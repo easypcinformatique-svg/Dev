@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Factures{% endblock %}
+
+{% block content %}
+<h1>Factures</h1>
+
+<!-- Filtres -->
+<div class="filters-bar">
+    <form method="get" class="filters-form">
+        <select name="statut">
+            <option value="">Tous les statuts</option>
+            <option value="a_verifier" {% if filtres.statut == 'a_verifier' %}selected{% endif %}>A v&eacute;rifier</option>
+            <option value="validee" {% if filtres.statut == 'validee' %}selected{% endif %}>Valid&eacute;e</option>
+            <option value="payee" {% if filtres.statut == 'payee' %}selected{% endif %}>Pay&eacute;e</option>
+            <option value="archivee" {% if filtres.statut == 'archivee' %}selected{% endif %}>Archiv&eacute;e</option>
+        </select>
+        <select name="source">
+            <option value="">Toutes les sources</option>
+            <option value="gmail" {% if filtres.source == 'gmail' %}selected{% endif %}>Gmail</option>
+            <option value="drive_scan" {% if filtres.source == 'drive_scan' %}selected{% endif %}>Drive (scans)</option>
+            <option value="upload" {% if filtres.source == 'upload' %}selected{% endif %}>Upload manuel</option>
+        </select>
+        <input type="text" name="fournisseur" placeholder="Fournisseur..." value="{{ filtres.fournisseur }}">
+        <input type="month" name="periode" value="{{ filtres.periode }}">
+        <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
+        <a href="{{ url_for('main.liste_factures') }}" class="btn btn-outline btn-sm">R&eacute;initialiser</a>
+    </form>
+</div>
+
+<!-- Liste des factures -->
+{% if factures %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>N&deg;</th>
+            <th>Fournisseur</th>
+            <th>Date</th>
+            <th>Source</th>
+            <th>HT</th>
+            <th>TVA</th>
+            <th>TTC</th>
+            <th>P&eacute;riode</th>
+            <th>Statut</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for f in factures %}
+        <tr>
+            <td>{{ f.numero or '-' }}</td>
+            <td>{{ f.fournisseur_nom or 'A identifier' }}</td>
+            <td>{{ f.date_facture.strftime('%d/%m/%Y') if f.date_facture else '-' }}</td>
+            <td><span class="badge badge-{{ f.source }}">{{ f.source }}</span></td>
+            <td>{{ "%.2f"|format(f.montant_ht) if f.montant_ht else '-' }}</td>
+            <td>{{ "%.2f"|format(f.montant_tva) if f.montant_tva else '-' }}</td>
+            <td>{{ "%.2f"|format(f.montant_ttc) if f.montant_ttc else '-' }}</td>
+            <td>{{ f.periode_tva or '-' }}</td>
+            <td><span class="badge badge-{{ f.statut }}">{{ f.statut }}</span></td>
+            <td><a href="{{ url_for('main.detail_facture', facture_id=f.id) }}">D&eacute;tail</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">Aucune facture trouv&eacute;e avec ces filtres.</p>
+{% endif %}
+{% endblock %}

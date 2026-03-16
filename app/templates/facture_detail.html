@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Facture #{{ facture.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Facture #{{ facture.id }}</h1>
+    <div class="header-actions">
+        {% if facture.fichier_path %}
+        <a href="{{ url_for('main.voir_fichier', facture_id=facture.id) }}" class="btn btn-outline" target="_blank">Voir le fichier</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('main.lancer_ocr', facture_id=facture.id) }}" class="inline-form">
+            <button type="submit" class="btn btn-secondary">Lancer OCR</button>
+        </form>
+    </div>
+</div>
+
+{% if facture.ocr_traite %}
+<div class="alert alert-info">
+    OCR effectu&eacute; - Confiance : {{ "%.0f"|format(facture.ocr_confiance or 0) }}%
+    {% if facture.ocr_confiance and facture.ocr_confiance < 50 %}
+    <br><strong>Attention :</strong> la confiance est faible, v&eacute;rifiez soigneusement les donn&eacute;es.
+    {% endif %}
+</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('main.modifier_facture', facture_id=facture.id) }}">
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Num&eacute;ro de facture</label>
+            <input type="text" name="numero" value="{{ facture.numero or '' }}" placeholder="FAC-2024-001">
+        </div>
+
+        <div class="form-group">
+            <label>Fournisseur (texte)</label>
+            <input type="text" name="fournisseur_nom" value="{{ facture.fournisseur_nom or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Fournisseur (liste)</label>
+            <select name="fournisseur_id">
+                <option value="">-- S&eacute;lectionner --</option>
+                {% for f in fournisseurs %}
+                <option value="{{ f.id }}" {% if facture.fournisseur_id == f.id %}selected{% endif %}>{{ f.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Date de facture</label>
+            <input type="date" name="date_facture" value="{{ facture.date_facture.strftime('%Y-%m-%d') if facture.date_facture else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Montant HT (&euro;)</label>
+            <input type="number" name="montant_ht" step="0.01" value="{{ '%.2f'|format(facture.montant_ht) if facture.montant_ht else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Taux TVA (%)</label>
+            <select name="taux_tva">
+                <option value="5.5" {% if facture.taux_tva == 5.5 %}selected{% endif %}>5,5% (alimentaire emporter)</option>
+                <option value="10" {% if facture.taux_tva == 10.0 %}selected{% endif %}>10% (restauration)</option>
+                <option value="20" {% if facture.taux_tva == 20.0 or not facture.taux_tva %}selected{% endif %}>20% (normal)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Montant TVA (&euro;)</label>
+            <input type="number" name="montant_tva" step="0.01" value="{{ '%.2f'|format(facture.montant_tva) if facture.montant_tva else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Montant TTC (&euro;)</label>
+            <input type="number" name="montant_ttc" step="0.01" value="{{ '%.2f'|format(facture.montant_ttc) if facture.montant_ttc else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Statut</label>
+            <select name="statut">
+                <option value="a_verifier" {% if facture.statut == 'a_verifier' %}selected{% endif %}>A v&eacute;rifier</option>
+                <option value="validee" {% if facture.statut == 'validee' %}selected{% endif %}>Valid&eacute;e</option>
+                <option value="payee" {% if facture.statut == 'payee' %}selected{% endif %}>Pay&eacute;e</option>
+                <option value="archivee" {% if facture.statut == 'archivee' %}selected{% endif %}>Archiv&eacute;e</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>P&eacute;riode TVA</label>
+            <input type="month" name="periode_tva" value="{{ facture.periode_tva or '' }}">
+        </div>
+
+        <div class="form-group form-group-wide">
+            <label>Notes</label>
+            <textarea name="notes" rows="3">{{ facture.notes or '' }}</textarea>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{{ url_for('main.liste_factures') }}" class="btn btn-outline">Retour</a>
+    </div>
+</form>
+
+<div class="section">
+    <h3>Informations d'import</h3>
+    <dl class="info-list">
+        <dt>Source</dt>
+        <dd><span class="badge badge-{{ facture.source }}">{{ facture.source }}</span></dd>
+        <dt>Fichier</dt>
+        <dd>{{ facture.fichier_nom or 'Aucun' }}</dd>
+        <dt>Import&eacute; le</dt>
+        <dd>{{ facture.created_at.strftime('%d/%m/%Y &agrave; %H:%M') }}</dd>
+        {% if facture.gmail_message_id %}
+        <dt>ID Gmail</dt>
+        <dd>{{ facture.gmail_message_id }}</dd>
+        {% endif %}
+        {% if facture.drive_file_id %}
+        <dt>ID Drive</dt>
+        <dd>{{ facture.drive_file_id }}</dd>
+        {% endif %}
+    </dl>
+</div>
+{% endblock %}

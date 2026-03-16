@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<h1>Tableau de bord</h1>
+
+<!-- Connexion Google -->
+<div class="card {% if google_connecte %}card-success{% else %}card-warning{% endif %}">
+    <div class="card-body">
+        {% if google_connecte %}
+            <span>Compte Google connect&eacute;</span>
+            <a href="{{ url_for('main.auth_deconnecter') }}" class="btn btn-sm btn-outline">D&eacute;connecter</a>
+        {% else %}
+            <span>Connectez votre compte Google pour synchroniser Gmail et Drive</span>
+            <a href="{{ url_for('main.auth_google') }}" class="btn btn-sm btn-primary">Connecter Google</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_factures }}</div>
+        <div class="stat-label">Factures totales</div>
+    </div>
+    <div class="stat-card stat-warning">
+        <div class="stat-number">{{ a_verifier }}</div>
+        <div class="stat-label">&Agrave; v&eacute;rifier</div>
+    </div>
+    <div class="stat-card stat-success">
+        <div class="stat-number">{{ validees }}</div>
+        <div class="stat-label">Valid&eacute;es</div>
+    </div>
+    <div class="stat-card stat-info">
+        <div class="stat-number">{{ "%.2f"|format(resume_tva.total_tva) }} &euro;</div>
+        <div class="stat-label">TVA du mois</div>
+    </div>
+</div>
+
+<!-- Actions de synchronisation -->
+<div class="section">
+    <h2>Synchronisation</h2>
+    <div class="actions-row">
+        <form method="post" action="{{ url_for('main.sync_gmail') }}" class="inline-form">
+            <button type="submit" class="btn btn-primary" {% if not google_connecte %}disabled{% endif %}>
+                Synchroniser Gmail
+            </button>
+        </form>
+        <form method="post" action="{{ url_for('main.sync_drive') }}" class="inline-form">
+            <button type="submit" class="btn btn-primary" {% if not google_connecte %}disabled{% endif %}>
+                Synchroniser Drive
+            </button>
+        </form>
+        <a href="{{ url_for('main.upload_facture') }}" class="btn btn-secondary">
+            Importer manuellement
+        </a>
+    </div>
+</div>
+
+<!-- Dernières factures -->
+<div class="section">
+    <h2>Derni&egrave;res factures import&eacute;es</h2>
+    {% if dernieres %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fournisseur</th>
+                <th>Source</th>
+                <th>Date import</th>
+                <th>Montant TTC</th>
+                <th>Statut</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in dernieres %}
+            <tr>
+                <td>{{ f.fournisseur_nom or '&Agrave; identifier' }}</td>
+                <td><span class="badge badge-{{ f.source }}">{{ f.source }}</span></td>
+                <td>{{ f.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ "%.2f"|format(f.montant_ttc) if f.montant_ttc else '-' }} &euro;</td>
+                <td><span class="badge badge-{{ f.statut }}">{{ f.statut }}</span></td>
+                <td><a href="{{ url_for('main.detail_facture', facture_id=f.id) }}">Voir</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">Aucune facture import&eacute;e pour le moment.</p>
+    {% endif %}
+</div>
+
+<!-- Journal de synchronisation -->
+<div class="section">
+    <h2>Derni&egrave;res synchronisations</h2>
+    {% if derniers_logs %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Source</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in derniers_logs %}
+            <tr>
+                <td>{{ log.source }}</td>
+                <td>{{ log.started_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td><span class="badge badge-{{ log.statut }}">{{ log.statut }}</span></td>
+                <td>{{ log.message or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">Aucune synchronisation effectu&eacute;e.</p>
+    {% endif %}
+</div>
+{% endblock %}
