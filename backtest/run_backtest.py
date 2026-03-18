@@ -30,6 +30,7 @@ from .strategies import (
     AdaptiveMomentumStrategy,
     LiquidityEdgeStrategy,
     AlphaCompositeStrategy,
+    InsuranceSellerStrategy,
 )
 from .engine import BacktestEngine, BacktestConfig
 from .report import generate_report
@@ -86,6 +87,18 @@ STRATEGIES = {
         spread_filter=0.10, volume_percentile_filter=10,
         min_price_extreme=0.05, max_price_extreme=0.95,
         sentiment_weight=0.30,
+    ),
+    # --- Insurance Seller (inspirée anoin123 : $1.45M profit) ---
+    "insurance": lambda: InsuranceSellerStrategy(
+        max_no_price=0.35,
+        min_yes_price=0.65,
+        ideal_no_price=0.10,
+        panic_threshold=-0.15,
+        fear_multiplier=1.5,
+        max_entries_per_market=5,
+        entry_cooldown_bars=12,
+        max_exposure_pct=0.15,
+        hard_stop_loss=0.40,
     ),
 }
 

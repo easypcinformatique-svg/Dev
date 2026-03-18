@@ -1114,3 +1114,213 @@ class AlphaCompositeStrategy(BaseStrategy):
         final_confidence = min(best_score * (0.5 + kelly), 1.0)
 
         return best, final_confidence
+
+
+# ================================================================
+#  INSURANCE SELLER STRATEGY (inspirée d'anoin123)
+# ================================================================
+
+class InsuranceSellerStrategy(BaseStrategy):
+    """
+    Insurance Seller — Stratégie inspirée du trader anoin123 ($1.45M profit).
+
+    Principe : vendre de l'assurance sur les événements extrêmes.
+    Quand la panique pousse le YES trop haut sur des événements peu probables
+    (guerres, frappes militaires, crises), on achète du NO à bas prix.
+
+    La stratégie exploite le biais humain de surestimation des événements
+    extrêmes à court terme (availability bias + recency bias).
+
+    Pipeline :
+        1. Identifier les marchés binaires avec deadline (géopolitique, crises)
+        2. Détecter la panique via le sentiment (News + VADER)
+        3. Acheter NO quand YES est surévalué par la peur
+        4. Accumuler progressivement (pas tout d'un coup)
+        5. Sortir quand le sentiment se normalise ou à la résolution
+
+    Risques (leçon d'anoin123) :
+        - Si l'événement se produit, perte totale sur la position
+        - Stop-loss OBLIGATOIRE pour éviter le scénario -$6.5M
+    """
+
+    def __init__(
+        self,
+        # Seuils de prix pour le NO
+        max_no_price: float = 0.35,       # Acheter NO seulement si < 35 cents
+        min_yes_price: float = 0.65,       # YES doit être > 65% (panique)
+        ideal_no_price: float = 0.10,      # Zone idéale : NO < 10 cents
+        # Sentiment
+        panic_threshold: float = -0.20,    # Sentiment < -0.20 = panique
+        fear_multiplier: float = 1.5,      # Plus la peur est forte, plus on achète
+        # Accumulation
+        max_entries_per_market: int = 5,   # Max 5 entrées par marché
+        entry_cooldown_bars: int = 12,     # 12h entre chaque entrée (fidelity=60)
+        # Risk
+        max_exposure_pct: float = 0.15,    # Max 15% du capital par marché
+        hard_stop_loss: float = 0.50,      # Stop-loss dur à -50% (leçon anoin123)
+        # Catégories cibles
+        target_keywords: list | None = None,
+        **kwargs,
+    ):
+        kwargs.setdefault("max_position_pct", 0.10)  # Gros sizing comme anoin123
+        kwargs.setdefault("max_positions", 6)
+        kwargs.setdefault("stop_loss", hard_stop_loss)
+        kwargs.setdefault("take_profit", 0.80)  # TP large : on attend la résolution
+        kwargs.setdefault("trailing_stop", 0.15)
+        super().__init__(name="InsuranceSeller", **kwargs)
+
+        self.max_no_price = max_no_price
+        self.min_yes_price = min_yes_price
+        self.ideal_no_price = ideal_no_price
+        self.panic_threshold = panic_threshold
+        self.fear_multiplier = fear_multiplier
+        self.max_entries_per_market = max_entries_per_market
+        self.entry_cooldown_bars = entry_cooldown_bars
+        self.max_exposure_pct = max_exposure_pct
+
+        # Mots-clés pour identifier les marchés géopolitiques/crises
+        self.target_keywords = target_keywords or [
+            "strike", "war", "invade", "attack", "bomb", "military",
+            "shutdown", "default", "collapse", "crash", "resign",
+            "impeach", "assassin", "coup", "martial law", "nuclear",
+            "ceasefire", "sanctions", "embargo", "declaration",
+            "indictment", "arrest", "charged", "guilty", "convicted",
+        ]
+
+        # Sentiment analyzer
+        self._sentiment = None
+        self._sentiment_cache: dict[str, object] = {}
+        try:
+            from .sentiment import SentimentAnalyzer
+            self._sentiment = SentimentAnalyzer()
+            import logging
+            logging.getLogger(__name__).info(
+                "InsuranceSeller: Sentiment ACTIVE (panic detection)"
+            )
+        except ImportError:
+            pass
+
+        # Tracking des entrées par marché
+        self._entry_count: dict[str, int] = {}
+        self._last_entry_bar: dict[str, int] = {}
+        self._bar_counter: dict[str, int] = {}
+
+    def _is_target_market(self, question: str) -> bool:
+        """Vérifie si le marché correspond aux catégories cibles (géopolitique, crises)."""
+        q_lower = question.lower()
+        return any(kw in q_lower for kw in self.target_keywords)
+
+    def _get_panic_score(self, question: str, market_id: str, current_price: float) -> float:
+        """Détecte le niveau de panique via le sentiment des news."""
+        if not self._sentiment:
+            return 0.0
+
+        # Cache pour éviter de re-scraper à chaque barre
+        if market_id in self._sentiment_cache:
+            result = self._sentiment_cache[market_id]
+            return result.composite_score
+
+        try:
+            result = self._sentiment.analyze(
+                question=question,
+                market_id=market_id,
+                current_price=current_price,
+                max_tweets=15,
+            )
+            self._sentiment_cache[market_id] = result
+            return result.composite_score
+        except Exception:
+            return 0.0
+
+    def generate_signal(self, market_id, current_bar, history):
+        current_price = current_bar["mid_price"]  # Prix YES
+        no_price = 1.0 - current_price  # Prix NO implicite
+
+        # Counter pour le cooldown
+        self._bar_counter[market_id] = self._bar_counter.get(market_id, 0) + 1
+        bar_num = self._bar_counter[market_id]
+
+        # --- FILTRE 1 : Historique suffisant ---
+        if len(history) < 24:
+            return "HOLD", 0.0
+
+        # --- FILTRE 2 : Le NO doit être assez cheap ---
+        if no_price > self.max_no_price:
+            return "HOLD", 0.0
+
+        # --- FILTRE 3 : Le YES doit être suffisamment haut (panique) ---
+        if current_price < self.min_yes_price:
+            return "HOLD", 0.0
+
+        # --- FILTRE 4 : Bonus pour marchés géopolitiques/crises ---
+        # On trade tous les marchés avec NO cheap, mais les crises ont un bonus
+        question = current_bar.get("question", "")
+        is_crisis = self._is_target_market(question) if question else False
+
+        # --- FILTRE 5 : Max entrées par marché ---
+        entries = self._entry_count.get(market_id, 0)
+        if entries >= self.max_entries_per_market:
+            return "HOLD", 0.0
+
+        # --- FILTRE 6 : Cooldown entre entrées ---
+        last_entry = self._last_entry_bar.get(market_id, -999)
+        if (bar_num - last_entry) < self.entry_cooldown_bars:
+            return "HOLD", 0.0
+
+        # --- FILTRE 7 : Détection de panique via mouvement de prix ---
+        prices = history["mid_price"].values
+        recent_prices = prices[-24:]  # 24 dernières barres
+        price_velocity = (recent_prices[-1] - recent_prices[0]) / max(len(recent_prices), 1)
+
+        # Le YES monte vite = panique croissante = opportunité pour NO
+        is_panic_move = price_velocity > 0.005  # YES monte de >0.5% par barre
+
+        # --- FILTRE 8 : Sentiment de panique (si disponible) ---
+        panic_score = self._get_panic_score(question, market_id, current_price)
+        is_sentiment_panic = panic_score < self.panic_threshold
+
+        # --- SCORING ---
+        # Le signal est BUY_NO quand :
+        # 1. Le NO est cheap (< max_no_price)
+        # 2. La panique pousse le YES vers le haut
+        # 3. Le sentiment confirme la peur
+
+        confidence = 0.0
+
+        # Score de base : plus le NO est cheap, plus c'est intéressant
+        # NO à 5 cents = gros edge, NO à 30 cents = edge modéré
+        price_edge = (self.max_no_price - no_price) / self.max_no_price
+        confidence += price_edge * 0.4
+
+        # Bonus pour mouvement de panique dans le prix
+        if is_panic_move:
+            panic_magnitude = min(abs(price_velocity) / 0.02, 1.0)
+            confidence += panic_magnitude * 0.25
+
+        # Bonus pour sentiment de peur
+        if is_sentiment_panic:
+            fear_strength = min(abs(panic_score) / 0.5, 1.0)
+            confidence += fear_strength * 0.25 * self.fear_multiplier
+
+        # Bonus si on est dans la zone idéale (NO < 10 cents)
+        if no_price <= self.ideal_no_price:
+            confidence += 0.15
+
+        # Bonus pour marchés géopolitiques/crises (coeur de la stratégie anoin123)
+        if is_crisis:
+            confidence += 0.10
+
+        # Volatilité récente (confirme l'incertitude/panique)
+        vol = np.std(recent_prices)
+        if vol > 0.02:
+            confidence += min(vol / 0.10, 0.10)
+
+        # Minimum de confiance pour entrer
+        if confidence < 0.25:
+            return "HOLD", 0.0
+
+        # On entre : BUY_NO
+        self._entry_count[market_id] = entries + 1
+        self._last_entry_bar[market_id] = bar_num
+
+        return "BUY_NO", min(confidence, 1.0)
