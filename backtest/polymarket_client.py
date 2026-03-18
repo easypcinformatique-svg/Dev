@@ -100,6 +100,8 @@ class PolymarketClient:
                     logger.warning(f"Rate limited, waiting {wait}s...")
                     time.sleep(wait)
                     continue
+                if resp.status_code == 404:
+                    return {}  # Resource not found, no retry
                 resp.raise_for_status()
                 return resp.json()
             except requests.RequestException as e:
@@ -199,11 +201,24 @@ class PolymarketClient:
         })
 
     def _is_valid_market(self, raw: dict) -> bool:
-        """Vérifie qu'un marché a les données nécessaires."""
+        """Vérifie qu'un marché a les données nécessaires et est tradable."""
         try:
             token_ids = json.loads(raw.get("clobTokenIds", "[]"))
-            return len(token_ids) >= 2 and raw.get("enableOrderBook", False)
-        except (json.JSONDecodeError, TypeError):
+            if len(token_ids) < 2:
+                return False
+            if not raw.get("enableOrderBook", False):
+                return False
+            # Exclure les marchés résolus (prix à 0 ou 1)
+            prices = json.loads(raw.get("outcomePrices", '["0.5","0.5"]'))
+            yes_price = float(prices[0]) if prices else 0.5
+            if yes_price <= 0.02 or yes_price >= 0.98:
+                return False
+            # Exclure les marchés sans liquidité
+            liquidity = float(raw.get("liquidity", 0) or 0)
+            if liquidity <= 0:
+                return False
+            return True
+        except (json.JSONDecodeError, TypeError, ValueError):
             return False
 
     def _parse_market(self, raw: dict) -> PolymarketMarket:
