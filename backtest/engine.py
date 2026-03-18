@@ -13,7 +13,7 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import Optional
 
-from .strategies import BaseStrategy, Position, Trade
+from .strategies import BaseStrategy, Position, Trade, AlphaCompositeStrategy
 from .metrics import compute_metrics, PerformanceMetrics
 from .data_generator import MarketConfig
 
@@ -210,6 +210,9 @@ class BacktestEngine:
                     trade.pnl -= fee
                     pos_size = trade.size
                     self.capital += pos_size + trade.pnl
+                    # Feedback pour AlphaComposite
+                    if isinstance(self.strategy, AlphaCompositeStrategy):
+                        self.strategy.update_strategy_performance(mid, trade.pnl)
 
                 # 4. Générer signal et exécuter
                 action, confidence = self.strategy.generate_signal(

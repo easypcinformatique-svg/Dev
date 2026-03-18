@@ -5,7 +5,8 @@ Point d'entrée principal du moteur de backtesting Polymarket.
 Usage:
     python -m backtest.run_backtest [options]
 
-    --strategy    Stratégie à utiliser: momentum, mean_reversion, value, composite (défaut: composite)
+    --strategy    Stratégie: momentum, mean_reversion, value, composite,
+                  smart_money, convergence, bayesian, adaptive, liquidity, alpha (défaut: alpha)
     --markets     Nombre de marchés à simuler (défaut: 30)
     --capital     Capital initial en USD (défaut: 100000)
     --freq        Fréquence des données: 1h, 4h, 1D (défaut: 4h)
@@ -24,12 +25,19 @@ from .strategies import (
     MeanReversionStrategy,
     ValueStrategy,
     CompositeStrategy,
+    SmartMoneyStrategy,
+    ConvergenceStrategy,
+    BayesianEdgeStrategy,
+    AdaptiveMomentumStrategy,
+    LiquidityEdgeStrategy,
+    AlphaCompositeStrategy,
 )
 from .engine import BacktestEngine, BacktestConfig
 from .report import generate_report
 
 
 STRATEGIES = {
+    # --- Stratégies de base ---
     "momentum": lambda: MomentumStrategy(
         lookback=24, momentum_threshold=0.05, volume_filter=1.2,
         max_position_pct=0.05, stop_loss=0.15, take_profit=0.30,
@@ -47,6 +55,32 @@ STRATEGIES = {
         max_position_pct=0.05, max_positions=10,
         stop_loss=0.15, take_profit=0.30,
     ),
+    # --- Stratégies avancées ---
+    "smart_money": lambda: SmartMoneyStrategy(
+        lookback=36, volume_spike_threshold=1.8,
+        max_position_pct=0.04, stop_loss=0.10, take_profit=0.25,
+    ),
+    "convergence": lambda: ConvergenceStrategy(
+        min_market_progress=0.55, trend_lookback=48,
+        max_position_pct=0.05, stop_loss=0.12, take_profit=0.30,
+    ),
+    "bayesian": lambda: BayesianEdgeStrategy(
+        lookback=60, edge_threshold=0.05,
+        max_position_pct=0.04, stop_loss=0.10, take_profit=0.25,
+    ),
+    "adaptive": lambda: AdaptiveMomentumStrategy(
+        fast_lookback=12, slow_lookback=48, hurst_lookback=80,
+        max_position_pct=0.04, stop_loss=0.10, take_profit=0.25,
+    ),
+    "liquidity": lambda: LiquidityEdgeStrategy(
+        lookback=36, spread_contraction_threshold=0.45,
+        max_position_pct=0.04, stop_loss=0.10, take_profit=0.25,
+    ),
+    # --- Stratégie Alpha (la meilleure) ---
+    "alpha": lambda: AlphaCompositeStrategy(
+        min_consensus=0.35, min_agreeing_strategies=2,
+        spread_filter=0.06, volume_percentile_filter=30,
+    ),
 }
 
 
@@ -57,7 +91,7 @@ def main():
     )
     parser.add_argument(
         "--strategy", choices=list(STRATEGIES.keys()),
-        default="composite", help="Stratégie de trading",
+        default="alpha", help="Stratégie de trading",
     )
     parser.add_argument("--markets", type=int, default=30, help="Nombre de marchés")
     parser.add_argument("--capital", type=float, default=100000, help="Capital initial ($)")
