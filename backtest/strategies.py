@@ -1178,6 +1178,19 @@ class InsuranceSellerStrategy(BaseStrategy):
         self.entry_cooldown_bars = entry_cooldown_bars
         self.max_exposure_pct = max_exposure_pct
 
+        # Mots-clés à EXCLURE (résolution rapide = gap risk)
+        self.exclude_keywords = [
+            "map 1", "map 2", "map 3", " vs ", "vs.",
+            "game 1", "game 2", "game 3",
+            "spread:", "over/under", "total points",
+            "first half", "second half", "quarter",
+            "winner", " win on ",
+            "today", "tonight", "this hour",
+            "up or down", "temperature", "°c", "°f", "weather",
+            "tweets from", "tweets in", "posts from",
+            "truth social posts",
+        ]
+
         # Mots-clés pour identifier les marchés géopolitiques/crises
         self.target_keywords = target_keywords or [
             "strike", "war", "invade", "attack", "bomb", "military",
@@ -1240,6 +1253,13 @@ class InsuranceSellerStrategy(BaseStrategy):
         self._bar_counter[market_id] = self._bar_counter.get(market_id, 0) + 1
         bar_num = self._bar_counter[market_id]
 
+        # --- FILTRE 0 : Exclure marchés à résolution rapide (gap risk) ---
+        question = current_bar.get("question", "")
+        if question:
+            q_lower = question.lower()
+            if any(kw in q_lower for kw in self.exclude_keywords):
+                return "HOLD", 0.0
+
         # --- FILTRE 1 : Historique suffisant ---
         if len(history) < 24:
             return "HOLD", 0.0
@@ -1253,8 +1273,6 @@ class InsuranceSellerStrategy(BaseStrategy):
             return "HOLD", 0.0
 
         # --- FILTRE 4 : Bonus pour marchés géopolitiques/crises ---
-        # On trade tous les marchés avec NO cheap, mais les crises ont un bonus
-        question = current_bar.get("question", "")
         is_crisis = self._is_target_market(question) if question else False
 
         # --- FILTRE 5 : Max entrées par marché ---

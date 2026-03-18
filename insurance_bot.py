@@ -91,6 +91,10 @@ class BotConfig:
     order_type: str = "limit"              # "limit" ou "market"
     limit_offset: float = 0.005
 
+    # ── Filtres anti-gap (leçon FURIA vs TYLOO) ──
+    min_days_to_resolution: int = 3        # Minimum 3 jours avant résolution
+    exclude_keywords: list | None = None   # Mots-clés à exclure
+
     # ── Risk ──
     daily_loss_limit_pct: float = 0.05     # Stop trading si -5% dans la journée
 
@@ -238,6 +242,25 @@ class InsuranceBot:
 
         # ── Notifications ──
         self.notifier = TelegramNotifier(config.telegram_token, config.telegram_chat_id)
+
+        # ── Filtres anti-gap (marchés à résolution rapide) ──
+        self._exclude_keywords = config.exclude_keywords or [
+            # E-sport / Sport live
+            "map 1", "map 2", "map 3", " vs ", "vs.",
+            "game 1", "game 2", "game 3",
+            "spread:", "over/under", "total points",
+            "first half", "second half", "quarter",
+            "winner", " win on ",
+            # Intraday / très court terme
+            "today", "tonight", "this hour", "this morning",
+            "7:15am", "7:30am", "7:00am", "8:00am",
+            "up or down",
+            # Météo
+            "temperature", "°c", "°f", "weather",
+            # Tweets count (volatilité extrême)
+            "tweets from", "tweets in", "posts from",
+            "truth social posts",
+        ]
 
         # ── Cache historiques ──
         self._histories: dict[str, pd.DataFrame] = {}
@@ -459,19 +482,37 @@ class InsuranceBot:
             logger.error(f"Erreur scan marchés: {e}")
             return []
 
-        # Pré-filtrer : on ne veut que les marchés avec YES > min_yes_price
-        # (c'est là que le NO est cheap)
+        # Pré-filtrer les marchés
         eligible = []
+        excluded = 0
         for m in markets:
+            # FILTRE 1 : Exclure les marchés à résolution rapide
+            q_lower = m.question.lower()
+            if any(kw in q_lower for kw in self._exclude_keywords):
+                excluded += 1
+                continue
+
+            # FILTRE 2 : Exclure si résolution < min_days_to_resolution
+            if m.end_date:
+                try:
+                    end_dt = datetime.fromisoformat(
+                        m.end_date.replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
+                    days_left = (end_dt - datetime.now()).days
+                    if days_left < self.config.min_days_to_resolution:
+                        excluded += 1
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+            # FILTRE 3 : YES > min_yes_price OU marché de crise
             if m.yes_price >= self.config.min_yes_price:
                 eligible.append(m)
-            elif any(kw in m.question.lower() for kw in self.strategy.target_keywords):
-                # Marchés de crise : on les inclut même si YES pas encore élevé
-                # pour pouvoir les surveiller
+            elif any(kw in q_lower for kw in self.strategy.target_keywords):
                 eligible.append(m)
 
         logger.info(f"  Scan: {len(markets)} marchés → {len(eligible)} éligibles "
-                     f"(YES>{self.config.min_yes_price:.0%} ou crise)")
+                     f"({excluded} exclus: résolution rapide/e-sport/météo)")
 
         return eligible
 
