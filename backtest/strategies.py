@@ -894,28 +894,63 @@ class AlphaCompositeStrategy(BaseStrategy):
         else:
             conv_w, bayes_w, smart_w, adapt_w, liq_w = 0.30, 0.30, 0.10, 0.15, 0.15
 
-        self.sub_strategies: list[tuple[BaseStrategy, float]] = [
-            (SmartMoneyStrategy(
-                lookback=36, volume_spike_threshold=2.2,
-                directional_threshold=0.035, consistency_window=8,
-            ), smart_w),
-            (ConvergenceStrategy(
-                min_market_progress=0.50, trend_lookback=60,
-                trend_threshold=0.012,
-            ), conv_w),
-            (BayesianEdgeStrategy(
-                lookback=80, edge_threshold=0.07,
-                volume_info_weight=0.45, min_observations=30,
-            ), bayes_w),
-            (AdaptiveMomentumStrategy(
-                fast_lookback=12, slow_lookback=60,
-                hurst_lookback=100, signal_threshold=0.03,
-            ), adapt_w),
-            (LiquidityEdgeStrategy(
-                lookback=36, spread_contraction_threshold=0.35,
-                price_move_threshold=0.02, min_volume_ratio=1.5,
-            ), liq_w),
-        ]
+        # Detecter si les seuils sont relaches (mode donnees reelles)
+        is_real_data_mode = (
+            spread_filter >= 0.08
+            or min_consensus <= 0.20
+            or min_agreeing_strategies <= 1
+        )
+
+        if is_real_data_mode:
+            # Seuils calibres pour donnees reelles Polymarket
+            # (volumes estimes, mouvements de prix faibles)
+            self.sub_strategies: list[tuple[BaseStrategy, float]] = [
+                (SmartMoneyStrategy(
+                    lookback=24, volume_spike_threshold=1.2,
+                    directional_threshold=0.01, consistency_window=4,
+                ), smart_w),
+                (ConvergenceStrategy(
+                    min_market_progress=0.30, trend_lookback=30,
+                    trend_threshold=0.003, max_price_extreme=0.95,
+                    min_price_extreme=0.05,
+                ), conv_w),
+                (BayesianEdgeStrategy(
+                    lookback=40, edge_threshold=0.03,
+                    volume_info_weight=0.25, min_observations=15,
+                ), bayes_w),
+                (AdaptiveMomentumStrategy(
+                    fast_lookback=8, slow_lookback=30,
+                    hurst_lookback=50, signal_threshold=0.01,
+                ), adapt_w),
+                (LiquidityEdgeStrategy(
+                    lookback=24, spread_contraction_threshold=0.20,
+                    price_move_threshold=0.008, min_volume_ratio=1.1,
+                ), liq_w),
+            ]
+        else:
+            # Seuils originaux pour donnees simulees
+            self.sub_strategies: list[tuple[BaseStrategy, float]] = [
+                (SmartMoneyStrategy(
+                    lookback=36, volume_spike_threshold=2.2,
+                    directional_threshold=0.035, consistency_window=8,
+                ), smart_w),
+                (ConvergenceStrategy(
+                    min_market_progress=0.50, trend_lookback=60,
+                    trend_threshold=0.012,
+                ), conv_w),
+                (BayesianEdgeStrategy(
+                    lookback=80, edge_threshold=0.07,
+                    volume_info_weight=0.45, min_observations=30,
+                ), bayes_w),
+                (AdaptiveMomentumStrategy(
+                    fast_lookback=12, slow_lookback=60,
+                    hurst_lookback=100, signal_threshold=0.03,
+                ), adapt_w),
+                (LiquidityEdgeStrategy(
+                    lookback=36, spread_contraction_threshold=0.35,
+                    price_move_threshold=0.02, min_volume_ratio=1.5,
+                ), liq_w),
+            ]
 
         # Tracking de la performance de chaque sous-stratégie
         self._strat_wins: dict[str, int] = {}

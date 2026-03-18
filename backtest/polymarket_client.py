@@ -372,9 +372,10 @@ class PolymarketClient:
         df["category"] = market.category
 
         # Estimer le spread à partir de la volatilité locale
+        # Polymarket est très liquide — spreads serrés (1-3% typique)
         df["returns"] = df["mid_price"].pct_change()
         rolling_vol = df["returns"].rolling(window=24, min_periods=1).std()
-        df["spread"] = np.clip(rolling_vol * 2, 0.005, 0.10).fillna(0.02)
+        df["spread"] = np.clip(rolling_vol * 1.2, 0.003, 0.05).fillna(0.015)
         df["bid_price"] = np.clip(df["mid_price"] - df["spread"] / 2, 0.01, 0.99)
         df["ask_price"] = np.clip(df["mid_price"] + df["spread"] / 2, 0.01, 0.99)
 

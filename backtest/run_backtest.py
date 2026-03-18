@@ -80,6 +80,13 @@ STRATEGIES = {
         min_consensus=0.35, min_agreeing_strategies=2,
         spread_filter=0.06, volume_percentile_filter=30,
     ),
+    # --- Alpha calibrée pour données réelles Polymarket ---
+    "alpha_real": lambda: AlphaCompositeStrategy(
+        min_consensus=0.15, min_agreeing_strategies=1,
+        spread_filter=0.10, volume_percentile_filter=10,
+        min_price_extreme=0.05, max_price_extreme=0.95,
+        sentiment_weight=0.30,
+    ),
 }
 
 
