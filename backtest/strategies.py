@@ -840,6 +840,7 @@ class AlphaCompositeStrategy(BaseStrategy):
     - Filtre de corrélation des signaux (éviter la redondance)
     - Filtres de qualité strict : spread, volume, consistance
     - Seuil de consensus adaptatif
+    - **Sentiment Twitter/X + Grok** (optionnel, activé si les API keys sont configurées)
 
     C'est l'approche "ensemble de modèles" utilisée par les meilleurs funds.
     """
@@ -852,6 +853,7 @@ class AlphaCompositeStrategy(BaseStrategy):
         volume_percentile_filter: float = 30,
         max_price_extreme: float = 0.90,
         min_price_extreme: float = 0.10,
+        sentiment_weight: float = 0.25,
         **kwargs,
     ):
         kwargs.setdefault("max_position_pct", 0.03)
@@ -867,30 +869,52 @@ class AlphaCompositeStrategy(BaseStrategy):
         self.volume_percentile_filter = volume_percentile_filter
         self.max_price_extreme = max_price_extreme
         self.min_price_extreme = min_price_extreme
+        self.sentiment_weight = sentiment_weight
+
+        # Sentiment analyzer (Twitter/X + Grok)
+        self.sentiment = None
+        self._sentiment_cache: dict[str, object] = {}
+        try:
+            from .sentiment import SentimentAnalyzer
+            analyzer = SentimentAnalyzer()
+            if analyzer.is_available():
+                self.sentiment = analyzer
+                import logging
+                logging.getLogger(__name__).info(
+                    "Sentiment analysis ACTIVE (Twitter/X + Grok)"
+                )
+        except ImportError:
+            pass
 
         # Sous-stratégies avec poids calibrés
-        # Poids fort sur Convergence et Bayesian (meilleur edge théorique)
+        # Poids ajustés pour inclure le sentiment
+        # Si sentiment actif : on réduit légèrement les autres pour faire de la place
+        if self.sentiment:
+            conv_w, bayes_w, smart_w, adapt_w, liq_w = 0.22, 0.22, 0.08, 0.12, 0.11
+        else:
+            conv_w, bayes_w, smart_w, adapt_w, liq_w = 0.30, 0.30, 0.10, 0.15, 0.15
+
         self.sub_strategies: list[tuple[BaseStrategy, float]] = [
             (SmartMoneyStrategy(
                 lookback=36, volume_spike_threshold=2.2,
                 directional_threshold=0.035, consistency_window=8,
-            ), 0.10),
+            ), smart_w),
             (ConvergenceStrategy(
                 min_market_progress=0.50, trend_lookback=60,
                 trend_threshold=0.012,
-            ), 0.30),
+            ), conv_w),
             (BayesianEdgeStrategy(
                 lookback=80, edge_threshold=0.07,
                 volume_info_weight=0.45, min_observations=30,
-            ), 0.30),
+            ), bayes_w),
             (AdaptiveMomentumStrategy(
                 fast_lookback=12, slow_lookback=60,
                 hurst_lookback=100, signal_threshold=0.03,
-            ), 0.15),
+            ), adapt_w),
             (LiquidityEdgeStrategy(
                 lookback=36, spread_contraction_threshold=0.35,
                 price_move_threshold=0.02, min_volume_ratio=1.5,
-            ), 0.15),
+            ), liq_w),
         ]
 
         # Tracking de la performance de chaque sous-stratégie
@@ -958,6 +982,36 @@ class AlphaCompositeStrategy(BaseStrategy):
             action, confidence = strat.generate_signal(market_id, current_bar, history)
             signals[action].append((weight, confidence))
             strat_signals[strat.name] = action
+
+        # --- SIGNAL SENTIMENT (Twitter/X + Grok) ---
+        if self.sentiment:
+            try:
+                question = current_bar.get("question", "")
+                if question:
+                    sent_result = self.sentiment.analyze(
+                        question=question,
+                        market_id=market_id,
+                        current_price=current_price,
+                    )
+                    self._sentiment_cache[market_id] = sent_result
+
+                    score = sent_result.composite_score
+                    sent_weight = self.sentiment_weight
+                    total_weight += sent_weight
+
+                    if score > 0.1:
+                        # Sentiment bullish → BUY_YES
+                        signals["BUY_YES"].append((sent_weight, abs(score)))
+                        strat_signals["Sentiment"] = "BUY_YES"
+                    elif score < -0.1:
+                        # Sentiment bearish → BUY_NO
+                        signals["BUY_NO"].append((sent_weight, abs(score)))
+                        strat_signals["Sentiment"] = "BUY_NO"
+                    else:
+                        signals["HOLD"].append((sent_weight, 0.0))
+                        strat_signals["Sentiment"] = "HOLD"
+            except Exception:
+                pass  # Sentiment non disponible, on continue sans
 
         # Sauvegarder pour le tracking
         self._last_signals[market_id] = strat_signals
