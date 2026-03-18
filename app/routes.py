@@ -28,6 +28,18 @@ from app.modules.tva_service import TVAService
 main = Blueprint("main", __name__)
 
 
+# --- Backtest Report ---
+
+
+@main.route("/backtest")
+def backtest_report():
+    """Sert le rapport de backtest Polymarket."""
+    report_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "backtest_report.html")
+    if os.path.exists(report_path):
+        return send_file(report_path)
+    return "Rapport non généré. Lancez: python -m backtest.run_backtest", 404
+
+
 # --- Dashboard ---
 
 
