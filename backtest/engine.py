@@ -169,8 +169,12 @@ class BacktestEngine:
             c.market_id: (c.resolution_date, c.outcome) for c in market_configs
         }
 
-        # Historique par marché
+        # Historique par marché — pré-indexé pour performance
         market_histories: dict[str, list[pd.Series]] = {}
+        # Cache DataFrame pour éviter la reconstruction à chaque barre
+        market_history_dfs: dict[str, pd.DataFrame] = {}
+        _history_rebuild_interval = 50  # Rebuild le DF tous les N barres
+        _history_counters: dict[str, int] = {}
 
         # Grouper par timestamp
         grouped = data.groupby("timestamp")
@@ -197,11 +201,18 @@ class BacktestEngine:
                 if mid in resolved_markets:
                     continue
 
-                # Mettre à jour l'historique
+                # Mettre à jour l'historique (optimisé)
                 if mid not in market_histories:
                     market_histories[mid] = []
+                    _history_counters[mid] = 0
                 market_histories[mid].append(bar)
-                history_df = pd.DataFrame(market_histories[mid])
+                _history_counters[mid] += 1
+
+                # Rebuild le DataFrame seulement tous les N barres
+                if _history_counters[mid] >= _history_rebuild_interval or mid not in market_history_dfs:
+                    market_history_dfs[mid] = pd.DataFrame(market_histories[mid])
+                    _history_counters[mid] = 0
+                history_df = market_history_dfs[mid]
 
                 # 3. Vérifier stop-loss / take-profit
                 trade = self.strategy.check_exits(mid, bar, self.capital)
