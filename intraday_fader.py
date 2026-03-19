@@ -458,7 +458,19 @@ class IntradayFader:
         for pos in self.open_positions:
             cid = pos["condition_id"]
             current_price = current_prices.get(cid)
+
+            # Si pas de prix disponible, vérifier le time-stop quand même
             if current_price is None:
+                entry_time = datetime.fromisoformat(pos["entry_time"])
+                hours_held = (now - entry_time).total_seconds() / 3600
+                if hours_held >= pos.get("max_hold_hours", 4.0):
+                    exits.append({
+                        "position": pos,
+                        "exit_reason": "TIME_STOP_NO_PRICE",
+                        "exit_price": pos["entry_price"],
+                        "pnl_usd": 0.0,
+                        "hours_held": hours_held,
+                    })
                 continue
 
             exit_reason = None
@@ -538,13 +550,18 @@ class IntradayFader:
 
     def _calculate_size(self, confidence: float, risk_per_unit: float) -> float:
         """
-        Position sizing basé sur Kelly Criterion simplifié.
-        size = bankroll * edge * confidence / risk
+        Position sizing proportionnel à la confidence.
+
+        Formule simple et bornée :
+          fraction = confidence * risk_fraction (défaut 5% du bankroll)
+          size = bankroll * fraction
+        Clampé entre min et max position.
         """
-        # Kelly fraction (conservative: half-Kelly)
-        edge = confidence * 0.5  # On assume un edge proportionnel à confidence
-        kelly = edge / max(risk_per_unit, 0.01)
-        raw_size = self.bankroll * kelly * 0.5  # Half Kelly
+        # Fraction du bankroll : 2% à 8% selon confidence (0.3 → 2%, 0.9 → 8%)
+        base_fraction = 0.02 + (confidence - 0.3) * 0.10  # linéaire
+        base_fraction = max(0.02, min(0.08, base_fraction))
+
+        raw_size = self.bankroll * base_fraction
 
         # Clamp aux limites
         size = max(self.risk.min_position_usd, min(self.risk.max_position_usd, raw_size))

@@ -82,8 +82,9 @@ class BotConfig:
     fear_multiplier: float = 1.5
     max_entries_per_market: int = 5
     entry_cooldown_bars: int = 12
-    hard_stop_loss: float = 0.40           # Stop-loss dur (leçon anoin123)
+    hard_stop_loss: float = 0.25           # Stop-loss dur resserré (était 0.40)
     take_profit: float = 0.80
+    max_hold_days: float = 14.0            # Time-stop: fermer après N jours
 
     # ── Exécution ──
     scan_interval_seconds: int = 300       # Scan toutes les 5 min
@@ -237,7 +238,7 @@ class InsuranceBot:
             max_positions=config.max_positions,
             take_profit=config.take_profit,
             stop_loss=config.hard_stop_loss,
-            trailing_stop=0.15,
+            trailing_stop=0.10,
         )
 
         # ── Notifications ──
@@ -527,6 +528,29 @@ class InsuranceBot:
         for cid in list(self.positions.keys()):
             pos = self.positions[cid]
 
+            # ── Vérifier si le marché est expiré via end_date ──
+            try:
+                end_date = None
+                if cid in market_map:
+                    end_date = market_map[cid].end_date
+                elif pos.market and pos.market.end_date:
+                    end_date = pos.market.end_date
+
+                if end_date:
+                    end_dt = datetime.fromisoformat(
+                        str(end_date).replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
+                    if end_dt < datetime.now():
+                        logger.info(f"  Marché EXPIRÉ: {pos.market.question[:50]}")
+                        try:
+                            current_no_price = self.client.get_midpoint(pos.token_id)
+                        except Exception:
+                            current_no_price = pos.entry_price
+                        self._close_position(cid, current_no_price, "EXPIRED")
+                        continue
+            except (ValueError, TypeError):
+                pass
+
             try:
                 # Récupérer le prix actuel du NO
                 no_token = pos.token_id
@@ -557,9 +581,15 @@ class InsuranceBot:
             # Trailing stop (si on est en profit)
             elif pos.peak_price > pos.entry_price * 1.05:
                 peak_pnl = (pos.peak_price - pos.entry_price) / pos.entry_price
-                if (peak_pnl - pnl_pct) > 0.15:  # 15% trailing
+                if (peak_pnl - pnl_pct) > 0.10:  # 10% trailing (resserré)
                     should_exit = True
                     exit_reason = "TRAILING_STOP"
+
+            # Time-stop: fermer après max_hold_days (défaut 14 jours)
+            days_held = (datetime.now() - pos.entry_time).total_seconds() / 86400
+            if days_held >= self.config.max_hold_days:
+                should_exit = True
+                exit_reason = "TIME_STOP"
 
             # Marché fermé/résolu
             if cid in market_map and market_map[cid].closed:
@@ -681,7 +711,11 @@ class InsuranceBot:
         """Ouvre une position NO sur un marché."""
         token_id = market.no_token_id
 
-        # Sizing (proportionnel à la confiance)
+        # Sizing — proportionnel à la confiance, avec seuil minimum
+        # Confidence < 0.40 → pas de trade (signal trop faible)
+        if confidence < 0.40:
+            return
+
         max_size = self.capital * self.config.max_position_pct
         current_exposure = sum(p.size_usd for p in self.positions.values())
         max_remaining = (self.capital * self.config.max_total_exposure_pct
@@ -689,7 +723,10 @@ class InsuranceBot:
         if max_remaining <= 0:
             return
 
-        size_usd = min(max_size * confidence, max_remaining)
+        # Sizing linéaire : conf 0.40 → 30% du max, conf 1.0 → 100% du max
+        sizing_factor = 0.3 + (confidence - 0.4) * (0.7 / 0.6)
+        sizing_factor = max(0.3, min(1.0, sizing_factor))
+        size_usd = min(max_size * sizing_factor, max_remaining)
         if size_usd < 5:
             return
 
@@ -913,10 +950,12 @@ Exemples:
                         help="Prix max du NO pour acheter (défaut: 0.35)")
     parser.add_argument("--min-yes-price", type=float, default=0.65,
                         help="Prix min du YES requis (défaut: 0.65)")
-    parser.add_argument("--stop-loss", type=float, default=0.40,
-                        help="Stop-loss en %% (défaut: 0.40)")
+    parser.add_argument("--stop-loss", type=float, default=0.25,
+                        help="Stop-loss en %% (défaut: 0.25)")
     parser.add_argument("--take-profit", type=float, default=0.80,
                         help="Take-profit en %% (défaut: 0.80)")
+    parser.add_argument("--max-hold-days", type=float, default=14.0,
+                        help="Durée max de détention en jours (défaut: 14)")
 
     # Exécution
     parser.add_argument("--scan-interval", type=int, default=300,
@@ -950,6 +989,7 @@ Exemples:
         min_yes_price=args.min_yes_price,
         hard_stop_loss=args.stop_loss,
         take_profit=args.take_profit,
+        max_hold_days=args.max_hold_days,
         scan_interval_seconds=args.scan_interval,
         dry_run=not args.real_money,
         telegram_token=args.telegram_token,
