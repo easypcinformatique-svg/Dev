@@ -98,7 +98,9 @@ STRATEGIES = {
         max_entries_per_market=5,
         entry_cooldown_bars=12,
         max_exposure_pct=0.15,
-        hard_stop_loss=0.40,
+        hard_stop_loss=0.25,            # Resserré (était 0.40)
+        stop_loss=0.25,                 # Aligné
+        trailing_stop=0.10,             # Resserré (était 0.15)
     ),
 }
 
