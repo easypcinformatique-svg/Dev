@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 STATE_FILE = "logs/insurance_bot/state.json"
 REPORT_DIR = "logs/insurance_bot/reports"
 CLOB_API = "https://clob.polymarket.com"
+NTFY_TOPIC = "insurance-bot-easypc-03757"
 
 os.makedirs(REPORT_DIR, exist_ok=True)
 
@@ -133,6 +134,35 @@ def generate_report():
     # Aussi afficher
     print(report)
     print(f"Rapport sauvegardé: {filename}")
+
+    # Envoyer via ntfy.sh (notification push gratuite)
+    send_notification(report, total_pnl, total_pnl_pct, len(positions), exposure)
+
+
+def send_notification(report, total_pnl, total_pnl_pct, nb_positions, exposure):
+    """Envoie le rapport via ntfy.sh — gratuit, sans inscription."""
+    sign = "+" if total_pnl >= 0 else ""
+    title = f"Bot Polymarket | {sign}${total_pnl:.2f} ({sign}{total_pnl_pct:.1f}%)"
+
+    # Version compacte pour la notification
+    try:
+        resp = requests.post(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=report.encode("utf-8"),
+            headers={
+                "Title": title,
+                "Tags": "chart_with_upwards_trend" if total_pnl >= 0 else "chart_with_downwards_trend",
+                "Priority": "3",
+            },
+            timeout=10,
+        )
+        if resp.ok:
+            print(f"Notification envoyée via ntfy.sh/{NTFY_TOPIC}")
+        else:
+            print(f"Erreur ntfy: {resp.status_code}")
+    except Exception as e:
+        print(f"Erreur envoi notification: {e}")
+
 
 if __name__ == "__main__":
     generate_report()
