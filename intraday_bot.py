@@ -145,7 +145,7 @@ class IntradayBot:
         self.iteration = 0
 
         # ── Modules ──
-        self.news_engine = NewsEngine(refresh_interval=120)
+        self.news_engine = NewsEngine(scan_interval=120)
         self.volume_detector = VolumeDetector(
             scan_interval=config.scan_interval_seconds,
             max_days_to_resolution=config.max_days_to_resolution,
