@@ -4,7 +4,8 @@ Stratégie Intraday Fader — 3 sous-stratégies combinées.
 
 1. News Fade: Surréaction à une news → fade le mouvement
 2. Volume Spike Fade: Volume anormal sans news confirmée → fade
-3. Mean Reversion: Prix extrême (>90% ou <10%) → pari sur le retour
+3. Last Minute Sniper: Marché proche de la résolution (1-6h), prix
+   manifestement faux → acheter le résultat quasi-certain
 
 Gestion du risque intégrée: sizing dynamique, stop-loss, take-profit.
 """
@@ -21,7 +22,7 @@ logger = logging.getLogger("intraday_fader")
 class SignalType(Enum):
     NEWS_FADE = "NEWS_FADE"
     VOLUME_SPIKE_FADE = "VOLUME_SPIKE_FADE"
-    MEAN_REVERSION = "MEAN_REVERSION"
+    LAST_MINUTE_SNIPER = "LAST_MINUTE_SNIPER"
 
 
 class Side(Enum):
@@ -278,83 +279,170 @@ class IntradayFader:
             max_hold_hours=1.5,
         )
 
-    # ── Sous-stratégie 3: Mean Reversion ──
+    # ── Sous-stratégie 3: Last Minute Sniper ──
 
-    def evaluate_mean_reversion(self, market,
-                                  hours_to_resolution: float) -> Optional[TradeSignal]:
+    def evaluate_last_minute_sniper(self, market,
+                                      hours_to_resolution: float,
+                                      news_items: list = None,
+                                      orderbook=None) -> Optional[TradeSignal]:
         """
-        Stratégie: Prix extrême (>90% ou <10%) → pari sur le retour au centre.
+        Stratégie: Marché brûlant, proche de sa résolution → le résultat
+        est quasi-connu mais le prix n'a pas encore convergé à 100%.
 
-        Conditions:
-        - Prix >90¢ ou <10¢
-        - Résolution dans >6h (pas trop proche)
-        - Pas de raison fondamentale claire pour l'extrême
+        On entre à la dernière minute pour capturer le spread restant.
+
+        Conditions d'entrée:
+        - Résolution dans 1-6h (assez proche pour que le résultat soit ~connu)
+        - Prix fort d'un côté (>85¢ YES ou >85¢ NO = résultat probable)
+        - Mais PAS encore à 95¢+ (sinon le gain est trop faible vs spread)
+        - News/données confirment la direction du prix
+        - Liquidité suffisante pour sortir
+
+        Sizing agressif car durée très courte et probabilité élevée.
         """
         price = market.yes_price
+        q_lower = market.question.lower()
 
-        if hours_to_resolution < 6:
-            return None  # Trop proche de la résolution
-
-        if hours_to_resolution > 72:
-            return None  # Trop loin, pas assez de edge
-
-        if market.liquidity < self.risk.min_liquidity_usd:
+        # ── Exclure les marchés trop aléatoires (pas de vrai edge) ──
+        noise_keywords = [
+            "temperature", "°c", "°f", "weather", "rainfall",
+            "wind", "humidity", "dew point",
+            "tweets from", "tweets in", "posts from",
+            "truth social posts", "how many",
+            "coin flip", "random", "dice",
+        ]
+        if any(kw in q_lower for kw in noise_keywords):
             return None
 
-        # Seuils de mean reversion
-        if price >= 0.92:
-            side = Side.BUY_NO
-            entry = 1.0 - price  # Prix du NO
-            target_yes = 0.85  # On vise un retour à 85¢
-            target = 1.0 - target_yes
-            stop_yes = 0.97
-            stop = 1.0 - stop_yes
-        elif price <= 0.08:
+        # ── Fenêtre temporelle : 1h à 6h avant résolution ──
+        if hours_to_resolution < 0.5:
+            return None  # Trop tard, risque de ne pas pouvoir sortir
+        if hours_to_resolution > 6:
+            return None  # Trop tôt, résultat pas encore clair
+
+        if market.liquidity < 500:
+            return None  # Minimum de liquidité
+
+        # ── Identifier le côté gagnant probable ──
+        # Le prix indique déjà la direction: >85¢ YES = YES va probablement gagner
+        side = None
+        entry = 0
+        target = 0
+        stop = 0
+
+        if price >= 0.85 and price <= 0.96:
+            # YES est très probable → acheter YES, attendre résolution à 1.00
             side = Side.BUY_YES
             entry = price
-            target = 0.15
-            stop = 0.03
+            target = 0.99  # On vise quasi-résolution
+            stop = price - 0.10  # Stop si le marché se retourne
+        elif price <= 0.15 and price >= 0.04:
+            # NO est très probable → acheter NO (YES va vers 0)
+            side = Side.BUY_NO
+            entry = 1.0 - price  # Prix du NO
+            target = 0.99  # NO va vers 1.00 si résolution NO
+            stop = entry - 0.10
         else:
-            return None
+            return None  # Prix trop neutre ou déjà convergé
 
+        # ── Vérifier que le spread n'annule pas le gain ──
+        if orderbook:
+            if orderbook.spread > 0.04:
+                return None  # Spread trop large, pas rentable
+
+        # ── Calculer R/R ──
         risk = abs(entry - stop)
         reward = abs(target - entry)
         if risk == 0:
             return None
         rr = reward / risk
 
-        if rr < self.risk.min_risk_reward:
-            return None
+        # R/R minimum plus bas car la probabilité de gain est très haute
+        if rr < 0.3:
+            return None  # Même pour du sniper, il faut un minimum
 
-        # Plus le prix est extrême, plus la confidence est haute
-        extremity = max(price, 1.0 - price)  # Distance from 50%
-        conf = min(0.55, 0.15 + (extremity - 0.85) * 3)
+        # ── Confidence scoring ──
+        conf = 0.0
+
+        # 1. Proximité de la résolution (plus c'est proche, plus le prix est fiable)
+        if hours_to_resolution <= 2:
+            conf += 0.35  # Très proche = prix très informatif
+        elif hours_to_resolution <= 4:
+            conf += 0.25
+        else:
+            conf += 0.15
+
+        # 2. Force du prix (plus le prix est extrême, plus le résultat est certain)
+        price_strength = max(price, 1.0 - price)  # Distance du 50%
+        if price_strength >= 0.93:
+            conf += 0.25
+        elif price_strength >= 0.90:
+            conf += 0.20
+        elif price_strength >= 0.87:
+            conf += 0.15
+        else:
+            conf += 0.10
+
+        # 3. News confirment la direction
+        if news_items:
+            conf += min(0.15, len(news_items) * 0.05)
+
+        # 4. Volume/liquidité élevé = le marché est actif et informé
+        if market.liquidity > 10000:
+            conf += 0.10
+        elif market.liquidity > 3000:
+            conf += 0.05
+
+        # 5. Orderbook confirme (profondeur du côté gagnant)
+        if orderbook:
+            if side == Side.BUY_YES and orderbook.imbalance > 0.2:
+                conf += 0.10  # Plus d'acheteurs YES = confirme
+            elif side == Side.BUY_NO and orderbook.imbalance < -0.2:
+                conf += 0.10
+
+        conf = min(0.90, conf)  # Cap à 90%
 
         if conf < self.risk.min_confidence:
             return None
 
+        # ── Sizing agressif (durée courte = risque temporel faible) ──
+        # On utilise le sizing normal mais avec un bonus pour le sniper
         size = self._calculate_size(conf, risk)
+        # Bonus: on peut aller jusqu'à 1.5x la taille normale car durée courte
+        size = min(self.risk.max_position_usd, size * 1.5)
 
         token_id = ""
         if market.tokens:
             idx = 0 if side == Side.BUY_YES else (1 if len(market.tokens) > 1 else 0)
             token_id = market.tokens[idx]
 
+        reasoning_parts = [
+            f"Prix={price:.0%}",
+            f"{hours_to_resolution:.1f}h avant résolution",
+            f"Liq=${market.liquidity:.0f}",
+        ]
+        if news_items:
+            reasoning_parts.append(f"{len(news_items)} news confirment")
+        if orderbook:
+            reasoning_parts.append(f"Spread={orderbook.spread:.3f}")
+        reasoning_parts.append(f"R/R={rr:.1f}")
+
         return TradeSignal(
-            signal_type=SignalType.MEAN_REVERSION,
+            signal_type=SignalType.LAST_MINUTE_SNIPER,
             condition_id=market.condition_id,
             question=market.question,
             side=side,
             entry_price=entry,
             target_price=target,
             stop_price=stop,
-            size_usd=size,
+            size_usd=round(size, 2),
             confidence=conf,
-            reasoning=f"Prix extrême {price:.0%} | {hours_to_resolution:.0f}h avant résolution | R/R={rr:.1f}",
+            reasoning=" | ".join(reasoning_parts),
             token_id=token_id,
             slug=market.slug,
             risk_reward=rr,
-            max_hold_hours=min(hours_to_resolution * 0.5, 8.0),
+            # Hold max = temps restant avant résolution (on attend la résolution)
+            max_hold_hours=min(hours_to_resolution + 1, 8.0),
         )
 
     # ── Position management ──

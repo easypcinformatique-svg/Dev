@@ -5,7 +5,7 @@ Intraday Fader Bot — Bot de trading intraday Polymarket.
 Combine 3 stratégies:
 1. News Fade: Surréaction à une news → fade le mouvement
 2. Volume Spike Fade: Volume anormal sans news confirmée → fade
-3. Mean Reversion: Prix extrême (>90% ou <10%) → retour au centre
+3. Last Minute Sniper: Marché brûlant proche résolution → sniper le résultat
 
 Scan toutes les 30-60s, trade court terme (1-4h max).
 
@@ -68,7 +68,7 @@ class IntradayBotConfig:
     # Stratégies activées
     enable_news_fade: bool = True
     enable_volume_spike: bool = True
-    enable_mean_reversion: bool = True
+    enable_last_minute_sniper: bool = True
 
     # Exécution
     dry_run: bool = True
@@ -253,7 +253,7 @@ class IntradayBot:
         logger.info(f"  Strategies:  "
                      f"{'NEWS ' if self.config.enable_news_fade else ''}"
                      f"{'VOL_SPIKE ' if self.config.enable_volume_spike else ''}"
-                     f"{'MEAN_REV ' if self.config.enable_mean_reversion else ''}")
+                     f"{'SNIPER ' if self.config.enable_last_minute_sniper else ''}")
         logger.info(f"  Marchés:     ≤{self.config.max_days_to_resolution}j de résolution")
         logger.info("=" * 60)
 
@@ -264,9 +264,15 @@ class IntradayBot:
         logger.info("Démarrage VolumeDetector...")
         self.volume_detector.start_background()
 
-        # Attendre le premier scan
-        logger.info("Attente du premier scan (30s)...")
-        time.sleep(30)
+        # Attendre le premier scan du VolumeDetector (~2-3min pour Gamma API)
+        logger.info("Attente du premier scan VolumeDetector (~3min)...")
+        for i in range(180):
+            if self.volume_detector.active_markets:
+                logger.info(f"  VolumeDetector prêt: {len(self.volume_detector.active_markets)} marchés")
+                break
+            time.sleep(1)
+        else:
+            logger.warning("  VolumeDetector timeout — démarrage avec données partielles")
 
         self.notifier.send(
             f"🤖 <b>Intraday Fader Bot Started</b>\n"
@@ -303,11 +309,16 @@ class IntradayBot:
     def _run_cycle(self):
         """Un cycle complet: check exits → scan → evaluate → trade."""
         now = datetime.now(timezone.utc)
+        n_markets = len(self.volume_detector.active_markets)
 
+        # Log chaque cycle (compact) ou détaillé toutes les 20
         if self.iteration % 20 == 0:
             logger.info(f"\n{'─' * 50}")
-            logger.info(f"  Cycle #{self.iteration} | {now:%H:%M:%S} UTC")
+            logger.info(f"  Cycle #{self.iteration} | {now:%H:%M:%S} UTC | "
+                        f"{n_markets} marchés | {len(self.fader.open_positions)} pos")
             logger.info(f"{'─' * 50}")
+        else:
+            logger.debug(f"Cycle #{self.iteration} | {n_markets} marchés")
 
         # 1. Check exits sur positions ouvertes
         self._check_exits()
@@ -332,10 +343,10 @@ class IntradayBot:
             vol_signals = self._evaluate_volume_spikes()
             signals.extend(vol_signals)
 
-        # 3c. Mean Reversion
-        if self.config.enable_mean_reversion:
-            mr_signals = self._evaluate_mean_reversion()
-            signals.extend(mr_signals)
+        # 3c. Last Minute Sniper
+        if self.config.enable_last_minute_sniper:
+            sniper_signals = self._evaluate_last_minute_sniper()
+            signals.extend(sniper_signals)
 
         # 4. Exécuter les meilleurs signaux
         if signals:
@@ -358,7 +369,7 @@ class IntradayBot:
 
         for move in fade_opps:
             # Vérifier s'il y a des news liées
-            news = self.news_engine.search_news(move.question, minutes=30)
+            _, news = self.news_engine.match_news_to_market(move.question, minutes=30)
 
             # Éviter les doublons (déjà en position sur ce marché)
             already_in = any(
@@ -405,31 +416,72 @@ class IntradayBot:
 
         return signals
 
-    def _evaluate_mean_reversion(self):
-        """Évalue les opportunités de mean reversion."""
+    def _evaluate_last_minute_sniper(self):
+        """
+        Évalue les marchés brûlants proches de la résolution (1-6h).
+        Cherche les prix forts (>85% d'un côté) pas encore convergés à 100%.
+        Optimisé: filtre rapide d'abord, appels API seulement sur le top 10.
+        """
         signals = []
         now = datetime.now(timezone.utc)
         markets = self.volume_detector.get_short_term_markets()
 
+        # Phase 1: Filtre rapide (aucun appel API)
+        pre_candidates = []
         for cid, market in markets.items():
-            # Filtrer les prix extrêmes
-            if 0.08 < market.yes_price < 0.92:
+            if not market.end_date:
                 continue
-
+            hours_left = (market.end_date - now).total_seconds() / 3600
+            if hours_left < 0.5 or hours_left > 6:
+                continue
+            price = market.yes_price
+            if 0.15 < price < 0.85:
+                continue
+            if price > 0.96 or price < 0.04:
+                continue
+            if market.liquidity < 500:
+                continue
             already_in = any(
                 p["condition_id"] == cid
                 for p in self.fader.open_positions
             )
             if already_in:
                 continue
+            # Score rapide: prix extrême + proximité
+            strength = max(price, 1.0 - price)
+            score = strength + (1.0 / max(hours_left, 0.5))
+            pre_candidates.append((cid, market, hours_left, score))
 
-            if not market.end_date:
-                continue
+        # Trier et garder top 10
+        pre_candidates.sort(key=lambda x: x[3], reverse=True)
+        top = pre_candidates[:10]
 
-            hours_left = (market.end_date - now).total_seconds() / 3600
-            signal = self.fader.evaluate_mean_reversion(market, hours_left)
+        if top and self.iteration % 10 == 0:
+            logger.info(f"  🎯 Sniper: {len(pre_candidates)} candidats, "
+                        f"top {len(top)} évalués")
+
+        # Phase 2: Évaluation détaillée (appels API limités)
+        for i, (cid, market, hours_left, _) in enumerate(top):
+            # News matching (local, pas d'appel réseau)
+            _, news = self.news_engine.match_news_to_market(
+                market.question, minutes=120
+            )
+
+            # Orderbook seulement pour le top 5
+            orderbook = None
+            if i < 5 and market.tokens:
+                orderbook = self.volume_detector.get_orderbook(market.tokens[0])
+
+            signal = self.fader.evaluate_last_minute_sniper(
+                market, hours_left, news, orderbook
+            )
             if signal:
                 signals.append(signal)
+                logger.info(
+                    f"  🔥 SNIPER: {market.question[:45]} | "
+                    f"prix={market.yes_price:.0%} | {hours_left:.1f}h | "
+                    f"conf={signal.confidence:.0%}"
+                )
 
         return signals
 
@@ -538,7 +590,7 @@ class IntradayBot:
     def _print_dashboard(self):
         stats = self.fader.get_stats()
         n_markets = len(self.volume_detector.active_markets)
-        n_news = len(self.news_engine.get_recent_news(minutes=60))
+        n_news = len(self.news_engine.get_recent_alerts(minutes=60))
         uptime = datetime.now(timezone.utc) - self.start_time
 
         logger.info("")
@@ -629,7 +681,7 @@ Exemples:
   # Real money
   python intraday_bot.py --real-money --private-key 0x...
 
-  # Seulement mean reversion
+  # Seulement le sniper
   python intraday_bot.py --no-news-fade --no-volume-spike
 
   # Avec Telegram
@@ -660,8 +712,8 @@ Exemples:
                         help="Désactiver la stratégie News Fade")
     parser.add_argument("--no-volume-spike", action="store_true",
                         help="Désactiver la stratégie Volume Spike")
-    parser.add_argument("--no-mean-reversion", action="store_true",
-                        help="Désactiver la stratégie Mean Reversion")
+    parser.add_argument("--no-sniper", action="store_true",
+                        help="Désactiver la stratégie Last Minute Sniper")
 
     # Confidence
     parser.add_argument("--min-confidence", type=float, default=0.30,
@@ -695,7 +747,7 @@ Exemples:
         max_days_to_resolution=args.max_days,
         enable_news_fade=not args.no_news_fade,
         enable_volume_spike=not args.no_volume_spike,
-        enable_mean_reversion=not args.no_mean_reversion,
+        enable_last_minute_sniper=not args.no_sniper,
         dry_run=not args.real_money,
         telegram_token=args.telegram_token,
         telegram_chat_id=args.telegram_chat,
