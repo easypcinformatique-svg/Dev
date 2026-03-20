@@ -147,11 +147,18 @@ class IntradayFader:
         if rr < self.risk.min_risk_reward:
             return None
 
-        # Bonus confidence si news multiples confirment surréaction
+        # Confidence avancée basée sur la qualité des signaux
         conf = price_move.fade_confidence
         if news_items:
-            # News existe mais mouvement excessif
-            conf = min(1.0, conf + 0.1)
+            # News existe mais mouvement excessif → surréaction probable
+            # Bonus proportionnel au nombre de sources (multi-source = plus fiable)
+            source_count = len(set(getattr(n, 'source', str(i)) for i, n in enumerate(news_items)))
+            conf = min(1.0, conf + 0.05 * source_count)
+            # Si les news sont contradictoires avec le mouvement, gros bonus
+            avg_sentiment = sum(getattr(n, 'sentiment', 0) for n in news_items) / max(len(news_items), 1)
+            if (price_move.price_change_pct > 0 and avg_sentiment < 0) or \
+               (price_move.price_change_pct < 0 and avg_sentiment > 0):
+                conf = min(1.0, conf + 0.15)  # News contredit le mouvement
 
         size = self._calculate_size(conf, risk)
 
@@ -361,46 +368,52 @@ class IntradayFader:
         if rr < 0.3:
             return None  # Même pour du sniper, il faut un minimum
 
-        # ── Confidence scoring ──
+        # ── Confidence scoring avancé ──
         conf = 0.0
 
-        # 1. Proximité de la résolution (plus c'est proche, plus le prix est fiable)
-        if hours_to_resolution <= 2:
-            conf += 0.35  # Très proche = prix très informatif
-        elif hours_to_resolution <= 4:
-            conf += 0.25
-        else:
-            conf += 0.15
+        # 1. Proximité de la résolution (scoring continu, pas par paliers)
+        # Plus c'est proche, plus le prix est informatif (asymptote)
+        time_score = max(0.15, 0.40 * (1 - hours_to_resolution / 6))
+        conf += time_score
 
-        # 2. Force du prix (plus le prix est extrême, plus le résultat est certain)
-        price_strength = max(price, 1.0 - price)  # Distance du 50%
-        if price_strength >= 0.93:
-            conf += 0.25
-        elif price_strength >= 0.90:
-            conf += 0.20
-        elif price_strength >= 0.87:
-            conf += 0.15
-        else:
-            conf += 0.10
+        # 2. Force du prix (scoring continu basé sur la distance du 50%)
+        price_strength = max(price, 1.0 - price)
+        # Sigmoid-like : accélère fortement au-dessus de 0.90
+        price_score = max(0.05, (price_strength - 0.75) * 1.5)
+        price_score = min(0.30, price_score)
+        conf += price_score
 
-        # 3. News confirment la direction
+        # 3. News confirment la direction avec analyse du sentiment
         if news_items:
-            conf += min(0.15, len(news_items) * 0.05)
+            news_bonus = min(0.15, len(news_items) * 0.04)
+            # Si les news ont un sentiment aligné avec notre trade
+            news_sentiments = [getattr(n, 'sentiment', 0) for n in news_items]
+            avg_news_sentiment = sum(news_sentiments) / max(len(news_sentiments), 1)
+            if side == Side.BUY_YES and avg_news_sentiment > 0:
+                news_bonus *= 1.5
+            elif side == Side.BUY_NO and avg_news_sentiment < 0:
+                news_bonus *= 1.5
+            conf += min(0.18, news_bonus)
 
-        # 4. Volume/liquidité élevé = le marché est actif et informé
-        if market.liquidity > 10000:
-            conf += 0.10
-        elif market.liquidity > 3000:
-            conf += 0.05
+        # 4. Volume/liquidité (scoring continu logarithmique)
+        import math
+        if market.liquidity > 500:
+            liq_score = min(0.12, 0.03 * math.log2(market.liquidity / 500))
+            conf += liq_score
 
-        # 5. Orderbook confirme (profondeur du côté gagnant)
+        # 5. Orderbook confirmation avec intensité
         if orderbook:
-            if side == Side.BUY_YES and orderbook.imbalance > 0.2:
-                conf += 0.10  # Plus d'acheteurs YES = confirme
-            elif side == Side.BUY_NO and orderbook.imbalance < -0.2:
-                conf += 0.10
+            if side == Side.BUY_YES and orderbook.imbalance > 0.1:
+                conf += min(0.12, orderbook.imbalance * 0.3)
+            elif side == Side.BUY_NO and orderbook.imbalance < -0.1:
+                conf += min(0.12, abs(orderbook.imbalance) * 0.3)
+            # Pénalité si orderbook contredit le trade
+            elif side == Side.BUY_YES and orderbook.imbalance < -0.3:
+                conf -= 0.08
+            elif side == Side.BUY_NO and orderbook.imbalance > 0.3:
+                conf -= 0.08
 
-        conf = min(0.90, conf)  # Cap à 90%
+        conf = max(0.0, min(0.92, conf))  # Cap à 92%
 
         if conf < self.risk.min_confidence:
             return None
@@ -550,25 +563,44 @@ class IntradayFader:
 
     def _calculate_size(self, confidence: float, risk_per_unit: float) -> float:
         """
-        Position sizing proportionnel à la confidence.
+        Position sizing amélioré — proportionnel au risque, pas au bankroll.
 
-        Formule simple et bornée :
-          fraction = confidence * risk_fraction (défaut 5% du bankroll)
-          size = bankroll * fraction
-        Clampé entre min et max position.
+        Approche Risk-Parity inspirée de Bridgewater :
+        - On risque un % fixe du bankroll par trade (risk-based sizing)
+        - Puis on ajuste par la confidence
+        - Anti-tilt : réduction après des pertes
         """
-        # Fraction du bankroll : 2% à 8% selon confidence (0.3 → 2%, 0.9 → 8%)
-        base_fraction = 0.02 + (confidence - 0.3) * 0.10  # linéaire
-        base_fraction = max(0.02, min(0.08, base_fraction))
+        # Risk budget : 1% à 4% du bankroll risqué par trade
+        risk_pct = 0.01 + (confidence - 0.3) * 0.05  # 1% à 4%
+        risk_pct = max(0.01, min(0.04, risk_pct))
 
-        raw_size = self.bankroll * base_fraction
+        # Sizing basé sur le risque : si stop-loss = 5%, et on veut risquer 2%
+        # alors size = bankroll * 2% / 5% du size
+        if risk_per_unit > 0.001:
+            raw_size = self.bankroll * risk_pct / risk_per_unit
+        else:
+            raw_size = self.bankroll * risk_pct
 
         # Clamp aux limites
         size = max(self.risk.min_position_usd, min(self.risk.max_position_usd, raw_size))
 
+        # Anti-tilt : réduire après des pertes consécutives
+        recent_losses = 0
+        for t in reversed(self.trade_history[-5:]):
+            if t.get("pnl", 0) < 0:
+                recent_losses += 1
+            else:
+                break
+        if recent_losses >= 3:
+            size *= 0.5  # Réduire de 50% après 3 pertes
+        elif recent_losses >= 2:
+            size *= 0.75
+
         # Réduire si proche du stop journalier
         remaining = self.risk.max_daily_loss_usd + self.daily_pnl
-        if remaining < size:
+        if remaining < size * 0.5:
+            size = max(self.risk.min_position_usd, remaining * 0.3)
+        elif remaining < size:
             size = max(self.risk.min_position_usd, remaining * 0.5)
 
         return round(size, 2)

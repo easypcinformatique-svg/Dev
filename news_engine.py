@@ -216,31 +216,58 @@ class NewsEngine:
         return items
 
     def _score_news(self, news: NewsItem):
-        """Score un article par pertinence pour Polymarket."""
+        """Score un article par pertinence pour Polymarket — NLP amélioré."""
         title_lower = news.title.lower()
         total_score = 0.0
         matched = []
 
+        # Keyword matching avec bonus pour co-occurrence
         for keyword, weight in HIGH_VALUE_KEYWORDS.items():
             if keyword in title_lower:
                 total_score += weight
                 matched.append(keyword)
 
+        # Bonus co-occurrence : 2+ keywords à haute valeur = breaking news probable
+        high_value_matches = [kw for kw in matched if HIGH_VALUE_KEYWORDS.get(kw, 0) >= 2.5]
+        if len(high_value_matches) >= 2:
+            total_score *= 1.5  # Multiplicateur pour multi-keyword match
+
         news.keywords_matched = matched
         news.relevance_score = min(total_score, 10.0)
 
-        # Sentiment basique basé sur les mots
-        bullish_words = ["deal", "peace", "agreement", "rally", "surge", "win",
-                         "approve", "pass", "success", "recover", "rise", "gain"]
-        bearish_words = ["crash", "war", "crisis", "fail", "reject", "loss",
-                         "collapse", "default", "scandal", "arrest", "die",
-                         "kill", "attack", "bomb", "strike", "sanction"]
+        # Sentiment avancé avec pondération contextuelle
+        bullish_words = {
+            "deal": 1.0, "peace": 1.5, "agreement": 1.0, "rally": 0.8,
+            "surge": 1.0, "win": 0.8, "approve": 1.2, "pass": 0.8,
+            "success": 0.8, "recover": 1.0, "rise": 0.7, "gain": 0.7,
+            "ceasefire": 1.5, "breakthrough": 1.3, "record high": 1.2,
+            "resolved": 1.0, "confirmed": 0.8, "signed": 1.0,
+        }
+        bearish_words = {
+            "crash": 1.5, "war": 1.5, "crisis": 1.2, "fail": 1.0,
+            "reject": 1.0, "loss": 0.7, "collapse": 1.5, "default": 1.5,
+            "scandal": 1.0, "arrest": 1.2, "die": 1.0, "kill": 1.3,
+            "attack": 1.3, "bomb": 1.5, "strike": 1.0, "sanction": 1.0,
+            "threat": 1.0, "warning": 0.8, "plunge": 1.2, "tumble": 1.0,
+            "emergency": 1.2, "escalat": 1.3, "suspend": 1.0,
+        }
 
-        bull = sum(1 for w in bullish_words if w in title_lower)
-        bear = sum(1 for w in bearish_words if w in title_lower)
+        # Negation detection basique
+        negation_words = {"not", "no", "don't", "doesn't", "won't", "isn't", "aren't",
+                          "never", "unlikely", "denies", "denied", "refuses"}
+        words = title_lower.split()
+        has_negation = bool(negation_words & set(words))
 
-        if bull + bear > 0:
-            news.sentiment = (bull - bear) / (bull + bear)
+        bull_score = sum(w for word, w in bullish_words.items() if word in title_lower)
+        bear_score = sum(w for word, w in bearish_words.items() if word in title_lower)
+
+        # Si négation détectée, inverser partiellement le sentiment
+        if has_negation:
+            bull_score, bear_score = bear_score * 0.6, bull_score * 0.6
+
+        total_sentiment = bull_score + bear_score
+        if total_sentiment > 0:
+            news.sentiment = (bull_score - bear_score) / total_sentiment
 
     def _scan_all_feeds(self):
         """Scan tous les flux RSS."""
@@ -323,7 +350,13 @@ class NewsEngine:
                 else:
                     direction = "UNCERTAIN"
 
-                urgency = min(10.0, spike_ratio * 1.5 + sources * 0.5)
+                # Urgency scoring amélioré : pondère la diversité des sources
+                # et la vélocité, avec bonus pour les keywords géopolitiques
+                geo_bonus = 1.5 if keyword in ("war", "nuclear", "invasion",
+                                                "ceasefire", "missile", "attack") else 1.0
+                urgency = min(10.0,
+                              (spike_ratio * 1.2 + sources * 0.8 +
+                               len(related_news) * 0.3) * geo_bonus)
 
                 alert = BreakingAlert(
                     news_items=related_news,
@@ -427,11 +460,29 @@ class NewsEngine:
         if not matched_news:
             return 0.0, []
 
-        # Score = somme des relevance scores normalisée
+        # Score amélioré : TF-IDF inspiré
+        # Plus un keyword est rare dans les news mais présent dans le match, plus c'est pertinent
         total_relevance = sum(n.relevance_score for n in matched_news)
         source_diversity = len(set(n.source for n in matched_news))
 
-        score = min(10.0, total_relevance * 0.5 + source_diversity * 1.0)
+        # Bonus pour recency (news très récentes = plus pertinentes)
+        now = datetime.now(timezone.utc)
+        recency_bonus = sum(
+            max(0, 1.0 - (now - n.detected_at).total_seconds() / 3600)
+            for n in matched_news
+        ) / max(len(matched_news), 1)
+
+        # Bonus pour le nombre de keywords matchés en commun
+        keyword_overlap = 0
+        for n in matched_news:
+            overlap = len(set(n.keywords_matched) & set(keywords))
+            keyword_overlap += overlap
+
+        score = min(10.0,
+                    total_relevance * 0.4 +
+                    source_diversity * 0.8 +
+                    recency_bonus * 1.5 +
+                    keyword_overlap * 0.3)
         return score, matched_news
 
     @staticmethod

@@ -7,6 +7,7 @@ Identifie les surréactions en temps réel pour le fading intraday.
 import time
 import logging
 import requests
+import numpy as np
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -253,8 +254,17 @@ class VolumeDetector:
 
                 change_pct = (current_price - ref_price) / ref_price * 100
 
-                # Seuil dynamique selon la fenêtre
-                threshold = {5: 3.0, 15: 5.0, 30: 8.0, 60: 12.0}[window_min]
+                # Seuil dynamique adaptatif : basé sur la volatilité historique du marché
+                base_threshold = {5: 3.0, 15: 5.0, 30: 8.0, 60: 12.0}[window_min]
+                # Ajuster le seuil par la volatilité récente du marché
+                recent_prices = [p for _, p in history[-20:]]
+                if len(recent_prices) >= 5:
+                    hist_vol = np.std(recent_prices) / max(np.mean(recent_prices), 0.01) * 100
+                    # Marchés volatils → seuil plus haut (éviter faux signaux)
+                    vol_adjustment = max(0.5, min(2.0, hist_vol / 5.0))
+                    threshold = base_threshold * vol_adjustment
+                else:
+                    threshold = base_threshold
 
                 if abs(change_pct) < threshold:
                     continue
@@ -328,59 +338,70 @@ class VolumeDetector:
                                      market: MarketSnapshot) -> float:
         """
         Calcule la probabilité que le mouvement se reverse (fade).
+        Version améliorée avec analyse statistique et facteurs multiples.
 
-        Principes des meilleurs faders:
-        1. Plus le mouvement est rapide, plus il est probable qu'il se reverse
-        2. Les spikes de volume sans confirmation multi-source sont souvent faux
-        3. Les prix extrêmes (>90% ou <10%) ont une tendance naturelle à revenir
-        4. Les marchés avec plus de liquidité sont plus efficients (moins de fading)
+        Améliorations :
+        - Score continu au lieu de paliers discrets (plus précis)
+        - Analyse de la persistance du mouvement (momentum vs noise)
+        - Facteur de surprise (écart par rapport au comportement habituel)
+        - Asymétrie up/down (les paniques se reversent plus que les rallyes)
         """
         conf = 0.0
-
-        # 1. Magnitude du mouvement (surréaction)
         abs_change = abs(change_pct)
-        if abs_change > 20:
-            conf += 0.30  # Mouvement extrême = forte probabilité de reversal
-        elif abs_change > 10:
-            conf += 0.20
-        elif abs_change > 5:
-            conf += 0.10
 
-        # 2. Rapidité (mouvement rapide = moins réfléchi)
-        speed_factor = abs_change / max(window_min, 1)
-        if speed_factor > 2.0:
-            conf += 0.20
-        elif speed_factor > 1.0:
-            conf += 0.10
+        # 1. Magnitude (scoring continu logarithmique)
+        # log-scale : les mouvements extrêmes ont une prob de fade non-linéaire
+        if abs_change > 3:
+            magnitude_score = min(0.35, 0.10 * np.log2(abs_change / 3))
+            conf += magnitude_score
 
-        # 3. Volume spike (volume élevé sans news = panic/FOMO)
-        if vol_ratio > 10:
-            conf += 0.15
-        elif vol_ratio > 5:
-            conf += 0.10
-        elif vol_ratio > 2:
-            conf += 0.05
+        # 2. Rapidité (mouvement/minute — scoring continu)
+        speed = abs_change / max(window_min, 1)
+        speed_score = min(0.25, speed * 0.08)
+        conf += speed_score
 
-        # 4. Prix extrême (mean reversion)
+        # 3. Volume spike avec asymétrie
+        if vol_ratio > 1.5:
+            vol_score = min(0.20, 0.04 * np.log2(vol_ratio))
+            conf += vol_score
+
+        # 4. Prix extrême (scoring continu basé sur distance de 0.5)
         price = market.yes_price
-        if price > 0.92 or price < 0.08:
-            conf += 0.15  # Extrême
-        elif price > 0.85 or price < 0.15:
-            conf += 0.08
+        extremeness = abs(price - 0.5) * 2  # 0 au centre, 1 aux extrêmes
+        if extremeness > 0.7:
+            conf += min(0.15, (extremeness - 0.7) * 0.5)
 
-        # 5. Pénalité: marché très liquide = mouvement plus légitime
+        # 5. Asymétrie up/down : les paniques (down) se reversent plus souvent
+        if change_pct < 0:
+            conf += 0.05  # Bias de fade pour les mouvements baissiers
+
+        # 6. Persistance check : si l'historique montre déjà un reversal, bonus
+        cid = market.condition_id
+        if cid in self.price_history and len(self.price_history[cid]) >= 3:
+            prices = [p for _, p in self.price_history[cid][-5:]]
+            if len(prices) >= 3:
+                # Vérifier si le mouvement récent montre un début de reversal
+                last_move = prices[-1] - prices[-2]
+                main_move = prices[-1] - prices[0]
+                if main_move != 0 and (last_move / main_move) < 0:
+                    # Déjà en train de reverser !
+                    conf += 0.10
+
+        # 7. Pénalité: liquidité élevée (mouvement plus légitime)
         if market.liquidity > 50000:
-            conf -= 0.10
+            conf *= 0.75
         elif market.liquidity > 20000:
-            conf -= 0.05
+            conf *= 0.85
 
-        # 6. Pénalité: proche de la résolution (le marché a raison)
+        # 8. Pénalité: proche de la résolution
         if market.end_date:
             hours_left = (market.end_date - datetime.now(timezone.utc)).total_seconds() / 3600
-            if hours_left < 2:
-                conf -= 0.20  # Trop proche, probablement légitime
+            if hours_left < 1:
+                conf *= 0.3  # Très proche : probablement légitime
+            elif hours_left < 3:
+                conf *= 0.6
             elif hours_left < 6:
-                conf -= 0.10
+                conf *= 0.8
 
         return max(0.0, min(1.0, conf))
 

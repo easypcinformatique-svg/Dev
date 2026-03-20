@@ -60,20 +60,37 @@ class SentimentResult:
 
     @property
     def composite_score(self) -> float:
-        """Score composite combinant Twitter sentiment + Grok/VADER analysis."""
+        """Score composite amélioré — pondération adaptative + consensus check."""
         twitter_score = np.clip(self.weighted_sentiment, -1, 1)
         grok_score = (self.grok_probability - 0.5) * 2  # Map 0-1 a -1..+1
         grok_weight = self.grok_confidence
 
+        # Facteur de fiabilité : plus on a de tweets, plus le signal est fiable
+        tweet_reliability = min(1.0, self.tweet_count / 15.0)
+        # Consensus : faible std = fort consensus entre tweets = signal plus fiable
+        consensus_factor = max(0.3, 1.0 - self.sentiment_std) if self.tweet_count >= 3 else 0.5
+
         if grok_weight > 0:
-            # Mode API : 40% Twitter + 60% Grok
+            # Mode API : pondération adaptative Grok/Twitter
+            # Si Grok est très confiant ET Twitter concorde → signal fort
+            agreement = 1.0 if (twitter_score > 0 and grok_score > 0) or \
+                               (twitter_score < 0 and grok_score < 0) else 0.5
             composite = (
-                0.4 * twitter_score +
-                0.6 * grok_score * grok_weight
+                0.35 * twitter_score * tweet_reliability +
+                0.50 * grok_score * grok_weight +
+                0.15 * (twitter_score + grok_score) / 2 * agreement
             )
         else:
-            # Mode scraping/VADER : 100% sentiment Twitter (analyse par VADER)
-            composite = twitter_score
+            # Mode VADER : pondérer par la fiabilité et le consensus
+            composite = twitter_score * tweet_reliability * consensus_factor
+
+        # Bonus/pénalité pour engagement total (beaucoup d'engagement = signal plus fort)
+        if self.total_engagement > 100:
+            engagement_boost = min(0.15, np.log10(self.total_engagement / 100) * 0.1)
+            if composite > 0:
+                composite += engagement_boost
+            else:
+                composite -= engagement_boost
 
         return float(np.clip(composite, -1, 1))
 
@@ -115,7 +132,7 @@ class VaderAnalyzer:
         tweets: list[dict],
         current_price: float,
     ) -> dict:
-        """Estime la probabilite a partir du sentiment moyen des tweets."""
+        """Estime la probabilité — pondération par engagement + analyse avancée."""
         if not tweets:
             return {
                 "probability": current_price,
@@ -129,28 +146,55 @@ class VaderAnalyzer:
         avg = np.mean(sentiments) if sentiments else 0.0
         std = np.std(sentiments) if len(sentiments) > 1 else 1.0
 
-        # Convertir le sentiment en ajustement de probabilite
-        # avg in [-1, +1] => shift de -15% a +15% max
-        shift = avg * 0.15
+        # Sentiment pondéré par l'engagement (tweets influents comptent plus)
+        engagement_weights = []
+        for t in tweets:
+            eng = 1 + t.get("likes", 0) + t.get("retweets", 0) * 2 + t.get("quotes", 0) * 3
+            # Bonus pour les comptes à fort following
+            followers = t.get("followers", 0)
+            if followers > 100000:
+                eng *= 3.0
+            elif followers > 10000:
+                eng *= 2.0
+            elif followers > 1000:
+                eng *= 1.5
+            engagement_weights.append(eng)
+
+        if engagement_weights and sentiments:
+            total_eng = sum(engagement_weights[:len(sentiments)])
+            weighted_avg = sum(
+                s * w for s, w in zip(sentiments, engagement_weights[:len(sentiments)])
+            ) / max(total_eng, 1)
+        else:
+            weighted_avg = avg
+
+        # Shift adaptatif : proportionnel au consensus et au nombre de tweets
+        # Plus de tweets = plus de confiance dans le shift
+        sample_factor = min(1.0, len(sentiments) / 20.0)
+        consensus_factor = max(0.3, 1.0 - std) if len(sentiments) >= 3 else 0.3
+        shift = weighted_avg * 0.18 * sample_factor * consensus_factor
         estimated_prob = np.clip(current_price + shift, 0.05, 0.95)
 
-        # Confiance basee sur le consensus (faible std = fort consensus)
+        # Confiance améliorée
         consensus = max(0, 1.0 - std) if len(sentiments) >= 3 else 0.3
-        confidence = min(consensus * (len(sentiments) / 20.0), 0.85)
+        confidence = min(consensus * sample_factor, 0.85)
+        # Bonus si le sentiment pondéré et non-pondéré sont alignés
+        if (avg > 0 and weighted_avg > 0) or (avg < 0 and weighted_avg < 0):
+            confidence = min(confidence * 1.2, 0.85)
 
-        if avg > 0.15:
+        if weighted_avg > 0.12:
             sentiment_label = "bullish"
-        elif avg < -0.15:
+        elif weighted_avg < -0.12:
             sentiment_label = "bearish"
         else:
             sentiment_label = "neutral"
 
-        # Discretiser en -1, 0, +1 pour compatibilite
+        # Discretiser avec seuils ajustés
         discrete_sentiments = []
         for s in sentiments:
-            if s > 0.2:
+            if s > 0.15:
                 discrete_sentiments.append(1)
-            elif s < -0.2:
+            elif s < -0.15:
                 discrete_sentiments.append(-1)
             else:
                 discrete_sentiments.append(0)
@@ -159,7 +203,7 @@ class VaderAnalyzer:
             "probability": float(estimated_prob),
             "confidence": float(confidence),
             "sentiment": sentiment_label,
-            "reasoning": f"VADER: avg={avg:+.2f} std={std:.2f} sur {len(sentiments)} tweets",
+            "reasoning": f"VADER: avg={avg:+.2f} weighted={weighted_avg:+.2f} std={std:.2f} sur {len(sentiments)} tweets",
             "tweet_sentiments": discrete_sentiments,
         }
 

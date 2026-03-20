@@ -188,10 +188,44 @@ class StateStore:
 # ================================================================
 
 class RiskManager:
-    """Gestion du risque en temps reel."""
+    """Gestion du risque avancee — inspiree des risk desks de hedge funds."""
 
     def __init__(self, config: BotConfig):
         self.config = config
+        self._consecutive_losses = 0
+        self._max_consecutive_losses = 0
+        self._recent_pnls: list[float] = []  # 20 derniers PnL pour analyse
+
+    def record_trade_result(self, pnl: float):
+        """Enregistre le resultat d'un trade pour adapter le risk."""
+        self._recent_pnls.append(pnl)
+        if len(self._recent_pnls) > 20:
+            self._recent_pnls.pop(0)
+        if pnl < 0:
+            self._consecutive_losses += 1
+            self._max_consecutive_losses = max(
+                self._max_consecutive_losses, self._consecutive_losses
+            )
+        else:
+            self._consecutive_losses = 0
+
+    def _get_risk_multiplier(self) -> float:
+        """Multiplicateur de risque dynamique base sur la performance recente."""
+        # Apres des pertes consecutives, reduire le risque (anti-tilt)
+        if self._consecutive_losses >= 4:
+            return 0.25  # Reduire a 25% apres 4 pertes de suite
+        elif self._consecutive_losses >= 3:
+            return 0.50
+        elif self._consecutive_losses >= 2:
+            return 0.75
+
+        # Si on est en winning streak, augmenter legerement
+        if len(self._recent_pnls) >= 5:
+            recent_wins = sum(1 for p in self._recent_pnls[-5:] if p > 0)
+            if recent_wins >= 4:
+                return 1.15  # 15% bonus pendant les bonnes periodes
+
+        return 1.0
 
     def can_open_position(
         self,
@@ -220,15 +254,33 @@ class RiskManager:
         if size_usd > state.capital * 0.95:
             return False, "insufficient_capital"
 
-        # Daily loss limit
-        if state.daily_pnl < -(equity * self.config.daily_loss_limit_pct):
-            return False, "daily_loss_limit"
+        # Daily loss limit dynamique : se resserre si on perd beaucoup
+        risk_mult = self._get_risk_multiplier()
+        effective_daily_limit = self.config.daily_loss_limit_pct * risk_mult
+        if state.daily_pnl < -(equity * effective_daily_limit):
+            return False, f"daily_loss_limit (adjusted x{risk_mult:.2f})"
 
-        # Max drawdown
+        # Max drawdown dynamique : warning zone avant le hard stop
         if state.peak_equity > 0:
             current_dd = (state.peak_equity - equity) / state.peak_equity
             if current_dd > self.config.max_drawdown_pct:
                 return False, f"max_drawdown ({current_dd:.1%})"
+            # Warning zone : reduire le sizing quand on approche du drawdown max
+            if current_dd > self.config.max_drawdown_pct * 0.7:
+                return True, "warning_drawdown"  # Autorise mais avec warning
+
+        # Anti-correlation check : eviter de concentrer le risque
+        # sur un seul type de marche (toutes les positions du meme cote)
+        if len(state.positions) >= 3:
+            sides = [
+                p.get("side", "YES") if isinstance(p, dict) else p.side
+                for p in state.positions.values()
+            ]
+            yes_count = sum(1 for s in sides if s == "YES")
+            no_count = len(sides) - yes_count
+            # Si > 80% du meme cote, reduire
+            if max(yes_count, no_count) / len(sides) > 0.8:
+                return True, "concentration_warning"
 
         return True, "ok"
 
@@ -237,7 +289,7 @@ class RiskManager:
         state: BotState,
         confidence: float,
     ) -> float:
-        """Calcule la taille de position optimale."""
+        """Calcule la taille de position optimale avec sizing dynamique."""
         total_exposure = sum(
             p.get("size_usd", 0) if isinstance(p, dict) else p.size_usd
             for p in state.positions.values()
@@ -247,7 +299,23 @@ class RiskManager:
         max_size = equity * self.config.max_position_pct
         max_remaining = equity * self.config.max_total_exposure_pct - total_exposure
 
-        size = min(max_size * confidence, max_remaining, state.capital * 0.90)
+        # Sizing de base proportionnel a la confidence
+        base_size = max_size * confidence
+
+        # Multiplicateur de risque dynamique
+        risk_mult = self._get_risk_multiplier()
+        adjusted_size = base_size * risk_mult
+
+        # Drawdown adjustment : reduire le sizing progressivement en drawdown
+        if state.peak_equity > 0:
+            current_dd = (state.peak_equity - equity) / state.peak_equity
+            dd_ratio = current_dd / max(self.config.max_drawdown_pct, 0.01)
+            if dd_ratio > 0.5:
+                # Reduire lineairement de 50% a 100% du drawdown max
+                dd_reduction = max(0.3, 1.0 - dd_ratio)
+                adjusted_size *= dd_reduction
+
+        size = min(adjusted_size, max_remaining, state.capital * 0.90)
         return max(0, size)
 
 
@@ -572,6 +640,7 @@ class HedgeFundBot:
         self.state.capital += size_usd + pnl
         self.state.daily_pnl += pnl
         self.state.total_pnl += pnl
+        self.risk.record_trade_result(pnl)
 
         # Executer la vente sur Polymarket
         if self.trading_client and not self.config.dry_run:
