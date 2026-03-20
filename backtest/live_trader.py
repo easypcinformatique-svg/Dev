@@ -158,8 +158,10 @@ class LiveTrader:
 
                 logger.info(f"\n--- Iteration {iteration} | {datetime.now():%H:%M:%S} ---")
 
-                # Reset daily PnL à minuit
-                if datetime.now().hour == 0 and datetime.now().minute < 6:
+                # Reset daily PnL à minuit (robuste : tracker la date du dernier reset)
+                today = datetime.now().date()
+                if not hasattr(self, '_last_reset_date') or self._last_reset_date != today:
+                    self._last_reset_date = today
                     self.daily_pnl = 0.0
 
                 # Check daily loss limit

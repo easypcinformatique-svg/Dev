@@ -472,6 +472,8 @@ class VolumeDetector:
             self.volume_history[cid] = [
                 (t, v) for t, v in self.volume_history[cid] if t > cutoff_history
             ]
+            if not self.volume_history[cid]:
+                del self.volume_history[cid]
 
         with self._lock:
             self.detected_moves = [

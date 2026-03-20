@@ -442,8 +442,10 @@ class InsuranceBot:
         logger.info(f"  Cycle #{self.iteration} | {datetime.now():%Y-%m-%d %H:%M:%S}")
         logger.info(f"{'─' * 50}")
 
-        # Reset daily PnL à minuit
-        if datetime.now().hour == 0 and datetime.now().minute < 6:
+        # Reset daily PnL (robuste : tracker la date du dernier reset)
+        today = datetime.now().date()
+        if not hasattr(self, '_last_reset_date') or self._last_reset_date != today:
+            self._last_reset_date = today
             self.daily_pnl = 0.0
             logger.info("  Daily PnL reset")
 
