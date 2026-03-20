@@ -94,9 +94,9 @@ class BaseStrategy(ABC):
         mid = current_bar["mid_price"]
 
         if pos.side == "YES":
-            unrealized_pnl_pct = (mid - pos.entry_price) / pos.entry_price
+            unrealized_pnl_pct = (mid - pos.entry_price) / max(pos.entry_price, 0.01)
         else:
-            unrealized_pnl_pct = (pos.entry_price - mid) / pos.entry_price
+            unrealized_pnl_pct = (pos.entry_price - mid) / max(pos.entry_price, 0.01)
 
         # Trailing stop : tracker le meilleur PnL et sortir si ça recule
         if self.trailing_stop > 0:
@@ -129,9 +129,9 @@ class BaseStrategy(ABC):
     ) -> Trade:
         pos = self.positions.pop(market_id)
         if pos.side == "YES":
-            pnl = (exit_price - pos.entry_price) * pos.size / pos.entry_price
+            pnl = (exit_price - pos.entry_price) * pos.size / max(pos.entry_price, 0.01)
         else:
-            pnl = (pos.entry_price - exit_price) * pos.size / pos.entry_price
+            pnl = (pos.entry_price - exit_price) * pos.size / max(pos.entry_price, 0.01)
 
         trade = Trade(
             market_id=market_id,
@@ -318,6 +318,9 @@ def _kelly_fraction(win_prob: float, win_loss_ratio: float) -> float:
 
 def _exponential_moving_avg(values: np.ndarray, span: int) -> np.ndarray:
     """EMA rapide via numpy."""
+    if len(values) == 0:
+        return np.array([], dtype=float)
+    span = max(span, 1)
     alpha = 2.0 / (span + 1)
     ema = np.zeros_like(values, dtype=float)
     ema[0] = values[0]
@@ -980,6 +983,9 @@ class AlphaCompositeStrategy(BaseStrategy):
                     self._strat_total[strat_name] = self._strat_total.get(strat_name, 0) + 1
                     if pnl > 0:
                         self._strat_wins[strat_name] = self._strat_wins.get(strat_name, 0) + 1
+            # Nettoyer le cache pour ce marché terminé
+            del self._last_signals[market_id]
+            self._sentiment_cache.pop(market_id, None)
 
     def generate_signal(self, market_id, current_bar, history):
         current_price = current_bar["mid_price"]
@@ -1338,6 +1344,9 @@ class InsuranceSellerStrategy(BaseStrategy):
             return "HOLD", 0.0
 
         # On entre : BUY_NO
+        # Note: entry_count et last_entry_bar sont mis à jour ici car le signal
+        # pourrait ne pas être exécuté (capital insuffisant). Le cooldown s'applique
+        # quand même pour éviter le spam de signaux sur le même marché.
         self._entry_count[market_id] = entries + 1
         self._last_entry_bar[market_id] = bar_num
 

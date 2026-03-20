@@ -14,7 +14,7 @@ INTRADAY_STATE = "logs/intraday_bot/state.json"
 REPORT_DIR = "logs/reports"
 CLOB_API = "https://clob.polymarket.com"
 GAMMA_API = "https://gamma-api.polymarket.com"
-NTFY_TOPIC = "insurance-bot-easypc-03757"
+NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "insurance-bot-easypc-03757")
 
 os.makedirs(REPORT_DIR, exist_ok=True)
 

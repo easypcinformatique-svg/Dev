@@ -188,6 +188,10 @@ def compute_metrics(
         risk_free_rate: Taux sans risque annualisé
         benchmark_returns: Rendements du benchmark (pour Information Ratio)
     """
+    # --- Guard: equity curve vide ---
+    if len(equity_curve) == 0:
+        return PerformanceMetrics(initial_capital=initial_capital, final_capital=initial_capital, peak_capital=initial_capital)
+
     # --- Rendements quotidiens ---
     daily_equity = equity_curve.resample("D").last().dropna()
     daily_returns = daily_equity.pct_change().dropna()

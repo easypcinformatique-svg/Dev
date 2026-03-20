@@ -171,10 +171,8 @@ class BacktestEngine:
 
         # Historique par marché — pré-indexé pour performance
         market_histories: dict[str, list[pd.Series]] = {}
-        # Cache DataFrame pour éviter la reconstruction à chaque barre
+        # Cache DataFrame
         market_history_dfs: dict[str, pd.DataFrame] = {}
-        _history_rebuild_interval = 50  # Rebuild le DF tous les N barres
-        _history_counters: dict[str, int] = {}
 
         # Grouper par timestamp
         grouped = data.groupby("timestamp")
@@ -204,26 +202,44 @@ class BacktestEngine:
                 # Mettre à jour l'historique (optimisé)
                 if mid not in market_histories:
                     market_histories[mid] = []
-                    _history_counters[mid] = 0
                 market_histories[mid].append(bar)
-                _history_counters[mid] += 1
 
-                # Rebuild le DataFrame seulement tous les N barres
-                if _history_counters[mid] >= _history_rebuild_interval or mid not in market_history_dfs:
-                    market_history_dfs[mid] = pd.DataFrame(market_histories[mid])
-                    _history_counters[mid] = 0
+                # Rebuild le DataFrame à chaque barre pour garantir des signaux à jour
+                market_history_dfs[mid] = pd.DataFrame(market_histories[mid])
                 history_df = market_history_dfs[mid]
 
                 # 3. Vérifier stop-loss / take-profit
-                trade = self.strategy.check_exits(mid, bar, self.capital)
-                if trade:
-                    fee = trade.size * self.config.transaction_fee_pct
-                    trade.pnl -= fee
-                    pos_size = trade.size
-                    self.capital += pos_size + trade.pnl
-                    # Feedback pour AlphaComposite
-                    if isinstance(self.strategy, AlphaCompositeStrategy):
-                        self.strategy.update_strategy_performance(mid, trade.pnl)
+                # On vérifie les conditions de sortie sans exécuter via la stratégie
+                # pour éviter le double comptage de PnL. On passe par _execute_exit
+                # qui applique slippage + frais de manière unifiée.
+                if mid in self.strategy.positions:
+                    pos = self.strategy.positions[mid]
+                    mid_price = bar["mid_price"]
+                    if pos.side == "YES":
+                        unrealized = (mid_price - pos.entry_price) / max(pos.entry_price, 0.01)
+                    else:
+                        unrealized = (pos.entry_price - mid_price) / max(pos.entry_price, 0.01)
+
+                    exit_reason = None
+                    # Trailing stop
+                    if self.strategy.trailing_stop > 0:
+                        peak = self.strategy._peak_prices.get(mid, unrealized)
+                        if unrealized > peak:
+                            self.strategy._peak_prices[mid] = unrealized
+                            peak = unrealized
+                        if peak > 0.03 and (peak - unrealized) > self.strategy.trailing_stop:
+                            self.strategy._peak_prices.pop(mid, None)
+                            exit_reason = "trailing_stop"
+                    if exit_reason is None and unrealized <= -self.strategy.stop_loss:
+                        exit_reason = "stop_loss"
+                    elif exit_reason is None and unrealized >= self.strategy.take_profit:
+                        exit_reason = "take_profit"
+
+                    if exit_reason:
+                        self.strategy._peak_prices.pop(mid, None)
+                        trade = self._execute_exit(mid, mid_price, ts, exit_reason)
+                        if trade and isinstance(self.strategy, AlphaCompositeStrategy):
+                            self.strategy.update_strategy_performance(mid, trade.pnl)
 
                 # 4. Générer signal et exécuter
                 action, confidence = self.strategy.generate_signal(

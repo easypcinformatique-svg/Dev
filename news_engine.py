@@ -8,7 +8,11 @@ import re
 import time
 import hashlib
 import logging
-import xml.etree.ElementTree as ET
+try:
+    from defusedxml.ElementTree import fromstring as safe_xml_fromstring
+except ImportError:
+    import xml.etree.ElementTree as _ET
+    safe_xml_fromstring = _ET.fromstring
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -27,12 +31,12 @@ RSS_FEEDS = {
     "reuters_politics": "https://feeds.reuters.com/Reuters/PoliticsNews",
     "reuters_business": "https://feeds.reuters.com/Reuters/businessNews",
     "ap_topnews": "https://rsshub.app/apnews/topics/apf-topnews",
-    "bbc_world": "http://feeds.bbci.co.uk/news/world/rss.xml",
-    "bbc_politics": "http://feeds.bbci.co.uk/news/politics/rss.xml",
+    "bbc_world": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "bbc_politics": "https://feeds.bbci.co.uk/news/politics/rss.xml",
     "nyt_world": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
     "nyt_politics": "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml",
     "guardian_world": "https://www.theguardian.com/world/rss",
-    "cnn_top": "http://rss.cnn.com/rss/edition.rss",
+    "cnn_top": "https://rss.cnn.com/rss/edition.rss",
     # Crypto / Finance
     "coindesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "cointelegraph": "https://cointelegraph.com/rss",
@@ -84,9 +88,9 @@ class NewsItem:
     hash_id: str = ""
 
     def __post_init__(self):
-        self.hash_id = hashlib.md5(
+        self.hash_id = hashlib.sha256(
             (self.title + self.source).encode()
-        ).hexdigest()[:12]
+        ).hexdigest()[:16]
 
 
 @dataclass
@@ -148,7 +152,7 @@ class NewsEngine:
             if not resp.ok:
                 return items
 
-            root = ET.fromstring(resp.content)
+            root = safe_xml_fromstring(resp.content)
 
             # RSS 2.0 format
             for item in root.findall(".//item"):
@@ -255,6 +259,14 @@ class NewsEngine:
 
         with self._lock:
             self.news_buffer.extend(new_items)
+            # Nettoyage périodique des velocity timestamps (> 30 min)
+            cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+            for kw in list(self.keyword_velocity.keys()):
+                self.keyword_velocity[kw] = [
+                    t for t in self.keyword_velocity[kw] if t > cutoff
+                ]
+                if not self.keyword_velocity[kw]:
+                    del self.keyword_velocity[kw]
 
         if new_items:
             high_relevance = [n for n in new_items if n.relevance_score >= 2.0]
@@ -380,8 +392,9 @@ class NewsEngine:
     def get_keyword_velocity(self, keyword: str) -> float:
         """Retourne la vélocité actuelle d'un keyword (articles/minute)."""
         now = datetime.now(timezone.utc)
-        recent = [t for t in self.keyword_velocity.get(keyword, [])
-                  if now - t < timedelta(minutes=15)]
+        with self._lock:
+            timestamps = list(self.keyword_velocity.get(keyword, []))
+        recent = [t for t in timestamps if now - t < timedelta(minutes=15)]
         if len(recent) < 2:
             return 0.0
         span = (recent[-1] - recent[0]).total_seconds() / 60.0

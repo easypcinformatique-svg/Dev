@@ -213,7 +213,8 @@ class VolumeDetector:
                     else:
                         self.volume_baselines[cid] = 0.9 * old_baseline + 0.1 * volume_24h
 
-                    self.active_markets[cid] = snapshot
+                    with self._lock:
+                        self.active_markets[cid] = snapshot
                     updated += 1
 
                 except Exception:
@@ -397,9 +398,12 @@ class VolumeDetector:
 
     def get_volume_spikes(self, min_ratio: float = 3.0) -> List[MarketSnapshot]:
         """Retourne les marchés avec volume spike actif."""
+        with self._lock:
+            markets_copy = dict(self.active_markets)
+            baselines_copy = dict(self.volume_baselines)
         spikes = []
-        for cid, market in self.active_markets.items():
-            baseline = self.volume_baselines.get(cid, 0)
+        for cid, market in markets_copy.items():
+            baseline = baselines_copy.get(cid, 0)
             if baseline == 0:
                 continue
             ratio = market.volume_24h / baseline
@@ -448,7 +452,8 @@ class VolumeDetector:
 
     def get_short_term_markets(self) -> Dict[str, MarketSnapshot]:
         """Retourne tous les marchés court terme monitorés."""
-        return dict(self.active_markets)
+        with self._lock:
+            return dict(self.active_markets)
 
     def _cleanup(self):
         """Nettoie les données anciennes."""
@@ -474,7 +479,8 @@ class VolumeDetector:
             ]
 
         # Retirer les marchés expirés
-        for cid in list(self.active_markets.keys()):
-            m = self.active_markets[cid]
-            if m.end_date and m.end_date < now:
-                del self.active_markets[cid]
+        with self._lock:
+            for cid in list(self.active_markets.keys()):
+                m = self.active_markets[cid]
+                if m.end_date and m.end_date < now:
+                    del self.active_markets[cid]

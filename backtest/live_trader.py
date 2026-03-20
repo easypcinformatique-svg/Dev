@@ -237,15 +237,18 @@ class LiveTrader:
             except Exception:
                 continue
 
-            # Mise à jour peak price (pour trailing stop)
-            if current_price > pos.peak_price:
-                pos.peak_price = current_price
-
-            # Check exits
+            # Pour les positions NO, on raisonne en "effective price" (valeur NO)
             if pos.side == "YES":
+                effective_price = current_price
                 unrealized_pnl_pct = (current_price - pos.entry_price) / max(pos.entry_price, 0.01)
             else:
-                unrealized_pnl_pct = (pos.entry_price - current_price) / max(pos.entry_price, 0.01)
+                effective_price = 1.0 - current_price  # Prix effectif du NO
+                no_entry = 1.0 - pos.entry_price
+                unrealized_pnl_pct = (effective_price - no_entry) / max(no_entry, 0.01)
+
+            # Mise à jour peak price (pour trailing stop) — en espace effectif
+            if effective_price > pos.peak_price:
+                pos.peak_price = effective_price
 
             should_exit = False
             exit_reason = ""
@@ -260,12 +263,17 @@ class LiveTrader:
                 should_exit = True
                 exit_reason = "take_profit"
 
-            # Trailing stop
-            elif self.strategy.trailing_stop > 0 and pos.peak_price > pos.entry_price:
-                peak_pnl = (pos.peak_price - pos.entry_price) / max(pos.entry_price, 0.01)
-                if peak_pnl > 0.03 and (peak_pnl - unrealized_pnl_pct) > self.strategy.trailing_stop:
-                    should_exit = True
-                    exit_reason = "trailing_stop"
+            # Trailing stop — raisonne en effective price
+            elif self.strategy.trailing_stop > 0:
+                if pos.side == "YES":
+                    entry_eff = pos.entry_price
+                else:
+                    entry_eff = 1.0 - pos.entry_price
+                if pos.peak_price > entry_eff:
+                    peak_pnl = (pos.peak_price - entry_eff) / max(entry_eff, 0.01)
+                    if peak_pnl > 0.03 and (peak_pnl - unrealized_pnl_pct) > self.strategy.trailing_stop:
+                        should_exit = True
+                        exit_reason = "trailing_stop"
 
             # Marché fermé
             if cid in market_map and market_map[cid].closed:
@@ -401,6 +409,12 @@ class LiveTrader:
         size_usd = min(max_size * confidence, max_remaining)
         if size_usd < 5:  # Minimum $5
             return
+
+        # Vérifier que le capital est suffisant
+        if size_usd > self.capital:
+            size_usd = self.capital
+            if size_usd < 5:
+                return
 
         shares = size_usd / max(price, 0.01)
 
