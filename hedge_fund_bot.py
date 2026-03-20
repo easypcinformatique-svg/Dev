@@ -1,0 +1,930 @@
+"""
+Bot autonome de trading Polymarket — Hedge Fund Mode.
+
+Tourne en continu 24/7. Scanne les marches, execute les strategies,
+gere le risque, et expose une API JSON pour le dashboard web.
+
+Architecture :
+    1. MarketScanner  — decouvre et filtre les marches actifs
+    2. SignalEngine    — genere les signaux via AlphaComposite + Sentiment
+    3. RiskManager     — position sizing, exposure limits, drawdown guard
+    4. Executor        — place les ordres (dry-run ou live)
+    5. StateStore      — etat persistant (JSON) pour reprendre apres crash
+    6. API endpoint    — FastAPI/Flask pour le dashboard
+
+Usage :
+    # Paper trading (par defaut)
+    python hedge_fund_bot.py
+
+    # Live trading
+    POLYMARKET_PRIVATE_KEY=0x... python hedge_fund_bot.py --live
+
+    # Avec dashboard
+    python hedge_fund_bot.py --dashboard --port 5050
+"""
+
+import os
+import sys
+import json
+import time
+import signal
+import logging
+import argparse
+import threading
+from pathlib import Path
+from datetime import datetime, timedelta
+from dataclasses import dataclass, field, asdict
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+
+# Ajouter le repertoire parent au path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from backtest.polymarket_client import PolymarketClient, PolymarketTradingClient, PolymarketMarket
+from backtest.strategies import AlphaCompositeStrategy, InsuranceSellerStrategy
+
+logger = logging.getLogger("hedge_fund_bot")
+
+
+# ================================================================
+#  DATA MODELS
+# ================================================================
+
+@dataclass
+class BotPosition:
+    """Position ouverte sur un marche."""
+    market_id: str
+    question: str
+    side: str           # YES ou NO
+    token_id: str
+    entry_price: float
+    size_usd: float
+    shares: float
+    entry_time: str
+    order_id: str = ""
+    peak_price: float = 0.0
+    current_price: float = 0.0
+    unrealized_pnl: float = 0.0
+    unrealized_pnl_pct: float = 0.0
+
+
+@dataclass
+class BotTrade:
+    """Trade termine."""
+    market_id: str
+    question: str
+    side: str
+    entry_price: float
+    exit_price: float
+    size_usd: float
+    pnl: float
+    pnl_pct: float
+    entry_time: str
+    exit_time: str
+    reason: str
+
+
+@dataclass
+class BotConfig:
+    """Configuration complete du bot."""
+    # Capital
+    initial_capital: float = 1000.0
+    max_position_pct: float = 0.05
+    max_total_exposure_pct: float = 0.30
+    max_positions: int = 8
+
+    # Filtres marches
+    min_volume: float = 50000.0
+    min_liquidity: float = 5000.0
+    min_spread: float = 0.005
+    max_spread: float = 0.08
+
+    # Timing
+    scan_interval_seconds: int = 300
+    history_fidelity: int = 60
+
+    # Risk
+    daily_loss_limit_pct: float = 0.05
+    max_drawdown_pct: float = 0.15
+
+    # Mode
+    dry_run: bool = True
+    strategy: str = "alpha_composite"  # alpha_composite ou insurance_seller
+
+    # Persistence
+    state_file: str = "bot_state.json"
+    log_dir: str = "logs"
+
+
+@dataclass
+class BotState:
+    """Etat persistant du bot."""
+    capital: float = 1000.0
+    positions: dict = field(default_factory=dict)
+    trades: list = field(default_factory=list)
+    equity_history: list = field(default_factory=list)
+    daily_pnl: float = 0.0
+    total_pnl: float = 0.0
+    peak_equity: float = 1000.0
+    iteration: int = 0
+    started_at: str = ""
+    last_scan: str = ""
+    markets_scanned: int = 0
+    signals_generated: int = 0
+    errors: list = field(default_factory=list)
+
+
+# ================================================================
+#  STATE STORE — Persistence JSON
+# ================================================================
+
+class StateStore:
+    """Sauvegarde et charge l'etat du bot en JSON."""
+
+    def __init__(self, path: str):
+        self.path = Path(path)
+
+    def save(self, state: BotState):
+        data = {
+            "capital": state.capital,
+            "positions": state.positions,
+            "trades": state.trades[-500:],  # Garder les 500 derniers
+            "equity_history": state.equity_history[-2000:],
+            "daily_pnl": state.daily_pnl,
+            "total_pnl": state.total_pnl,
+            "peak_equity": state.peak_equity,
+            "iteration": state.iteration,
+            "started_at": state.started_at,
+            "last_scan": state.last_scan,
+            "markets_scanned": state.markets_scanned,
+            "signals_generated": state.signals_generated,
+            "errors": state.errors[-50:],
+        }
+        tmp = self.path.with_suffix(".tmp")
+        with open(tmp, "w") as f:
+            json.dump(data, f, indent=2, default=str)
+        tmp.replace(self.path)
+
+    def load(self) -> BotState:
+        if not self.path.exists():
+            return BotState()
+        try:
+            with open(self.path) as f:
+                data = json.load(f)
+            state = BotState()
+            for k, v in data.items():
+                if hasattr(state, k):
+                    setattr(state, k, v)
+            return state
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.warning(f"Etat corrompu, reset: {e}")
+            return BotState()
+
+
+# ================================================================
+#  RISK MANAGER
+# ================================================================
+
+class RiskManager:
+    """Gestion du risque en temps reel."""
+
+    def __init__(self, config: BotConfig):
+        self.config = config
+
+    def can_open_position(
+        self,
+        state: BotState,
+        size_usd: float,
+    ) -> tuple[bool, str]:
+        """Verifie si on peut ouvrir une nouvelle position."""
+        # Max positions
+        if len(state.positions) >= self.config.max_positions:
+            return False, "max_positions_reached"
+
+        # Exposition totale
+        total_exposure = sum(
+            p.get("size_usd", 0) if isinstance(p, dict) else p.size_usd
+            for p in state.positions.values()
+        )
+        equity = state.capital + total_exposure
+        if equity <= 0:
+            return False, "no_equity"
+
+        max_remaining = equity * self.config.max_total_exposure_pct - total_exposure
+        if size_usd > max_remaining:
+            return False, f"exposure_limit ({total_exposure:.0f}/{equity * self.config.max_total_exposure_pct:.0f})"
+
+        # Capital disponible
+        if size_usd > state.capital * 0.95:
+            return False, "insufficient_capital"
+
+        # Daily loss limit
+        if state.daily_pnl < -(equity * self.config.daily_loss_limit_pct):
+            return False, "daily_loss_limit"
+
+        # Max drawdown
+        if state.peak_equity > 0:
+            current_dd = (state.peak_equity - equity) / state.peak_equity
+            if current_dd > self.config.max_drawdown_pct:
+                return False, f"max_drawdown ({current_dd:.1%})"
+
+        return True, "ok"
+
+    def compute_position_size(
+        self,
+        state: BotState,
+        confidence: float,
+    ) -> float:
+        """Calcule la taille de position optimale."""
+        total_exposure = sum(
+            p.get("size_usd", 0) if isinstance(p, dict) else p.size_usd
+            for p in state.positions.values()
+        )
+        equity = state.capital + total_exposure
+
+        max_size = equity * self.config.max_position_pct
+        max_remaining = equity * self.config.max_total_exposure_pct - total_exposure
+
+        size = min(max_size * confidence, max_remaining, state.capital * 0.90)
+        return max(0, size)
+
+
+# ================================================================
+#  HEDGE FUND BOT
+# ================================================================
+
+class HedgeFundBot:
+    """Bot de trading autonome pour Polymarket."""
+
+    def __init__(self, config: BotConfig):
+        self.config = config
+        self.store = StateStore(config.state_file)
+        self.state = self.store.load()
+        self.risk = RiskManager(config)
+        self._running = False
+        self._lock = threading.Lock()
+
+        # Initialiser le capital si premier lancement
+        if self.state.started_at == "":
+            self.state.capital = config.initial_capital
+            self.state.peak_equity = config.initial_capital
+            self.state.started_at = datetime.now().isoformat()
+
+        # Client Polymarket (read-only)
+        self.client = PolymarketClient(rate_limit_delay=0.3)
+
+        # Client trading (live seulement)
+        self.trading_client = None
+        if not config.dry_run:
+            pk = os.environ.get("POLYMARKET_PRIVATE_KEY", "")
+            if pk:
+                try:
+                    self.trading_client = PolymarketTradingClient(pk)
+                    logger.info("LIVE TRADING MODE")
+                except Exception as e:
+                    logger.error(f"Impossible d'initialiser le trading client: {e}")
+                    config.dry_run = True
+            else:
+                logger.warning("POLYMARKET_PRIVATE_KEY absent, passage en dry-run")
+                config.dry_run = True
+
+        # Strategie
+        if config.strategy == "insurance_seller":
+            self.strategy = InsuranceSellerStrategy()
+        else:
+            self.strategy = AlphaCompositeStrategy(
+                min_consensus=0.20,
+                min_agreeing_strategies=1,
+                spread_filter=0.10,
+                volume_percentile_filter=20,
+                max_price_extreme=0.95,
+                min_price_extreme=0.05,
+            )
+
+        # Cache des historiques
+        self._histories: dict[str, pd.DataFrame] = {}
+
+        # Setup logging
+        self._setup_logging()
+
+        logger.info("=" * 60)
+        logger.info("  HEDGE FUND BOT INITIALISE")
+        logger.info(f"  Strategie : {self.strategy.name}")
+        logger.info(f"  Capital   : ${self.state.capital:,.2f}")
+        logger.info(f"  Mode      : {'DRY RUN' if config.dry_run else 'LIVE'}")
+        logger.info(f"  Scan      : toutes les {config.scan_interval_seconds}s")
+        logger.info("=" * 60)
+
+    def _setup_logging(self):
+        log_dir = Path(self.config.log_dir)
+        log_dir.mkdir(exist_ok=True)
+
+        # Console handler
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
+        ))
+
+        # File handler
+        fh = logging.FileHandler(
+            log_dir / f"bot_{datetime.now():%Y%m%d}.log"
+        )
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        ))
+
+        logger.addHandler(ch)
+        logger.addHandler(fh)
+        logger.setLevel(logging.DEBUG)
+
+    # ================================================================
+    #  BOUCLE PRINCIPALE
+    # ================================================================
+
+    def run(self, max_iterations: int = 0):
+        """Boucle principale du bot."""
+        self._running = True
+
+        def _handle_signal(sig, frame):
+            logger.info("Signal d'arret recu, fermeture propre...")
+            self._running = False
+
+        signal.signal(signal.SIGINT, _handle_signal)
+        signal.signal(signal.SIGTERM, _handle_signal)
+
+        try:
+            while self._running:
+                self.state.iteration += 1
+                if max_iterations > 0 and self.state.iteration > max_iterations:
+                    break
+
+                self._run_iteration()
+
+                # Sauvegarder l'etat
+                self.store.save(self.state)
+
+                if self._running:
+                    logger.info(f"Attente {self.config.scan_interval_seconds}s...")
+                    # Sleep interruptible
+                    for _ in range(self.config.scan_interval_seconds):
+                        if not self._running:
+                            break
+                        time.sleep(1)
+
+        except Exception as e:
+            logger.error(f"Erreur fatale: {e}", exc_info=True)
+            self.state.errors.append({
+                "time": datetime.now().isoformat(),
+                "error": str(e),
+                "type": "fatal",
+            })
+        finally:
+            self.store.save(self.state)
+            logger.info(f"Bot arrete. PnL total: ${self.state.total_pnl:+,.2f}")
+
+    def _run_iteration(self):
+        """Execute une iteration complete."""
+        now = datetime.now()
+        logger.info(f"\n{'='*50}")
+        logger.info(f"  Iteration {self.state.iteration} | {now:%Y-%m-%d %H:%M:%S}")
+        logger.info(f"{'='*50}")
+
+        # Reset daily PnL a minuit
+        if now.hour == 0 and now.minute < 6:
+            if self.state.daily_pnl != 0:
+                logger.info(f"Reset daily PnL (etait ${self.state.daily_pnl:+,.2f})")
+                self.state.daily_pnl = 0.0
+
+        try:
+            # 1. Scanner les marches
+            markets = self._scan_markets()
+
+            # 2. Mettre a jour les positions existantes
+            self._update_positions()
+
+            # 3. Evaluer les signaux et ouvrir des positions
+            self._evaluate_markets(markets)
+
+            # 4. Mettre a jour l'equity
+            self._update_equity()
+
+            # 5. Afficher le statut
+            self._log_status()
+
+            self.state.last_scan = now.isoformat()
+
+        except Exception as e:
+            logger.error(f"Erreur iteration: {e}", exc_info=True)
+            self.state.errors.append({
+                "time": now.isoformat(),
+                "error": str(e),
+                "type": "iteration",
+            })
+
+    # ================================================================
+    #  SCAN DES MARCHES
+    # ================================================================
+
+    def _scan_markets(self) -> list[PolymarketMarket]:
+        """Scanne et filtre les marches actifs."""
+        try:
+            markets = self.client.get_all_active_markets(
+                min_volume=self.config.min_volume,
+                min_liquidity=self.config.min_liquidity,
+                max_markets=100,
+            )
+        except Exception as e:
+            logger.error(f"Scan marches echoue: {e}")
+            return []
+
+        # Filtrer par spread
+        eligible = []
+        for m in markets[:50]:  # Limiter les appels API
+            try:
+                spread_info = self.client.get_spread(m.yes_token_id)
+                spread = spread_info["spread"]
+                if self.config.min_spread <= spread <= self.config.max_spread:
+                    eligible.append(m)
+            except Exception:
+                continue
+
+        self.state.markets_scanned = len(eligible)
+        logger.info(f"  Marches scannes: {len(markets)} total, {len(eligible)} eligibles")
+        return eligible
+
+    # ================================================================
+    #  MISE A JOUR DES POSITIONS
+    # ================================================================
+
+    def _update_positions(self):
+        """Met a jour les prix et verifie les sorties."""
+        for cid in list(self.state.positions.keys()):
+            pos = self.state.positions[cid]
+            if isinstance(pos, dict):
+                token_id = pos.get("token_id", "")
+                entry_price = pos.get("entry_price", 0.5)
+                side = pos.get("side", "YES")
+                peak = pos.get("peak_price", entry_price)
+                size_usd = pos.get("size_usd", 0)
+                question = pos.get("question", "")
+                entry_time = pos.get("entry_time", "")
+            else:
+                token_id = pos.token_id
+                entry_price = pos.entry_price
+                side = pos.side
+                peak = pos.peak_price
+                size_usd = pos.size_usd
+                question = pos.question
+                entry_time = pos.entry_time
+
+            try:
+                current_price = self.client.get_midpoint(token_id)
+            except Exception:
+                continue
+
+            # Calculer PnL non realise
+            if side == "YES":
+                pnl_pct = (current_price - entry_price) / max(entry_price, 0.01)
+            else:
+                pnl_pct = (entry_price - current_price) / max(entry_price, 0.01)
+
+            unrealized_pnl = pnl_pct * size_usd
+
+            # Mettre a jour le peak
+            if current_price > peak:
+                peak = current_price
+
+            # Mettre a jour la position
+            updated = {
+                "market_id": cid,
+                "question": question,
+                "side": side,
+                "token_id": token_id,
+                "entry_price": entry_price,
+                "size_usd": size_usd,
+                "shares": size_usd / max(entry_price, 0.01),
+                "entry_time": entry_time,
+                "order_id": pos.get("order_id", "") if isinstance(pos, dict) else getattr(pos, "order_id", ""),
+                "peak_price": peak,
+                "current_price": current_price,
+                "unrealized_pnl": unrealized_pnl,
+                "unrealized_pnl_pct": pnl_pct,
+            }
+            self.state.positions[cid] = updated
+
+            # Verifier les conditions de sortie
+            should_exit = False
+            exit_reason = ""
+
+            # Stop-loss
+            if pnl_pct <= -self.strategy.stop_loss:
+                should_exit = True
+                exit_reason = "stop_loss"
+
+            # Take-profit
+            elif pnl_pct >= self.strategy.take_profit:
+                should_exit = True
+                exit_reason = "take_profit"
+
+            # Trailing stop
+            elif self.strategy.trailing_stop > 0 and peak > entry_price:
+                peak_pnl = (peak - entry_price) / max(entry_price, 0.01)
+                if peak_pnl > 0.03 and (peak_pnl - pnl_pct) > self.strategy.trailing_stop:
+                    should_exit = True
+                    exit_reason = "trailing_stop"
+
+            if should_exit:
+                self._close_position(cid, current_price, exit_reason)
+
+    def _close_position(self, condition_id: str, exit_price: float, reason: str):
+        """Ferme une position."""
+        with self._lock:
+            pos = self.state.positions.pop(condition_id, None)
+        if not pos:
+            return
+
+        if isinstance(pos, dict):
+            entry_price = pos.get("entry_price", 0.5)
+            side = pos.get("side", "YES")
+            size_usd = pos.get("size_usd", 0)
+            question = pos.get("question", "")
+            entry_time = pos.get("entry_time", "")
+            token_id = pos.get("token_id", "")
+        else:
+            entry_price = pos.entry_price
+            side = pos.side
+            size_usd = pos.size_usd
+            question = pos.question
+            entry_time = pos.entry_time
+            token_id = pos.token_id
+
+        if side == "YES":
+            pnl = (exit_price - entry_price) * (size_usd / max(entry_price, 0.01))
+        else:
+            pnl = (entry_price - exit_price) * (size_usd / max(entry_price, 0.01))
+
+        pnl_pct = pnl / max(size_usd, 0.01)
+
+        self.state.capital += size_usd + pnl
+        self.state.daily_pnl += pnl
+        self.state.total_pnl += pnl
+
+        # Executer la vente sur Polymarket
+        if self.trading_client and not self.config.dry_run:
+            try:
+                self.trading_client.place_market_order(
+                    token_id=token_id,
+                    amount_usd=size_usd,
+                    side="SELL",
+                )
+            except Exception as e:
+                logger.error(f"Echec de la fermeture sur Polymarket: {e}")
+
+        trade = {
+            "market_id": condition_id,
+            "question": question,
+            "side": side,
+            "entry_price": entry_price,
+            "exit_price": exit_price,
+            "size_usd": size_usd,
+            "pnl": pnl,
+            "pnl_pct": pnl_pct,
+            "entry_time": entry_time,
+            "exit_time": datetime.now().isoformat(),
+            "reason": reason,
+        }
+        self.state.trades.append(trade)
+
+        pnl_str = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
+        logger.info(f"  CLOSE [{reason}] {side} | {pnl_str} ({pnl_pct:+.1%}) | {question[:50]}")
+
+    # ================================================================
+    #  EVALUATION DES SIGNAUX
+    # ================================================================
+
+    def _evaluate_markets(self, markets: list[PolymarketMarket]):
+        """Evalue les signaux et ouvre des positions."""
+        if len(self.state.positions) >= self.config.max_positions:
+            return
+
+        signals_count = 0
+        for market in markets:
+            if market.condition_id in self.state.positions:
+                continue
+            if len(self.state.positions) >= self.config.max_positions:
+                break
+
+            try:
+                # Recuperer l'historique
+                history = self._get_history(market)
+                if history is None or len(history) < 30:
+                    continue
+
+                # Construire la barre actuelle
+                current_bar = history.iloc[-1].copy()
+
+                # Generer le signal
+                action, confidence = self.strategy.generate_signal(
+                    market.condition_id,
+                    current_bar,
+                    history.iloc[:-1],
+                )
+
+                signals_count += 1
+
+                if action in ("BUY_YES", "BUY_NO") and confidence > 0:
+                    self._open_position(market, action, confidence, current_bar)
+
+            except Exception as e:
+                logger.debug(f"Erreur evaluation {market.condition_id[:8]}: {e}")
+                continue
+
+        self.state.signals_generated += signals_count
+        if signals_count > 0:
+            logger.info(f"  Signaux evalues: {signals_count}")
+
+    def _get_history(self, market: PolymarketMarket) -> Optional[pd.DataFrame]:
+        """Recupere ou met a jour l'historique d'un marche."""
+        cid = market.condition_id
+
+        # Cache: rafraichir si > 10 min
+        if cid in self._histories:
+            last_ts = self._histories[cid]["timestamp"].iloc[-1]
+            age = datetime.now() - last_ts.to_pydatetime().replace(tzinfo=None)
+            if age < timedelta(minutes=10):
+                return self._histories[cid]
+
+        try:
+            df = self.client.get_market_history_for_backtest(
+                market,
+                fidelity=self.config.history_fidelity,
+            )
+            if not df.empty:
+                self._histories[cid] = df
+                return df
+        except Exception as e:
+            logger.debug(f"Historique echoue pour {cid[:8]}: {e}")
+
+        return self._histories.get(cid)
+
+    def _open_position(
+        self,
+        market: PolymarketMarket,
+        action: str,
+        confidence: float,
+        current_bar: pd.Series,
+    ):
+        """Ouvre une nouvelle position."""
+        side = "YES" if action == "BUY_YES" else "NO"
+        token_id = market.yes_token_id if side == "YES" else market.no_token_id
+        price = current_bar["mid_price"]
+
+        # Sizing via le risk manager
+        size_usd = self.risk.compute_position_size(self.state, confidence)
+
+        # Verification risque
+        can_open, reason = self.risk.can_open_position(self.state, size_usd)
+        if not can_open:
+            logger.debug(f"Position refusee: {reason}")
+            return
+
+        if size_usd < 5:
+            return
+
+        shares = size_usd / max(price, 0.01)
+
+        # Executer l'achat
+        order_id = ""
+        if self.trading_client and not self.config.dry_run:
+            try:
+                limit_price = round(price + 0.005, 2)
+                limit_price = min(limit_price, 0.99)
+                result = self.trading_client.place_limit_order(
+                    token_id=token_id,
+                    price=limit_price,
+                    size=shares,
+                    side="BUY",
+                )
+                order_id = result.get("orderID", "")
+            except Exception as e:
+                logger.error(f"Echec placement ordre: {e}")
+                return
+        else:
+            order_id = f"DRY-{int(time.time())}"
+
+        self.state.capital -= size_usd
+
+        with self._lock:
+            self.state.positions[market.condition_id] = {
+                "market_id": market.condition_id,
+                "question": market.question,
+                "side": side,
+                "token_id": token_id,
+                "entry_price": price,
+                "size_usd": size_usd,
+                "shares": shares,
+                "entry_time": datetime.now().isoformat(),
+                "order_id": order_id,
+                "peak_price": price,
+                "current_price": price,
+                "unrealized_pnl": 0.0,
+                "unrealized_pnl_pct": 0.0,
+            }
+
+        logger.info(
+            f"  OPEN {side} | ${size_usd:.0f} @ {price:.3f} "
+            f"(conf={confidence:.2f}) | {market.question[:50]}"
+        )
+
+    # ================================================================
+    #  EQUITY & REPORTING
+    # ================================================================
+
+    def _update_equity(self):
+        """Met a jour l'equity curve."""
+        total_exposure = sum(
+            p.get("size_usd", 0) if isinstance(p, dict) else p.size_usd
+            for p in self.state.positions.values()
+        )
+        total_unrealized = sum(
+            p.get("unrealized_pnl", 0) if isinstance(p, dict) else p.unrealized_pnl
+            for p in self.state.positions.values()
+        )
+        equity = self.state.capital + total_exposure + total_unrealized
+
+        if equity > self.state.peak_equity:
+            self.state.peak_equity = equity
+
+        self.state.equity_history.append({
+            "timestamp": datetime.now().isoformat(),
+            "equity": equity,
+            "capital": self.state.capital,
+            "exposure": total_exposure,
+            "unrealized_pnl": total_unrealized,
+            "n_positions": len(self.state.positions),
+        })
+
+    def _log_status(self):
+        """Affiche le statut actuel."""
+        total_exposure = sum(
+            p.get("size_usd", 0) if isinstance(p, dict) else p.size_usd
+            for p in self.state.positions.values()
+        )
+        total_unrealized = sum(
+            p.get("unrealized_pnl", 0) if isinstance(p, dict) else p.unrealized_pnl
+            for p in self.state.positions.values()
+        )
+        equity = self.state.capital + total_exposure + total_unrealized
+        dd = (self.state.peak_equity - equity) / self.state.peak_equity * 100 if self.state.peak_equity > 0 else 0
+
+        logger.info(f"  --- STATUT ---")
+        logger.info(f"  Capital cash    : ${self.state.capital:,.2f}")
+        logger.info(f"  Equity totale   : ${equity:,.2f}")
+        logger.info(f"  Positions       : {len(self.state.positions)}")
+        logger.info(f"  Exposition      : ${total_exposure:,.2f} ({total_exposure/max(equity,1)*100:.1f}%)")
+        logger.info(f"  PnL non realise : ${total_unrealized:+,.2f}")
+        logger.info(f"  PnL journalier  : ${self.state.daily_pnl:+,.2f}")
+        logger.info(f"  PnL total       : ${self.state.total_pnl:+,.2f}")
+        logger.info(f"  Drawdown        : {dd:.1f}%")
+
+        for cid, pos in self.state.positions.items():
+            if isinstance(pos, dict):
+                side = pos.get("side", "?")
+                size = pos.get("size_usd", 0)
+                entry = pos.get("entry_price", 0)
+                current = pos.get("current_price", 0)
+                upnl = pos.get("unrealized_pnl", 0)
+                question = pos.get("question", "")
+            else:
+                side, size, entry = pos.side, pos.size_usd, pos.entry_price
+                current, upnl = pos.current_price, pos.unrealized_pnl
+                question = pos.question
+            logger.info(
+                f"    [{side}] ${size:.0f} @ {entry:.3f} -> {current:.3f} "
+                f"({upnl:+.2f}) | {question[:40]}"
+            )
+
+    # ================================================================
+    #  API POUR LE DASHBOARD
+    # ================================================================
+
+    def get_dashboard_data(self) -> dict:
+        """Retourne toutes les donnees pour le dashboard."""
+        total_exposure = sum(
+            p.get("size_usd", 0) if isinstance(p, dict) else p.size_usd
+            for p in self.state.positions.values()
+        )
+        total_unrealized = sum(
+            p.get("unrealized_pnl", 0) if isinstance(p, dict) else p.unrealized_pnl
+            for p in self.state.positions.values()
+        )
+        equity = self.state.capital + total_exposure + total_unrealized
+        dd = (self.state.peak_equity - equity) / self.state.peak_equity if self.state.peak_equity > 0 else 0
+
+        # Stats des trades
+        trades = self.state.trades
+        pnls = [t.get("pnl", 0) if isinstance(t, dict) else t.pnl for t in trades]
+        wins = [p for p in pnls if p > 0]
+        losses = [p for p in pnls if p < 0]
+
+        return {
+            "status": "running" if self._running else "stopped",
+            "mode": "DRY RUN" if self.config.dry_run else "LIVE",
+            "strategy": self.strategy.name,
+            "started_at": self.state.started_at,
+            "last_scan": self.state.last_scan,
+            "iteration": self.state.iteration,
+            "overview": {
+                "capital": round(self.state.capital, 2),
+                "equity": round(equity, 2),
+                "total_pnl": round(self.state.total_pnl, 2),
+                "daily_pnl": round(self.state.daily_pnl, 2),
+                "unrealized_pnl": round(total_unrealized, 2),
+                "exposure": round(total_exposure, 2),
+                "exposure_pct": round(total_exposure / max(equity, 1) * 100, 1),
+                "drawdown_pct": round(dd * 100, 2),
+                "peak_equity": round(self.state.peak_equity, 2),
+                "initial_capital": self.config.initial_capital,
+                "total_return_pct": round((equity / self.config.initial_capital - 1) * 100, 2),
+            },
+            "positions": list(self.state.positions.values()),
+            "recent_trades": trades[-20:],
+            "trade_stats": {
+                "total_trades": len(trades),
+                "winning_trades": len(wins),
+                "losing_trades": len(losses),
+                "win_rate": round(len(wins) / max(len(trades), 1) * 100, 1),
+                "avg_win": round(np.mean(wins), 2) if wins else 0,
+                "avg_loss": round(np.mean(losses), 2) if losses else 0,
+                "profit_factor": round(abs(sum(wins) / sum(losses)), 2) if losses else 0,
+                "largest_win": round(max(pnls), 2) if pnls else 0,
+                "largest_loss": round(min(pnls), 2) if pnls else 0,
+            },
+            "equity_history": self.state.equity_history[-200:],
+            "markets_scanned": self.state.markets_scanned,
+            "signals_generated": self.state.signals_generated,
+            "errors": self.state.errors[-10:],
+        }
+
+
+# ================================================================
+#  MAIN
+# ================================================================
+
+def main():
+    parser = argparse.ArgumentParser(description="Polymarket Hedge Fund Bot")
+    parser.add_argument("--live", action="store_true", help="Mode live (vrai argent)")
+    parser.add_argument("--capital", type=float, default=1000.0, help="Capital initial ($)")
+    parser.add_argument("--strategy", default="alpha_composite",
+                        choices=["alpha_composite", "insurance_seller"],
+                        help="Strategie de trading")
+    parser.add_argument("--interval", type=int, default=300, help="Intervalle de scan (secondes)")
+    parser.add_argument("--max-positions", type=int, default=8, help="Nombre max de positions")
+    parser.add_argument("--max-iterations", type=int, default=0, help="0 = infini")
+    parser.add_argument("--dashboard", action="store_true", help="Lancer le dashboard web")
+    parser.add_argument("--port", type=int, default=5050, help="Port du dashboard")
+    parser.add_argument("--state-file", default="bot_state.json", help="Fichier d'etat")
+
+    args = parser.parse_args()
+
+    config = BotConfig(
+        initial_capital=args.capital,
+        dry_run=not args.live,
+        strategy=args.strategy,
+        scan_interval_seconds=args.interval,
+        max_positions=args.max_positions,
+        state_file=args.state_file,
+    )
+
+    bot = HedgeFundBot(config)
+
+    # Lancer le dashboard dans un thread separe
+    if args.dashboard:
+        try:
+            from web_dashboard import create_dashboard_app
+            app = create_dashboard_app(bot)
+
+            dash_thread = threading.Thread(
+                target=lambda: app.run(
+                    host="0.0.0.0",
+                    port=args.port,
+                    debug=False,
+                    use_reloader=False,
+                ),
+                daemon=True,
+            )
+            dash_thread.start()
+            logger.info(f"Dashboard demarre sur http://localhost:{args.port}")
+        except ImportError as e:
+            logger.warning(f"Dashboard non disponible: {e}")
+
+    # Lancer le bot
+    bot.run(max_iterations=args.max_iterations)
+
+
+if __name__ == "__main__":
+    main()
