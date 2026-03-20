@@ -76,17 +76,22 @@ STRATEGIES = {
         lookback=36, spread_contraction_threshold=0.45,
         max_position_pct=0.04, stop_loss=0.10, take_profit=0.25,
     ),
-    # --- Stratégie Alpha (la meilleure) ---
+    # --- Stratégie Alpha (optimisée par auto-training 100 itérations) ---
     "alpha": lambda: AlphaCompositeStrategy(
-        min_consensus=0.35, min_agreeing_strategies=2,
-        spread_filter=0.06, volume_percentile_filter=30,
+        min_consensus=0.14, min_agreeing_strategies=2,
+        spread_filter=0.10, volume_percentile_filter=28,
+        max_price_extreme=0.89, min_price_extreme=0.09,
+        stop_loss=0.25, take_profit=0.50, trailing_stop=0.17,
+        max_position_pct=0.08, max_positions=12,
     ),
     # --- Alpha calibrée pour données réelles Polymarket ---
     "alpha_real": lambda: AlphaCompositeStrategy(
-        min_consensus=0.15, min_agreeing_strategies=1,
+        min_consensus=0.14, min_agreeing_strategies=1,
         spread_filter=0.10, volume_percentile_filter=10,
         min_price_extreme=0.05, max_price_extreme=0.95,
         sentiment_weight=0.30,
+        stop_loss=0.25, take_profit=0.50, trailing_stop=0.17,
+        max_position_pct=0.08, max_positions=12,
     ),
     # --- Insurance Seller (inspirée anoin123 : $1.45M profit) ---
     "insurance": lambda: InsuranceSellerStrategy(

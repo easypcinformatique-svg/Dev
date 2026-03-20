@@ -363,12 +363,17 @@ class HedgeFundBot:
             self.strategy = InsuranceSellerStrategy()
         else:
             self.strategy = AlphaCompositeStrategy(
-                min_consensus=0.20,
-                min_agreeing_strategies=1,
+                min_consensus=0.14,
+                min_agreeing_strategies=2,
                 spread_filter=0.10,
-                volume_percentile_filter=20,
-                max_price_extreme=0.95,
-                min_price_extreme=0.05,
+                volume_percentile_filter=28,
+                max_price_extreme=0.89,
+                min_price_extreme=0.09,
+                stop_loss=0.25,
+                take_profit=0.50,
+                trailing_stop=0.17,
+                max_position_pct=0.08,
+                max_positions=12,
             )
 
         # Cache des historiques
