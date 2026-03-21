@@ -299,6 +299,50 @@ body {
     color: #6b7280;
     margin-top: 4px;
 }
+/* Dashboard tooltips */
+.metric-card { position: relative; cursor: help; }
+.metric-tooltip {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    z-index: 100;
+    width: 300px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #d1d5db;
+    line-height: 1.5;
+    pointer-events: none;
+}
+.metric-card:hover .metric-tooltip { display: block; }
+.metric-tooltip strong { color: #a5b4fc; }
+.metric-tooltip .tip-example { color: #4ade80; margin-top: 6px; font-size: 11px; }
+.stat-row { position: relative; cursor: help; }
+.stat-tooltip {
+    display: none;
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    z-index: 100;
+    width: 280px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #d1d5db;
+    line-height: 1.4;
+    pointer-events: none;
+}
+.stat-row:hover .stat-tooltip { display: block; }
 
 /* Chart */
 .chart-container {
@@ -504,20 +548,37 @@ function truncate(s, len) {
 function renderMetrics(data) {
     const o = data.overview || {};
     const cards = [
-        { label: 'Equity', value: fmtUsd(o.equity), cls: '' },
-        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '' },
-        { label: 'PnL Total', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '%' },
-        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl) },
-        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl) },
-        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%' },
-        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '' },
-        { label: 'Peak Equity', value: fmtUsd(o.peak_equity) },
+        { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '\u{1F4B0}',
+          tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br>C\'est la valeur totale de ton portefeuille a cet instant.',
+          ex: 'Capital 700$ + 2 positions de 150$ + 30$ de gains = Equity 1030$' },
+        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
+          tip: '<strong>L\'argent disponible</strong> qui n\'est pas investi dans des positions. C\'est ta reserve pour ouvrir de nouvelles positions.',
+          ex: 'Sur 1000$ total, si 300$ sont investis, il reste 700$ de cash' },
+        { label: 'PnL Total', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '%', icon: '\u{1F4CA}',
+          tip: '<strong>Profit and Loss total</strong> depuis le lancement du bot. Somme de tous les trades fermes (gains - pertes).',
+          ex: '+45$ = le bot a gagne 45$ depuis le debut. -20$ = il a perdu 20$ au total' },
+        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
+          tip: '<strong>Profit et perte du jour</strong>. Se reinitialise a minuit. Si ca depasse la limite journaliere, le bot arrete de trader.',
+          ex: '+12$ = le bot a gagne 12$ aujourd\'hui. -30$ = il a perdu 30$ depuis minuit' },
+        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '\u{23F3}',
+          tip: '<strong>Gains/pertes des positions encore ouvertes</strong>. Ce n\'est pas du vrai profit tant que la position n\'est pas fermee. Ca peut changer a tout moment.',
+          ex: '+15$ = tes positions ouvertes sont en gain de 15$. Mais si le marche bouge, ca peut devenir -15$' },
+        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '\u{1F3AF}',
+          tip: '<strong>Montant total investi</strong> dans les positions ouvertes. L\'exposition en % = combien de ton capital est "a risque".',
+          ex: '300$ (30%) = 300$ sont investis sur les marches, soit 30% de ton equity' },
+        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '\u{1F4C9}',
+          tip: '<strong>Baisse depuis le plus haut</strong> (peak equity). Mesure combien tu as "perdu" depuis ton meilleur moment. Si ca depasse le max (15%), le bot s\'arrete.',
+          ex: 'Peak a 1100$, equity actuelle 1050$ = drawdown de 4.5%. A 15% le bot coupe tout' },
+        { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '\u{1F3D4}',
+          tip: '<strong>La plus haute valeur atteinte</strong> par ton portefeuille. Sert de reference pour calculer le drawdown.',
+          ex: 'Peak 1100$ = a un moment, ton portefeuille valait 1100$. C\'est le record a battre' },
     ];
 
     const grid = document.getElementById('metrics-grid');
     grid.innerHTML = cards.map(c => `
         <div class="metric-card">
-            <div class="metric-label">${c.label}</div>
+            <div class="metric-tooltip">${c.tip}${c.ex ? '<div class="tip-example">' + c.icon + ' ' + c.ex + '</div>' : ''}</div>
+            <div class="metric-label">${c.icon} ${c.label}</div>
             <div class="metric-value ${c.cls}">${c.value}</div>
             ${c.sub ? '<div class="metric-sub">' + c.sub + '</div>' : ''}
         </div>
@@ -621,22 +682,23 @@ function renderPositions(data) {
 function renderStats(data) {
     const s = data.trade_stats || {};
     const rows = [
-        ['Total Trades', s.total_trades || 0],
-        ['Win Rate', fmt(s.win_rate, 1) + '%'],
-        ['Trades Gagnants', s.winning_trades || 0],
-        ['Trades Perdants', s.losing_trades || 0],
-        ['Gain Moyen', fmtUsd(s.avg_win)],
-        ['Perte Moyenne', fmtUsd(s.avg_loss)],
-        ['Profit Factor', fmt(s.profit_factor)],
-        ['Plus Gros Gain', fmtUsd(s.largest_win)],
-        ['Plus Grosse Perte', fmtUsd(s.largest_loss)],
-        ['Marches Scannes', data.markets_scanned || 0],
-        ['Signaux Generes', data.signals_generated || 0],
-        ['Iteration', data.iteration || 0],
+        ['Total Trades', s.total_trades || 0, 'Nombre total de trades fermes (gagnes + perdus) depuis le lancement'],
+        ['Win Rate', fmt(s.win_rate, 1) + '%', 'Pourcentage de trades gagnants. Ex: 60% = 6 trades sur 10 sont positifs. Au-dessus de 50% c\'est bon signe'],
+        ['Trades Gagnants', s.winning_trades || 0, 'Nombre de trades qui ont rapporte de l\'argent (PnL > 0)'],
+        ['Trades Perdants', s.losing_trades || 0, 'Nombre de trades qui ont perdu de l\'argent (PnL < 0)'],
+        ['Gain Moyen', fmtUsd(s.avg_win), 'Combien un trade gagnant rapporte en moyenne. Ex: +8.50$ = chaque trade positif gagne 8.50$ en moyenne'],
+        ['Perte Moyenne', fmtUsd(s.avg_loss), 'Combien un trade perdant coute en moyenne. Ex: -5.20$ = chaque trade negatif perd 5.20$ en moyenne'],
+        ['Profit Factor', fmt(s.profit_factor), 'Gains totaux / Pertes totales. > 1 = rentable. Ex: 1.5 = pour chaque 1$ perdu, le bot gagne 1.50$. < 1 = non rentable'],
+        ['Plus Gros Gain', fmtUsd(s.largest_win), 'Le meilleur trade jamais realise. Montre le potentiel max du bot'],
+        ['Plus Grosse Perte', fmtUsd(s.largest_loss), 'Le pire trade jamais realise. Montre le risque max par trade'],
+        ['Marches Scannes', data.markets_scanned || 0, 'Nombre de marches Polymarket analyses a la derniere iteration (apres filtrage volume/liquidite)'],
+        ['Signaux Generes', data.signals_generated || 0, 'Nombre total de signaux de trading generes depuis le debut. Pas tous ne menent a un trade'],
+        ['Iteration', data.iteration || 0, 'Nombre de cycles complets du bot. Chaque iteration = scan + analyse + decisions + mise a jour'],
     ];
 
-    document.getElementById('stats-grid').innerHTML = rows.map(([label, value]) => `
+    document.getElementById('stats-grid').innerHTML = rows.map(([label, value, tip]) => `
         <div class="stat-row">
+            <div class="stat-tooltip">${tip}</div>
             <span class="stat-label">${label}</span>
             <span class="stat-value">${value}</span>
         </div>
@@ -852,13 +914,25 @@ body {
     border-bottom: 1px solid #1a2332;
 }
 .param-row:last-child { border-bottom: none; }
-.param-info { }
+.param-info { position: relative; }
 .param-label {
     font-size: 13px;
     font-weight: 500;
     color: #e0e6ed;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 .param-label.modified { color: #fbbf24; }
+.param-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.7;
+}
 .param-desc {
     font-size: 11px;
     color: #6b7280;
@@ -868,6 +942,70 @@ body {
     font-size: 11px;
     color: #4b5563;
     margin-top: 2px;
+}
+/* Info bulle */
+.info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #374151;
+    color: #9ca3af;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.info-btn:hover { background: #6366f1; color: #fff; }
+.tooltip-popup {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 100;
+    width: 380px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-top: 6px;
+}
+.tooltip-popup.visible { display: block; }
+.tooltip-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a5b4fc;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.tooltip-text {
+    font-size: 12px;
+    color: #d1d5db;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+.tooltip-example {
+    background: #0d1321;
+    border: 1px solid #2a3a5c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #4ade80;
+    line-height: 1.5;
+}
+.tooltip-example-label {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
 .param-input { text-align: right; }
 .param-input input, .param-input select {
@@ -1070,6 +1208,21 @@ input:checked + .toggle-slider:before { transform: translateX(24px); }
 let settingsData = null;
 let pendingChanges = {};
 
+function toggleTooltip(id, event) {
+    event.stopPropagation();
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Fermer tous les autres tooltips
+    document.querySelectorAll('.tooltip-popup.visible').forEach(t => {
+        if (t.id !== id) t.classList.remove('visible');
+    });
+    el.classList.toggle('visible');
+}
+// Fermer les tooltips en cliquant ailleurs
+document.addEventListener('click', () => {
+    document.querySelectorAll('.tooltip-popup.visible').forEach(t => t.classList.remove('visible'));
+});
+
 function showToast(msg, type='success') {
     const toast = document.createElement('div');
     toast.className = 'toast toast-' + type;
@@ -1129,6 +1282,14 @@ function renderSettings() {
     }
 }
 
+const ICONS = {
+    dollar: '\u{1F4B0}', target: '\u{1F3AF}', shield: '\u{1F6E1}', layers: '\u{1F4DA}',
+    chart: '\u{1F4CA}', droplet: '\u{1F4A7}', arrows: '\u{2194}\uFE0F', clock: '\u{23F0}',
+    alert: '\u{26A0}\uFE0F', toggle: '\u{1F504}', brain: '\u{1F9E0}', users: '\u{1F465}',
+    filter: '\u{1F50D}', trendUp: '\u{1F4C8}', trendDown: '\u{1F4C9}', scissors: '\u{2702}\uFE0F',
+    trophy: '\u{1F3C6}',
+};
+
 function createParamRow(p) {
     const row = document.createElement('div');
     row.className = 'param-row';
@@ -1136,14 +1297,25 @@ function createParamRow(p) {
 
     const displayValue = p.type === 'percent' ? (p.value * 100).toFixed(1) + '%' : p.value;
     const displayDefault = p.type === 'percent' ? (p.default * 100).toFixed(1) + '%' : p.default;
+    const icon = ICONS[p.icon] || '\u{2699}\uFE0F';
+    const tooltipId = 'tip-' + p.key;
 
     // Info
     const info = document.createElement('div');
     info.className = 'param-info';
     info.innerHTML = `
-        <div class="param-label ${p.modified ? 'modified' : ''}">${p.label || p.key}</div>
+        <div class="param-label ${p.modified ? 'modified' : ''}">
+            <span class="param-icon">${icon}</span>
+            ${p.label || p.key}
+            ${p.tooltip ? '<button class="info-btn" onclick="toggleTooltip(\'' + tooltipId + '\', event)">?</button>' : ''}
+        </div>
         <div class="param-desc">${p.desc || ''}</div>
         <div class="param-default">Default: ${displayDefault}</div>
+        ${p.tooltip ? '<div class="tooltip-popup" id="' + tooltipId + '">' +
+            '<div class="tooltip-title">' + icon + ' ' + (p.label || p.key) + '</div>' +
+            '<div class="tooltip-text">' + (p.tooltip || '') + '</div>' +
+            (p.example ? '<div class="tooltip-example"><div class="tooltip-example-label">Exemple concret</div>' + p.example + '</div>' : '') +
+        '</div>' : ''}
     `;
 
     // Input
