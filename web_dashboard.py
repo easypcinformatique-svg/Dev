@@ -383,7 +383,32 @@ th {
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.5px;
+    position: relative;
+    cursor: help;
 }
+.th-tooltip {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    z-index: 100;
+    width: 250px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #d1d5db;
+    line-height: 1.4;
+    pointer-events: none;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+}
+th:hover .th-tooltip { display: block; }
 td {
     padding: 10px 12px;
     border-bottom: 1px solid #111827;
@@ -471,12 +496,13 @@ tr:hover td { background: #1a2332; }
             <table>
                 <thead>
                     <tr>
-                        <th>Marche</th>
-                        <th>Side</th>
-                        <th>Taille</th>
-                        <th>Entree</th>
-                        <th>Actuel</th>
-                        <th>PnL</th>
+                        <th>Date<span class="th-tooltip">Date et heure d'ouverture de la position</span></th>
+                        <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel la position est ouverte</span></th>
+                        <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
+                        <th>Taille<span class="th-tooltip">Montant investi en dollars dans cette position</span></th>
+                        <th>Entree<span class="th-tooltip">Prix d'achat de la position (entre 0 et 1)</span></th>
+                        <th>Actuel<span class="th-tooltip">Prix actuel du marche en temps reel</span></th>
+                        <th>PnL<span class="th-tooltip">Profit ou perte non realise(e) sur cette position</span></th>
                     </tr>
                 </thead>
                 <tbody id="positions-body"></tbody>
@@ -495,14 +521,14 @@ tr:hover td { background: #1a2332; }
         <table>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Marche</th>
-                    <th>Side</th>
-                    <th>Entree</th>
-                    <th>Sortie</th>
-                    <th>Taille</th>
-                    <th>PnL</th>
-                    <th>Raison</th>
+                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
+                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
+                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
+                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
+                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
+                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
+                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
+                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
                 </tr>
             </thead>
             <tbody id="trades-body"></tbody>
@@ -663,20 +689,25 @@ function renderPositions(data) {
 
     const body = document.getElementById('positions-body');
     if (positions.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4b5563;padding:20px;">Aucune position ouverte</td></tr>';
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#4b5563;padding:20px;">Aucune position ouverte</td></tr>';
         return;
     }
 
-    body.innerHTML = positions.map(p => `
+    body.innerHTML = positions.map(p => {
+        const entryTime = p.entry_time ? new Date(p.entry_time).toLocaleString('fr-FR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '-';
+        return `
         <tr>
+            <td>${entryTime}</td>
             <td title="${p.question || ''}">${truncate(p.question || p.market_id, 35)}</td>
             <td><span style="color:${p.side === 'YES' ? '#4ade80' : '#f87171'};font-weight:600;">${p.side}</span></td>
             <td>${fmtUsd(p.size_usd)}</td>
             <td>${fmt(p.entry_price, 3)}</td>
             <td>${fmt(p.current_price, 3)}</td>
             <td class="${pnlClass(p.unrealized_pnl)}">${fmtUsd(p.unrealized_pnl)} (${fmt((p.unrealized_pnl_pct || 0) * 100, 1)}%)</td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 }
 
 function renderStats(data) {
