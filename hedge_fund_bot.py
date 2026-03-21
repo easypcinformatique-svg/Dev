@@ -44,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from backtest.polymarket_client import PolymarketClient, PolymarketTradingClient, PolymarketMarket
 from backtest.strategies import AlphaCompositeStrategy, InsuranceSellerStrategy
+from config_manager import ConfigManager
 
 logger = logging.getLogger("hedge_fund_bot")
 
@@ -358,22 +359,28 @@ class HedgeFundBot:
                 logger.warning("POLYMARKET_PRIVATE_KEY absent, passage en dry-run")
                 config.dry_run = True
 
-        # Strategie
+        # Strategie — parametres depuis le config manager si disponible
+        try:
+            _cm = ConfigManager()
+            _sp = _cm.get_strategy_params()
+        except Exception:
+            _sp = {}
+
         if config.strategy == "insurance_seller":
             self.strategy = InsuranceSellerStrategy()
         else:
             self.strategy = AlphaCompositeStrategy(
-                min_consensus=0.14,
-                min_agreeing_strategies=2,
-                spread_filter=0.10,
-                volume_percentile_filter=28,
-                max_price_extreme=0.89,
-                min_price_extreme=0.09,
-                stop_loss=0.25,
-                take_profit=0.50,
-                trailing_stop=0.17,
-                max_position_pct=0.08,
-                max_positions=12,
+                min_consensus=_sp.get("min_consensus", 0.14),
+                min_agreeing_strategies=_sp.get("min_agreeing_strategies", 2),
+                spread_filter=_sp.get("spread_filter", 0.10),
+                volume_percentile_filter=_sp.get("volume_percentile_filter", 28),
+                max_price_extreme=_sp.get("max_price_extreme", 0.89),
+                min_price_extreme=_sp.get("min_price_extreme", 0.09),
+                stop_loss=_sp.get("stop_loss", 0.25),
+                take_profit=_sp.get("take_profit", 0.50),
+                trailing_stop=_sp.get("trailing_stop", 0.17),
+                max_position_pct=_sp.get("strategy_max_position_pct", 0.08),
+                max_positions=_sp.get("strategy_max_positions", 12),
             )
 
         # Cache des historiques
@@ -952,12 +959,12 @@ class HedgeFundBot:
 def main():
     parser = argparse.ArgumentParser(description="Polymarket Hedge Fund Bot")
     parser.add_argument("--live", action="store_true", help="Mode live (vrai argent)")
-    parser.add_argument("--capital", type=float, default=1000.0, help="Capital initial ($)")
-    parser.add_argument("--strategy", default="alpha_composite",
+    parser.add_argument("--capital", type=float, default=None, help="Capital initial ($)")
+    parser.add_argument("--strategy", default=None,
                         choices=["alpha_composite", "insurance_seller"],
                         help="Strategie de trading")
-    parser.add_argument("--interval", type=int, default=300, help="Intervalle de scan (secondes)")
-    parser.add_argument("--max-positions", type=int, default=8, help="Nombre max de positions")
+    parser.add_argument("--interval", type=int, default=None, help="Intervalle de scan (secondes)")
+    parser.add_argument("--max-positions", type=int, default=None, help="Nombre max de positions")
     parser.add_argument("--max-iterations", type=int, default=0, help="0 = infini")
     parser.add_argument("--dashboard", action="store_true", help="Lancer le dashboard web")
     parser.add_argument("--port", type=int, default=5050, help="Port du dashboard")
@@ -965,12 +972,28 @@ def main():
 
     args = parser.parse_args()
 
+    # Charger la config depuis le gestionnaire de profils
+    cm = ConfigManager()
+    active = cm.get_active()
+    bot_cfg = active["bot"]
+    strat_cfg = active["strategy"]
+
+    # Les arguments CLI overrident la config sauvegardee
     config = BotConfig(
-        initial_capital=args.capital,
-        dry_run=not args.live,
-        strategy=args.strategy,
-        scan_interval_seconds=args.interval,
-        max_positions=args.max_positions,
+        initial_capital=args.capital if args.capital is not None else bot_cfg["initial_capital"],
+        max_position_pct=bot_cfg["max_position_pct"],
+        max_total_exposure_pct=bot_cfg["max_total_exposure_pct"],
+        max_positions=args.max_positions if args.max_positions is not None else bot_cfg["max_positions"],
+        min_volume=bot_cfg["min_volume"],
+        min_liquidity=bot_cfg["min_liquidity"],
+        min_spread=bot_cfg["min_spread"],
+        max_spread=bot_cfg["max_spread"],
+        scan_interval_seconds=args.interval if args.interval is not None else bot_cfg["scan_interval_seconds"],
+        history_fidelity=bot_cfg["history_fidelity"],
+        daily_loss_limit_pct=bot_cfg["daily_loss_limit_pct"],
+        max_drawdown_pct=bot_cfg["max_drawdown_pct"],
+        dry_run=not args.live if args.live else bot_cfg["dry_run"],
+        strategy=args.strategy if args.strategy is not None else bot_cfg["strategy"],
         state_file=args.state_file,
     )
 
@@ -980,7 +1003,7 @@ def main():
     if args.dashboard:
         try:
             from web_dashboard import create_dashboard_app
-            app = create_dashboard_app(bot)
+            app = create_dashboard_app(bot, config_manager=cm)
 
             dash_thread = threading.Thread(
                 target=lambda: app.run(
@@ -993,6 +1016,7 @@ def main():
             )
             dash_thread.start()
             logger.info(f"Dashboard demarre sur http://localhost:{args.port}")
+            logger.info(f"  Parametres : http://localhost:{args.port}/settings")
         except ImportError as e:
             logger.warning(f"Dashboard non disponible: {e}")
 
