@@ -20,6 +20,7 @@ Usage :
     python hedge_fund_bot.py --dashboard --port 5050
 """
 
+import csv
 import json
 import argparse
 import threading
@@ -75,6 +76,31 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
 
             positions = state.get("positions", {})
             trades = state.get("trades", [])
+
+            # Fallback: charger l'historique depuis trades_report.csv
+            if not trades:
+                csv_path = Path(state_file).parent / "trades_report.csv"
+                if csv_path.exists():
+                    try:
+                        with open(csv_path) as csvf:
+                            reader = csv.DictReader(csvf)
+                            for row in reader:
+                                trades.append({
+                                    "market_id": row.get("market_id", ""),
+                                    "question": row.get("market_id", ""),
+                                    "side": row.get("side", ""),
+                                    "entry_price": float(row.get("entry_price", 0)),
+                                    "exit_price": float(row.get("exit_price", 0)),
+                                    "size_usd": float(row.get("montant_engage", 0)),
+                                    "pnl": float(row.get("gain_perte", 0)),
+                                    "pnl_pct": float(row.get("rendement_%", 0)),
+                                    "entry_time": row.get("entry_time", ""),
+                                    "exit_time": row.get("exit_time", ""),
+                                    "reason": row.get("exit_reason", ""),
+                                })
+                    except Exception:
+                        pass
+
             pnls = [t.get("pnl", 0) for t in trades]
             wins = [p for p in pnls if p > 0]
             losses = [p for p in pnls if p < 0]
