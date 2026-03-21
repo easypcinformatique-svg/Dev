@@ -28,7 +28,7 @@
       "n_positions": 1
     },
     {
-      "timestamp": "2026-03-21T18:17:53.370674",
+      "timestamp": "2026-03-21T18:18:16.773709",
       "equity": 1003.3027625643881,
       "capital": 991.1687000995709,
       "exposure": 8.831299900429151,
@@ -41,7 +41,7 @@
   "peak_equity": 1003.3027625643881,
   "iteration": 2,
   "started_at": "2026-03-21T18:10:20.781004",
-  "last_scan": "2026-03-21T18:17:11.866776",
+  "last_scan": "2026-03-21T18:17:25.140031",
   "markets_scanned": 39,
   "signals_generated": 70,
   "errors": []
