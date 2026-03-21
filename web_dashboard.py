@@ -115,6 +115,7 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                 },
                 "positions": list(positions.values()) if isinstance(positions, dict) else positions,
                 "recent_trades": trades[-20:],
+                "all_trades": trades,
                 "trade_stats": {
                     "total_trades": len(trades),
                     "winning_trades": len(wins),
@@ -133,8 +134,8 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
             }
         except Exception:
             return {"status": "error", "overview": {}, "positions": [],
-                    "recent_trades": [], "trade_stats": {}, "equity_history": [],
-                    "errors": []}
+                    "recent_trades": [], "all_trades": [], "trade_stats": {},
+                    "equity_history": [], "errors": []}
 
     @app.route("/api/data")
     def api_data():
@@ -535,6 +536,26 @@ tr:hover td { background: #1a2332; }
         </table>
     </div>
 
+    <!-- Historique complet des trades -->
+    <div class="table-container" id="history-container" style="display:none;">
+        <h2>Historique des Trades (<span id="history-count">0</span>)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
+                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
+                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
+                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
+                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
+                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
+                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
+                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+        </table>
+    </div>
+
     <!-- Erreurs -->
     <div class="table-container" id="errors-container" style="display:none;">
         <h2>Erreurs Recentes</h2>
@@ -763,6 +784,36 @@ function renderTrades(data) {
     }).join('');
 }
 
+function renderTradesHistory(data) {
+    const trades = (data.all_trades || []).slice().reverse();
+    const container = document.getElementById('history-container');
+    const body = document.getElementById('history-body');
+    document.getElementById('history-count').textContent = trades.length;
+
+    if (trades.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    body.innerHTML = trades.map(t => {
+        const exitTime = t.exit_time ? new Date(t.exit_time).toLocaleString('fr-FR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '-';
+        return `
+        <tr>
+            <td>${exitTime}</td>
+            <td title="${t.question || ''}">${truncate(t.question || t.market_id, 30)}</td>
+            <td><span style="color:${t.side === 'YES' ? '#4ade80' : '#f87171'}">${t.side}</span></td>
+            <td>${fmt(t.entry_price, 3)}</td>
+            <td>${fmt(t.exit_price, 3)}</td>
+            <td>${fmtUsd(t.size_usd)}</td>
+            <td class="${pnlClass(t.pnl)}">${fmtUsd(t.pnl)}</td>
+            <td style="color:#9ca3af;font-size:11px;">${t.reason || ''}</td>
+        </tr>`;
+    }).join('');
+}
+
 function renderErrors(data) {
     const errors = data.errors || [];
     const container = document.getElementById('errors-container');
@@ -806,6 +857,7 @@ async function fetchAndRender() {
         renderPositions(data);
         renderStats(data);
         renderTrades(data);
+        renderTradesHistory(data);
         renderErrors(data);
     } catch (err) {
         console.error('Erreur de chargement:', err);

@@ -1014,6 +1014,7 @@ class HedgeFundBot:
             },
             "positions": list(self.state.positions.values()),
             "recent_trades": trades[-20:],
+            "all_trades": trades,
             "trade_stats": {
                 "total_trades": len(trades),
                 "winning_trades": len(wins),
