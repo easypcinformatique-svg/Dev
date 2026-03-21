@@ -999,24 +999,33 @@ def main():
 
     bot = HedgeFundBot(config)
 
+    # Render.com definit PORT automatiquement
+    port = args.port or int(os.environ.get("PORT", 5050))
+
     # Lancer le dashboard dans un thread separe
     if args.dashboard:
         try:
-            from web_dashboard import create_dashboard_app
+            from web_dashboard import create_dashboard_app, _start_keep_alive
             app = create_dashboard_app(bot, config_manager=cm)
 
             dash_thread = threading.Thread(
                 target=lambda: app.run(
                     host="0.0.0.0",
-                    port=args.port,
+                    port=port,
                     debug=False,
                     use_reloader=False,
                 ),
                 daemon=True,
             )
             dash_thread.start()
-            logger.info(f"Dashboard demarre sur http://localhost:{args.port}")
-            logger.info(f"  Parametres : http://localhost:{args.port}/settings")
+            logger.info(f"Dashboard demarre sur http://localhost:{port}")
+            logger.info(f"  Parametres : http://localhost:{port}/settings")
+
+            # Keep-alive pour les hebergeurs gratuits (Render, etc.)
+            render_url = os.environ.get("RENDER_EXTERNAL_URL")
+            if render_url:
+                _start_keep_alive(render_url)
+                logger.info(f"  Keep-alive actif pour {render_url}")
         except ImportError as e:
             logger.warning(f"Dashboard non disponible: {e}")
 

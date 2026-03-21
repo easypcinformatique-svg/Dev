@@ -22,12 +22,30 @@ Usage :
 
 import json
 import argparse
+import threading
 from pathlib import Path
 from datetime import datetime
 
 from flask import Flask, jsonify, Response, request
 
 from config_manager import ConfigManager
+
+
+def _start_keep_alive(app_url: str, interval: int = 600):
+    """Ping le serveur toutes les 10 min pour eviter le sleep du free tier."""
+    import urllib.request
+
+    def _ping():
+        while True:
+            try:
+                urllib.request.urlopen(f"{app_url}/api/health", timeout=10)
+            except Exception:
+                pass
+            import time
+            time.sleep(interval)
+
+    t = threading.Thread(target=_ping, daemon=True)
+    t.start()
 
 
 def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=None):
@@ -179,6 +197,11 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
         if not name:
             return jsonify({"error": "Nom requis"}), 400
         return jsonify(cm.delete_profile(name))
+
+    @app.route("/api/health")
+    def api_health():
+        """Endpoint de sante pour le keep-alive."""
+        return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
     @app.route("/")
     def index():
@@ -1391,15 +1414,19 @@ loadSettings();
 # ================================================================
 
 def main():
+    import os
     parser = argparse.ArgumentParser(description="Dashboard Web Polymarket Bot")
-    parser.add_argument("--port", type=int, default=5050, help="Port du serveur")
+    parser.add_argument("--port", type=int, default=None, help="Port du serveur")
     parser.add_argument("--host", default="0.0.0.0", help="Adresse d'ecoute")
     parser.add_argument("--state-file", default="bot_state.json", help="Fichier d'etat du bot")
     args = parser.parse_args()
 
+    # Render.com definit PORT automatiquement
+    port = args.port or int(os.environ.get("PORT", 5050))
+
     app = create_dashboard_app(state_file=args.state_file)
-    print(f"Dashboard demarre sur http://localhost:{args.port}")
-    app.run(host=args.host, port=args.port, debug=True)
+    print(f"Dashboard demarre sur http://localhost:{port}")
+    app.run(host=args.host, port=port, debug=True)
 
 
 if __name__ == "__main__":
