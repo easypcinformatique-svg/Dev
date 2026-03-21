@@ -204,13 +204,17 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
         """Endpoint de sante pour le keep-alive."""
         return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
+    def _inject_version(html: str) -> str:
+        version = datetime.now().strftime("%Y-%m-%d %H:%M")
+        return html.replace("__BUILD_VERSION__", version)
+
     @app.route("/")
     def index():
-        return Response(DASHBOARD_HTML, mimetype="text/html")
+        return Response(_inject_version(DASHBOARD_HTML), mimetype="text/html")
 
     @app.route("/settings")
     def settings_page():
-        return Response(SETTINGS_HTML, mimetype="text/html")
+        return Response(_inject_version(SETTINGS_HTML), mimetype="text/html")
 
     return app
 
@@ -468,7 +472,7 @@ tr:hover td { background: #1a2332; }
 <body>
 
 <div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot</h1>
+    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
     <div class="header-right">
         <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Parametres</a>
         <span id="strategy-name"></span>
@@ -1247,7 +1251,7 @@ input:checked + .toggle-slider:before { transform: translateX(24px); }
 <body>
 
 <div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot</h1>
+    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
     <div class="header-right">
         <a href="/" class="nav-link">Dashboard</a>
         <a href="/settings" class="nav-link active">Parametres</a>
