@@ -13,3 +13,5 @@ credentials.json
 *.egg-info/
 dist/
 build/
+backtest_report.html
+logs/

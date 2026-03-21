@@ -8,30 +8,69 @@ echo    INSTALLATION - Gestion Factures Pizzeria
 echo ============================================================
 echo.
 
-:: Vérifier Python
+:: Trouver la bonne version de Python (3.10-3.13)
 echo [1/5] Verification de Python...
-python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo.
-    echo ERREUR : Python n'est pas installe ou pas dans le PATH.
-    echo.
-    echo Telechargez Python 3.10+ depuis : https://www.python.org/downloads/
-    echo IMPORTANT : Cochez "Add Python to PATH" lors de l'installation !
-    echo.
-    pause
-    exit /b 1
+set PYTHON_CMD=
+
+:: Essayer py -3.12 d'abord (version recommandee)
+py -3.12 --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PYTHON_CMD=py -3.12
+    goto python_found
 )
-python --version
-echo    OK
+
+:: Essayer py -3.13
+py -3.13 --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PYTHON_CMD=py -3.13
+    goto python_found
+)
+
+:: Essayer py -3.11
+py -3.11 --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PYTHON_CMD=py -3.11
+    goto python_found
+)
+
+:: Essayer py -3.10
+py -3.10 --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PYTHON_CMD=py -3.10
+    goto python_found
+)
+
+:: Essayer python classique en dernier recours
+python --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PYTHON_CMD=python
+    goto python_found
+)
+
+echo.
+echo ERREUR : Python 3.10 a 3.13 n'est pas installe.
+echo.
+echo Telechargez Python 3.12 depuis :
+echo https://www.python.org/downloads/release/python-3120/
+echo Cliquez sur "Windows installer (64-bit)"
+echo IMPORTANT : Cochez "Add Python to PATH" lors de l'installation !
+echo.
+pause
+exit /b 1
+
+:python_found
+%PYTHON_CMD% --version
+echo    OK (utilise: %PYTHON_CMD%)
 echo.
 
 :: Créer l'environnement virtuel
 echo [2/5] Creation de l'environnement virtuel...
 if not exist "venv" (
-    python -m venv venv
+    %PYTHON_CMD% -m venv venv
     echo    Environnement cree.
 ) else (
     echo    Environnement existant detecte.
+    echo    Pour reinstaller, supprimez le dossier "venv" et relancez.
 )
 echo.
 
@@ -41,6 +80,7 @@ call venv\Scripts\activate.bat
 pip install --quiet -r requirements.txt
 if %errorlevel% neq 0 (
     echo ERREUR lors de l'installation des dependances.
+    echo Essayez de supprimer le dossier "venv" et relancez ce script.
     pause
     exit /b 1
 )
