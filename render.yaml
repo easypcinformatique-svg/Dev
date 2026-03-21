@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: polymarket-bot
+    runtime: docker
+    repo: https://github.com/easypcinformatique-svg/Dev
+    branch: claude/pokymarket-work-MXwve
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 5050
+      - key: PYTHONUNBUFFERED
+        value: "1"

@@ -40,6 +40,7 @@ class Trade:
     entry_time: pd.Timestamp
     exit_time: pd.Timestamp
     exit_reason: str  # "signal", "stop_loss", "take_profit", "resolution"
+    fees_total: float = 0.0
 
 
 class BaseStrategy(ABC):

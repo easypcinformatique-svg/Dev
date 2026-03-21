@@ -22,7 +22,7 @@ from .data_generator import MarketConfig
 class BacktestConfig:
     """Configuration du backtest."""
     initial_capital: float = 100000.0
-    transaction_fee_pct: float = 0.002  # 0.2% frais
+    transaction_fee_pct: float = 0.02  # 2% frais Polymarket
     slippage_pct: float = 0.001  # 0.1% slippage
     max_position_pct: float = 0.05  # 5% du capital max par position
     max_total_exposure_pct: float = 0.50  # 50% max d'exposition
@@ -136,9 +136,11 @@ class BacktestEngine:
 
         trade = self.strategy._close_position(market_id, exec_price, timestamp, reason)
 
-        # Frais de sortie
-        fee = pos.size * self.config.transaction_fee_pct
-        trade.pnl -= fee
+        # Frais de sortie (entree deja deduite dans _execute_entry)
+        fee_exit = pos.size * self.config.transaction_fee_pct
+        fee_entry = pos.size * self.config.transaction_fee_pct
+        trade.pnl -= fee_exit
+        trade.fees_total = fee_entry + fee_exit
 
         self.capital += pos.size + trade.pnl
         return trade

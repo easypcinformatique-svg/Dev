@@ -22,15 +22,40 @@ Usage :
 
 import json
 import argparse
+import threading
 from pathlib import Path
 from datetime import datetime
 
-from flask import Flask, jsonify, Response
+from flask import Flask, jsonify, Response, request
+
+from config_manager import ConfigManager
 
 
-def create_dashboard_app(bot=None, state_file="bot_state.json"):
+def _start_keep_alive(app_url: str, interval: int = 600):
+    """Ping le serveur toutes les 10 min pour eviter le sleep du free tier."""
+    import urllib.request
+
+    def _ping():
+        while True:
+            try:
+                urllib.request.urlopen(f"{app_url}/api/health", timeout=10)
+            except Exception:
+                pass
+            import time
+            time.sleep(interval)
+
+    t = threading.Thread(target=_ping, daemon=True)
+    t.start()
+
+
+def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=None):
     """Cree l'application Flask du dashboard."""
     app = Flask(__name__)
+
+    # Gestionnaire de configuration
+    if config_manager is None:
+        config_manager = ConfigManager()
+    cm = config_manager
 
     def _get_data():
         """Recupere les donnees du bot ou du fichier d'etat."""
@@ -90,6 +115,7 @@ def create_dashboard_app(bot=None, state_file="bot_state.json"):
                 },
                 "positions": list(positions.values()) if isinstance(positions, dict) else positions,
                 "recent_trades": trades[-20:],
+                "all_trades": trades,
                 "trade_stats": {
                     "total_trades": len(trades),
                     "winning_trades": len(wins),
@@ -108,16 +134,87 @@ def create_dashboard_app(bot=None, state_file="bot_state.json"):
             }
         except Exception:
             return {"status": "error", "overview": {}, "positions": [],
-                    "recent_trades": [], "trade_stats": {}, "equity_history": [],
-                    "errors": []}
+                    "recent_trades": [], "all_trades": [], "trade_stats": {},
+                    "equity_history": [], "errors": []}
 
     @app.route("/api/data")
     def api_data():
         return jsonify(_get_data())
 
+    # ---- Settings API ----
+
+    @app.route("/api/settings")
+    def api_settings():
+        """Retourne la config active avec metadonnees."""
+        return jsonify(cm.get_active_with_meta())
+
+    @app.route("/api/settings/update", methods=["POST"])
+    def api_settings_update():
+        """Met a jour des parametres."""
+        updates = request.get_json(force=True)
+        result = cm.update_params(updates)
+        return jsonify(result)
+
+    @app.route("/api/settings/reset", methods=["POST"])
+    def api_settings_reset():
+        """Restaure les parametres d'origine."""
+        result = cm.reset_to_defaults()
+        return jsonify(result)
+
+    @app.route("/api/settings/diff")
+    def api_settings_diff():
+        """Compare la config active vs les defaults."""
+        return jsonify(cm.get_diff())
+
+    @app.route("/api/settings/profiles", methods=["GET"])
+    def api_profiles_list():
+        """Liste les profils sauvegardes."""
+        profiles = list(cm.data.get("profiles", {}).keys())
+        return jsonify({"profiles": profiles})
+
+    @app.route("/api/settings/profiles/save", methods=["POST"])
+    def api_profiles_save():
+        """Sauvegarde la config active comme profil."""
+        data = request.get_json(force=True)
+        name = data.get("name", "")
+        if not name:
+            return jsonify({"error": "Nom requis"}), 400
+        return jsonify(cm.save_profile(name))
+
+    @app.route("/api/settings/profiles/load", methods=["POST"])
+    def api_profiles_load():
+        """Charge un profil."""
+        data = request.get_json(force=True)
+        name = data.get("name", "")
+        if not name:
+            return jsonify({"error": "Nom requis"}), 400
+        return jsonify(cm.load_profile(name))
+
+    @app.route("/api/settings/profiles/delete", methods=["POST"])
+    def api_profiles_delete():
+        """Supprime un profil."""
+        data = request.get_json(force=True)
+        name = data.get("name", "")
+        if not name:
+            return jsonify({"error": "Nom requis"}), 400
+        return jsonify(cm.delete_profile(name))
+
+    @app.route("/api/health")
+    def api_health():
+        """Endpoint de sante pour le keep-alive."""
+        return jsonify({"status": "ok", "time": datetime.now().isoformat()})
+
+    def _inject_version(html: str) -> str:
+        version = datetime.now().strftime("%Y-%m-%d %H:%M")
+        return html.replace("__BUILD_VERSION__", version)
+
     @app.route("/")
     def index():
-        return Response(DASHBOARD_HTML, mimetype="text/html")
+        return Response(_inject_version(DASHBOARD_HTML), mimetype="text/html")
+
+    @app.route("/settings")
+    def settings_page():
+        return Response(_inject_version(SETTINGS_HTML), mimetype="text/html")
 
     return app
 
@@ -207,6 +304,50 @@ body {
     color: #6b7280;
     margin-top: 4px;
 }
+/* Dashboard tooltips */
+.metric-card { position: relative; cursor: help; }
+.metric-tooltip {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    z-index: 100;
+    width: 300px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #d1d5db;
+    line-height: 1.5;
+    pointer-events: none;
+}
+.metric-card:hover .metric-tooltip { display: block; }
+.metric-tooltip strong { color: #a5b4fc; }
+.metric-tooltip .tip-example { color: #4ade80; margin-top: 6px; font-size: 11px; }
+.stat-row { position: relative; cursor: help; }
+.stat-tooltip {
+    display: none;
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    z-index: 100;
+    width: 280px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #d1d5db;
+    line-height: 1.4;
+    pointer-events: none;
+}
+.stat-row:hover .stat-tooltip { display: block; }
 
 /* Chart */
 .chart-container {
@@ -247,7 +388,32 @@ th {
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.5px;
+    position: relative;
+    cursor: help;
 }
+.th-tooltip {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    z-index: 100;
+    width: 250px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #d1d5db;
+    line-height: 1.4;
+    pointer-events: none;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+}
+th:hover .th-tooltip { display: block; }
 td {
     padding: 10px 12px;
     border-bottom: 1px solid #111827;
@@ -306,8 +472,9 @@ tr:hover td { background: #1a2332; }
 <body>
 
 <div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot</h1>
+    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
     <div class="header-right">
+        <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Parametres</a>
         <span id="strategy-name"></span>
         <span id="mode-badge" class="mode-badge"></span>
         <span id="status-badge" class="status-badge"></span>
@@ -334,12 +501,13 @@ tr:hover td { background: #1a2332; }
             <table>
                 <thead>
                     <tr>
-                        <th>Marche</th>
-                        <th>Side</th>
-                        <th>Taille</th>
-                        <th>Entree</th>
-                        <th>Actuel</th>
-                        <th>PnL</th>
+                        <th>Date<span class="th-tooltip">Date et heure d'ouverture de la position</span></th>
+                        <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel la position est ouverte</span></th>
+                        <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
+                        <th>Taille<span class="th-tooltip">Montant investi en dollars dans cette position</span></th>
+                        <th>Entree<span class="th-tooltip">Prix d'achat de la position (entre 0 et 1)</span></th>
+                        <th>Actuel<span class="th-tooltip">Prix actuel du marche en temps reel</span></th>
+                        <th>PnL<span class="th-tooltip">Profit ou perte non realise(e) sur cette position</span></th>
                     </tr>
                 </thead>
                 <tbody id="positions-body"></tbody>
@@ -358,17 +526,37 @@ tr:hover td { background: #1a2332; }
         <table>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Marche</th>
-                    <th>Side</th>
-                    <th>Entree</th>
-                    <th>Sortie</th>
-                    <th>Taille</th>
-                    <th>PnL</th>
-                    <th>Raison</th>
+                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
+                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
+                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
+                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
+                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
+                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
+                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
+                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
                 </tr>
             </thead>
             <tbody id="trades-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Historique complet des trades -->
+    <div class="table-container" id="history-container" style="display:none;">
+        <h2>Historique des Trades (<span id="history-count">0</span>)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
+                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
+                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
+                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
+                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
+                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
+                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
+                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
         </table>
     </div>
 
@@ -411,20 +599,37 @@ function truncate(s, len) {
 function renderMetrics(data) {
     const o = data.overview || {};
     const cards = [
-        { label: 'Equity', value: fmtUsd(o.equity), cls: '' },
-        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '' },
-        { label: 'PnL Total', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '%' },
-        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl) },
-        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl) },
-        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%' },
-        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '' },
-        { label: 'Peak Equity', value: fmtUsd(o.peak_equity) },
+        { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '\u{1F4B0}',
+          tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br>C\'est la valeur totale de ton portefeuille a cet instant.',
+          ex: 'Capital 700$ + 2 positions de 150$ + 30$ de gains = Equity 1030$' },
+        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
+          tip: '<strong>L\'argent disponible</strong> qui n\'est pas investi dans des positions. C\'est ta reserve pour ouvrir de nouvelles positions.',
+          ex: 'Sur 1000$ total, si 300$ sont investis, il reste 700$ de cash' },
+        { label: 'PnL Total', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '%', icon: '\u{1F4CA}',
+          tip: '<strong>Profit and Loss total</strong> depuis le lancement du bot. Somme de tous les trades fermes (gains - pertes).',
+          ex: '+45$ = le bot a gagne 45$ depuis le debut. -20$ = il a perdu 20$ au total' },
+        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
+          tip: '<strong>Profit et perte du jour</strong>. Se reinitialise a minuit. Si ca depasse la limite journaliere, le bot arrete de trader.',
+          ex: '+12$ = le bot a gagne 12$ aujourd\'hui. -30$ = il a perdu 30$ depuis minuit' },
+        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '\u{23F3}',
+          tip: '<strong>Gains/pertes des positions encore ouvertes</strong>. Ce n\'est pas du vrai profit tant que la position n\'est pas fermee. Ca peut changer a tout moment.',
+          ex: '+15$ = tes positions ouvertes sont en gain de 15$. Mais si le marche bouge, ca peut devenir -15$' },
+        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '\u{1F3AF}',
+          tip: '<strong>Montant total investi</strong> dans les positions ouvertes. L\'exposition en % = combien de ton capital est "a risque".',
+          ex: '300$ (30%) = 300$ sont investis sur les marches, soit 30% de ton equity' },
+        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '\u{1F4C9}',
+          tip: '<strong>Baisse depuis le plus haut</strong> (peak equity). Mesure combien tu as "perdu" depuis ton meilleur moment. Si ca depasse le max (15%), le bot s\'arrete.',
+          ex: 'Peak a 1100$, equity actuelle 1050$ = drawdown de 4.5%. A 15% le bot coupe tout' },
+        { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '\u{1F3D4}',
+          tip: '<strong>La plus haute valeur atteinte</strong> par ton portefeuille. Sert de reference pour calculer le drawdown.',
+          ex: 'Peak 1100$ = a un moment, ton portefeuille valait 1100$. C\'est le record a battre' },
     ];
 
     const grid = document.getElementById('metrics-grid');
     grid.innerHTML = cards.map(c => `
         <div class="metric-card">
-            <div class="metric-label">${c.label}</div>
+            <div class="metric-tooltip">${c.tip}${c.ex ? '<div class="tip-example">' + c.icon + ' ' + c.ex + '</div>' : ''}</div>
+            <div class="metric-label">${c.icon} ${c.label}</div>
             <div class="metric-value ${c.cls}">${c.value}</div>
             ${c.sub ? '<div class="metric-sub">' + c.sub + '</div>' : ''}
         </div>
@@ -509,41 +714,47 @@ function renderPositions(data) {
 
     const body = document.getElementById('positions-body');
     if (positions.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4b5563;padding:20px;">Aucune position ouverte</td></tr>';
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#4b5563;padding:20px;">Aucune position ouverte</td></tr>';
         return;
     }
 
-    body.innerHTML = positions.map(p => `
+    body.innerHTML = positions.map(p => {
+        const entryTime = p.entry_time ? new Date(p.entry_time).toLocaleString('fr-FR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '-';
+        return `
         <tr>
+            <td>${entryTime}</td>
             <td title="${p.question || ''}">${truncate(p.question || p.market_id, 35)}</td>
             <td><span style="color:${p.side === 'YES' ? '#4ade80' : '#f87171'};font-weight:600;">${p.side}</span></td>
             <td>${fmtUsd(p.size_usd)}</td>
             <td>${fmt(p.entry_price, 3)}</td>
             <td>${fmt(p.current_price, 3)}</td>
             <td class="${pnlClass(p.unrealized_pnl)}">${fmtUsd(p.unrealized_pnl)} (${fmt((p.unrealized_pnl_pct || 0) * 100, 1)}%)</td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 }
 
 function renderStats(data) {
     const s = data.trade_stats || {};
     const rows = [
-        ['Total Trades', s.total_trades || 0],
-        ['Win Rate', fmt(s.win_rate, 1) + '%'],
-        ['Trades Gagnants', s.winning_trades || 0],
-        ['Trades Perdants', s.losing_trades || 0],
-        ['Gain Moyen', fmtUsd(s.avg_win)],
-        ['Perte Moyenne', fmtUsd(s.avg_loss)],
-        ['Profit Factor', fmt(s.profit_factor)],
-        ['Plus Gros Gain', fmtUsd(s.largest_win)],
-        ['Plus Grosse Perte', fmtUsd(s.largest_loss)],
-        ['Marches Scannes', data.markets_scanned || 0],
-        ['Signaux Generes', data.signals_generated || 0],
-        ['Iteration', data.iteration || 0],
+        ['Total Trades', s.total_trades || 0, 'Nombre total de trades fermes (gagnes + perdus) depuis le lancement'],
+        ['Win Rate', fmt(s.win_rate, 1) + '%', 'Pourcentage de trades gagnants. Ex: 60% = 6 trades sur 10 sont positifs. Au-dessus de 50% c\'est bon signe'],
+        ['Trades Gagnants', s.winning_trades || 0, 'Nombre de trades qui ont rapporte de l\'argent (PnL > 0)'],
+        ['Trades Perdants', s.losing_trades || 0, 'Nombre de trades qui ont perdu de l\'argent (PnL < 0)'],
+        ['Gain Moyen', fmtUsd(s.avg_win), 'Combien un trade gagnant rapporte en moyenne. Ex: +8.50$ = chaque trade positif gagne 8.50$ en moyenne'],
+        ['Perte Moyenne', fmtUsd(s.avg_loss), 'Combien un trade perdant coute en moyenne. Ex: -5.20$ = chaque trade negatif perd 5.20$ en moyenne'],
+        ['Profit Factor', fmt(s.profit_factor), 'Gains totaux / Pertes totales. > 1 = rentable. Ex: 1.5 = pour chaque 1$ perdu, le bot gagne 1.50$. < 1 = non rentable'],
+        ['Plus Gros Gain', fmtUsd(s.largest_win), 'Le meilleur trade jamais realise. Montre le potentiel max du bot'],
+        ['Plus Grosse Perte', fmtUsd(s.largest_loss), 'Le pire trade jamais realise. Montre le risque max par trade'],
+        ['Marches Scannes', data.markets_scanned || 0, 'Nombre de marches Polymarket analyses a la derniere iteration (apres filtrage volume/liquidite)'],
+        ['Signaux Generes', data.signals_generated || 0, 'Nombre total de signaux de trading generes depuis le debut. Pas tous ne menent a un trade'],
+        ['Iteration', data.iteration || 0, 'Nombre de cycles complets du bot. Chaque iteration = scan + analyse + decisions + mise a jour'],
     ];
 
-    document.getElementById('stats-grid').innerHTML = rows.map(([label, value]) => `
+    document.getElementById('stats-grid').innerHTML = rows.map(([label, value, tip]) => `
         <div class="stat-row">
+            <div class="stat-tooltip">${tip}</div>
             <span class="stat-label">${label}</span>
             <span class="stat-value">${value}</span>
         </div>
@@ -559,6 +770,36 @@ function renderTrades(data) {
         return;
     }
 
+    body.innerHTML = trades.map(t => {
+        const exitTime = t.exit_time ? new Date(t.exit_time).toLocaleString('fr-FR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '-';
+        return `
+        <tr>
+            <td>${exitTime}</td>
+            <td title="${t.question || ''}">${truncate(t.question || t.market_id, 30)}</td>
+            <td><span style="color:${t.side === 'YES' ? '#4ade80' : '#f87171'}">${t.side}</span></td>
+            <td>${fmt(t.entry_price, 3)}</td>
+            <td>${fmt(t.exit_price, 3)}</td>
+            <td>${fmtUsd(t.size_usd)}</td>
+            <td class="${pnlClass(t.pnl)}">${fmtUsd(t.pnl)}</td>
+            <td style="color:#9ca3af;font-size:11px;">${t.reason || ''}</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderTradesHistory(data) {
+    const trades = (data.all_trades || []).slice().reverse();
+    const container = document.getElementById('history-container');
+    const body = document.getElementById('history-body');
+    document.getElementById('history-count').textContent = trades.length;
+
+    if (trades.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
     body.innerHTML = trades.map(t => {
         const exitTime = t.exit_time ? new Date(t.exit_time).toLocaleString('fr-FR', {
             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -620,6 +861,7 @@ async function fetchAndRender() {
         renderPositions(data);
         renderStats(data);
         renderTrades(data);
+        renderTradesHistory(data);
         renderErrors(data);
     } catch (err) {
         console.error('Erreur de chargement:', err);
@@ -636,19 +878,814 @@ setInterval(fetchAndRender, 10000);
 
 
 # ================================================================
+#  SETTINGS HTML/CSS/JS COMPLET (EMBARQUE)
+# ================================================================
+
+SETTINGS_HTML = r"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parametres - Polymarket Bot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0a0e17;
+    color: #e0e6ed;
+    min-height: 100vh;
+}
+.header {
+    background: linear-gradient(135deg, #0d1321 0%, #1a1f35 100%);
+    border-bottom: 1px solid #2a3a5c;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header h1 { font-size: 20px; color: #fff; font-weight: 600; }
+.header h1 span { color: #6c63ff; }
+.header-right { display: flex; gap: 12px; align-items: center; }
+.nav-link {
+    color: #a5b4fc;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 4px 12px;
+    border: 1px solid #6366f1;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+.nav-link:hover { background: #6366f1; color: #fff; }
+.nav-link.active { background: #6366f1; color: #fff; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+/* Top bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.top-bar h2 { font-size: 18px; color: #fff; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    background: #111827;
+    color: #e0e6ed;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+.btn:hover { border-color: #6366f1; color: #a5b4fc; }
+.btn-primary { background: #6366f1; border-color: #6366f1; color: #fff; }
+.btn-primary:hover { background: #4f46e5; }
+.btn-danger { border-color: #ef4444; color: #f87171; }
+.btn-danger:hover { background: #7f1d1d; }
+.btn-success { border-color: #22c55e; color: #4ade80; }
+.btn-success:hover { background: #0d3320; }
+
+/* Diff badge */
+.diff-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: #1e1b4b;
+    border: 1px solid #6366f1;
+    color: #a5b4fc;
+    font-size: 12px;
+}
+
+/* Sections */
+.settings-section {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.section-header {
+    padding: 14px 20px;
+    background: #0d1321;
+    border-bottom: 1px solid #1f2937;
+    font-size: 14px;
+    font-weight: 600;
+    color: #a5b4fc;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.section-header:hover { background: #111827; }
+.section-header .chevron { transition: transform 0.2s; }
+.section-header.collapsed .chevron { transform: rotate(-90deg); }
+.section-body { padding: 16px 20px; }
+.section-body.hidden { display: none; }
+
+/* Param rows */
+.param-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a2332;
+}
+.param-row:last-child { border-bottom: none; }
+.param-info { position: relative; }
+.param-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #e0e6ed;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.param-label.modified { color: #fbbf24; }
+.param-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.7;
+}
+.param-desc {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+.param-default {
+    font-size: 11px;
+    color: #4b5563;
+    margin-top: 2px;
+}
+/* Info bulle */
+.info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #374151;
+    color: #9ca3af;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.info-btn:hover { background: #6366f1; color: #fff; }
+.tooltip-popup {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 100;
+    width: 380px;
+    background: #1a1f35;
+    border: 1px solid #6366f1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    margin-top: 6px;
+}
+.tooltip-popup.visible { display: block; }
+.tooltip-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a5b4fc;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.tooltip-text {
+    font-size: 12px;
+    color: #d1d5db;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+.tooltip-example {
+    background: #0d1321;
+    border: 1px solid #2a3a5c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #4ade80;
+    line-height: 1.5;
+}
+.tooltip-example-label {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.param-input { text-align: right; }
+.param-input input, .param-input select {
+    background: #0d1321;
+    border: 1px solid #374151;
+    color: #e0e6ed;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    width: 180px;
+    text-align: right;
+}
+.param-input input:focus, .param-input select:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+.param-input input.modified {
+    border-color: #fbbf24;
+    background: #1a1500;
+}
+.param-reset-btn {
+    background: none;
+    border: 1px solid #374151;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.param-reset-btn:hover { border-color: #ef4444; color: #f87171; }
+.param-reset-btn.hidden { visibility: hidden; }
+
+/* Toggle switch */
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    display: inline-block;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #374151;
+    border-radius: 24px;
+    transition: 0.3s;
+}
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+input:checked + .toggle-slider { background: #6366f1; }
+input:checked + .toggle-slider:before { transform: translateX(24px); }
+
+/* Profiles section */
+.profiles-section {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.profiles-section h3 {
+    font-size: 14px;
+    color: #d1d5db;
+    margin-bottom: 12px;
+}
+.profile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid #1f2937;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+.profile-row:hover { border-color: #374151; }
+.profile-name { color: #e0e6ed; font-weight: 500; }
+.profile-actions { display: flex; gap: 6px; }
+.save-profile-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+.save-profile-row input {
+    flex: 1;
+    background: #0d1321;
+    border: 1px solid #374151;
+    color: #e0e6ed;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.save-profile-row input:focus { outline: none; border-color: #6366f1; }
+
+/* History */
+.history-section {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.history-section h3 {
+    font-size: 14px;
+    color: #d1d5db;
+    margin-bottom: 12px;
+}
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #1a2332;
+    font-size: 12px;
+}
+.history-item:last-child { border-bottom: none; }
+.history-key { color: #a5b4fc; }
+.history-change { color: #6b7280; }
+.history-time { color: #4b5563; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.toast-success { background: #0d3320; color: #4ade80; border: 1px solid #22c55e; }
+.toast-error { background: #3b1818; color: #f87171; border: 1px solid #ef4444; }
+.toast-info { background: #1e1b4b; color: #a5b4fc; border: 1px solid #6366f1; }
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
+    <div class="header-right">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/settings" class="nav-link active">Parametres</a>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:16px;">
+            <h2>Configuration du Bot</h2>
+            <span id="diff-count" class="diff-count" style="display:none;"></span>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-danger" onclick="resetToDefaults()">Restaurer les Defaults</button>
+            <button class="btn btn-success" onclick="applyChanges()">Appliquer les Modifications</button>
+        </div>
+    </div>
+
+    <!-- Profiles -->
+    <div class="profiles-section">
+        <h3>Profils de Configuration</h3>
+        <div id="profiles-list"></div>
+        <div class="save-profile-row">
+            <input type="text" id="profile-name-input" placeholder="Nom du nouveau profil...">
+            <button class="btn btn-primary" onclick="saveProfile()">Sauvegarder le Profil</button>
+        </div>
+    </div>
+
+    <!-- Settings groups -->
+    <div id="settings-groups"></div>
+
+    <!-- History -->
+    <div class="history-section">
+        <h3>Historique des Modifications</h3>
+        <div id="history-list"></div>
+    </div>
+</div>
+
+<script>
+let settingsData = null;
+let pendingChanges = {};
+
+function toggleTooltip(id, event) {
+    event.stopPropagation();
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Fermer tous les autres tooltips
+    document.querySelectorAll('.tooltip-popup.visible').forEach(t => {
+        if (t.id !== id) t.classList.remove('visible');
+    });
+    el.classList.toggle('visible');
+}
+// Fermer les tooltips en cliquant ailleurs
+document.addEventListener('click', () => {
+    document.querySelectorAll('.tooltip-popup.visible').forEach(t => t.classList.remove('visible'));
+});
+
+function showToast(msg, type='success') {
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+async function loadSettings() {
+    try {
+        const resp = await fetch('/api/settings');
+        settingsData = await resp.json();
+        pendingChanges = {};
+        renderSettings();
+        renderProfiles();
+        renderHistory();
+        updateDiffCount();
+    } catch(e) {
+        showToast('Erreur de chargement des parametres', 'error');
+    }
+}
+
+function renderSettings() {
+    const groups = {};
+    for (const p of settingsData.params) {
+        const g = p.group || 'Autre';
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(p);
+    }
+
+    const container = document.getElementById('settings-groups');
+    container.innerHTML = '';
+
+    for (const [groupName, params] of Object.entries(groups)) {
+        const section = document.createElement('div');
+        section.className = 'settings-section';
+
+        const header = document.createElement('div');
+        header.className = 'section-header';
+        header.innerHTML = `<span>${groupName}</span><span class="chevron">&#9660;</span>`;
+        header.onclick = function() {
+            const body = this.nextElementSibling;
+            body.classList.toggle('hidden');
+            this.classList.toggle('collapsed');
+        };
+
+        const body = document.createElement('div');
+        body.className = 'section-body';
+
+        for (const p of params) {
+            body.appendChild(createParamRow(p));
+        }
+
+        section.appendChild(header);
+        section.appendChild(body);
+        container.appendChild(section);
+    }
+}
+
+const ICONS = {
+    dollar: '\u{1F4B0}', target: '\u{1F3AF}', shield: '\u{1F6E1}', layers: '\u{1F4DA}',
+    chart: '\u{1F4CA}', droplet: '\u{1F4A7}', arrows: '\u{2194}\uFE0F', clock: '\u{23F0}',
+    alert: '\u{26A0}\uFE0F', toggle: '\u{1F504}', brain: '\u{1F9E0}', users: '\u{1F465}',
+    filter: '\u{1F50D}', trendUp: '\u{1F4C8}', trendDown: '\u{1F4C9}', scissors: '\u{2702}\uFE0F',
+    trophy: '\u{1F3C6}',
+};
+
+function createParamRow(p) {
+    const row = document.createElement('div');
+    row.className = 'param-row';
+    row.id = 'row-' + p.key;
+
+    const displayValue = p.type === 'percent' ? (p.value * 100).toFixed(1) + '%' : p.value;
+    const displayDefault = p.type === 'percent' ? (p.default * 100).toFixed(1) + '%' : p.default;
+    const icon = ICONS[p.icon] || '\u{2699}\uFE0F';
+    const tooltipId = 'tip-' + p.key;
+
+    // Info
+    const info = document.createElement('div');
+    info.className = 'param-info';
+    info.innerHTML = `
+        <div class="param-label ${p.modified ? 'modified' : ''}">
+            <span class="param-icon">${icon}</span>
+            ${p.label || p.key}
+            ${p.tooltip ? '<button class="info-btn" onclick="toggleTooltip(\'' + tooltipId + '\', event)">?</button>' : ''}
+        </div>
+        <div class="param-desc">${p.desc || ''}</div>
+        <div class="param-default">Default: ${displayDefault}</div>
+        ${p.tooltip ? '<div class="tooltip-popup" id="' + tooltipId + '">' +
+            '<div class="tooltip-title">' + icon + ' ' + (p.label || p.key) + '</div>' +
+            '<div class="tooltip-text">' + (p.tooltip || '') + '</div>' +
+            (p.example ? '<div class="tooltip-example"><div class="tooltip-example-label">Exemple concret</div>' + p.example + '</div>' : '') +
+        '</div>' : ''}
+    `;
+
+    // Input
+    const inputDiv = document.createElement('div');
+    inputDiv.className = 'param-input';
+
+    if (p.type === 'boolean') {
+        inputDiv.innerHTML = `
+            <label class="toggle-switch">
+                <input type="checkbox" id="input-${p.key}" ${p.value ? 'checked' : ''}
+                    onchange="onParamChange('${p.key}', this.checked, 'boolean')">
+                <span class="toggle-slider"></span>
+            </label>
+        `;
+    } else if (p.type === 'select') {
+        const options = (p.options || []).map(o =>
+            `<option value="${o}" ${o === p.value ? 'selected' : ''}>${o}</option>`
+        ).join('');
+        inputDiv.innerHTML = `
+            <select id="input-${p.key}" onchange="onParamChange('${p.key}', this.value, 'select')">
+                ${options}
+            </select>
+        `;
+    } else if (p.type === 'percent') {
+        inputDiv.innerHTML = `
+            <input type="number" id="input-${p.key}" value="${(p.value * 100).toFixed(1)}"
+                min="${(p.min || 0) * 100}" max="${(p.max || 100) * 100}" step="${(p.step || 0.01) * 100}"
+                onchange="onParamChange('${p.key}', this.value / 100, 'percent')"
+                class="${p.modified ? 'modified' : ''}">
+        `;
+    } else if (p.type === 'integer') {
+        inputDiv.innerHTML = `
+            <input type="number" id="input-${p.key}" value="${p.value}"
+                min="${p.min || 0}" max="${p.max || 999999}" step="${p.step || 1}"
+                onchange="onParamChange('${p.key}', parseInt(this.value), 'integer')"
+                class="${p.modified ? 'modified' : ''}">
+        `;
+    } else {
+        inputDiv.innerHTML = `
+            <input type="number" id="input-${p.key}" value="${p.value}"
+                min="${p.min || 0}" max="${p.max || 999999}" step="${p.step || 0.01}"
+                onchange="onParamChange('${p.key}', parseFloat(this.value), 'number')"
+                class="${p.modified ? 'modified' : ''}">
+        `;
+    }
+
+    // Reset button
+    const resetDiv = document.createElement('div');
+    resetDiv.innerHTML = `
+        <button class="param-reset-btn ${p.modified ? '' : 'hidden'}" id="reset-${p.key}"
+            onclick="resetParam('${p.key}', ${JSON.stringify(p.default)}, '${p.type}')">
+            Reset
+        </button>
+    `;
+
+    row.appendChild(info);
+    row.appendChild(inputDiv);
+    row.appendChild(resetDiv);
+    return row;
+}
+
+function onParamChange(key, value, type) {
+    pendingChanges[key] = value;
+    const input = document.getElementById('input-' + key);
+    if (input && input.type !== 'checkbox') input.classList.add('modified');
+    const resetBtn = document.getElementById('reset-' + key);
+    if (resetBtn) resetBtn.classList.remove('hidden');
+    updateDiffCount();
+}
+
+function resetParam(key, defaultValue, type) {
+    const input = document.getElementById('input-' + key);
+    if (!input) return;
+
+    if (type === 'boolean') {
+        input.checked = defaultValue;
+    } else if (type === 'percent') {
+        input.value = (defaultValue * 100).toFixed(1);
+    } else {
+        input.value = defaultValue;
+    }
+
+    pendingChanges[key] = defaultValue;
+    input.classList.remove('modified');
+    const resetBtn = document.getElementById('reset-' + key);
+    if (resetBtn) resetBtn.classList.add('hidden');
+}
+
+async function applyChanges() {
+    if (Object.keys(pendingChanges).length === 0) {
+        showToast('Aucune modification a appliquer', 'info');
+        return;
+    }
+
+    try {
+        const resp = await fetch('/api/settings/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(pendingChanges),
+        });
+        const result = await resp.json();
+        showToast(`${result.changes.length} parametre(s) modifie(s)`, 'success');
+        pendingChanges = {};
+        loadSettings();
+    } catch(e) {
+        showToast('Erreur lors de la sauvegarde', 'error');
+    }
+}
+
+async function resetToDefaults() {
+    if (!confirm('Restaurer TOUS les parametres aux valeurs d\'origine ?')) return;
+
+    try {
+        await fetch('/api/settings/reset', { method: 'POST' });
+        showToast('Parametres restaures aux valeurs d\'origine', 'success');
+        pendingChanges = {};
+        loadSettings();
+    } catch(e) {
+        showToast('Erreur lors de la restauration', 'error');
+    }
+}
+
+async function updateDiffCount() {
+    try {
+        const resp = await fetch('/api/settings/diff');
+        const diffs = await resp.json();
+        const el = document.getElementById('diff-count');
+        const total = diffs.length + Object.keys(pendingChanges).length;
+        if (total > 0) {
+            el.textContent = total + ' modification(s) vs defaults';
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    } catch(e) {}
+}
+
+function renderProfiles() {
+    const profiles = settingsData.profiles || [];
+    const list = document.getElementById('profiles-list');
+
+    if (profiles.length === 0) {
+        list.innerHTML = '<div style="color:#4b5563;font-size:13px;padding:8px 0;">Aucun profil sauvegarde</div>';
+        return;
+    }
+
+    list.innerHTML = profiles.map(name => `
+        <div class="profile-row">
+            <span class="profile-name">${name}</span>
+            <div class="profile-actions">
+                <button class="btn" onclick="loadProfile('${name}')">Charger</button>
+                <button class="btn btn-danger" onclick="deleteProfile('${name}')">Supprimer</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function saveProfile() {
+    const input = document.getElementById('profile-name-input');
+    const name = input.value.trim();
+    if (!name) {
+        showToast('Entre un nom pour le profil', 'error');
+        return;
+    }
+
+    // Apply pending changes first
+    if (Object.keys(pendingChanges).length > 0) {
+        await fetch('/api/settings/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(pendingChanges),
+        });
+        pendingChanges = {};
+    }
+
+    try {
+        await fetch('/api/settings/profiles/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: name}),
+        });
+        input.value = '';
+        showToast(`Profil "${name}" sauvegarde`, 'success');
+        loadSettings();
+    } catch(e) {
+        showToast('Erreur lors de la sauvegarde du profil', 'error');
+    }
+}
+
+async function loadProfile(name) {
+    if (!confirm(`Charger le profil "${name}" ? Les modifications non sauvegardees seront perdues.`)) return;
+
+    try {
+        await fetch('/api/settings/profiles/load', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: name}),
+        });
+        showToast(`Profil "${name}" charge`, 'success');
+        pendingChanges = {};
+        loadSettings();
+    } catch(e) {
+        showToast('Erreur lors du chargement du profil', 'error');
+    }
+}
+
+async function deleteProfile(name) {
+    if (!confirm(`Supprimer le profil "${name}" ?`)) return;
+
+    try {
+        await fetch('/api/settings/profiles/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: name}),
+        });
+        showToast(`Profil "${name}" supprime`, 'success');
+        loadSettings();
+    } catch(e) {
+        showToast('Erreur lors de la suppression', 'error');
+    }
+}
+
+function renderHistory() {
+    const history = (settingsData.history || []).slice().reverse().slice(0, 20);
+    const list = document.getElementById('history-list');
+
+    if (history.length === 0) {
+        list.innerHTML = '<div style="color:#4b5563;font-size:13px;">Aucune modification</div>';
+        return;
+    }
+
+    list.innerHTML = history.map(h => {
+        const time = h.time ? new Date(h.time).toLocaleString('fr-FR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '';
+
+        if (h.key === '__reset__') {
+            return `<div class="history-item">
+                <span class="history-key" style="color:#f87171;">RESET aux defaults</span>
+                <span class="history-time">${time}</span>
+            </div>`;
+        }
+        if (h.key === '__load_profile__') {
+            return `<div class="history-item">
+                <span class="history-key" style="color:#4ade80;">Profil charge: ${h.new}</span>
+                <span class="history-time">${time}</span>
+            </div>`;
+        }
+
+        return `<div class="history-item">
+            <span class="history-key">${h.key}</span>
+            <span class="history-change">${h.old} → ${h.new}</span>
+            <span class="history-time">${time}</span>
+        </div>`;
+    }).join('');
+}
+
+// Initial load
+loadSettings();
+</script>
+</body>
+</html>
+"""
+
+
+# ================================================================
 #  MAIN (mode standalone)
 # ================================================================
 
 def main():
+    import os
     parser = argparse.ArgumentParser(description="Dashboard Web Polymarket Bot")
-    parser.add_argument("--port", type=int, default=5050, help="Port du serveur")
+    parser.add_argument("--port", type=int, default=None, help="Port du serveur")
     parser.add_argument("--host", default="0.0.0.0", help="Adresse d'ecoute")
     parser.add_argument("--state-file", default="bot_state.json", help="Fichier d'etat du bot")
     args = parser.parse_args()
 
+    # Render.com definit PORT automatiquement
+    port = args.port or int(os.environ.get("PORT", 5050))
+
     app = create_dashboard_app(state_file=args.state_file)
-    print(f"Dashboard demarre sur http://localhost:{args.port}")
-    app.run(host=args.host, port=args.port, debug=True)
+    print(f"Dashboard demarre sur http://localhost:{port}")
+    app.run(host=args.host, port=port, debug=True)
 
 
 if __name__ == "__main__":
