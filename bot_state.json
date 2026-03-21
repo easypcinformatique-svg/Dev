@@ -42,15 +42,23 @@
       "exposure": 8.831299900429151,
       "unrealized_pnl": 3.3027625643881375,
       "n_positions": 1
+    },
+    {
+      "timestamp": "2026-03-21T18:29:52.909380",
+      "equity": 1003.3027625643881,
+      "capital": 991.1687000995709,
+      "exposure": 8.831299900429151,
+      "unrealized_pnl": 3.3027625643881375,
+      "n_positions": 1
     }
   ],
   "daily_pnl": 0.0,
   "total_pnl": 0.0,
   "peak_equity": 1003.3027625643881,
-  "iteration": 3,
+  "iteration": 4,
   "started_at": "2026-03-21T18:10:20.781004",
-  "last_scan": "2026-03-21T18:23:16.883871",
-  "markets_scanned": 38,
-  "signals_generated": 104,
+  "last_scan": "2026-03-21T18:29:04.058430",
+  "markets_scanned": 37,
+  "signals_generated": 137,
   "errors": []
 }
