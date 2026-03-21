@@ -45,6 +45,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from backtest.polymarket_client import PolymarketClient, PolymarketTradingClient, PolymarketMarket
 from backtest.strategies import AlphaCompositeStrategy, InsuranceSellerStrategy
 from config_manager import ConfigManager
+from trade_logger import TradeLogger, POLYMARKET_FEE_PCT
+from signal_detector import SignalDetector
 
 logger = logging.getLogger("hedge_fund_bot")
 
@@ -383,6 +385,14 @@ class HedgeFundBot:
                 max_positions=_sp.get("strategy_max_positions", 12),
             )
 
+        # Trade logger — logging propre des trades avec frais
+        self.trade_logger = TradeLogger(output_dir=config.log_dir)
+
+        # Signal detector — Twitter/News
+        self.signal_detector = SignalDetector(
+            signal_log_path=str(Path(config.log_dir) / "signals.json")
+        )
+
         # Cache des historiques
         self._histories: dict[str, pd.DataFrame] = {}
 
@@ -483,10 +493,24 @@ class HedgeFundBot:
             # 1. Scanner les marches
             markets = self._scan_markets()
 
-            # 2. Mettre a jour les positions existantes
+            # 2. Scanner Twitter/News pour signaux
+            self._signal_boosts = {}
+            try:
+                twitter_signals = self.signal_detector.scan_and_match(markets)
+                for sig in twitter_signals:
+                    self._signal_boosts[sig.market_id] = {
+                        "direction": sig.direction,
+                        "confidence_boost": sig.confidence * 0.3,
+                    }
+                if twitter_signals:
+                    logger.info(f"  Signaux Twitter: {len(twitter_signals)} detectes")
+            except Exception as e:
+                logger.debug(f"Scan Twitter echoue: {e}")
+
+            # 3. Mettre a jour les positions existantes
             self._update_positions()
 
-            # 3. Evaluer les signaux et ouvrir des positions
+            # 4. Evaluer les signaux et ouvrir des positions
             self._evaluate_markets(markets)
 
             # 4. Mettre a jour l'equity
@@ -574,9 +598,16 @@ class HedgeFundBot:
 
             unrealized_pnl = pnl_pct * size_usd
 
-            # Mettre a jour le peak
+            # Mettre a jour le peak price et loguer si nouveau peak
             if current_price > peak:
+                old_peak = peak
                 peak = current_price
+                if old_peak > 0 and (peak - old_peak) / old_peak > 0.005:
+                    logger.debug(
+                        f"  Peak update {question[:30]}: {old_peak:.4f} -> {peak:.4f}"
+                    )
+
+            shares = pos.get("shares", size_usd / max(entry_price, 0.01)) if isinstance(pos, dict) else getattr(pos, "shares", size_usd / max(entry_price, 0.01))
 
             # Mettre a jour la position
             updated = {
@@ -586,7 +617,7 @@ class HedgeFundBot:
                 "token_id": token_id,
                 "entry_price": entry_price,
                 "size_usd": size_usd,
-                "shares": size_usd / max(entry_price, 0.01),
+                "shares": shares,
                 "entry_time": entry_time,
                 "order_id": pos.get("order_id", "") if isinstance(pos, dict) else getattr(pos, "order_id", ""),
                 "peak_price": peak,
@@ -610,18 +641,23 @@ class HedgeFundBot:
                 should_exit = True
                 exit_reason = "take_profit"
 
-            # Trailing stop
+            # Trailing stop — calcul base sur le prix
             elif self.strategy.trailing_stop > 0 and peak > entry_price:
-                peak_pnl = (peak - entry_price) / max(entry_price, 0.01)
-                if peak_pnl > 0.03 and (peak_pnl - pnl_pct) > self.strategy.trailing_stop:
+                trailing_stop_pct = self.strategy.trailing_stop
+                trailing_stop_price = peak * (1 - trailing_stop_pct)
+                if current_price < trailing_stop_price:
                     should_exit = True
                     exit_reason = "trailing_stop"
+                    logger.info(
+                        f"  Trailing stop declenche: prix {current_price:.4f} < "
+                        f"stop {trailing_stop_price:.4f} (peak {peak:.4f})"
+                    )
 
             if should_exit:
                 self._close_position(cid, current_price, exit_reason)
 
     def _close_position(self, condition_id: str, exit_price: float, reason: str):
-        """Ferme une position."""
+        """Ferme une position avec frais Polymarket 2%."""
         with self._lock:
             pos = self.state.positions.pop(condition_id, None)
         if not pos:
@@ -634,6 +670,7 @@ class HedgeFundBot:
             question = pos.get("question", "")
             entry_time = pos.get("entry_time", "")
             token_id = pos.get("token_id", "")
+            shares = pos.get("shares", size_usd / max(entry_price, 0.01))
         else:
             entry_price = pos.entry_price
             side = pos.side
@@ -641,12 +678,20 @@ class HedgeFundBot:
             question = pos.question
             entry_time = pos.entry_time
             token_id = pos.token_id
+            shares = pos.shares
 
+        # PnL brut
         if side == "YES":
-            pnl = (exit_price - entry_price) * (size_usd / max(entry_price, 0.01))
+            pnl_gross = (exit_price - entry_price) * shares
         else:
-            pnl = (entry_price - exit_price) * (size_usd / max(entry_price, 0.01))
+            pnl_gross = (entry_price - exit_price) * shares
 
+        # Frais Polymarket 2% entree + sortie
+        fees_entry = size_usd * POLYMARKET_FEE_PCT
+        fees_exit = shares * exit_price * POLYMARKET_FEE_PCT
+        fees_total = fees_entry + fees_exit
+
+        pnl = pnl_gross - fees_total
         pnl_pct = pnl / max(size_usd, 0.01)
 
         self.state.capital += size_usd + pnl
@@ -665,6 +710,13 @@ class HedgeFundBot:
             except Exception as e:
                 logger.error(f"Echec de la fermeture sur Polymarket: {e}")
 
+        # Logger via TradeLogger (CSV + JSON)
+        self.trade_logger.log_exit(
+            market_id=condition_id,
+            exit_price=exit_price,
+            exit_reason=reason,
+        )
+
         trade = {
             "market_id": condition_id,
             "question": question,
@@ -672,16 +724,20 @@ class HedgeFundBot:
             "entry_price": entry_price,
             "exit_price": exit_price,
             "size_usd": size_usd,
-            "pnl": pnl,
-            "pnl_pct": pnl_pct,
+            "pnl": round(pnl, 4),
+            "pnl_pct": round(pnl_pct, 4),
             "entry_time": entry_time,
             "exit_time": datetime.now().isoformat(),
             "reason": reason,
+            "fees_total": round(fees_total, 4),
         }
         self.state.trades.append(trade)
 
         pnl_str = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
-        logger.info(f"  CLOSE [{reason}] {side} | {pnl_str} ({pnl_pct:+.1%}) | {question[:50]}")
+        logger.info(
+            f"  CLOSE [{reason}] {side} | PnL brut: ${pnl_gross:+.2f} | "
+            f"Frais: ${fees_total:.2f} | Net: {pnl_str} ({pnl_pct:+.1%}) | {question[:50]}"
+        )
 
     # ================================================================
     #  EVALUATION DES SIGNAUX
@@ -716,6 +772,15 @@ class HedgeFundBot:
                 )
 
                 signals_count += 1
+
+                # Booster la confiance si un signal Twitter correspond
+                boost = self._signal_boosts.get(market.condition_id)
+                if boost and action in ("BUY_YES", "BUY_NO"):
+                    signal_dir = "BUY_YES" if boost["direction"] == "YES" else "BUY_NO"
+                    if action == signal_dir:
+                        confidence = min(1.0, confidence + boost["confidence_boost"])
+                        logger.info(f"  Signal Twitter boost: +{boost['confidence_boost']:.2f} "
+                                    f"-> conf={confidence:.2f}")
 
                 if action in ("BUY_YES", "BUY_NO") and confidence > 0:
                     self._open_position(market, action, confidence, current_bar)
@@ -799,6 +864,8 @@ class HedgeFundBot:
 
         self.state.capital -= size_usd
 
+        entry_time = datetime.now().isoformat()
+
         with self._lock:
             self.state.positions[market.condition_id] = {
                 "market_id": market.condition_id,
@@ -808,13 +875,26 @@ class HedgeFundBot:
                 "entry_price": price,
                 "size_usd": size_usd,
                 "shares": shares,
-                "entry_time": datetime.now().isoformat(),
+                "entry_time": entry_time,
                 "order_id": order_id,
                 "peak_price": price,
                 "current_price": price,
                 "unrealized_pnl": 0.0,
                 "unrealized_pnl_pct": 0.0,
             }
+
+        # Logger via TradeLogger (CSV + JSON)
+        self.trade_logger.log_entry(
+            market_id=market.condition_id,
+            token_id=token_id,
+            question=market.question,
+            side=side,
+            entry_price=price,
+            size_usd=size_usd,
+            shares=shares,
+            entry_time=entry_time,
+            order_id=order_id,
+        )
 
         logger.info(
             f"  OPEN {side} | ${size_usd:.0f} @ {price:.3f} "
