@@ -24,7 +24,7 @@ import json
 import argparse
 import threading
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from flask import Flask, jsonify, Response, request
 
@@ -205,7 +205,14 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
         return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
     def _inject_version(html: str) -> str:
-        version = datetime.now().strftime("%Y-%m-%d %H:%M")
+        # Heure de Paris (CET=UTC+1, CEST=UTC+2)
+        # Utiliser zoneinfo si disponible, sinon fallback UTC+2 (heure d'ete FR)
+        try:
+            from zoneinfo import ZoneInfo
+            paris_now = datetime.now(ZoneInfo("Europe/Paris"))
+        except ImportError:
+            paris_now = datetime.now(timezone(timedelta(hours=2)))
+        version = paris_now.strftime("%Y-%m-%d %H:%M")
         return html.replace("__BUILD_VERSION__", version)
 
     @app.route("/")
