@@ -999,8 +999,8 @@ def main():
 
     bot = HedgeFundBot(config)
 
-    # Render.com definit PORT automatiquement
-    port = args.port or int(os.environ.get("PORT", 5050))
+    # Render.com definit PORT automatiquement — priorite a $PORT
+    port = int(os.environ.get("PORT", 0)) or args.port or 5050
 
     # Lancer le dashboard dans un thread separe
     if args.dashboard:

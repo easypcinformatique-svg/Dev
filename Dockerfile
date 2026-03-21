@@ -14,8 +14,5 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Copier le code source
 COPY . .
 
-# Port expose pour le dashboard
-EXPOSE 5050
-
-# Lancer le bot avec dashboard
-CMD ["python", "hedge_fund_bot.py", "--dashboard", "--port", "5050"]
+# Lancer le bot avec dashboard (le port est lu depuis $PORT)
+CMD ["python", "hedge_fund_bot.py", "--dashboard"]
