@@ -1513,8 +1513,11 @@ const ValidationChecker = {
 
     ensureDryRunStart(data) {
         const state = this.getState();
-        // Only track dry run start date when mode is DRY RUN
-        if ((data.mode || '').toUpperCase().includes('DRY')) {
+        // Use backend started_at if available, otherwise track locally
+        if (data.started_at) {
+            state.dryRunStartDate = data.started_at;
+            this.saveState(state);
+        } else if ((data.mode || '').toUpperCase().includes('DRY')) {
             if (!state.dryRunStartDate) {
                 state.dryRunStartDate = new Date().toISOString();
                 this.saveState(state);
@@ -1529,7 +1532,7 @@ const ValidationChecker = {
         const ts = data.trade_stats || {};
         const steps = [];
 
-        // STEP 1 - Dry run duration >= 7 days
+        // STEP 1 - Dry run duration >= 30 days
         let dryDays = 0;
         if (state.dryRunStartDate) {
             const start = new Date(state.dryRunStartDate);
