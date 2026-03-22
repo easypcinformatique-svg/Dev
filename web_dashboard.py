@@ -1529,8 +1529,23 @@ const ValidationChecker = {
     computeSteps(data) {
         const state = this.ensureDryRunStart(data);
         const o = data.overview || {};
-        const ts = data.trade_stats || {};
         const steps = [];
+
+        // Filter trades to only those AFTER the DRY RUN start date
+        const startDate = (state.dryRunStartDate || '').substring(0, 10);
+        const allTrades = data.all_trades || data.recent_trades || [];
+        const liveTrades = startDate
+            ? allTrades.filter(t => {
+                const d = (t.exit_time || t.entry_time || '').substring(0, 10);
+                return d >= startDate;
+            })
+            : allTrades;
+
+        // Compute live-only stats
+        const liveTradeCount = liveTrades.length;
+        const liveWins = liveTrades.filter(t => (t.pnl || 0) > 0).length;
+        const livePnl = liveTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const liveWinRate = liveTradeCount > 0 ? (liveWins / liveTradeCount * 100) : 0;
 
         // STEP 1 - Dry run duration >= 30 days
         let dryDays = 0;
@@ -1546,22 +1561,24 @@ const ValidationChecker = {
             pending: dryDays > 0 && dryDays < 30
         });
 
-        // STEP 2 - PNL Net > 0
-        const pnl = o.total_pnl || 0;
+        // STEP 2 - PNL Net > 0 (only trades since DRY RUN start)
         steps.push({
             title: 'PNL Net positif',
-            detail: 'PNL Net : ' + (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toFixed(2),
-            valid: pnl > 0,
+            detail: 'PNL Net : ' + (livePnl >= 0 ? '+' : '') + '$' + Math.abs(livePnl).toFixed(2),
+            valid: livePnl > 0,
             pending: false
         });
 
-        // STEP 3 - Drawdown < 15%
+        // STEP 3 - Drawdown < 15% (current session)
         const dd = o.drawdown_pct || 0;
-        // Also check max historical drawdown from equity history
         let maxDd = dd;
         if (data.equity_history && data.equity_history.length > 0) {
             let peak = 0;
+            const startTs = state.dryRunStartDate ? new Date(state.dryRunStartDate).getTime() : 0;
             data.equity_history.forEach(p => {
+                // Only consider equity points since DRY RUN start
+                const pTime = p.timestamp ? new Date(p.timestamp).getTime() : 0;
+                if (startTs && pTime < startTs) return;
                 const eq = p.equity || p.value || 0;
                 if (eq > peak) peak = eq;
                 if (peak > 0) {
@@ -1577,22 +1594,20 @@ const ValidationChecker = {
             pending: false
         });
 
-        // STEP 4 - At least 20 trades
-        const totalTrades = ts.total_trades || 0;
+        // STEP 4 - At least 50 trades (since DRY RUN start)
         steps.push({
             title: 'Nombre de trades minimum',
-            detail: totalTrades + ' / 50 trades',
-            valid: totalTrades >= 50,
-            pending: totalTrades > 0 && totalTrades < 50
+            detail: liveTradeCount + ' / 50 trades',
+            valid: liveTradeCount >= 50,
+            pending: liveTradeCount > 0 && liveTradeCount < 50
         });
 
-        // STEP 5 - Win rate >= 55%
-        const wr = ts.win_rate || 0;
+        // STEP 5 - Win rate >= 55% (since DRY RUN start)
         steps.push({
             title: 'Win Rate acceptable',
-            detail: 'Win rate : ' + wr.toFixed(1) + '%',
-            valid: wr >= 55,
-            pending: totalTrades > 0 && wr < 55
+            detail: 'Win rate : ' + liveWinRate.toFixed(1) + '%',
+            valid: liveWinRate >= 55,
+            pending: liveTradeCount > 0 && liveWinRate < 55
         });
 
         // STEP 6 - Manual confirmation
