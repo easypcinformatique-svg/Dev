@@ -279,6 +279,10 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
     def settings_page():
         return Response(_inject_version(SETTINGS_HTML), mimetype="text/html")
 
+    @app.route("/report")
+    def report_page():
+        return Response(_inject_version(REPORT_HTML), mimetype="text/html")
+
     return app
 
 
@@ -537,6 +541,7 @@ tr:hover td { background: #1a2332; }
 <div class="header">
     <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
     <div class="header-right">
+        <a href="/report" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Rapport</a>
         <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Parametres</a>
         <span id="strategy-name"></span>
         <span id="mode-badge" class="mode-badge"></span>
@@ -1317,6 +1322,7 @@ input:checked + .toggle-slider:before { transform: translateX(24px); }
     <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
     <div class="header-right">
         <a href="/" class="nav-link">Dashboard</a>
+        <a href="/report" class="nav-link">Rapport</a>
         <a href="/settings" class="nav-link active">Parametres</a>
     </div>
 </div>
@@ -1725,6 +1731,379 @@ function renderHistory() {
 
 // Initial load
 loadSettings();
+</script>
+</body>
+</html>
+"""
+
+
+# ================================================================
+#  REPORT HTML/CSS/JS COMPLET (EMBARQUE)
+# ================================================================
+
+REPORT_HTML = r"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport - Polymarket Bot</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f1117; color: #e5e7eb; font-family: 'Inter', system-ui, sans-serif; }
+.header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; background: #161822; border-bottom: 1px solid #1e2030;
+}
+.header h1 { font-size: 16px; font-weight: 600; color: #e5e7eb; }
+.header h1 span:first-child { color: #818cf8; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+    color: #a5b4fc; text-decoration: none; font-size: 13px;
+    padding: 4px 12px; border: 1px solid #6366f1; border-radius: 20px;
+}
+.nav-link:hover { background: #6366f1; color: #fff; }
+.nav-link.active { background: #6366f1; color: #fff; }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+/* KPI Cards */
+.kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+}
+.kpi-card {
+    background: #161822; border: 1px solid #1e2030; border-radius: 10px;
+    padding: 16px; text-align: center;
+}
+.kpi-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 700; }
+.kpi-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.positive { color: #4ade80; }
+.negative { color: #f87171; }
+.neutral { color: #a5b4fc; }
+
+/* Charts */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+.chart-box {
+    background: #161822; border: 1px solid #1e2030; border-radius: 10px;
+    padding: 16px;
+}
+.chart-box h2 { font-size: 14px; color: #818cf8; margin-bottom: 12px; }
+.chart-box canvas { width: 100% !important; height: 250px !important; }
+
+/* Table */
+.table-box {
+    background: #161822; border: 1px solid #1e2030; border-radius: 10px;
+    padding: 16px; margin-bottom: 24px;
+}
+.table-box h2 { font-size: 14px; color: #818cf8; margin-bottom: 12px; }
+.table-box .controls { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.table-box input, .table-box select {
+    background: #1e2030; border: 1px solid #2d3048; color: #e5e7eb;
+    padding: 6px 10px; border-radius: 6px; font-size: 12px;
+}
+.table-box input { flex: 1; max-width: 300px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { background: #1e2030; color: #9ca3af; padding: 8px; text-align: left; font-weight: 600; cursor: pointer; user-select: none; }
+th:hover { color: #a5b4fc; }
+td { padding: 8px; border-bottom: 1px solid #1e2030; }
+tr:hover { background: #1a1c2e; }
+.badge {
+    padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
+}
+.badge-win { background: #4ade8022; color: #4ade80; }
+.badge-loss { background: #f8717122; color: #f87171; }
+.badge-reason { background: #818cf822; color: #818cf8; }
+
+/* Footer */
+.footer { text-align: center; padding: 20px; color: #374151; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
+    <div class="header-right">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/report" class="nav-link active">Rapport</a>
+        <a href="/settings" class="nav-link">Parametres</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="charts-grid">
+        <div class="chart-box">
+            <h2>PnL Cumule</h2>
+            <canvas id="pnlChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h2>Distribution des Trades</h2>
+            <canvas id="distChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <h2>Historique Complet des Trades (<span id="trade-count">0</span>)</h2>
+        <div class="controls">
+            <input type="text" id="search" placeholder="Rechercher un marche...">
+            <select id="filter-side">
+                <option value="">Tous</option>
+                <option value="YES">YES</option>
+                <option value="NO">NO</option>
+            </select>
+            <select id="filter-result">
+                <option value="">Tous</option>
+                <option value="win">Gagnants</option>
+                <option value="loss">Perdants</option>
+            </select>
+        </div>
+        <div style="max-height:500px;overflow-y:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-sort="idx">#</th>
+                        <th data-sort="date">Date</th>
+                        <th data-sort="market">Marche</th>
+                        <th data-sort="side">Side</th>
+                        <th data-sort="entry">Entree</th>
+                        <th data-sort="exit">Sortie</th>
+                        <th data-sort="size">Taille</th>
+                        <th data-sort="pnl">PnL</th>
+                        <th data-sort="pct">%</th>
+                        <th data-sort="reason">Raison</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">Polymarket Hedge Fund Bot — Rapport genere automatiquement</div>
+</div>
+
+<script>
+let allTrades = [];
+let sortKey = 'idx';
+let sortAsc = false;
+
+function fmt(n, d=2) { return n == null ? '-' : Number(n).toFixed(d); }
+function fmtUsd(n) {
+    if (n == null) return '-';
+    const s = n >= 0 ? '' : '-';
+    return s + '$' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function renderKPIs(data) {
+    const s = data.trade_stats || {};
+    const o = data.overview || {};
+    const trades = data.all_trades || [];
+
+    // Calculs supplementaires
+    let pnlCumul = 0;
+    let peak = 0;
+    let maxDD = 0;
+    const pnls = trades.map(t => t.pnl || 0);
+    pnls.forEach(p => {
+        pnlCumul += p;
+        if (pnlCumul > peak) peak = pnlCumul;
+        const dd = peak > 0 ? (peak - pnlCumul) / peak * 100 : 0;
+        if (dd > maxDD) maxDD = dd;
+    });
+
+    const avgTrade = pnls.length > 0 ? pnls.reduce((a,b) => a+b, 0) / pnls.length : 0;
+    const expectancy = (s.win_rate/100 || 0) * (s.avg_win || 0) + (1 - (s.win_rate/100 || 0)) * (s.avg_loss || 0);
+
+    const cards = [
+        { label: 'PnL Total', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative' },
+        { label: 'Total Trades', value: s.total_trades || trades.length, cls: 'neutral' },
+        { label: 'Win Rate', value: fmt(s.win_rate, 1) + '%', cls: (s.win_rate || 0) >= 50 ? 'positive' : 'negative' },
+        { label: 'Profit Factor', value: fmt(s.profit_factor), cls: (s.profit_factor || 0) >= 1 ? 'positive' : 'negative' },
+        { label: 'Gain Moyen', value: fmtUsd(s.avg_win), cls: 'positive' },
+        { label: 'Perte Moyenne', value: fmtUsd(s.avg_loss), cls: 'negative' },
+        { label: 'Plus Gros Gain', value: fmtUsd(s.largest_win), cls: 'positive' },
+        { label: 'Plus Grosse Perte', value: fmtUsd(s.largest_loss), cls: 'negative' },
+        { label: 'Esperance/Trade', value: fmtUsd(expectancy), cls: expectancy >= 0 ? 'positive' : 'negative' },
+        { label: 'Max Drawdown', value: fmt(maxDD, 1) + '%', cls: 'negative' },
+    ];
+
+    document.getElementById('kpi-grid').innerHTML = cards.map(c => `
+        <div class="kpi-card">
+            <div class="kpi-label">${c.label}</div>
+            <div class="kpi-value ${c.cls}">${c.value}</div>
+        </div>
+    `).join('');
+}
+
+function renderPnlChart(trades) {
+    const ctx = document.getElementById('pnlChart').getContext('2d');
+    let cumul = 0;
+    const data = trades.map((t, i) => { cumul += (t.pnl || 0); return cumul; });
+    const labels = trades.map((t, i) => '#' + (i + 1));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'PnL Cumule ($)',
+                data,
+                borderColor: '#818cf8',
+                backgroundColor: 'rgba(129,140,248,0.1)',
+                fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2,
+            }, {
+                label: 'Zero',
+                data: Array(data.length).fill(0),
+                borderColor: '#374151', borderDash: [4,4], pointRadius: 0, borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#9ca3af', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: '#4b5563', maxTicksLimit: 15, font: { size: 10 } }, grid: { color: '#1f2937' } },
+                y: { ticks: { color: '#4b5563', callback: v => '$' + v }, grid: { color: '#1f2937' } }
+            }
+        }
+    });
+}
+
+function renderDistChart(trades) {
+    const ctx = document.getElementById('distChart').getContext('2d');
+    const pnls = trades.map(t => t.pnl || 0);
+
+    // Creer des buckets
+    const min = Math.min(...pnls, -50);
+    const max = Math.max(...pnls, 50);
+    const step = Math.max(10, Math.round((max - min) / 15));
+    const buckets = {};
+    for (let b = Math.floor(min / step) * step; b <= max; b += step) {
+        buckets[b] = 0;
+    }
+    pnls.forEach(p => {
+        const b = Math.floor(p / step) * step;
+        buckets[b] = (buckets[b] || 0) + 1;
+    });
+
+    const labels = Object.keys(buckets).map(Number).sort((a,b) => a-b);
+    const values = labels.map(l => buckets[l]);
+    const colors = labels.map(l => l >= 0 ? '#4ade80' : '#f87171');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels.map(l => '$' + l),
+            datasets: [{ label: 'Trades', data: values, backgroundColor: colors }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#4b5563', font: { size: 10 } }, grid: { display: false } },
+                y: { ticks: { color: '#4b5563', stepSize: 1 }, grid: { color: '#1f2937' } }
+            }
+        }
+    });
+}
+
+function getFilteredTrades() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const side = document.getElementById('filter-side').value;
+    const result = document.getElementById('filter-result').value;
+
+    return allTrades.filter(t => {
+        if (search && !(t.question || t.market_id || '').toLowerCase().includes(search)) return false;
+        if (side && t.side !== side) return false;
+        if (result === 'win' && (t.pnl || 0) <= 0) return false;
+        if (result === 'loss' && (t.pnl || 0) >= 0) return false;
+        return true;
+    });
+}
+
+function renderTable() {
+    let trades = getFilteredTrades();
+    document.getElementById('trade-count').textContent = trades.length;
+
+    // Tri
+    trades.sort((a, b) => {
+        let va, vb;
+        switch(sortKey) {
+            case 'idx': va = a._idx; vb = b._idx; break;
+            case 'date': va = a.exit_time || ''; vb = b.exit_time || ''; break;
+            case 'market': va = (a.question || a.market_id || '').toLowerCase(); vb = (b.question || b.market_id || '').toLowerCase(); break;
+            case 'side': va = a.side; vb = b.side; break;
+            case 'entry': va = a.entry_price || 0; vb = b.entry_price || 0; break;
+            case 'exit': va = a.exit_price || 0; vb = b.exit_price || 0; break;
+            case 'size': va = a.size_usd || 0; vb = b.size_usd || 0; break;
+            case 'pnl': va = a.pnl || 0; vb = b.pnl || 0; break;
+            case 'pct': va = a.pnl_pct || 0; vb = b.pnl_pct || 0; break;
+            case 'reason': va = a.reason || ''; vb = b.reason || ''; break;
+            default: va = a._idx; vb = b._idx;
+        }
+        if (va < vb) return sortAsc ? -1 : 1;
+        if (va > vb) return sortAsc ? 1 : -1;
+        return 0;
+    });
+
+    const body = document.getElementById('trades-body');
+    if (trades.length === 0) {
+        body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#4b5563;padding:30px;">Aucun trade</td></tr>';
+        return;
+    }
+
+    body.innerHTML = trades.map(t => {
+        const dt = t.exit_time ? new Date(t.exit_time).toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+        const pnlCls = (t.pnl || 0) >= 0 ? 'positive' : 'negative';
+        const badge = (t.pnl || 0) >= 0 ? 'badge-win' : 'badge-loss';
+        return `<tr>
+            <td>${t._idx}</td>
+            <td>${dt}</td>
+            <td title="${t.question || t.market_id || ''}">${(t.question || t.market_id || '').substring(0, 40)}</td>
+            <td><span style="color:${t.side==='YES'?'#4ade80':'#f87171'};font-weight:600">${t.side}</span></td>
+            <td>${fmt(t.entry_price, 4)}</td>
+            <td>${fmt(t.exit_price, 4)}</td>
+            <td>${fmtUsd(t.size_usd)}</td>
+            <td class="${pnlCls}" style="font-weight:600">${fmtUsd(t.pnl)}</td>
+            <td class="${pnlCls}">${fmt((t.pnl_pct || 0), 1)}%</td>
+            <td><span class="badge badge-reason">${t.reason || '-'}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+// Tri par colonnes
+document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        if (sortKey === key) { sortAsc = !sortAsc; }
+        else { sortKey = key; sortAsc = true; }
+        renderTable();
+    });
+});
+
+// Filtres
+document.getElementById('search').addEventListener('input', renderTable);
+document.getElementById('filter-side').addEventListener('change', renderTable);
+document.getElementById('filter-result').addEventListener('change', renderTable);
+
+async function loadReport() {
+    try {
+        const resp = await fetch('/api/data');
+        const data = await resp.json();
+
+        allTrades = (data.all_trades || []).map((t, i) => ({ ...t, _idx: i + 1 }));
+
+        renderKPIs(data);
+        renderPnlChart(allTrades);
+        renderDistChart(allTrades);
+        renderTable();
+    } catch (err) {
+        console.error('Erreur:', err);
+    }
+}
+
+loadReport();
 </script>
 </body>
 </html>
