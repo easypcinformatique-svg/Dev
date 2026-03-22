@@ -337,10 +337,40 @@ class ConfigManager:
             "history": self.data.get("history", [])[-20:],
         }
 
+    def validate_param(self, key: str, value) -> tuple[bool, str]:
+        """Valide qu'un parametre est dans les bornes autorisees."""
+        meta = PARAM_META.get(key)
+        if not meta:
+            return True, ""
+        param_type = meta.get("type", "")
+        if param_type in ("number", "percent", "integer"):
+            try:
+                val = float(value)
+            except (TypeError, ValueError):
+                return False, f"{meta.get('label', key)}: valeur numerique attendue"
+            mn = meta.get("min")
+            mx = meta.get("max")
+            if mn is not None and val < mn:
+                return False, f"{meta.get('label', key)}: minimum {mn}, recu {val}"
+            if mx is not None and val > mx:
+                return False, f"{meta.get('label', key)}: maximum {mx}, recu {val}"
+        if param_type == "select":
+            options = meta.get("options", [])
+            if options and value not in options:
+                return False, f"{meta.get('label', key)}: valeurs possibles {options}"
+        return True, ""
+
     def update_params(self, updates: dict) -> dict:
         """Met a jour les parametres actifs. Retourne les changements effectues."""
         changes = []
+        errors = []
         for key, new_value in updates.items():
+            # Validation des ranges
+            valid, err = self.validate_param(key, new_value)
+            if not valid:
+                errors.append(err)
+                continue
+
             # Determiner si c'est un param bot ou strategy
             if key in self.data["active"]["bot"]:
                 old_value = self.data["active"]["bot"][key]
@@ -365,7 +395,10 @@ class ConfigManager:
             self.data["history"] = self.data["history"][-200:]
             self._save()
 
-        return {"changes": changes, "active": self.get_active()}
+        result = {"changes": changes, "active": self.get_active()}
+        if errors:
+            result["errors"] = errors
+        return result
 
     def reset_to_defaults(self) -> dict:
         """Restaure les parametres d'origine."""

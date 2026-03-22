@@ -413,6 +413,15 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
             return jsonify({"error": "Nom requis"}), 400
         return jsonify(cm.delete_profile(name))
 
+    @app.route("/api/strategy-attribution")
+    def api_strategy_attribution():
+        """Retourne l'attribution par sous-strategie."""
+        data = _get_data()
+        return jsonify({
+            "attribution": data.get("strategy_attribution", {}),
+            "performance": data.get("strategy_performance", {}),
+        })
+
     @app.route("/api/health")
     def api_health():
         """Endpoint de sante pour le keep-alive."""
@@ -1053,6 +1062,43 @@ tr:hover td { background: #1a2332; }
     .validation-panel { padding: 16px; }
     .validation-step { padding: 10px 12px; flex-wrap: wrap; }
 }
+
+/* ======== Mobile Responsive ======== */
+@media (max-width: 640px) {
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 16px;
+        text-align: center;
+    }
+    .header h1 { font-size: 16px; }
+    .header-right {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    .container { padding: 12px 8px; }
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .metric-card { padding: 12px; }
+    .metric-value { font-size: 18px; }
+    .metric-label { font-size: 10px; }
+    .chart-container { padding: 12px; }
+    .chart-wrapper { height: 200px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat-row { font-size: 12px; }
+    table { font-size: 11px; }
+    th, td { padding: 6px 4px; }
+    .section-title { font-size: 15px; }
+    .trade-row td { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 400px) {
+    .metrics-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .metric-card { padding: 8px; border-radius: 8px; }
+    .metric-value { font-size: 16px; }
+}
 </style>
 </head>
 <body>
@@ -1125,6 +1171,13 @@ tr:hover td { background: #1a2332; }
             </thead>
             <tbody id="trades-body"></tbody>
         </table>
+    </div>
+
+    <!-- Attribution par Strategie -->
+    <div class="table-container" id="attribution-container">
+        <h2>Attribution par Strategie</h2>
+        <p style="color:#6b7280;font-size:12px;margin-bottom:12px;">Derniers signaux generes par chaque sous-strategie</p>
+        <div id="attribution-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
     </div>
 
     <!-- Historique complet des trades -->
@@ -1928,10 +1981,54 @@ async function fetchAndRender() {
         renderTrades(data);
         renderTradesHistory(data);
         renderErrors(data);
+        renderAttribution(data);
         ValidationChecker.render(data);
     } catch (err) {
         console.error('Erreur de chargement:', err);
     }
+}
+
+function renderAttribution(data) {
+    const grid = document.getElementById('attribution-grid');
+    if (!grid) return;
+    const attr = data.strategy_attribution || {};
+    const perf = data.strategy_performance || {};
+
+    if (Object.keys(attr).length === 0) {
+        grid.innerHTML = '<p style="color:#374151;font-size:13px;">Aucun signal genere pour le moment</p>';
+        return;
+    }
+
+    // Aggreger les signaux par sous-strategie
+    const stratCounts = {};
+    for (const [marketId, signals] of Object.entries(attr)) {
+        for (const [stratName, action] of Object.entries(signals)) {
+            if (!stratCounts[stratName]) stratCounts[stratName] = {BUY_YES:0, BUY_NO:0, HOLD:0, total:0};
+            stratCounts[stratName][action] = (stratCounts[stratName][action] || 0) + 1;
+            stratCounts[stratName].total++;
+        }
+    }
+
+    let html = '';
+    for (const [name, counts] of Object.entries(stratCounts)) {
+        const active = counts.BUY_YES + counts.BUY_NO;
+        const pct = counts.total > 0 ? Math.round(active / counts.total * 100) : 0;
+        const perfData = perf[name] || {};
+        const wr = perfData.win_rate ? perfData.win_rate.toFixed(0) + '%' : '-';
+        html += `<div style="background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px;">
+            <div style="font-weight:600;color:#fff;font-size:14px;margin-bottom:8px;">${name}</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;">
+                <span>YES: <span style="color:#4ade80">${counts.BUY_YES}</span></span>
+                <span>NO: <span style="color:#f87171">${counts.BUY_NO}</span></span>
+                <span>HOLD: ${counts.HOLD}</span>
+            </div>
+            <div style="margin-top:8px;height:4px;background:#1f2937;border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;"></div>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:4px;">Activite: ${pct}%</div>
+        </div>`;
+    }
+    grid.innerHTML = html;
 }
 
 // Bind tooltips on table headers (data-tip-* attributes)
