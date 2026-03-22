@@ -232,14 +232,16 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
         return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
     def _inject_version(html: str) -> str:
-        # Heure de Paris (CET=UTC+1, CEST=UTC+2)
-        # Utiliser zoneinfo si disponible, sinon fallback UTC+2 (heure d'ete FR)
+        """Injecte la version basee sur le dernier commit git (MAJ de code uniquement)."""
+        import subprocess
         try:
-            from zoneinfo import ZoneInfo
-            paris_now = datetime.now(ZoneInfo("Europe/Paris"))
-        except ImportError:
-            paris_now = datetime.now(timezone(timedelta(hours=2)))
-        version = paris_now.strftime("%Y-%m-%d %H:%M")
+            result = subprocess.run(
+                ["git", "log", "-1", "--format=%cd", "--date=format:%Y-%m-%d %H:%M"],
+                capture_output=True, text=True, timeout=5,
+            )
+            version = result.stdout.strip() if result.returncode == 0 else "unknown"
+        except Exception:
+            version = "unknown"
         return html.replace("__BUILD_VERSION__", version)
 
     @app.route("/")
