@@ -24,7 +24,10 @@ import csv
 import json
 import logging
 import argparse
+import smtplib
 import threading
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
@@ -33,12 +36,112 @@ from flask import Flask, jsonify, Response, request
 from config_manager import ConfigManager
 
 
+def _send_email_report(report: dict):
+    """Envoie un rapport journalier par email."""
+    import os
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    email_to = os.environ.get("REPORT_EMAIL", "easypc.informatique@gmail.com")
+
+    if not smtp_user or not smtp_pass:
+        logging.getLogger("web_dashboard").warning(
+            "Email non envoye: SMTP_USER et SMTP_PASS non configures sur Render")
+        return False
+
+    pnl = report.get('pnl', 0)
+    equity = report.get('equity', 0)
+    dd = report.get('drawdown', 0)
+    trades = report.get('trades', 0)
+    wr = report.get('win_rate', 0)
+    positions = report.get('open_positions', 0)
+    uptime = report.get('uptime_hours', 0)
+    validation = report.get('validation', '?')
+    mode = report.get('mode', 'DRY RUN')
+    date_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+
+    # Status emojis
+    pnl_icon = "\u2705" if pnl > 0 else ("\u26A0\uFE0F" if pnl == 0 else "\u274C")
+    dd_icon = "\u2705" if dd < 10 else ("\u26A0\uFE0F" if dd < 15 else "\u274C")
+    wr_icon = "\u2705" if wr >= 55 else ("\u26A0\uFE0F" if wr >= 45 else "\u274C")
+
+    subject = f"Polymarket Bot - Rapport du {datetime.now().strftime('%d/%m/%Y')} | Equity: ${equity:.2f}"
+
+    html = f"""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; background: #0a0e17; color: #e0e6ed; padding: 24px;">
+      <div style="max-width: 600px; margin: 0 auto; background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937;">
+        <h1 style="color: #6c63ff; font-size: 22px; margin-bottom: 4px;">POLYMARKET Hedge Fund Bot</h1>
+        <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">Rapport journalier du {date_str} | Mode: <strong style="color: #a5b4fc;">{mode}</strong></p>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Equity</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">${equity:.2f}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">{pnl_icon} PNL Net</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: {'#4ade80' if pnl >= 0 else '#f87171'};">{'+' if pnl >= 0 else ''}${pnl:.2f}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">{dd_icon} Drawdown</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: {'#4ade80' if dd < 10 else '#f87171'};">{dd:.1f}%</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Trades fermes</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">{trades} / 50</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">{wr_icon} Win Rate</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: {'#4ade80' if wr >= 55 else '#f87171'};">{wr:.1f}%</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Positions ouvertes</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">{positions}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Uptime</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">{uptime:.1f}h</td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 20px; padding: 16px; background: #0d1117; border-radius: 8px; border: 1px solid #1f2937;">
+          <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">Validation passage EN LIGNE</p>
+          <p style="font-size: 16px; font-weight: 700; color: #a5b4fc;">{validation}</p>
+        </div>
+
+        <p style="color: #374151; font-size: 11px; text-align: center; margin-top: 20px;">
+          <a href="https://polymarket-bot-d86.onrender.com" style="color: #6366f1;">Ouvrir le dashboard</a>
+        </p>
+      </div>
+    </body>
+    </html>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = smtp_user
+    msg["To"] = email_to
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, email_to, msg.as_string())
+        logging.getLogger("web_dashboard").info(f"Rapport journalier envoye a {email_to}")
+        return True
+    except Exception as e:
+        logging.getLogger("web_dashboard").error(f"Erreur envoi email: {e}")
+        return False
+
+
 def _start_keep_alive(app_url: str, interval: int = 600):
     """Ping le serveur toutes les 5 min pour eviter le sleep du free tier.
-    Log un rapport de statut toutes les heures."""
+    Log un rapport toutes les heures, envoie un email une fois par jour."""
     import urllib.request
 
     ping_count = [0]
+    last_email_day = [None]
 
     def _ping():
         while True:
@@ -63,6 +166,13 @@ def _start_keep_alive(app_url: str, interval: int = 600):
                         log.info(f"  Positions     : {report.get('open_positions', 0)}")
                         log.info(f"  Validation    : {report.get('validation', '?')}")
                         log.info("=" * 60)
+
+                        # Email journalier a 8h du matin (ou au premier rapport du jour)
+                        today = datetime.now().strftime('%Y-%m-%d')
+                        current_hour = datetime.now().hour
+                        if last_email_day[0] != today and current_hour >= 8:
+                            if _send_email_report(report):
+                                last_email_day[0] = today
                     except Exception:
                         pass
             except Exception:
