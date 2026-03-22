@@ -967,14 +967,14 @@ tr:hover td { background: #1a2332; }
 
     <!-- Validation Panel -->
     <div class="validation-panel" id="validation-panel">
-        <h2>\u{1F512} Conditions de passage EN LIGNE</h2>
+        <h2>&#x1F512; Conditions de passage EN LIGNE</h2>
         <div class="validation-progress-label" id="val-progress-label">0 / 6 etapes validees</div>
         <div class="validation-progress-bar">
             <div class="validation-progress-fill" id="val-progress-fill" style="width:0%"></div>
         </div>
         <div class="validation-steps" id="validation-steps"></div>
         <div style="text-align:center;">
-            <button class="go-live-btn" id="go-live-btn" disabled>Passer EN LIGNE \u{1F512} Verrouille</button>
+            <button class="go-live-btn" id="go-live-btn" disabled>Passer EN LIGNE &#x1F512; Verrouille</button>
         </div>
     </div>
 
