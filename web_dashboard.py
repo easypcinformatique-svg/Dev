@@ -908,18 +908,22 @@ function renderMetrics(data) {
           ex: 'Peak 1 100$ = a un moment, ton portefeuille valait 1 100$<br>C\'est <strong>le record a battre</strong>. Chaque nouveau peak = le bot performe bien.' },
     ];
 
-    // --- Build daily PnL from all_trades ---
+    // --- Build daily PnL from all_trades (only since bot started / last 30 days) ---
     const allTrades = data.all_trades || data.recent_trades || [];
+    const startedAt = data.started_at || '';
+    const startDate = startedAt ? startedAt.substring(0, 10) : '';
     const dailyMap = {};
     allTrades.forEach(t => {
         const d = t.exit_time || t.entry_time || '';
         if (!d) return;
         const day = d.substring(0, 10); // YYYY-MM-DD
+        // Only include trades from the current live session
+        if (startDate && day < startDate) return;
         if (!dailyMap[day]) dailyMap[day] = { pnl: 0, count: 0 };
         dailyMap[day].pnl += (t.pnl || 0);
         dailyMap[day].count += 1;
     });
-    const dailyDays = Object.keys(dailyMap).sort().slice(-7); // last 7 days
+    const dailyDays = Object.keys(dailyMap).sort().slice(-7);
 
     const grid = document.getElementById('metrics-grid');
     grid.innerHTML = cards.map((c, i) => {
@@ -932,18 +936,12 @@ function renderMetrics(data) {
             const equity = o.equity || (initCap + totalPnl);
 
             let dailyHtml = '';
+            const liveStartLabel = startDate ? new Date(startDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
             if (dailyDays.length > 0) {
                 const now = new Date();
                 const currentYear = now.getFullYear();
-                const firstDay = dailyDays[0];
-                const lastDay = dailyDays[dailyDays.length - 1];
-                const firstDate = new Date(firstDay + 'T00:00:00');
-                const lastDate = new Date(lastDay + 'T00:00:00');
-                // Build date range label
-                const fmtRange = (d) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: d.getFullYear() !== currentYear ? 'numeric' : undefined });
-                const rangeLabel = fmtRange(firstDate) + ' - ' + fmtRange(lastDate);
 
-                dailyHtml = '<div class="pnl-daily-section"><h4>Historique des gains par jour de trading (' + rangeLabel + ')</h4><div class="pnl-daily-grid">' +
+                dailyHtml = '<div class="pnl-daily-section"><h4>Gains par jour de trading (depuis le ' + liveStartLabel + ')</h4><div class="pnl-daily-grid">' +
                     dailyDays.map(day => {
                         const d = dailyMap[day];
                         const cls = d.pnl >= 0 ? 'day-positive' : 'day-negative';
@@ -958,14 +956,25 @@ function renderMetrics(data) {
                             '</div>';
                     }).join('') +
                     '</div></div>';
+            } else {
+                dailyHtml = '<div class="pnl-daily-section"><h4>Gains par jour de trading' + (liveStartLabel ? ' (live depuis le ' + liveStartLabel + ')' : '') + '</h4>' +
+                    '<div style="text-align:center;color:#4b5563;padding:12px 0;font-size:12px;">Aucun trade ferme depuis le passage en live. En attente du premier trade...</div></div>';
             }
+
+            // Count trades since live
+            const liveTradeCount = allTrades.filter(t => {
+                const d = (t.exit_time || t.entry_time || '').substring(0, 10);
+                return !startDate || d >= startDate;
+            }).length;
+            const oldTradeCount = allTrades.length - liveTradeCount;
 
             return `
             <div class="metric-card pnl-expanded" data-tip-idx="${i}">
-                <div class="metric-label">${c.icon} ${c.label}</div>
+                <div class="metric-label">${c.icon} ${c.label}${liveStartLabel ? ' <span style="font-size:10px;color:#818cf8;font-weight:400;text-transform:none;letter-spacing:0;">Live depuis le ' + liveStartLabel + '</span>' : ''}</div>
                 <div class="pnl-main-row">
                     <div class="pnl-main-value ${c.cls}">${c.value}</div>
                     <span class="pnl-return-badge ${returnPct >= 0 ? 'positive' : 'negative'}">${returnPct >= 0 ? '+' : ''}${fmt(returnPct, 2)}%</span>
+                    ${oldTradeCount > 0 ? '<span style="font-size:10px;color:#6b7280;margin-bottom:4px;">dont ' + oldTradeCount + ' trades historiques</span>' : ''}
                 </div>
                 <div class="pnl-breakdown">
                     <div class="pnl-breakdown-item">
