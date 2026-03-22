@@ -1538,9 +1538,9 @@ const ValidationChecker = {
         }
         steps.push({
             title: 'Duree minimum de DRY RUN',
-            detail: 'Jour ' + dryDays + ' / 7',
-            valid: dryDays >= 7,
-            pending: dryDays > 0 && dryDays < 7
+            detail: 'Jour ' + dryDays + ' / 30',
+            valid: dryDays >= 30,
+            pending: dryDays > 0 && dryDays < 30
         });
 
         // STEP 2 - PNL Net > 0
@@ -1578,9 +1578,9 @@ const ValidationChecker = {
         const totalTrades = ts.total_trades || 0;
         steps.push({
             title: 'Nombre de trades minimum',
-            detail: totalTrades + ' / 20 trades',
-            valid: totalTrades >= 20,
-            pending: totalTrades > 0 && totalTrades < 20
+            detail: totalTrades + ' / 50 trades',
+            valid: totalTrades >= 50,
+            pending: totalTrades > 0 && totalTrades < 50
         });
 
         // STEP 5 - Win rate >= 55%
