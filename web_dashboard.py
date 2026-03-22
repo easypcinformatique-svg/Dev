@@ -271,16 +271,25 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
         return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
     def _inject_version(html: str) -> str:
-        """Injecte la version basee sur le dernier commit git (MAJ de code uniquement)."""
-        import subprocess
-        try:
-            result = subprocess.run(
-                ["git", "log", "-1", "--format=%cd", "--date=format:%Y-%m-%d %H:%M"],
-                capture_output=True, text=True, timeout=5,
-            )
-            version = result.stdout.strip() if result.returncode == 0 else "unknown"
-        except Exception:
-            version = "unknown"
+        """Injecte la version basee sur le dernier commit git ou la date du fichier."""
+        import subprocess, os
+        version = os.environ.get("BUILD_VERSION", "")
+        if not version:
+            try:
+                result = subprocess.run(
+                    ["git", "log", "-1", "--format=%cd", "--date=format:%Y-%m-%d %H:%M"],
+                    capture_output=True, text=True, timeout=5,
+                )
+                version = result.stdout.strip() if result.returncode == 0 else ""
+            except Exception:
+                pass
+        if not version:
+            try:
+                mtime = os.path.getmtime(__file__)
+                from datetime import datetime as _dt
+                version = _dt.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                version = "1.0.0"
         return html.replace("__BUILD_VERSION__", version)
 
     @app.route("/")
