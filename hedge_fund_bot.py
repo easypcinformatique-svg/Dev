@@ -986,11 +986,28 @@ class HedgeFundBot:
         equity = self.state.capital + total_exposure + total_unrealized
         dd = (self.state.peak_equity - equity) / self.state.peak_equity if self.state.peak_equity > 0 else 0
 
-        # Stats des trades
-        trades = self.state.trades
-        pnls = [t.get("pnl", 0) if isinstance(t, dict) else t.pnl for t in trades]
+        # Filter trades to only those since bot started (exclude backtest)
+        all_trades = self.state.trades
+        start_date = (self.state.started_at or "")[:10]
+        if start_date:
+            live_trades = [t for t in all_trades
+                          if ((t.get("exit_time") or t.get("entry_time") or "") if isinstance(t, dict)
+                              else (getattr(t, "exit_time", "") or getattr(t, "entry_time", "") or ""))[:10] >= start_date]
+        else:
+            live_trades = all_trades
+
+        pnls = [t.get("pnl", 0) if isinstance(t, dict) else t.pnl for t in live_trades]
         wins = [p for p in pnls if p > 0]
         losses = [p for p in pnls if p < 0]
+        live_pnl = round(sum(pnls), 2)
+        live_fees = round(sum(
+            (t.get("fees_total", 0) if isinstance(t, dict) else getattr(t, "fees_total", 0))
+            for t in live_trades
+        ), 2)
+
+        initial = self.config.initial_capital
+        peak = max(equity, initial)
+        dd = (peak - equity) / peak if peak > 0 else 0
 
         return {
             "status": "running" if self._running else "stopped",
@@ -1002,24 +1019,26 @@ class HedgeFundBot:
             "overview": {
                 "capital": round(self.state.capital, 2),
                 "equity": round(equity, 2),
-                "total_pnl": round(self.state.total_pnl, 2),
+                "total_pnl": live_pnl,
+                "total_fees": live_fees,
+                "total_pnl_gross": round(live_pnl + live_fees, 2),
                 "daily_pnl": round(self.state.daily_pnl, 2),
                 "unrealized_pnl": round(total_unrealized, 2),
                 "exposure": round(total_exposure, 2),
                 "exposure_pct": round(total_exposure / max(equity, 1) * 100, 1),
                 "drawdown_pct": round(dd * 100, 2),
-                "peak_equity": round(self.state.peak_equity, 2),
-                "initial_capital": self.config.initial_capital,
-                "total_return_pct": round((equity / self.config.initial_capital - 1) * 100, 2),
+                "peak_equity": round(peak, 2),
+                "initial_capital": initial,
+                "total_return_pct": round((equity / initial - 1) * 100, 2),
             },
             "positions": list(self.state.positions.values()),
-            "recent_trades": trades[-20:],
-            "all_trades": trades,
+            "recent_trades": live_trades[-20:],
+            "all_trades": live_trades,
             "trade_stats": {
-                "total_trades": len(trades),
+                "total_trades": len(live_trades),
                 "winning_trades": len(wins),
                 "losing_trades": len(losses),
-                "win_rate": round(len(wins) / max(len(trades), 1) * 100, 1),
+                "win_rate": round(len(wins) / max(len(live_trades), 1) * 100, 1),
                 "avg_win": round(np.mean(wins), 2) if wins else 0,
                 "avg_loss": round(np.mean(losses), 2) if losses else 0,
                 "profit_factor": round(abs(sum(wins) / sum(losses)), 2) if losses else 0,
