@@ -129,9 +129,19 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                         except Exception:
                             pass
 
+            # Calculer les frais si absents (2% du montant engagé)
+            for t in trades:
+                if "fees_total" not in t:
+                    t["fees_total"] = round(t.get("size_usd", 0) * 0.02, 2)
+                if "pnl_gross" not in t:
+                    t["pnl_gross"] = t.get("pnl", 0) + t["fees_total"]
+                if "pnl_net" not in t:
+                    t["pnl_net"] = t.get("pnl", 0)
+
             pnls = [t.get("pnl", 0) for t in trades]
             wins = [p for p in pnls if p > 0]
             losses = [p for p in pnls if p < 0]
+            total_fees = round(sum(t.get("fees_total", 0) for t in trades), 2)
 
             total_exposure = sum(
                 p.get("size_usd", 0) for p in
@@ -158,6 +168,8 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                     "capital": round(capital, 2),
                     "equity": round(equity, 2),
                     "total_pnl": round(state.get("total_pnl", 0), 2),
+                    "total_fees": total_fees,
+                    "total_pnl_gross": round(state.get("total_pnl_gross", state.get("total_pnl", 0) + total_fees), 2),
                     "daily_pnl": round(state.get("daily_pnl", 0), 2),
                     "unrealized_pnl": round(total_unrealized, 2),
                     "exposure": round(total_exposure, 2),
@@ -673,9 +685,9 @@ function renderMetrics(data) {
         { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
           tip: '<strong>L\'argent disponible</strong> qui n\'est pas investi dans des positions. C\'est ta reserve pour ouvrir de nouvelles positions.',
           ex: 'Sur 1000$ total, si 300$ sont investis, il reste 700$ de cash' },
-        { label: 'PnL Total', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '%', icon: '\u{1F4CA}',
-          tip: '<strong>Profit and Loss total</strong> depuis le lancement du bot. Somme de tous les trades fermes (gains - pertes).',
-          ex: '+45$ = le bot a gagne 45$ depuis le debut. -20$ = il a perdu 20$ au total' },
+        { label: 'PnL Net (apr\u00e8s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '\u{1F4CA}',
+          tip: '<strong>Profit and Loss net</strong> depuis le lancement du bot. Somme de tous les trades fermes (gains - pertes - frais).',
+          ex: '+45$ = le bot a gagne 45$ net apres frais. Frais = 2% du montant engage par trade' },
         { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
           tip: '<strong>Profit et perte du jour</strong>. Se reinitialise a minuit. Si ca depasse la limite journaliere, le bot arrete de trader.',
           ex: '+12$ = le bot a gagne 12$ aujourd\'hui. -30$ = il a perdu 30$ depuis minuit' },
@@ -1871,7 +1883,8 @@ tr:hover { background: #1a1c2e; }
                         <th data-sort="entry">Entree</th>
                         <th data-sort="exit">Sortie</th>
                         <th data-sort="size">Taille</th>
-                        <th data-sort="pnl">PnL</th>
+                        <th data-sort="fees">Frais</th>
+                        <th data-sort="pnl">PnL Net</th>
                         <th data-sort="pct">%</th>
                         <th data-sort="reason">Raison</th>
                     </tr>
@@ -1915,16 +1928,18 @@ function renderKPIs(data) {
 
     const avgTrade = pnls.length > 0 ? pnls.reduce((a,b) => a+b, 0) / pnls.length : 0;
     const expectancy = (s.win_rate/100 || 0) * (s.avg_win || 0) + (1 - (s.win_rate/100 || 0)) * (s.avg_loss || 0);
+    const totalFees = trades.reduce((acc, t) => acc + (t.fees_total || 0), 0);
+    const totalPnlGross = trades.reduce((acc, t) => acc + (t.pnl_gross || t.pnl || 0), 0);
 
     const cards = [
-        { label: 'PnL Total', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative' },
+        { label: 'PnL Brut', value: fmtUsd(totalPnlGross), cls: totalPnlGross >= 0 ? 'positive' : 'negative' },
+        { label: 'Frais Totaux', value: fmtUsd(totalFees), cls: 'negative' },
+        { label: 'PnL Net', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative' },
         { label: 'Total Trades', value: s.total_trades || trades.length, cls: 'neutral' },
         { label: 'Win Rate', value: fmt(s.win_rate, 1) + '%', cls: (s.win_rate || 0) >= 50 ? 'positive' : 'negative' },
         { label: 'Profit Factor', value: fmt(s.profit_factor), cls: (s.profit_factor || 0) >= 1 ? 'positive' : 'negative' },
         { label: 'Gain Moyen', value: fmtUsd(s.avg_win), cls: 'positive' },
         { label: 'Perte Moyenne', value: fmtUsd(s.avg_loss), cls: 'negative' },
-        { label: 'Plus Gros Gain', value: fmtUsd(s.largest_win), cls: 'positive' },
-        { label: 'Plus Grosse Perte', value: fmtUsd(s.largest_loss), cls: 'negative' },
         { label: 'Esperance/Trade', value: fmtUsd(expectancy), cls: expectancy >= 0 ? 'positive' : 'negative' },
         { label: 'Max Drawdown', value: fmt(maxDD, 1) + '%', cls: 'negative' },
     ];
@@ -2031,12 +2046,13 @@ function renderTable() {
         let va, vb;
         switch(sortKey) {
             case 'idx': va = a._idx; vb = b._idx; break;
-            case 'date': va = a.exit_time || ''; vb = b.exit_time || ''; break;
+            case 'date': va = a.entry_time || a.exit_time || ''; vb = b.entry_time || b.exit_time || ''; break;
             case 'market': va = (a.question || a.market_id || '').toLowerCase(); vb = (b.question || b.market_id || '').toLowerCase(); break;
             case 'side': va = a.side; vb = b.side; break;
             case 'entry': va = a.entry_price || 0; vb = b.entry_price || 0; break;
             case 'exit': va = a.exit_price || 0; vb = b.exit_price || 0; break;
             case 'size': va = a.size_usd || 0; vb = b.size_usd || 0; break;
+            case 'fees': va = a.fees_total || 0; vb = b.fees_total || 0; break;
             case 'pnl': va = a.pnl || 0; vb = b.pnl || 0; break;
             case 'pct': va = a.pnl_pct || 0; vb = b.pnl_pct || 0; break;
             case 'reason': va = a.reason || ''; vb = b.reason || ''; break;
@@ -2049,22 +2065,23 @@ function renderTable() {
 
     const body = document.getElementById('trades-body');
     if (trades.length === 0) {
-        body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#4b5563;padding:30px;">Aucun trade</td></tr>';
+        body.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#4b5563;padding:30px;">Aucun trade</td></tr>';
         return;
     }
 
     body.innerHTML = trades.map(t => {
-        const dt = t.exit_time ? new Date(t.exit_time).toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+        const rawDate = t.entry_time || t.exit_time || '';
+        const dt = rawDate ? new Date(rawDate).toLocaleString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
         const pnlCls = (t.pnl || 0) >= 0 ? 'positive' : 'negative';
-        const badge = (t.pnl || 0) >= 0 ? 'badge-win' : 'badge-loss';
         return `<tr>
             <td>${t._idx}</td>
             <td>${dt}</td>
-            <td title="${t.question || t.market_id || ''}">${(t.question || t.market_id || '').substring(0, 40)}</td>
+            <td title="${t.question || t.market_id || ''}">${(t.question || t.market_id || '').substring(0, 45)}</td>
             <td><span style="color:${t.side==='YES'?'#4ade80':'#f87171'};font-weight:600">${t.side}</span></td>
             <td>${fmt(t.entry_price, 4)}</td>
             <td>${fmt(t.exit_price, 4)}</td>
             <td>${fmtUsd(t.size_usd)}</td>
+            <td style="color:#f59e0b">${fmtUsd(t.fees_total || 0)}</td>
             <td class="${pnlCls}" style="font-weight:600">${fmtUsd(t.pnl)}</td>
             <td class="${pnlCls}">${fmt((t.pnl_pct || 0), 1)}%</td>
             <td><span class="badge badge-reason">${t.reason || '-'}</span></td>
