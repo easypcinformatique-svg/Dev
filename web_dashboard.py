@@ -138,10 +138,20 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                 if "pnl_net" not in t:
                     t["pnl_net"] = t.get("pnl", 0)
 
-            pnls = [t.get("pnl", 0) for t in trades]
+            # Filter trades to only those since bot started (exclude backtest)
+            started_at = state.get("started_at", "")
+            start_date = started_at[:10] if started_at else ""
+            if start_date:
+                live_trades = [t for t in trades if (t.get("exit_time") or t.get("entry_time") or "")[:10] >= start_date]
+            else:
+                live_trades = trades
+
+            pnls = [t.get("pnl", 0) for t in live_trades]
             wins = [p for p in pnls if p > 0]
             losses = [p for p in pnls if p < 0]
-            total_fees = round(sum(t.get("fees_total", 0) for t in trades), 2)
+            total_fees = round(sum(t.get("fees_total", 0) for t in live_trades), 2)
+            live_pnl = round(sum(pnls), 2)
+            live_pnl_gross = round(live_pnl + total_fees, 2)
 
             total_exposure = sum(
                 p.get("size_usd", 0) for p in
@@ -152,24 +162,28 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                 (positions.values() if isinstance(positions, dict) else positions)
             )
             capital = state.get("capital", 0)
-            equity = capital + total_exposure + total_unrealized
-            peak = state.get("peak_equity", equity)
             initial = 1000.0
+            equity = initial + live_pnl + total_unrealized + total_exposure - sum(
+                p.get("size_usd", 0) for p in
+                (positions.values() if isinstance(positions, dict) else positions)
+            )
+            equity = capital + total_exposure + total_unrealized
+            peak = max(equity, initial)
             dd = (peak - equity) / peak if peak > 0 else 0
 
             return {
                 "status": "running",
                 "mode": "DRY RUN",
                 "strategy": "AlphaComposite",
-                "started_at": state.get("started_at", ""),
+                "started_at": started_at,
                 "last_scan": state.get("last_scan", ""),
                 "iteration": state.get("iteration", 0),
                 "overview": {
                     "capital": round(capital, 2),
                     "equity": round(equity, 2),
-                    "total_pnl": round(state.get("total_pnl", 0), 2),
+                    "total_pnl": live_pnl,
                     "total_fees": total_fees,
-                    "total_pnl_gross": round(state.get("total_pnl_gross", state.get("total_pnl", 0) + total_fees), 2),
+                    "total_pnl_gross": live_pnl_gross,
                     "daily_pnl": round(state.get("daily_pnl", 0), 2),
                     "unrealized_pnl": round(total_unrealized, 2),
                     "exposure": round(total_exposure, 2),
@@ -180,13 +194,13 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                     "total_return_pct": round((equity / initial - 1) * 100, 2),
                 },
                 "positions": list(positions.values()) if isinstance(positions, dict) else positions,
-                "recent_trades": trades[-20:],
-                "all_trades": trades,
+                "recent_trades": live_trades[-20:],
+                "all_trades": live_trades,
                 "trade_stats": {
-                    "total_trades": len(trades),
+                    "total_trades": len(live_trades),
                     "winning_trades": len(wins),
                     "losing_trades": len(losses),
-                    "win_rate": round(len(wins) / max(len(trades), 1) * 100, 1),
+                    "win_rate": round(len(wins) / max(len(live_trades), 1) * 100, 1),
                     "avg_win": round(sum(wins) / max(len(wins), 1), 2),
                     "avg_loss": round(sum(losses) / max(len(losses), 1), 2),
                     "profit_factor": round(abs(sum(wins) / sum(losses)), 2) if losses else 0,
