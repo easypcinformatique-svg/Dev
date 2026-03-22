@@ -392,50 +392,87 @@ body {
     color: #6b7280;
     margin-top: 4px;
 }
-/* Dashboard tooltips */
-.metric-card { position: relative; cursor: help; }
-.metric-tooltip {
+/* Global tooltip overlay */
+.metric-card { cursor: help; }
+.stat-row { cursor: help; }
+#global-tooltip {
     display: none;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 100%;
-    z-index: 100;
-    width: 300px;
-    background: #1a1f35;
-    border: 1px solid #6366f1;
-    border-radius: 8px;
+    position: fixed;
+    z-index: 9999;
+    width: 360px;
+    max-width: 90vw;
+    background: linear-gradient(135deg, #1a1f35 0%, #1e2340 100%);
+    border: 2px solid #818cf8;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 12px 40px rgba(99,102,241,0.3), 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 13px;
+    color: #e0e6ed;
+    line-height: 1.7;
+    pointer-events: none;
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+#global-tooltip .gt-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2d3460;
+}
+#global-tooltip .gt-icon { font-size: 20px; }
+#global-tooltip .gt-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #a5b4fc;
+}
+#global-tooltip .gt-body {
+    color: #d1d5db;
+    font-size: 13px;
+    line-height: 1.7;
+}
+#global-tooltip .gt-body strong { color: #c7d2fe; }
+#global-tooltip .gt-example {
+    margin-top: 12px;
     padding: 10px 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    margin-bottom: 8px;
-    font-size: 12px;
-    color: #d1d5db;
-    line-height: 1.5;
-    pointer-events: none;
-}
-.metric-card:hover .metric-tooltip { display: block; }
-.metric-tooltip strong { color: #a5b4fc; }
-.metric-tooltip .tip-example { color: #4ade80; margin-top: 6px; font-size: 11px; }
-.stat-row { position: relative; cursor: help; }
-.stat-tooltip {
-    display: none;
-    position: absolute;
-    left: 0;
-    bottom: 100%;
-    z-index: 100;
-    width: 280px;
-    background: #1a1f35;
-    border: 1px solid #6366f1;
+    background: #0d1321;
+    border: 1px solid #2a3a5c;
     border-radius: 8px;
-    padding: 8px 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    margin-bottom: 6px;
-    font-size: 11px;
-    color: #d1d5db;
-    line-height: 1.4;
-    pointer-events: none;
+    font-size: 12px;
+    color: #4ade80;
+    line-height: 1.6;
 }
-.stat-row:hover .stat-tooltip { display: block; }
+#global-tooltip .gt-example-label {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+#global-tooltip .gt-arrow {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #1a1f35;
+    border: 2px solid #818cf8;
+    transform: rotate(45deg);
+    border-right: none;
+    border-bottom: none;
+}
+#global-tooltip .gt-arrow.arrow-top {
+    top: -7px;
+    border-top: 2px solid #818cf8;
+    border-left: 2px solid #818cf8;
+}
+#global-tooltip .gt-arrow.arrow-bottom {
+    bottom: -7px;
+    transform: rotate(225deg);
+}
 
 /* Chart */
 .chart-container {
@@ -479,29 +516,8 @@ th {
     position: relative;
     cursor: help;
 }
-.th-tooltip {
-    display: none;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 100%;
-    z-index: 100;
-    width: 250px;
-    background: #1a1f35;
-    border: 1px solid #6366f1;
-    border-radius: 8px;
-    padding: 8px 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    margin-bottom: 6px;
-    font-size: 11px;
-    color: #d1d5db;
-    line-height: 1.4;
-    pointer-events: none;
-    text-transform: none;
-    letter-spacing: normal;
-    font-weight: 400;
-}
-th:hover .th-tooltip { display: block; }
+/* th-tooltip now handled by global tooltip system */
+.th-tooltip { display: none; }
 td {
     padding: 10px 12px;
     border-bottom: 1px solid #111827;
@@ -587,16 +603,16 @@ tr:hover td { background: #1a2332; }
     <div class="two-col">
         <div class="table-container">
             <h2>Positions Ouvertes (<span id="pos-count">0</span>)</h2>
-            <table>
+            <table id="positions-table">
                 <thead>
                     <tr>
-                        <th>Date<span class="th-tooltip">Date et heure d'ouverture de la position</span></th>
-                        <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel la position est ouverte</span></th>
-                        <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
-                        <th>Taille<span class="th-tooltip">Montant investi en dollars dans cette position</span></th>
-                        <th>Entree<span class="th-tooltip">Prix d'achat de la position (entre 0 et 1)</span></th>
-                        <th>Actuel<span class="th-tooltip">Prix actuel du marche en temps reel</span></th>
-                        <th>PnL<span class="th-tooltip">Profit ou perte non realise(e) sur cette position</span></th>
+                        <th data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date et heure d'ouverture</strong> de la position.<br><br>Indique quand le bot a decide d'entrer sur ce marche. Plus une position est ancienne, plus elle a eu le temps d'evoluer.">Date</th>
+                        <th data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel la position est ouverte.<br><br>Chaque marche est une question oui/non (ex: 'Bitcoin depassera-t-il 100k ?'). Le bot choisit les marches les plus prometteurs.">Marche</th>
+                        <th data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> :<br><br><span style='color:#4ade80;font-weight:700'>YES</span> = Le bot parie que l'evenement va se produire (le prix va monter vers 1$)<br><br><span style='color:#f87171;font-weight:700'>NO</span> = Le bot parie que l'evenement ne se produira PAS (le prix va descendre vers 0$)">Side</th>
+                        <th data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi en dollars</strong> dans cette position.<br><br>Le bot dimensionne automatiquement chaque position selon le Kelly Criterion et les limites d'exposition configurees.">Taille</th>
+                        <th data-tip-title="Prix d'Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00).<br><br>Sur Polymarket, les prix representent des probabilites. Un prix de 0.60 signifie que le marche estime l'evenement a 60% de chances de se produire.">Entree</th>
+                        <th data-tip-title="Prix Actuel" data-tip-icon="\u{1F4CA}" data-tip-body="<strong>Prix actuel du marche</strong> en temps reel.<br><br>Si le prix actuel est superieur au prix d'entree (pour un YES) = la position est en gain. S'il est inferieur = la position est en perte.">Actuel</th>
+                        <th data-tip-title="PnL" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte non realise(e)</strong> sur cette position.<br><br>Ce montant change en temps reel avec le prix du marche. Il ne devient 'reel' que lorsque la position est fermee (vente).">PnL</th>
                     </tr>
                 </thead>
                 <tbody id="positions-body"></tbody>
@@ -612,17 +628,17 @@ tr:hover td { background: #1a2332; }
     <!-- Trades recents -->
     <div class="table-container">
         <h2>Trades Recents</h2>
-        <table>
+        <table id="recent-trades-table">
             <thead>
                 <tr>
-                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
-                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
-                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
-                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
-                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
-                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
-                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
-                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
+                    <th data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date et heure de fermeture</strong> du trade.<br><br>Quand le bot a decide de vendre/fermer la position. Peut etre declenche par un take-profit, stop-loss, ou autre regle.">Date</th>
+                    <th data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue. La question complete est visible en survolant le texte dans le tableau.">Marche</th>
+                    <th data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80'>YES</span> = pari sur OUI | <span style='color:#f87171'>NO</span> = pari sur NON">Side</th>
+                    <th data-tip-title="Prix d'Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> au moment de l'ouverture du trade (entre 0 et 1).">Entree</th>
+                    <th data-tip-title="Prix de Sortie" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture du trade. La difference entre Sortie et Entree determine le profit ou la perte.">Sortie</th>
+                    <th data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. C'est la mise de depart.">Taille</th>
+                    <th data-tip-title="PnL" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte realise(e)</strong> sur ce trade (net de frais).<br><br><span style='color:#4ade80'>Vert</span> = gain | <span style='color:#f87171'>Rouge</span> = perte">PnL</th>
+                    <th data-tip-title="Raison" data-tip-icon="\u{1F3F3}\uFE0F" data-tip-body="<strong>Motif de fermeture du trade</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint<br><strong>stop_loss</strong> = Limite de perte declenchee<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
                 </tr>
             </thead>
             <tbody id="trades-body"></tbody>
@@ -632,17 +648,17 @@ tr:hover td { background: #1a2332; }
     <!-- Historique complet des trades -->
     <div class="table-container" id="history-container" style="display:none;">
         <h2>Historique des Trades (<span id="history-count">0</span>)</h2>
-        <table>
+        <table id="history-trades-table">
             <thead>
                 <tr>
-                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
-                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
-                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
-                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
-                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
-                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
-                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
-                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
+                    <th data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date de fermeture</strong> du trade.">Date</th>
+                    <th data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue.">Marche</th>
+                    <th data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> : YES ou NO.">Side</th>
+                    <th data-tip-title="Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> de la position.">Entree</th>
+                    <th data-tip-title="Sortie" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix de vente</strong> de la position.">Sortie</th>
+                    <th data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi</strong> en dollars.">Taille</th>
+                    <th data-tip-title="PnL" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte realise(e)</strong> net de frais.">PnL</th>
+                    <th data-tip-title="Raison" data-tip-icon="\u{1F3F3}\uFE0F" data-tip-body="<strong>Motif de fermeture</strong> : take_profit, stop_loss, trailing_stop, expiration.">Raison</th>
                 </tr>
             </thead>
             <tbody id="history-body"></tbody>
@@ -658,7 +674,92 @@ tr:hover td { background: #1a2332; }
     <div class="refresh-info">Rafraichissement automatique toutes les 10 secondes</div>
 </div>
 
+<!-- Global tooltip overlay -->
+<div id="global-tooltip">
+    <div class="gt-arrow" id="gt-arrow"></div>
+    <div class="gt-header">
+        <span class="gt-icon" id="gt-icon"></span>
+        <span class="gt-title" id="gt-title"></span>
+    </div>
+    <div class="gt-body" id="gt-body"></div>
+    <div class="gt-example" id="gt-example" style="display:none;">
+        <div class="gt-example-label">Exemple concret</div>
+        <div id="gt-example-text"></div>
+    </div>
+</div>
+
 <script>
+// ---- Global Tooltip System ----
+const GT = {
+    el: null, arrow: null, icon: null, title: null, body: null, example: null, exText: null,
+    hideTimeout: null,
+    init() {
+        this.el = document.getElementById('global-tooltip');
+        this.arrow = document.getElementById('gt-arrow');
+        this.icon = document.getElementById('gt-icon');
+        this.title = document.getElementById('gt-title');
+        this.body = document.getElementById('gt-body');
+        this.example = document.getElementById('gt-example');
+        this.exText = document.getElementById('gt-example-text');
+    },
+    show(target, opts) {
+        if (!this.el) this.init();
+        clearTimeout(this.hideTimeout);
+        this.icon.textContent = opts.icon || '';
+        this.title.textContent = opts.title || '';
+        this.body.innerHTML = opts.body || '';
+        if (opts.example) {
+            this.example.style.display = '';
+            this.exText.innerHTML = opts.example;
+        } else {
+            this.example.style.display = 'none';
+        }
+        this.el.style.display = 'block';
+        // Position
+        const rect = target.getBoundingClientRect();
+        const ttRect = this.el.getBoundingClientRect();
+        const pad = 12;
+        let top, arrowTop;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        // Prefer below
+        if (spaceBelow >= ttRect.height + pad || spaceBelow >= spaceAbove) {
+            top = rect.bottom + pad;
+            this.arrow.className = 'gt-arrow arrow-top';
+            arrowTop = true;
+        } else {
+            top = rect.top - ttRect.height - pad;
+            this.arrow.className = 'gt-arrow arrow-bottom';
+            arrowTop = false;
+        }
+        // Horizontal: center on target, clamp to viewport
+        let left = rect.left + rect.width / 2 - ttRect.width / 2;
+        left = Math.max(pad, Math.min(left, window.innerWidth - ttRect.width - pad));
+        // Clamp vertical
+        top = Math.max(pad, Math.min(top, window.innerHeight - ttRect.height - pad));
+        this.el.style.left = left + 'px';
+        this.el.style.top = top + 'px';
+        // Arrow horizontal position
+        const arrowLeft = Math.max(16, Math.min(rect.left + rect.width / 2 - left, ttRect.width - 16));
+        this.arrow.style.left = arrowLeft + 'px';
+    },
+    hide() {
+        this.hideTimeout = setTimeout(() => {
+            if (this.el) this.el.style.display = 'none';
+        }, 100);
+    }
+};
+
+function bindTooltip(el, opts) {
+    el.addEventListener('mouseenter', () => GT.show(el, opts));
+    el.addEventListener('mouseleave', () => GT.hide());
+    el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        GT.show(el, opts);
+        setTimeout(() => GT.hide(), 4000);
+    });
+}
+
 let equityChart = null;
 
 function fmt(n, decimals=2) {
@@ -689,40 +790,45 @@ function renderMetrics(data) {
     const o = data.overview || {};
     const cards = [
         { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '\u{1F4B0}',
-          tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br>C\'est la valeur totale de ton portefeuille a cet instant.',
-          ex: 'Capital 700$ + 2 positions de 150$ + 30$ de gains = Equity 1030$' },
+          tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br><br>C\'est la <strong>valeur totale de ton portefeuille</strong> a cet instant precis. Elle monte quand tes positions gagnent, elle descend quand elles perdent.<br><br>C\'est le chiffre le plus important : il resume la sante globale de ton compte.',
+          ex: 'Tu as 700$ de cash + 2 positions de 150$ chacune + 30$ de gains latents<br>= Equity de <strong>1 030$</strong>' },
         { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
-          tip: '<strong>L\'argent disponible</strong> qui n\'est pas investi dans des positions. C\'est ta reserve pour ouvrir de nouvelles positions.',
-          ex: 'Sur 1000$ total, si 300$ sont investis, il reste 700$ de cash' },
+          tip: '<strong>L\'argent disponible</strong> sur ton compte qui n\'est <strong>pas investi</strong> dans des positions ouvertes.<br><br>C\'est ta reserve pour ouvrir de nouvelles positions. Plus il est bas, moins tu peux ouvrir de trades. Le bot gere automatiquement l\'allocation.',
+          ex: 'Equity totale de 1000$, 300$ investis dans 3 positions<br>= <strong>700$ de cash disponible</strong> pour de nouveaux trades' },
         { label: 'PnL Net (apr\u00e8s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '\u{1F4CA}',
-          tip: '<strong>Profit and Loss net</strong> depuis le lancement du bot. Somme de tous les trades fermes (gains - pertes - frais).',
-          ex: '+45$ = le bot a gagne 45$ net apres frais. Frais = 2% du montant engage par trade' },
+          tip: '<strong>Profit and Loss NET</strong> = Gains - Pertes - Frais<br><br>C\'est ton <strong>vrai benefice</strong> depuis le lancement du bot, une fois les frais Polymarket deduits (2% par trade).<br><br><strong>Vert</strong> = tu gagnes de l\'argent<br><strong>Rouge</strong> = tu en perds',
+          ex: 'Gains bruts: +2 286$, Frais: -119$<br>= <strong>PnL Net: +2 167$</strong> (ce que tu gagnes vraiment)' },
         { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
-          tip: '<strong>Profit et perte du jour</strong>. Se reinitialise a minuit. Si ca depasse la limite journaliere, le bot arrete de trader.',
-          ex: '+12$ = le bot a gagne 12$ aujourd\'hui. -30$ = il a perdu 30$ depuis minuit' },
+          tip: '<strong>Profit et perte du jour</strong> (depuis minuit UTC).<br><br>Se reinitialise a <strong>00h00 chaque jour</strong>. Le bot a une limite de perte journaliere configurable. Si cette limite est depassee, il arrete automatiquement de trader pour proteger ton capital.',
+          ex: '+12$ = le bot a gagne 12$ aujourd\'hui<br>-30$ = il a perdu 30$ depuis minuit<br>Limite par defaut : -50$ = arret automatique' },
         { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '\u{23F3}',
-          tip: '<strong>Gains/pertes des positions encore ouvertes</strong>. Ce n\'est pas du vrai profit tant que la position n\'est pas fermee. Ca peut changer a tout moment.',
-          ex: '+15$ = tes positions ouvertes sont en gain de 15$. Mais si le marche bouge, ca peut devenir -15$' },
+          tip: '<strong>Gains ou pertes des positions ENCORE OUVERTES</strong>.<br><br>Ce montant n\'est <strong>pas encore encaisse</strong>. Tant que la position n\'est pas fermee, ce PnL peut changer a tout moment : un gain de +20$ peut devenir une perte de -10$ si le marche se retourne.',
+          ex: 'Position ouverte a 0.40$, prix actuel 0.55$<br>= +15$ de gain non realise<br>Mais si le prix retombe a 0.35$ = -5$ de perte latente' },
         { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '\u{1F3AF}',
-          tip: '<strong>Montant total investi</strong> dans les positions ouvertes. L\'exposition en % = combien de ton capital est "a risque".',
-          ex: '300$ (30%) = 300$ sont investis sur les marches, soit 30% de ton equity' },
+          tip: '<strong>Montant total investi</strong> dans tes positions ouvertes.<br><br>L\'exposition en % montre <strong>quelle part de ton capital est "en jeu"</strong>. Le bot limite l\'exposition max (par defaut 30%) pour eviter de tout risquer en meme temps.',
+          ex: 'Equity de 1000$, 3 positions de 100$ chacune<br>= Exposition: <strong>300$ (30%)</strong><br>Il reste 70% du capital en securite' },
         { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '\u{1F4C9}',
-          tip: '<strong>Baisse depuis le plus haut</strong> (peak equity). Mesure combien tu as "perdu" depuis ton meilleur moment. Si ca depasse le max (15%), le bot s\'arrete.',
-          ex: 'Peak a 1100$, equity actuelle 1050$ = drawdown de 4.5%. A 15% le bot coupe tout' },
+          tip: '<strong>Baisse depuis le plus haut historique</strong> de ton portefeuille.<br><br>Mesure "combien tu as perdu" depuis ton meilleur moment. C\'est un indicateur de risque cle.<br><br><strong>0-5%</strong> = Normal<br><strong>5-10%</strong> = Attention<br><strong>10-15%</strong> = Danger, le bot ralentit<br><strong>>15%</strong> = Le bot arrete TOUT',
+          ex: 'Peak a 1 100$, equity actuelle 1 050$<br>= Drawdown de <strong>4.5%</strong> (normal)<br>A 15% (935$), le bot coupe toutes les positions' },
         { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '\u{1F3D4}',
-          tip: '<strong>La plus haute valeur atteinte</strong> par ton portefeuille. Sert de reference pour calculer le drawdown.',
-          ex: 'Peak 1100$ = a un moment, ton portefeuille valait 1100$. C\'est le record a battre' },
+          tip: '<strong>Record historique</strong> de la valeur de ton portefeuille.<br><br>C\'est le <strong>plus haut sommet</strong> jamais atteint. Il sert de reference pour calculer le drawdown. L\'objectif est de toujours depasser ce chiffre !',
+          ex: 'Peak 1 100$ = a un moment, ton portefeuille valait 1 100$<br>C\'est <strong>le record a battre</strong>. Chaque nouveau peak = le bot performe bien.' },
     ];
 
     const grid = document.getElementById('metrics-grid');
-    grid.innerHTML = cards.map(c => `
-        <div class="metric-card">
-            <div class="metric-tooltip">${c.tip}${c.ex ? '<div class="tip-example">' + c.icon + ' ' + c.ex + '</div>' : ''}</div>
+    grid.innerHTML = cards.map((c, i) => `
+        <div class="metric-card" data-tip-idx="${i}">
             <div class="metric-label">${c.icon} ${c.label}</div>
             <div class="metric-value ${c.cls}">${c.value}</div>
             ${c.sub ? '<div class="metric-sub">' + c.sub + '</div>' : ''}
         </div>
     `).join('');
+
+    // Bind tooltips
+    grid.querySelectorAll('.metric-card').forEach((el, i) => {
+        const c = cards[i];
+        bindTooltip(el, { icon: c.icon, title: c.label, body: c.tip, example: c.ex });
+    });
 }
 
 function renderEquityChart(data) {
@@ -827,27 +933,57 @@ function renderPositions(data) {
 function renderStats(data) {
     const s = data.trade_stats || {};
     const rows = [
-        ['Total Trades', s.total_trades || 0, 'Nombre total de trades fermes (gagnes + perdus) depuis le lancement'],
-        ['Win Rate', fmt(s.win_rate, 1) + '%', 'Pourcentage de trades gagnants. Ex: 60% = 6 trades sur 10 sont positifs. Au-dessus de 50% c\'est bon signe'],
-        ['Trades Gagnants', s.winning_trades || 0, 'Nombre de trades qui ont rapporte de l\'argent (PnL > 0)'],
-        ['Trades Perdants', s.losing_trades || 0, 'Nombre de trades qui ont perdu de l\'argent (PnL < 0)'],
-        ['Gain Moyen', fmtUsd(s.avg_win), 'Combien un trade gagnant rapporte en moyenne. Ex: +8.50$ = chaque trade positif gagne 8.50$ en moyenne'],
-        ['Perte Moyenne', fmtUsd(s.avg_loss), 'Combien un trade perdant coute en moyenne. Ex: -5.20$ = chaque trade negatif perd 5.20$ en moyenne'],
-        ['Profit Factor', fmt(s.profit_factor), 'Gains totaux / Pertes totales. > 1 = rentable. Ex: 1.5 = pour chaque 1$ perdu, le bot gagne 1.50$. < 1 = non rentable'],
-        ['Plus Gros Gain', fmtUsd(s.largest_win), 'Le meilleur trade jamais realise. Montre le potentiel max du bot'],
-        ['Plus Grosse Perte', fmtUsd(s.largest_loss), 'Le pire trade jamais realise. Montre le risque max par trade'],
-        ['Marches Scannes', data.markets_scanned || 0, 'Nombre de marches Polymarket analyses a la derniere iteration (apres filtrage volume/liquidite)'],
-        ['Signaux Generes', data.signals_generated || 0, 'Nombre total de signaux de trading generes depuis le debut. Pas tous ne menent a un trade'],
-        ['Iteration', data.iteration || 0, 'Nombre de cycles complets du bot. Chaque iteration = scan + analyse + decisions + mise a jour'],
+        ['Total Trades', s.total_trades || 0, '\u{1F4CA}',
+         'Nombre total de trades <strong>fermes</strong> (gagnants + perdants) depuis le lancement du bot.',
+         '51 trades = le bot a ouvert et ferme 51 positions depuis le debut'],
+        ['Win Rate', fmt(s.win_rate, 1) + '%', '\u{1F3AF}',
+         '<strong>Pourcentage de trades gagnants</strong> sur le total.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = Le bot perd plus souvent qu\'il gagne',
+         '60% = sur 10 trades, 6 sont gagnants et 4 sont perdants'],
+        ['Trades Gagnants', s.winning_trades || 0, '\u{2705}',
+         'Nombre de trades qui ont <strong>rapporte de l\'argent</strong> (PnL > 0$). Plus ce chiffre est eleve par rapport aux perdants, mieux c\'est.',
+         '35 trades gagnants sur 51 = le bot gagne dans 69% des cas'],
+        ['Trades Perdants', s.losing_trades || 0, '\u{274C}',
+         'Nombre de trades qui ont <strong>coute de l\'argent</strong> (PnL < 0$). C\'est normal d\'en avoir, l\'important est que les gains compensent les pertes.',
+         '16 trades perdants sur 51 = seulement 31% de pertes, c\'est bon'],
+        ['Gain Moyen', fmtUsd(s.avg_win), '\u{1F4B0}',
+         'Combien un <strong>trade gagnant rapporte en moyenne</strong>. Plus c\'est eleve, mieux c\'est. Idealement, le gain moyen doit etre superieur a la perte moyenne.',
+         '+85$ = chaque trade positif gagne 85$ en moyenne'],
+        ['Perte Moyenne', fmtUsd(s.avg_loss), '\u{1F4B8}',
+         'Combien un <strong>trade perdant coute en moyenne</strong>. Le stop-loss limite cette valeur. Idealement, la perte moyenne doit etre inferieure au gain moyen.',
+         '-25$ = chaque trade negatif perd 25$ en moyenne'],
+        ['Profit Factor', fmt(s.profit_factor), '\u{2696}\uFE0F',
+         '<strong>Gains totaux / Pertes totales</strong>. C\'est LE ratio de rentabilite.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable (le bot perd de l\'argent)',
+         '1.80 = pour chaque 1$ perdu, le bot gagne 1.80$'],
+        ['Plus Gros Gain', fmtUsd(s.largest_win), '\u{1F3C6}',
+         'Le <strong>meilleur trade</strong> jamais realise par le bot. Montre le potentiel maximum sur un seul trade.',
+         '+250$ sur un seul trade = le meilleur coup du bot'],
+        ['Plus Grosse Perte', fmtUsd(s.largest_loss), '\u{1F4A5}',
+         'Le <strong>pire trade</strong> jamais realise. Montre le risque maximum. Le stop-loss devrait limiter ce chiffre.',
+         '-80$ = la plus grosse perte, limitee par le stop-loss a 10%'],
+        ['Marches Scannes', data.markets_scanned || 0, '\u{1F50D}',
+         'Nombre de marches Polymarket <strong>analyses lors du dernier scan</strong>. Le bot filtre par volume et liquidite pour ne garder que les marches interessants.',
+         '150 marches scannes, 12 retenus = le bot est selectif'],
+        ['Signaux Generes', data.signals_generated || 0, '\u{1F4E1}',
+         'Nombre total de <strong>signaux de trading detectes</strong> depuis le debut. Un signal ne mene pas toujours a un trade (filtrage, capital insuffisant, exposition max...).',
+         '200 signaux, 51 trades = le bot ne prend que les meilleures opportunites'],
+        ['Iteration', data.iteration || 0, '\u{1F504}',
+         'Nombre de <strong>cycles complets du bot</strong>. Chaque iteration : scan des marches, analyse des signaux, decisions de trading, mise a jour des positions.',
+         'Iteration 340 = le bot a fait 340 cycles d\'analyse depuis le lancement'],
     ];
 
-    document.getElementById('stats-grid').innerHTML = rows.map(([label, value, tip]) => `
+    const statsGrid = document.getElementById('stats-grid');
+    statsGrid.innerHTML = rows.map(([label, value]) => `
         <div class="stat-row">
-            <div class="stat-tooltip">${tip}</div>
             <span class="stat-label">${label}</span>
             <span class="stat-value">${value}</span>
         </div>
     `).join('');
+
+    // Bind tooltips to stat rows
+    statsGrid.querySelectorAll('.stat-row').forEach((el, i) => {
+        const [label, value, icon, tip, ex] = rows[i];
+        bindTooltip(el, { icon, title: label, body: tip, example: ex });
+    });
 }
 
 function renderTrades(data) {
@@ -957,8 +1093,21 @@ async function fetchAndRender() {
     }
 }
 
+// Bind tooltips on table headers (data-tip-* attributes)
+function bindTableHeaderTooltips() {
+    document.querySelectorAll('th[data-tip-title]').forEach(th => {
+        bindTooltip(th, {
+            icon: th.dataset.tipIcon || '',
+            title: th.dataset.tipTitle || '',
+            body: th.dataset.tipBody || '',
+            example: th.dataset.tipExample || ''
+        });
+    });
+}
+
 // Premier chargement + refresh automatique
 fetchAndRender();
+bindTableHeaderTooltips();
 setInterval(fetchAndRender, 10000);
 </script>
 </body>
@@ -1837,6 +1986,59 @@ tr:hover { background: #1a1c2e; }
 .badge-loss { background: #f8717122; color: #f87171; }
 .badge-reason { background: #818cf822; color: #818cf8; }
 
+/* KPI cards hover */
+.kpi-card { cursor: help; }
+
+/* Global tooltip overlay */
+#global-tooltip {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    width: 360px;
+    max-width: 90vw;
+    background: linear-gradient(135deg, #1a1f35 0%, #1e2340 100%);
+    border: 2px solid #818cf8;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 12px 40px rgba(99,102,241,0.3), 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 13px;
+    color: #e0e6ed;
+    line-height: 1.7;
+    pointer-events: none;
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+#global-tooltip .gt-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #2d3460;
+}
+#global-tooltip .gt-icon { font-size: 20px; }
+#global-tooltip .gt-title { font-size: 15px; font-weight: 700; color: #a5b4fc; }
+#global-tooltip .gt-body { color: #d1d5db; font-size: 13px; line-height: 1.7; }
+#global-tooltip .gt-body strong { color: #c7d2fe; }
+#global-tooltip .gt-example {
+    margin-top: 12px; padding: 10px 14px; background: #0d1321;
+    border: 1px solid #2a3a5c; border-radius: 8px; font-size: 12px;
+    color: #4ade80; line-height: 1.6;
+}
+#global-tooltip .gt-example-label {
+    font-size: 10px; color: #6b7280; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 4px; font-weight: 600;
+}
+#global-tooltip .gt-arrow {
+    position: absolute; width: 12px; height: 12px; background: #1a1f35;
+    border: 2px solid #818cf8; transform: rotate(45deg);
+    border-right: none; border-bottom: none;
+}
+#global-tooltip .gt-arrow.arrow-top { top: -7px; border-top: 2px solid #818cf8; border-left: 2px solid #818cf8; }
+#global-tooltip .gt-arrow.arrow-bottom { bottom: -7px; transform: rotate(225deg); }
+
+/* Table header cursor */
+th { cursor: help; }
+
 /* Footer */
 .footer { text-align: center; padding: 20px; color: #374151; font-size: 11px; }
 </style>
@@ -1886,16 +2088,16 @@ tr:hover { background: #1a1c2e; }
                 <thead>
                     <tr>
                         <th data-sort="idx">#</th>
-                        <th data-sort="date">Date</th>
-                        <th data-sort="market">Marche</th>
-                        <th data-sort="side">Side</th>
-                        <th data-sort="entry">Entree</th>
-                        <th data-sort="exit">Sortie</th>
-                        <th data-sort="size">Taille</th>
-                        <th data-sort="fees">Frais</th>
-                        <th data-sort="pnl">PnL Net</th>
-                        <th data-sort="pct">%</th>
-                        <th data-sort="reason">Raison</th>
+                        <th data-sort="date" data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date d'ouverture</strong> du trade. Quand le bot a entre sur ce marche.">Date</th>
+                        <th data-sort="market" data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Question du marche Polymarket</strong>. Survolez le texte dans le tableau pour voir la question complete.">Marche</th>
+                        <th data-sort="side" data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80;font-weight:700'>YES</span> = pari que l'evenement se produit<br><span style='color:#f87171;font-weight:700'>NO</span> = pari que l'evenement ne se produit PAS">Side</th>
+                        <th data-sort="entry" data-tip-title="Prix d'Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00). Represente la probabilite estimee par le marche au moment de l'achat.">Entree</th>
+                        <th data-sort="exit" data-tip-title="Prix de Sortie" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture. La difference Sortie - Entree determine le profit ou la perte.">Sortie</th>
+                        <th data-sort="size" data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. Dimensionne automatiquement par le bot selon le Kelly Criterion.">Taille</th>
+                        <th data-sort="fees" data-tip-title="Frais" data-tip-icon="\u{1F4B8}" data-tip-body="<strong>Frais Polymarket</strong> preleves sur ce trade (2% du montant engage). Ces frais sont deduits du PnL brut pour obtenir le PnL net.">Frais</th>
+                        <th data-sort="pnl" data-tip-title="PnL Net" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte NET</strong> apres deduction des frais.<br><br><span style='color:#4ade80'>Vert</span> = trade gagnant<br><span style='color:#f87171'>Rouge</span> = trade perdant">PnL Net</th>
+                        <th data-sort="pct" data-tip-title="Rendement %" data-tip-icon="\u{1F4CA}" data-tip-body="<strong>Rendement en pourcentage</strong> du trade par rapport au montant investi. Ex: +80% sur 100$ = +80$ de gain.">%</th>
+                        <th data-sort="reason" data-tip-title="Raison" data-tip-icon="\u{1F3F3}\uFE0F" data-tip-body="<strong>Motif de fermeture</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint (+20% par defaut)<br><strong>stop_loss</strong> = Limite de perte declenchee (-10% par defaut)<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
                     </tr>
                 </thead>
                 <tbody id="trades-body"></tbody>
@@ -1906,7 +2108,79 @@ tr:hover { background: #1a1c2e; }
     <div class="footer">Polymarket Hedge Fund Bot — Rapport genere automatiquement</div>
 </div>
 
+<!-- Global tooltip overlay -->
+<div id="global-tooltip">
+    <div class="gt-arrow" id="gt-arrow"></div>
+    <div class="gt-header">
+        <span class="gt-icon" id="gt-icon"></span>
+        <span class="gt-title" id="gt-title"></span>
+    </div>
+    <div class="gt-body" id="gt-body"></div>
+    <div class="gt-example" id="gt-example" style="display:none;">
+        <div class="gt-example-label">Exemple concret</div>
+        <div id="gt-example-text"></div>
+    </div>
+</div>
+
 <script>
+// ---- Global Tooltip System ----
+const GT = {
+    el: null, arrow: null, icon: null, title: null, body: null, example: null, exText: null,
+    hideTimeout: null,
+    init() {
+        this.el = document.getElementById('global-tooltip');
+        this.arrow = document.getElementById('gt-arrow');
+        this.icon = document.getElementById('gt-icon');
+        this.title = document.getElementById('gt-title');
+        this.body = document.getElementById('gt-body');
+        this.example = document.getElementById('gt-example');
+        this.exText = document.getElementById('gt-example-text');
+    },
+    show(target, opts) {
+        if (!this.el) this.init();
+        clearTimeout(this.hideTimeout);
+        this.icon.textContent = opts.icon || '';
+        this.title.textContent = opts.title || '';
+        this.body.innerHTML = opts.body || '';
+        if (opts.example) {
+            this.example.style.display = '';
+            this.exText.innerHTML = opts.example;
+        } else {
+            this.example.style.display = 'none';
+        }
+        this.el.style.display = 'block';
+        const rect = target.getBoundingClientRect();
+        const ttRect = this.el.getBoundingClientRect();
+        const pad = 12;
+        let top;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        if (spaceBelow >= ttRect.height + pad || spaceBelow >= spaceAbove) {
+            top = rect.bottom + pad;
+            this.arrow.className = 'gt-arrow arrow-top';
+        } else {
+            top = rect.top - ttRect.height - pad;
+            this.arrow.className = 'gt-arrow arrow-bottom';
+        }
+        let left = rect.left + rect.width / 2 - ttRect.width / 2;
+        left = Math.max(pad, Math.min(left, window.innerWidth - ttRect.width - pad));
+        top = Math.max(pad, Math.min(top, window.innerHeight - ttRect.height - pad));
+        this.el.style.left = left + 'px';
+        this.el.style.top = top + 'px';
+        const arrowLeft = Math.max(16, Math.min(rect.left + rect.width / 2 - left, ttRect.width - 16));
+        this.arrow.style.left = arrowLeft + 'px';
+    },
+    hide() {
+        this.hideTimeout = setTimeout(() => {
+            if (this.el) this.el.style.display = 'none';
+        }, 100);
+    }
+};
+function bindTooltip(el, opts) {
+    el.addEventListener('mouseenter', () => GT.show(el, opts));
+    el.addEventListener('mouseleave', () => GT.hide());
+}
+
 let allTrades = [];
 let sortKey = 'idx';
 let sortAsc = false;
@@ -1941,24 +2215,41 @@ function renderKPIs(data) {
     const totalPnlGross = trades.reduce((acc, t) => acc + (t.pnl_gross || t.pnl || 0), 0);
 
     const cards = [
-        { label: 'PnL Brut', value: fmtUsd(totalPnlGross), cls: totalPnlGross >= 0 ? 'positive' : 'negative' },
-        { label: 'Frais Totaux', value: fmtUsd(totalFees), cls: 'negative' },
-        { label: 'PnL Net', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative' },
-        { label: 'Total Trades', value: s.total_trades || trades.length, cls: 'neutral' },
-        { label: 'Win Rate', value: fmt(s.win_rate, 1) + '%', cls: (s.win_rate || 0) >= 50 ? 'positive' : 'negative' },
-        { label: 'Profit Factor', value: fmt(s.profit_factor), cls: (s.profit_factor || 0) >= 1 ? 'positive' : 'negative' },
-        { label: 'Gain Moyen', value: fmtUsd(s.avg_win), cls: 'positive' },
-        { label: 'Perte Moyenne', value: fmtUsd(s.avg_loss), cls: 'negative' },
-        { label: 'Esperance/Trade', value: fmtUsd(expectancy), cls: expectancy >= 0 ? 'positive' : 'negative' },
-        { label: 'Max Drawdown', value: fmt(maxDD, 1) + '%', cls: 'negative' },
+        { label: 'PnL Brut', value: fmtUsd(totalPnlGross), cls: totalPnlGross >= 0 ? 'positive' : 'negative',
+          icon: '\u{1F4B0}', tip: '<strong>Gains totaux AVANT deduction des frais</strong>.<br><br>C\'est la somme de tous les profits et pertes de tes trades, sans compter les frais Polymarket.', tipEx: 'PnL Brut +2 286$ = le bot a genere 2 286$ de gains bruts avant frais' },
+        { label: 'Frais Totaux', value: fmtUsd(totalFees), cls: 'negative',
+          icon: '\u{1F4B8}', tip: '<strong>Total des frais Polymarket</strong> preleves sur tous tes trades.<br><br>Polymarket applique des frais de <strong>2%</strong> sur le montant engage de chaque trade. Ces frais sont deduits automatiquement.', tipEx: '119$ de frais sur 5 963$ engages au total = 2% de frais' },
+        { label: 'PnL Net', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative',
+          icon: '\u{1F4CA}', tip: '<strong>Profit REEL apres frais</strong> = PnL Brut - Frais.<br><br>C\'est le chiffre le plus important : c\'est ce que tu gagnes (ou perds) vraiment, apres toutes les deductions.', tipEx: 'PnL Brut 2 286$ - Frais 119$ = <strong>PnL Net 2 167$</strong>' },
+        { label: 'Total Trades', value: s.total_trades || trades.length, cls: 'neutral',
+          icon: '\u{1F4CA}', tip: '<strong>Nombre total de trades fermes</strong> (gagnants + perdants). Plus ce nombre est eleve, plus les statistiques sont fiables.' },
+        { label: 'Win Rate', value: fmt(s.win_rate, 1) + '%', cls: (s.win_rate || 0) >= 50 ? 'positive' : 'negative',
+          icon: '\u{1F3AF}', tip: '<strong>Pourcentage de trades gagnants</strong>.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = A surveiller' },
+        { label: 'Profit Factor', value: fmt(s.profit_factor), cls: (s.profit_factor || 0) >= 1 ? 'positive' : 'negative',
+          icon: '\u{2696}\uFE0F', tip: '<strong>Gains totaux / Pertes totales</strong>.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable' },
+        { label: 'Gain Moyen', value: fmtUsd(s.avg_win), cls: 'positive',
+          icon: '\u{1F4B0}', tip: '<strong>Montant moyen gagne</strong> par trade gagnant. Idealement superieur a la perte moyenne.' },
+        { label: 'Perte Moyenne', value: fmtUsd(s.avg_loss), cls: 'negative',
+          icon: '\u{1F4B8}', tip: '<strong>Montant moyen perdu</strong> par trade perdant. Limite par le stop-loss configure.' },
+        { label: 'Esperance/Trade', value: fmtUsd(expectancy), cls: expectancy >= 0 ? 'positive' : 'negative',
+          icon: '\u{1F9E0}', tip: '<strong>Gain moyen attendu par trade</strong> en combinant le win rate et les gains/pertes moyens.<br><br>Positif = le bot est statistiquement rentable sur le long terme.', tipEx: '(Win% x Gain moyen) + (Loss% x Perte moy.) = esperance par trade' },
+        { label: 'Max Drawdown', value: fmt(maxDD, 1) + '%', cls: 'negative',
+          icon: '\u{1F4C9}', tip: '<strong>Plus grosse baisse</strong> depuis un sommet de PnL cumule.<br><br>Mesure le pire moment traverse. Plus c\'est bas, mieux c\'est. Au-dessus de 15%, le bot arrete tout.' },
     ];
 
-    document.getElementById('kpi-grid').innerHTML = cards.map(c => `
-        <div class="kpi-card">
+    const kpiGrid = document.getElementById('kpi-grid');
+    kpiGrid.innerHTML = cards.map((c, i) => `
+        <div class="kpi-card" data-kpi-idx="${i}">
             <div class="kpi-label">${c.label}</div>
             <div class="kpi-value ${c.cls}">${c.value}</div>
         </div>
     `).join('');
+
+    // Bind tooltips to KPI cards
+    kpiGrid.querySelectorAll('.kpi-card').forEach((el, i) => {
+        const c = cards[i];
+        if (c.tip) bindTooltip(el, { icon: c.icon, title: c.label, body: c.tip, example: c.tipEx || '' });
+    });
 }
 
 function renderPnlChart(trades) {
@@ -2130,6 +2421,16 @@ async function loadReport() {
 }
 
 loadReport();
+
+// Bind tooltips on table headers
+document.querySelectorAll('th[data-tip-title]').forEach(th => {
+    bindTooltip(th, {
+        icon: th.dataset.tipIcon || '',
+        title: th.dataset.tipTitle || '',
+        body: th.dataset.tipBody || '',
+        example: th.dataset.tipExample || ''
+    });
+});
 </script>
 </body>
 </html>
