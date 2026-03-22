@@ -933,12 +933,24 @@ function renderMetrics(data) {
 
             let dailyHtml = '';
             if (dailyDays.length > 0) {
-                dailyHtml = '<div class="pnl-daily-section"><h4>Gains par jour (7 derniers jours)</h4><div class="pnl-daily-grid">' +
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const firstDay = dailyDays[0];
+                const lastDay = dailyDays[dailyDays.length - 1];
+                const firstDate = new Date(firstDay + 'T00:00:00');
+                const lastDate = new Date(lastDay + 'T00:00:00');
+                // Build date range label
+                const fmtRange = (d) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: d.getFullYear() !== currentYear ? 'numeric' : undefined });
+                const rangeLabel = fmtRange(firstDate) + ' - ' + fmtRange(lastDate);
+
+                dailyHtml = '<div class="pnl-daily-section"><h4>Historique des gains par jour de trading (' + rangeLabel + ')</h4><div class="pnl-daily-grid">' +
                     dailyDays.map(day => {
                         const d = dailyMap[day];
                         const cls = d.pnl >= 0 ? 'day-positive' : 'day-negative';
                         const vCls = d.pnl >= 0 ? 'positive' : 'negative';
-                        const dayLabel = new Date(day + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                        const dateObj = new Date(day + 'T00:00:00');
+                        const showYear = dateObj.getFullYear() !== currentYear;
+                        const dayLabel = dateObj.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: showYear ? 'numeric' : undefined });
                         return '<div class="pnl-day-chip ' + cls + '">' +
                             '<span class="pnl-day-date">' + dayLabel + '</span>' +
                             '<span class="pnl-day-value ' + vCls + '">' + (d.pnl >= 0 ? '+' : '') + fmtUsd(d.pnl) + '</span>' +
