@@ -31,8 +31,8 @@ logger = logging.getLogger("signal_detector")
 #  CONFIGURATION
 # ================================================================
 
-# Comptes Twitter a surveiller par categorie
-WATCHED_ACCOUNTS = {
+# Comptes Twitter a surveiller par categorie (defaut, surchargeable via constructeur)
+DEFAULT_WATCHED_ACCOUNTS = {
     "politique_us": [
         "realDonaldTrump", "POTUS", "WhiteHouse", "SpeakerJohnson",
         "VP", "SecYellen",
@@ -49,6 +49,8 @@ WATCHED_ACCOUNTS = {
         "NATO", "UN", "SecBlinken", "WarMonitor3",
     ],
 }
+# Retrocompatibilite
+WATCHED_ACCOUNTS = DEFAULT_WATCHED_ACCOUNTS
 
 # Mots-cles generaux a surveiller
 GENERAL_KEYWORDS = [
@@ -89,10 +91,20 @@ class TweetSignal:
 class SignalDetector:
     """Detecteur de signaux base sur Twitter/News."""
 
-    def __init__(self, bearer_token: str = "", signal_log_path: str = "logs/signals.json"):
+    def __init__(self, bearer_token: str = "", signal_log_path: str = "logs/signals.json",
+                 watched_accounts: dict[str, list[str]] | None = None):
+        """Initialise le detecteur de signaux Twitter/News.
+
+        Args:
+            bearer_token: Token Twitter API (ou via env TWITTER_BEARER_TOKEN).
+            signal_log_path: Chemin du fichier de log des signaux.
+            watched_accounts: Comptes Twitter a surveiller par categorie.
+                Si None, utilise DEFAULT_WATCHED_ACCOUNTS.
+        """
         self.bearer_token = bearer_token or os.environ.get("TWITTER_BEARER_TOKEN", "")
         self.signal_log_path = Path(signal_log_path)
         self.signal_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self.watched_accounts = watched_accounts or DEFAULT_WATCHED_ACCOUNTS
 
         # Rate limiting
         self._signals_this_hour: list[str] = []  # timestamps
@@ -135,7 +147,7 @@ class SignalDetector:
             tweets = self._scan_nitter(keywords, since_minutes)
 
         # Aussi scanner les comptes surveilles
-        for category, accounts in WATCHED_ACCOUNTS.items():
+        for category, accounts in self.watched_accounts.items():
             for account in accounts[:3]:  # Limiter pour eviter le rate limit
                 try:
                     account_tweets = self._get_account_tweets(account, since_minutes)

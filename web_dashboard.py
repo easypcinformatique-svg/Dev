@@ -22,6 +22,7 @@ Usage :
 
 import csv
 import json
+import logging
 import argparse
 import threading
 from pathlib import Path
@@ -1717,7 +1718,7 @@ def main():
     port = args.port or int(os.environ.get("PORT", 5050))
 
     app = create_dashboard_app(state_file=args.state_file)
-    print(f"Dashboard demarre sur http://localhost:{port}")
+    logging.getLogger("web_dashboard").info(f"Dashboard demarre sur http://localhost:{port}")
     app.run(host=args.host, port=port, debug=True)
 
 

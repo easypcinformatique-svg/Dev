@@ -22,11 +22,44 @@ from datetime import datetime
 from dataclasses import dataclass, asdict, field
 from typing import Optional
 
+import re
+
 import numpy as np
 
 logger = logging.getLogger("trade_logger")
 
 POLYMARKET_FEE_PCT = 0.02  # 2%
+
+# Regex pour valider un market_id reel Polymarket (hash hex 64 chars avec prefixe 0x)
+_REAL_MARKET_ID_RE = re.compile(r"^0x[a-fA-F0-9]{64}$")
+
+
+def _validate_market_id(market_id: str) -> None:
+    """Valide que le market_id est un hash Polymarket reel, pas un ID synthetique."""
+    if not market_id:
+        raise ValueError("market_id ne peut pas etre vide")
+    if market_id.startswith("PM-") or not _REAL_MARKET_ID_RE.match(market_id):
+        raise ValueError(
+            f"market_id invalide: {market_id!r}. "
+            f"Attendu: hash hex 0x + 64 chars (ex: 0xabc...def)"
+        )
+
+
+def _validate_exit_time(exit_time: str) -> None:
+    """Valide que exit_time n'est pas une date epoch ou invalide."""
+    if not exit_time:
+        return
+    try:
+        dt = datetime.fromisoformat(exit_time.replace("Z", "+00:00"))
+        if dt.year < 2020:
+            raise ValueError(
+                f"exit_time invalide: {exit_time!r}. "
+                f"La date est anterieure a 2020 (date epoch?)."
+            )
+    except (ValueError, TypeError) as e:
+        if "exit_time invalide" in str(e):
+            raise
+        raise ValueError(f"exit_time format invalide: {exit_time!r}") from e
 
 CSV_COLUMNS = [
     "trade_id", "market_id", "token_id", "question", "side",
@@ -81,6 +114,7 @@ class TradeLogger:
 
     def __init__(self, output_dir: str = ".", csv_file: str = "trades_real.csv",
                  json_file: str = "trades_real.json"):
+        """Initialise le logger avec les chemins de sortie CSV et JSON."""
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.csv_path = self.output_dir / csv_file
@@ -163,6 +197,8 @@ class TradeLogger:
         Returns:
             trade_id unique pour cette position.
         """
+        _validate_market_id(market_id)
+
         if not entry_time:
             entry_time = datetime.now().isoformat()
 
@@ -214,6 +250,7 @@ class TradeLogger:
 
         if not exit_time:
             exit_time = datetime.now().isoformat()
+        _validate_exit_time(exit_time)
 
         # Calcul PnL brut
         if open_trade.side == "YES":
@@ -337,11 +374,14 @@ class TradeLogger:
 
     @property
     def open_trades(self) -> dict[str, OpenTrade]:
+        """Copie des trades actuellement ouverts, indexes par market_id."""
         return dict(self._open_trades)
 
     @property
     def closed_trades(self) -> list[ClosedTrade]:
+        """Copie de l'historique des trades fermes."""
         return list(self._closed_trades)
 
     def get_trade_by_market(self, market_id: str) -> Optional[OpenTrade]:
+        """Retourne le trade ouvert pour un market_id donne, ou None."""
         return self._open_trades.get(market_id)

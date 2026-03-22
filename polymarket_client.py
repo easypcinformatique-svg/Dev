@@ -93,8 +93,15 @@ class PolymarketClient:
         )
 
     def get_market_price(self, token_id: str) -> dict:
-        """Prix bid/ask en temps reel."""
-        return _with_retry(self.read_client.get_price, token_id)
+        """Prix bid/ask en temps reel. Retourne {price, bid, ask, spread}."""
+        spread_data = _with_retry(self.read_client.get_spread, token_id)
+        if isinstance(spread_data, dict):
+            price = _with_retry(self.read_client.get_price, token_id)
+            spread_data["price"] = float(price) if not isinstance(price, dict) else price
+            return spread_data
+        # Fallback si get_spread retourne un format inattendu
+        price = _with_retry(self.read_client.get_price, token_id)
+        return {"price": float(price), "bid": float(price), "ask": float(price), "spread": 0.0}
 
     def get_midpoint(self, token_id: str) -> float:
         """Prix midpoint d'un token."""
