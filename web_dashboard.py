@@ -78,29 +78,56 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
             positions = state.get("positions", {})
             trades = state.get("trades", [])
 
-            # Fallback: charger l'historique depuis trades_report.csv
+            # Fallback: charger l'historique depuis TradeLogger ou backtest
             if not trades:
-                csv_path = Path(state_file).parent / "trades_report.csv"
-                if csv_path.exists():
+                base = Path(state_file).parent
+                # 1) TradeLogger JSON (logs/trades_real.json) — trades du bot live
+                trade_logger_json = base / "logs" / "trades_real.json"
+                if trade_logger_json.exists():
                     try:
-                        with open(csv_path) as csvf:
-                            reader = csv.DictReader(csvf)
-                            for row in reader:
-                                trades.append({
-                                    "market_id": row.get("market_id", ""),
-                                    "question": row.get("market_id", ""),
-                                    "side": row.get("side", ""),
-                                    "entry_price": float(row.get("entry_price", 0)),
-                                    "exit_price": float(row.get("exit_price", 0)),
-                                    "size_usd": float(row.get("montant_engage", 0)),
-                                    "pnl": float(row.get("gain_perte", 0)),
-                                    "pnl_pct": float(row.get("rendement_%", 0)),
-                                    "entry_time": row.get("entry_time", ""),
-                                    "exit_time": row.get("exit_time", ""),
-                                    "reason": row.get("exit_reason", ""),
-                                })
+                        with open(trade_logger_json) as f:
+                            tl_data = json.load(f)
+                        for ct in tl_data.get("closed_trades", []):
+                            trades.append({
+                                "market_id": ct.get("market_id", ""),
+                                "question": ct.get("question", ct.get("market_id", "")),
+                                "side": ct.get("side", ""),
+                                "entry_price": float(ct.get("entry_price", 0)),
+                                "exit_price": float(ct.get("exit_price", 0)),
+                                "size_usd": float(ct.get("size_usd", 0)),
+                                "pnl": float(ct.get("pnl_net", ct.get("pnl_gross", 0))),
+                                "pnl_pct": float(ct.get("pnl_pct", 0)),
+                                "entry_time": ct.get("entry_time", ""),
+                                "exit_time": ct.get("exit_time", ""),
+                                "reason": ct.get("exit_reason", ""),
+                                "fees_total": float(ct.get("fees_total", 0)),
+                            })
                     except Exception:
                         pass
+
+                # 2) Backtest CSV (trades_report.csv) — historique backtest
+                if not trades:
+                    csv_path = base / "trades_report.csv"
+                    if csv_path.exists():
+                        try:
+                            with open(csv_path) as csvf:
+                                reader = csv.DictReader(csvf)
+                                for row in reader:
+                                    trades.append({
+                                        "market_id": row.get("market_id", ""),
+                                        "question": row.get("market_id", ""),
+                                        "side": row.get("side", ""),
+                                        "entry_price": float(row.get("entry_price", 0)),
+                                        "exit_price": float(row.get("exit_price", 0)),
+                                        "size_usd": float(row.get("montant_engage", 0)),
+                                        "pnl": float(row.get("gain_perte", 0)),
+                                        "pnl_pct": float(row.get("rendement_%", 0)),
+                                        "entry_time": row.get("entry_time", ""),
+                                        "exit_time": row.get("exit_time", ""),
+                                        "reason": row.get("exit_reason", ""),
+                                    })
+                        except Exception:
+                            pass
 
             pnls = [t.get("pnl", 0) for t in trades]
             wins = [p for p in pnls if p > 0]
