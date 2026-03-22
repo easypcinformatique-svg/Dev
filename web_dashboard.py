@@ -34,13 +34,37 @@ from config_manager import ConfigManager
 
 
 def _start_keep_alive(app_url: str, interval: int = 600):
-    """Ping le serveur toutes les 10 min pour eviter le sleep du free tier."""
+    """Ping le serveur toutes les 5 min pour eviter le sleep du free tier.
+    Log un rapport de statut toutes les heures."""
     import urllib.request
+
+    ping_count = [0]
 
     def _ping():
         while True:
             try:
                 urllib.request.urlopen(f"{app_url}/api/health", timeout=10)
+                ping_count[0] += 1
+                # Rapport de statut toutes les 12 pings (= 1 heure si interval=300)
+                if ping_count[0] % 12 == 0:
+                    try:
+                        resp = urllib.request.urlopen(f"{app_url}/api/status-report", timeout=15)
+                        report = json.loads(resp.read().decode())
+                        log = logging.getLogger("web_dashboard")
+                        log.info("=" * 60)
+                        log.info("RAPPORT AUTOMATIQUE HORAIRE")
+                        log.info(f"  Uptime        : {report.get('uptime_hours', '?')}h")
+                        log.info(f"  Mode          : {report.get('mode', '?')}")
+                        log.info(f"  Equity        : ${report.get('equity', 0):.2f}")
+                        log.info(f"  PNL Net       : ${report.get('pnl', 0):.2f}")
+                        log.info(f"  Drawdown      : {report.get('drawdown', 0):.1f}%")
+                        log.info(f"  Trades        : {report.get('trades', 0)}")
+                        log.info(f"  Win Rate      : {report.get('win_rate', 0):.1f}%")
+                        log.info(f"  Positions     : {report.get('open_positions', 0)}")
+                        log.info(f"  Validation    : {report.get('validation', '?')}")
+                        log.info("=" * 60)
+                    except Exception:
+                        pass
             except Exception:
                 pass
             import time
@@ -283,6 +307,46 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
     def api_health():
         """Endpoint de sante pour le keep-alive."""
         return jsonify({"status": "ok", "time": datetime.now().isoformat()})
+
+    @app.route("/api/status-report")
+    def api_status_report():
+        """Rapport de statut condense pour le monitoring automatique."""
+        data = _get_data()
+        o = data.get("overview", {})
+        ts = data.get("trade_stats", {})
+        started = data.get("started_at", "")
+        uptime_hours = 0
+        if started:
+            try:
+                from datetime import datetime as dt
+                start = dt.fromisoformat(started)
+                uptime_hours = round((dt.now() - start).total_seconds() / 3600, 1)
+            except Exception:
+                pass
+        # Validation progress
+        valid_count = 0
+        total_steps = 6
+        pnl = o.get("total_pnl", 0)
+        dd = o.get("drawdown_pct", 0)
+        trades = ts.get("total_trades", 0)
+        wr = ts.get("win_rate", 0)
+        days = round(uptime_hours / 24, 1)
+        if days >= 30: valid_count += 1
+        if pnl > 0: valid_count += 1
+        if dd < 15: valid_count += 1
+        if trades >= 50: valid_count += 1
+        if wr >= 55: valid_count += 1
+        return jsonify({
+            "mode": data.get("mode", "DRY RUN"),
+            "uptime_hours": uptime_hours,
+            "equity": o.get("equity", 0),
+            "pnl": pnl,
+            "drawdown": dd,
+            "trades": trades,
+            "win_rate": wr,
+            "open_positions": len(data.get("positions", [])),
+            "validation": f"{valid_count}/{total_steps} (manuelle non comptee)",
+        })
 
     def _inject_version(html: str) -> str:
         """Injecte la version basee sur le dernier commit git ou la date du fichier."""
@@ -3125,7 +3189,9 @@ def main():
     logging.getLogger("web_dashboard").info(f"Dashboard demarre sur http://localhost:{port}")
 
     # Keep-alive pour les hebergeurs gratuits (Render, etc.)
-    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("RENDER_SERVICE_ID") and f"https://polymarket-bot-d86.onrender.com"
+    if not render_url and os.environ.get("RENDER"):
+        render_url = "https://polymarket-bot-d86.onrender.com"
     if render_url:
         _start_keep_alive(render_url, interval=300)
         logging.getLogger("web_dashboard").info(f"Keep-alive actif pour {render_url} (toutes les 5 min)")

@@ -1123,6 +1123,8 @@ def main():
 
             # Keep-alive pour les hebergeurs gratuits (Render, etc.)
             render_url = os.environ.get("RENDER_EXTERNAL_URL")
+            if not render_url and os.environ.get("RENDER"):
+                render_url = "https://polymarket-bot-d86.onrender.com"
             if render_url:
                 _start_keep_alive(render_url, interval=300)
                 logger.info(f"  Keep-alive actif pour {render_url} (toutes les 5 min)")
