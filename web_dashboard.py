@@ -392,6 +392,99 @@ body {
     color: #6b7280;
     margin-top: 4px;
 }
+
+/* PnL Net expanded card - spans 2 columns */
+.metric-card.pnl-expanded {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+    border: 1px solid #1f2937;
+}
+.pnl-main-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.pnl-main-value {
+    font-size: 28px;
+    font-weight: 700;
+}
+.pnl-return-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 4px;
+}
+.pnl-return-badge.positive { background: #4ade8022; color: #4ade80; }
+.pnl-return-badge.negative { background: #f8717122; color: #f87171; }
+
+.pnl-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid #1f2937;
+    border-bottom: 1px solid #1f2937;
+    margin-bottom: 12px;
+}
+.pnl-breakdown-item {
+    text-align: center;
+}
+.pnl-breakdown-label {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.pnl-breakdown-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #d1d5db;
+}
+
+.pnl-daily-section h4 {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+.pnl-daily-grid {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.pnl-day-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #1a2332;
+    border: 1px solid #1f2937;
+    min-width: 72px;
+}
+.pnl-day-chip.day-positive { border-color: #16a34a44; }
+.pnl-day-chip.day-negative { border-color: #dc262644; }
+.pnl-day-date {
+    font-size: 10px;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+.pnl-day-value {
+    font-size: 13px;
+    font-weight: 600;
+}
+.pnl-day-value.positive { color: #4ade80; }
+.pnl-day-value.negative { color: #f87171; }
+.pnl-day-trades {
+    font-size: 9px;
+    color: #4b5563;
+    margin-top: 1px;
+}
+
 /* Global tooltip overlay */
 .metric-card { cursor: help; }
 .stat-row { cursor: help; }
@@ -795,7 +888,7 @@ function renderMetrics(data) {
         { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
           tip: '<strong>L\'argent disponible</strong> sur ton compte qui n\'est <strong>pas investi</strong> dans des positions ouvertes.<br><br>C\'est ta reserve pour ouvrir de nouvelles positions. Plus il est bas, moins tu peux ouvrir de trades. Le bot gere automatiquement l\'allocation.',
           ex: 'Equity totale de 1000$, 300$ investis dans 3 positions<br>= <strong>700$ de cash disponible</strong> pour de nouveaux trades' },
-        { label: 'PnL Net (apr\u00e8s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '\u{1F4CA}',
+        { label: 'PnL Net (apr\u00e8s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '\u{1F4CA}', expanded: true,
           tip: '<strong>Profit and Loss NET</strong> = Gains - Pertes - Frais<br><br>C\'est ton <strong>vrai benefice</strong> depuis le lancement du bot, une fois les frais Polymarket deduits (2% par trade).<br><br><strong>Vert</strong> = tu gagnes de l\'argent<br><strong>Rouge</strong> = tu en perds',
           ex: 'Gains bruts: +2 286$, Frais: -119$<br>= <strong>PnL Net: +2 167$</strong> (ce que tu gagnes vraiment)' },
         { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
@@ -815,14 +908,91 @@ function renderMetrics(data) {
           ex: 'Peak 1 100$ = a un moment, ton portefeuille valait 1 100$<br>C\'est <strong>le record a battre</strong>. Chaque nouveau peak = le bot performe bien.' },
     ];
 
+    // --- Build daily PnL from all_trades ---
+    const allTrades = data.all_trades || data.recent_trades || [];
+    const dailyMap = {};
+    allTrades.forEach(t => {
+        const d = t.exit_time || t.entry_time || '';
+        if (!d) return;
+        const day = d.substring(0, 10); // YYYY-MM-DD
+        if (!dailyMap[day]) dailyMap[day] = { pnl: 0, count: 0 };
+        dailyMap[day].pnl += (t.pnl || 0);
+        dailyMap[day].count += 1;
+    });
+    const dailyDays = Object.keys(dailyMap).sort().slice(-7); // last 7 days
+
     const grid = document.getElementById('metrics-grid');
-    grid.innerHTML = cards.map((c, i) => `
+    grid.innerHTML = cards.map((c, i) => {
+        if (c.expanded) {
+            const initCap = o.initial_capital || 1000;
+            const pnlGross = o.total_pnl_gross || (o.total_pnl + (o.total_fees || 0));
+            const totalFees = o.total_fees || 0;
+            const totalPnl = o.total_pnl || 0;
+            const returnPct = o.total_return_pct || 0;
+            const equity = o.equity || (initCap + totalPnl);
+
+            let dailyHtml = '';
+            if (dailyDays.length > 0) {
+                dailyHtml = '<div class="pnl-daily-section"><h4>Gains par jour (7 derniers jours)</h4><div class="pnl-daily-grid">' +
+                    dailyDays.map(day => {
+                        const d = dailyMap[day];
+                        const cls = d.pnl >= 0 ? 'day-positive' : 'day-negative';
+                        const vCls = d.pnl >= 0 ? 'positive' : 'negative';
+                        const dayLabel = new Date(day + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                        return '<div class="pnl-day-chip ' + cls + '">' +
+                            '<span class="pnl-day-date">' + dayLabel + '</span>' +
+                            '<span class="pnl-day-value ' + vCls + '">' + (d.pnl >= 0 ? '+' : '') + fmtUsd(d.pnl) + '</span>' +
+                            '<span class="pnl-day-trades">' + d.count + ' trade' + (d.count > 1 ? 's' : '') + '</span>' +
+                            '</div>';
+                    }).join('') +
+                    '</div></div>';
+            }
+
+            return `
+            <div class="metric-card pnl-expanded" data-tip-idx="${i}">
+                <div class="metric-label">${c.icon} ${c.label}</div>
+                <div class="pnl-main-row">
+                    <div class="pnl-main-value ${c.cls}">${c.value}</div>
+                    <span class="pnl-return-badge ${returnPct >= 0 ? 'positive' : 'negative'}">${returnPct >= 0 ? '+' : ''}${fmt(returnPct, 2)}%</span>
+                </div>
+                <div class="pnl-breakdown">
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">Capital Initial</div>
+                        <div class="pnl-breakdown-value">${fmtUsd(initCap)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">PnL Brut</div>
+                        <div class="pnl-breakdown-value" style="color:${pnlGross >= 0 ? '#4ade80' : '#f87171'}">${pnlGross >= 0 ? '+' : ''}${fmtUsd(pnlGross)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">Frais (2%)</div>
+                        <div class="pnl-breakdown-value" style="color:#f59e0b">-${fmtUsd(Math.abs(totalFees))}</div>
+                    </div>
+                </div>
+                <div class="pnl-breakdown" style="border-top:none;padding-top:0;margin-top:-12px;">
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">Equity Actuelle</div>
+                        <div class="pnl-breakdown-value" style="color:#818cf8;font-size:17px;font-weight:700">${fmtUsd(equity)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">PnL Aujourd'hui</div>
+                        <div class="pnl-breakdown-value" style="color:${(o.daily_pnl||0) >= 0 ? '#4ade80' : '#f87171'}">${(o.daily_pnl||0) >= 0 ? '+' : ''}${fmtUsd(o.daily_pnl || 0)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">PnL Non Realise</div>
+                        <div class="pnl-breakdown-value" style="color:${(o.unrealized_pnl||0) >= 0 ? '#4ade80' : '#f87171'}">${(o.unrealized_pnl||0) >= 0 ? '+' : ''}${fmtUsd(o.unrealized_pnl || 0)}</div>
+                    </div>
+                </div>
+                ${dailyHtml}
+            </div>`;
+        }
+        return `
         <div class="metric-card" data-tip-idx="${i}">
             <div class="metric-label">${c.icon} ${c.label}</div>
             <div class="metric-value ${c.cls}">${c.value}</div>
             ${c.sub ? '<div class="metric-sub">' + c.sub + '</div>' : ''}
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     // Bind tooltips
     grid.querySelectorAll('.metric-card').forEach((el, i) => {
