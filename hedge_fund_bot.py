@@ -1124,8 +1124,8 @@ def main():
             # Keep-alive pour les hebergeurs gratuits (Render, etc.)
             render_url = os.environ.get("RENDER_EXTERNAL_URL")
             if render_url:
-                _start_keep_alive(render_url)
-                logger.info(f"  Keep-alive actif pour {render_url}")
+                _start_keep_alive(render_url, interval=300)
+                logger.info(f"  Keep-alive actif pour {render_url} (toutes les 5 min)")
         except ImportError as e:
             logger.warning(f"Dashboard non disponible: {e}")
 

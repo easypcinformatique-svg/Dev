@@ -3123,6 +3123,13 @@ def main():
 
     app = create_dashboard_app(state_file=args.state_file)
     logging.getLogger("web_dashboard").info(f"Dashboard demarre sur http://localhost:{port}")
+
+    # Keep-alive pour les hebergeurs gratuits (Render, etc.)
+    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    if render_url:
+        _start_keep_alive(render_url, interval=300)
+        logging.getLogger("web_dashboard").info(f"Keep-alive actif pour {render_url} (toutes les 5 min)")
+
     app.run(host=args.host, port=port, debug=True)
 
 
