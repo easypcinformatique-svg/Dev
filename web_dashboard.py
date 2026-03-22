@@ -664,6 +664,207 @@ tr:hover td { background: #1a2332; }
     font-size: 12px;
     padding: 16px;
 }
+
+/* ======== Validation Panel ======== */
+.validation-panel {
+    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 16px;
+}
+.validation-panel h2 {
+    font-size: 18px;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.validation-progress-bar {
+    background: #1f2937;
+    border-radius: 8px;
+    height: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.validation-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #6366f1, #4ade80);
+    transition: width 0.5s ease;
+}
+.validation-progress-label {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    text-align: right;
+}
+.validation-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.validation-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 14px 18px;
+    transition: border-color 0.2s;
+}
+.validation-step:hover { border-color: #374151; }
+.validation-step .step-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+}
+.validation-step .step-info { flex: 1; }
+.validation-step .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e0e6ed;
+    margin-bottom: 2px;
+}
+.validation-step .step-detail {
+    font-size: 12px;
+    color: #6b7280;
+}
+.validation-step .step-detail .val-highlight {
+    font-weight: 600;
+    color: #a5b4fc;
+}
+.validation-step.step-valid { border-color: #22c55e33; }
+.validation-step.step-valid .step-title { color: #4ade80; }
+.validation-step.step-invalid { border-color: #ef444433; }
+.validation-step.step-pending { border-color: #eab30833; }
+
+/* Manual checkbox step */
+.validation-step label.step-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+.validation-step label.step-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+/* Go Live button */
+.go-live-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: not-allowed;
+    transition: all 0.3s ease;
+    background: #1f2937;
+    color: #4b5563;
+}
+.go-live-btn.ready {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+.go-live-btn.ready:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+}
+
+/* Confirmation modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+    background: #111827;
+    border: 1px solid #2a3a5c;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-box h3 {
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.modal-recap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.modal-recap-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #e0e6ed;
+    padding: 8px 12px;
+    background: #0d1117;
+    border-radius: 8px;
+}
+.modal-recap-item .recap-icon { font-size: 18px; }
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+.modal-btn-cancel {
+    padding: 12px 24px;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.modal-btn-cancel:hover { background: #1f2937; }
+.modal-btn-confirm {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.modal-btn-confirm:hover { background: #b91c1c; }
+
+@media (max-width: 768px) {
+    .validation-panel { padding: 16px; }
+    .validation-step { padding: 10px 12px; flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
@@ -762,6 +963,34 @@ tr:hover td { background: #1a2332; }
     <div class="table-container" id="errors-container" style="display:none;">
         <h2>Erreurs Recentes</h2>
         <div id="errors-list"></div>
+    </div>
+
+    <!-- Validation Panel -->
+    <div class="validation-panel" id="validation-panel">
+        <h2>\u{1F512} Conditions de passage EN LIGNE</h2>
+        <div class="validation-progress-label" id="val-progress-label">0 / 6 etapes validees</div>
+        <div class="validation-progress-bar">
+            <div class="validation-progress-fill" id="val-progress-fill" style="width:0%"></div>
+        </div>
+        <div class="validation-steps" id="validation-steps"></div>
+        <div style="text-align:center;">
+            <button class="go-live-btn" id="go-live-btn" disabled>Passer EN LIGNE \u{1F512} Verrouille</button>
+        </div>
+    </div>
+
+    <!-- Confirmation modal -->
+    <div class="modal-overlay" id="go-live-modal">
+        <div class="modal-box">
+            <h3>\u{26A0}\uFE0F Confirmation passage EN LIGNE</h3>
+            <p style="text-align:center;color:#9ca3af;font-size:13px;margin-bottom:20px;">
+                Tu es sur le point de passer en mode <strong style="color:#f87171;">ARGENT REEL</strong>.<br>Verifie une derniere fois :
+            </p>
+            <div class="modal-recap" id="modal-recap"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn-cancel" id="modal-cancel">Annuler</button>
+                <button class="modal-btn-confirm" id="modal-confirm">Confirmer le passage en reel</button>
+            </div>
+        </div>
     </div>
 
     <div class="refresh-info">Rafraichissement automatique toutes les 10 secondes</div>
@@ -1266,6 +1495,220 @@ function updateHeader(data) {
         'MAJ: ' + new Date().toLocaleTimeString('fr-FR');
 }
 
+// ======== Validation Checklist System ========
+const ValidationChecker = {
+    LS_KEY: 'polymarket_validation',
+
+    getState() {
+        try {
+            const raw = localStorage.getItem(this.LS_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return { dryRunStartDate: null, manualConfirm: false };
+    },
+
+    saveState(state) {
+        localStorage.setItem(this.LS_KEY, JSON.stringify(state));
+    },
+
+    ensureDryRunStart(data) {
+        const state = this.getState();
+        // Only track dry run start date when mode is DRY RUN
+        if ((data.mode || '').toUpperCase().includes('DRY')) {
+            if (!state.dryRunStartDate) {
+                state.dryRunStartDate = new Date().toISOString();
+                this.saveState(state);
+            }
+        }
+        return state;
+    },
+
+    computeSteps(data) {
+        const state = this.ensureDryRunStart(data);
+        const o = data.overview || {};
+        const ts = data.trade_stats || {};
+        const steps = [];
+
+        // STEP 1 - Dry run duration >= 7 days
+        let dryDays = 0;
+        if (state.dryRunStartDate) {
+            const start = new Date(state.dryRunStartDate);
+            const now = new Date();
+            dryDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        }
+        steps.push({
+            title: 'Duree minimum de DRY RUN',
+            detail: 'Jour ' + dryDays + ' / 7',
+            valid: dryDays >= 7,
+            pending: dryDays > 0 && dryDays < 7
+        });
+
+        // STEP 2 - PNL Net > 0
+        const pnl = o.total_pnl || 0;
+        steps.push({
+            title: 'PNL Net positif',
+            detail: 'PNL Net : ' + (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toFixed(2),
+            valid: pnl > 0,
+            pending: false
+        });
+
+        // STEP 3 - Drawdown < 15%
+        const dd = o.drawdown_pct || 0;
+        // Also check max historical drawdown from equity history
+        let maxDd = dd;
+        if (data.equity_history && data.equity_history.length > 0) {
+            let peak = 0;
+            data.equity_history.forEach(p => {
+                const eq = p.equity || p.value || 0;
+                if (eq > peak) peak = eq;
+                if (peak > 0) {
+                    const d = (peak - eq) / peak * 100;
+                    if (d > maxDd) maxDd = d;
+                }
+            });
+        }
+        steps.push({
+            title: 'Drawdown sous controle',
+            detail: 'Drawdown max : ' + maxDd.toFixed(1) + '%',
+            valid: maxDd < 15,
+            pending: false
+        });
+
+        // STEP 4 - At least 20 trades
+        const totalTrades = ts.total_trades || 0;
+        steps.push({
+            title: 'Nombre de trades minimum',
+            detail: totalTrades + ' / 20 trades',
+            valid: totalTrades >= 20,
+            pending: totalTrades > 0 && totalTrades < 20
+        });
+
+        // STEP 5 - Win rate >= 55%
+        const wr = ts.win_rate || 0;
+        steps.push({
+            title: 'Win Rate acceptable',
+            detail: 'Win rate : ' + wr.toFixed(1) + '%',
+            valid: wr >= 55,
+            pending: totalTrades > 0 && wr < 55
+        });
+
+        // STEP 6 - Manual confirmation
+        steps.push({
+            title: 'Validation manuelle',
+            detail: 'manual',
+            valid: state.manualConfirm === true,
+            pending: false,
+            isManual: true
+        });
+
+        return steps;
+    },
+
+    render(data) {
+        const steps = this.computeSteps(data);
+        const validCount = steps.filter(s => s.valid).length;
+        const total = steps.length;
+        const allValid = validCount === total;
+
+        // Progress
+        document.getElementById('val-progress-label').textContent = validCount + ' / ' + total + ' etapes validees';
+        document.getElementById('val-progress-fill').style.width = (validCount / total * 100) + '%';
+
+        // Steps list
+        const container = document.getElementById('validation-steps');
+        container.innerHTML = steps.map((s, i) => {
+            const icon = s.valid ? '\u2705' : (s.pending ? '\u23F3' : '\u{1F534}');
+            const cls = s.valid ? 'step-valid' : (s.pending ? 'step-pending' : 'step-invalid');
+
+            if (s.isManual) {
+                const state = this.getState();
+                const checked = state.manualConfirm ? 'checked' : '';
+                return '<div class="validation-step ' + cls + '">' +
+                    '<span class="step-icon">' + icon + '</span>' +
+                    '<div class="step-info">' +
+                        '<div class="step-title">Etape ' + (i + 1) + ' \u2014 ' + s.title + '</div>' +
+                        '<label class="step-checkbox">' +
+                            '<input type="checkbox" id="manual-confirm-cb" ' + checked + '>' +
+                            '<span>Je confirme avoir relu les parametres de risque et accepte de trader avec de l\'argent reel</span>' +
+                        '</label>' +
+                    '</div>' +
+                '</div>';
+            }
+
+            return '<div class="validation-step ' + cls + '">' +
+                '<span class="step-icon">' + icon + '</span>' +
+                '<div class="step-info">' +
+                    '<div class="step-title">Etape ' + (i + 1) + ' \u2014 ' + s.title + '</div>' +
+                    '<div class="step-detail"><span class="val-highlight">' + s.detail + '</span></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        // Bind manual checkbox
+        const cb = document.getElementById('manual-confirm-cb');
+        if (cb) {
+            cb.onchange = () => {
+                const state = this.getState();
+                state.manualConfirm = cb.checked;
+                this.saveState(state);
+                this.render(data);
+            };
+        }
+
+        // Go live button
+        const btn = document.getElementById('go-live-btn');
+        if (allValid) {
+            btn.disabled = false;
+            btn.className = 'go-live-btn ready';
+            btn.innerHTML = 'Passer EN LIGNE \u2705 Pret';
+            btn.onclick = () => this.showModal(steps);
+        } else {
+            btn.disabled = true;
+            btn.className = 'go-live-btn';
+            btn.innerHTML = 'Passer EN LIGNE \u{1F512} Verrouille';
+            btn.onclick = null;
+        }
+    },
+
+    showModal(steps) {
+        const recap = document.getElementById('modal-recap');
+        recap.innerHTML = steps.map((s, i) => {
+            return '<div class="modal-recap-item">' +
+                '<span class="recap-icon">\u2705</span>' +
+                '<span>Etape ' + (i + 1) + ' \u2014 ' + s.title + (s.isManual ? '' : ' : <strong>' + s.detail + '</strong>') + '</span>' +
+            '</div>';
+        }).join('');
+
+        document.getElementById('go-live-modal').classList.add('active');
+    },
+
+    hideModal() {
+        document.getElementById('go-live-modal').classList.remove('active');
+    },
+
+    init() {
+        document.getElementById('modal-cancel').onclick = () => this.hideModal();
+        document.getElementById('modal-confirm').onclick = () => {
+            this.hideModal();
+            // Send go-live request to backend
+            fetch('/api/settings/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dry_run: false })
+            }).then(() => {
+                alert('Mode EN LIGNE active ! Le bot va maintenant trader avec de l\'argent reel.');
+                location.reload();
+            }).catch(err => {
+                alert('Erreur lors du passage en live : ' + err.message);
+            });
+        };
+        // Close modal on overlay click
+        document.getElementById('go-live-modal').onclick = (e) => {
+            if (e.target === document.getElementById('go-live-modal')) this.hideModal();
+        };
+    }
+};
+
 async function fetchAndRender() {
     try {
         const resp = await fetch('/api/data');
@@ -1279,6 +1722,7 @@ async function fetchAndRender() {
         renderTrades(data);
         renderTradesHistory(data);
         renderErrors(data);
+        ValidationChecker.render(data);
     } catch (err) {
         console.error('Erreur de chargement:', err);
     }
@@ -1295,6 +1739,8 @@ function bindTableHeaderTooltips() {
         });
     });
 }
+
+ValidationChecker.init();
 
 // Premier chargement + refresh automatique
 fetchAndRender();
