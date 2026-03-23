@@ -1,0 +1,118 @@
+# ============================================================
+#  Listing Sniper — Master Configuration
+# ============================================================
+
+mode: dry_run  # dry_run | paper | live
+
+portfolio:
+  initial_capital_usd: 500
+  max_capital_usd: 10000
+  reserve_pct: 0.20          # Always keep 20% in SOL/USDC
+
+signals:
+  binance:
+    enabled: true
+    poll_interval_sec: 2
+    url: "https://www.binance.com/bapi/composite/v1/public/cms/article/list/query"
+    keywords: ["will list", "new listing", "trading starts", "list"]
+  bybit:
+    enabled: true
+    poll_interval_sec: 3
+  okx:
+    enabled: true
+    poll_interval_sec: 3
+  kucoin:
+    enabled: true
+    poll_interval_sec: 5
+  twitter:
+    enabled: true
+    accounts:
+      - "binance"
+      - "caborance"
+      - "ByBit_official"
+      - "OKX"
+      - "kaborncoin"
+    poll_interval_sec: 5
+  websocket:
+    enabled: true
+  onchain:
+    enabled: false           # Enable after validating other sources
+    hot_wallets:
+      binance:
+        - "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9"
+      bybit:
+        - "AC5RDfQFmDS1deWZos921JfqscXdByf8BKHs5ACWjtW2"
+
+analysis:
+  token_discovery:
+    providers: ["dexscreener", "jupiter", "birdeye"]
+    timeout_sec: 5
+  risk:
+    max_top10_concentration: 0.90
+    min_liquidity_usd: 5000
+    min_pool_age_hours: 0.5
+    honeypot_check: true
+
+execution:
+  max_slippage_bps: 200      # 2%
+  priority_fee_lamports: 100000
+  compute_units: 400000
+  jito_tip_lamports: 10000
+  use_jito: true
+  multi_rpc: true
+  confirmation_level: "confirmed"   # processed | confirmed | finalized
+
+positions:
+  take_profit:
+    - pct: 0.25
+      sell_fraction: 0.30
+    - pct: 0.50
+      sell_fraction: 0.30
+    - pct: 1.00
+      sell_fraction: 0.20
+  trailing_stop_pct: 0.20
+  trailing_fraction: 0.20
+  stop_loss_pct: 0.20
+  time_exits:
+    - hours: 1
+      min_gain_pct: 0.10
+    - hours: 4
+      min_gain_pct: 0.0
+  max_hold_hours: 24
+
+risk:
+  per_trade:
+    max_position_pct: 0.05   # 5% of portfolio
+    max_slippage_pct: 0.03   # 3%
+    stop_loss_pct: 0.20      # 20%
+  per_day:
+    max_trades: 10
+    max_loss_pct: 0.05       # -5% → halt
+    max_exposure_pct: 0.30   # 30%
+  per_week:
+    max_loss_pct: 0.10       # -10% → halt 48h
+    consecutive_losses_review: 3
+  circuit_breakers:
+    rpc_error_rate_pct: 10
+    min_sol_balance: 0.1
+    network_congestion_threshold: 0.80
+
+monitoring:
+  telegram:
+    notify_on_signal: true
+    notify_on_trade: true
+    notify_on_error: true
+    notify_on_pnl: true
+    daily_summary: true
+  prometheus:
+    enabled: true
+    port: 9090
+  log:
+    level: INFO
+    format: json
+    retention_days: 90
+
+database:
+  pool_size: 10
+  max_overflow: 20
+  echo: false

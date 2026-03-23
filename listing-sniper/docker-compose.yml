@@ -1,0 +1,106 @@
+version: "3.8"
+
+services:
+  sniper:
+    build: .
+    container_name: listing-sniper
+    restart: unless-stopped
+    env_file:
+      - config/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sniper:sniper@postgres:5432/listing_sniper
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "9090:9090"    # Prometheus metrics
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - sniper-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sniper-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sniper
+      POSTGRES_PASSWORD: sniper
+      POSTGRES_DB: listing_sniper
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sniper -d listing_sniper"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sniper-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: sniper-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redisdata:/data
+    networks:
+      - sniper-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sniper-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./grafana/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "9091:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=90d"
+    networks:
+      - sniper-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sniper-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: sniper
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/sniper.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafdata:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - sniper-net
+
+volumes:
+  pgdata:
+  redisdata:
+  promdata:
+  grafdata:
+
+networks:
+  sniper-net:
+    driver: bridge

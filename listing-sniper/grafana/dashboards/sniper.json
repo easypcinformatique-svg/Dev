@@ -1,0 +1,104 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "title": "Portfolio Value (USD)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sniper_portfolio_value_usd", "legendFormat": "Portfolio" }],
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "thresholds": { "steps": [{ "color": "green", "value": null }] } } }
+    },
+    {
+      "title": "Daily PnL (USD)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "expr": "sniper_daily_pnl_usd", "legendFormat": "PnL" }],
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 0 }] } } }
+    },
+    {
+      "title": "Open Positions",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sniper_open_positions", "legendFormat": "Open" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "blue", "value": null }] } } }
+    },
+    {
+      "title": "SOL Balance",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "targets": [{ "expr": "sniper_sol_balance", "legendFormat": "SOL" }],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "green", "value": 2 }] } } }
+    },
+    {
+      "title": "Trades Remaining Today",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "targets": [{ "expr": "sniper_daily_trades_remaining", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "min": 0, "max": 10, "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 3 }, { "color": "green", "value": 6 }] } } }
+    },
+    {
+      "title": "Signals Detected (rate/5m)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        { "expr": "rate(sniper_signals_detected_total[5m])", "legendFormat": "{{exchange}} / {{source}}" }
+      ]
+    },
+    {
+      "title": "Trades Executed (rate/5m)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        { "expr": "rate(sniper_trades_executed_total[5m])", "legendFormat": "{{side}} / {{status}}" }
+      ]
+    },
+    {
+      "title": "Signal-to-Trade Latency",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "sniper_signal_to_trade_seconds_bucket", "legendFormat": "{{le}}" }
+      ]
+    },
+    {
+      "title": "Trade PnL Distribution (%)",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        { "expr": "sniper_trade_pnl_pct_bucket", "legendFormat": "{{le}}" }
+      ]
+    },
+    {
+      "title": "Unrealized PnL (USD)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        { "expr": "sniper_unrealized_pnl_usd", "legendFormat": "Unrealized PnL" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } }
+    },
+    {
+      "title": "Circuit Breaker Trips",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        { "expr": "increase(sniper_circuit_breaker_trips_total[1h])", "legendFormat": "{{reason}}" }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["crypto", "sniper", "trading"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Listing Sniper Dashboard",
+  "uid": "listing-sniper-v1"
+}
