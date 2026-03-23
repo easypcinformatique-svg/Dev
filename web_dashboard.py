@@ -422,6 +422,37 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
             "performance": data.get("strategy_performance", {}),
         })
 
+    @app.route("/api/activity")
+    def api_activity():
+        """Retourne les derniers evenements du flux d'activite."""
+        data = _get_data()
+        return jsonify(data.get("activity_feed", []))
+
+    @app.route("/api/activity/stream")
+    def api_activity_stream():
+        """Server-Sent Events — flux d'activite temps reel."""
+        try:
+            from hedge_fund_bot import activity_feed as _af
+        except ImportError:
+            return jsonify({"error": "activity_feed not available"}), 500
+
+        def event_stream():
+            q = _af.subscribe()
+            try:
+                while True:
+                    if q:
+                        event = q.popleft()
+                        yield f"data: {json.dumps(event)}\n\n"
+                    else:
+                        import time as _time
+                        _time.sleep(1)
+                        yield ": keepalive\n\n"
+            except GeneratorExit:
+                _af.unsubscribe(q)
+
+        return Response(event_stream(), mimetype="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     @app.route("/api/health")
     def api_health():
         """Endpoint de sante pour le keep-alive."""
@@ -1099,6 +1130,78 @@ tr:hover td { background: #1a2332; }
     .metric-card { padding: 8px; border-radius: 8px; }
     .metric-value { font-size: 16px; }
 }
+
+/* ======== Live Activity Feed ======== */
+.live-feed {
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+.live-feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: #111827;
+    border-bottom: 1px solid #1f2937;
+}
+.live-feed-header h2 {
+    font-size: 16px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.live-dot {
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+}
+.live-feed-body {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+.live-feed-body::-webkit-scrollbar { width: 6px; }
+.live-feed-body::-webkit-scrollbar-track { background: #0d1117; }
+.live-feed-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+.feed-event {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 20px;
+    border-bottom: 1px solid #111827;
+    font-size: 13px;
+    transition: background 0.3s;
+    animation: feedSlideIn 0.3s ease-out;
+}
+@keyframes feedSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.feed-event:hover { background: #111827; }
+.feed-time { color: #6b7280; font-size: 11px; font-family: monospace; white-space: nowrap; min-width: 60px; margin-top: 1px; }
+.feed-icon { font-size: 14px; min-width: 20px; text-align: center; margin-top: 1px; }
+.feed-msg { color: #d1d5db; flex: 1; line-height: 1.4; }
+.feed-event[data-type="open"] { border-left: 3px solid #4ade80; }
+.feed-event[data-type="close"] { border-left: 3px solid #f87171; }
+.feed-event[data-type="signal"] { border-left: 3px solid #a78bfa; }
+.feed-event[data-type="scan"] { border-left: 3px solid #38bdf8; }
+.feed-event[data-type="evaluate"] { border-left: 3px solid #fbbf24; }
+.feed-event[data-type="iteration"] { border-left: 3px solid #6b7280; }
+.feed-event[data-type="resolved"] { border-left: 3px solid #fb923c; }
+.feed-event[data-type="timeout"] { border-left: 3px solid #ef4444; }
+.feed-event.new-event { background: rgba(99,102,241,0.08); }
+.feed-count { font-size: 11px; color: #6b7280; background: #1f2937; padding: 2px 8px; border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -1124,6 +1227,23 @@ tr:hover td { background: #1a2332; }
         <h2>Equity Curve</h2>
         <div class="chart-wrapper">
             <canvas id="equityChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Live Activity Feed -->
+    <div class="live-feed" id="live-feed">
+        <div class="live-feed-header">
+            <h2><span class="live-dot"></span> Activite en direct <span class="feed-count" id="feed-count">0</span></h2>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                    <input type="checkbox" id="feed-autoscroll" checked style="accent-color:#6366f1;"> Auto-scroll
+                </label>
+                <button onclick="document.getElementById('feed-body').innerHTML='';feedEventCount=0;document.getElementById('feed-count').textContent='0';"
+                    style="font-size:11px;color:#6b7280;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:3px 10px;cursor:pointer;">Effacer</button>
+            </div>
+        </div>
+        <div class="live-feed-body" id="feed-body">
+            <div style="padding:20px;text-align:center;color:#374151;font-size:13px;">En attente d'evenements...</div>
         </div>
     </div>
 
@@ -2049,6 +2169,100 @@ ValidationChecker.init();
 fetchAndRender();
 bindTableHeaderTooltips();
 setInterval(fetchAndRender, 10000);
+
+// ================================================================
+//  LIVE ACTIVITY FEED — SSE + Fallback polling
+// ================================================================
+
+const FEED_ICONS = {
+    iteration: '\u{1F504}',
+    scan: '\u{1F50D}',
+    signal: '\u{1F4E1}',
+    evaluate: '\u{1F9E0}',
+    open: '\u{1F7E2}',
+    close: '\u{1F534}',
+    resolved: '\u{1F3C1}',
+    timeout: '\u{23F0}',
+};
+
+let feedEventCount = 0;
+let sseConnected = false;
+
+function addFeedEvent(event) {
+    const body = document.getElementById('feed-body');
+    if (!body) return;
+
+    // Retirer le message "En attente..."
+    if (feedEventCount === 0) body.innerHTML = '';
+
+    feedEventCount++;
+    document.getElementById('feed-count').textContent = feedEventCount;
+
+    const div = document.createElement('div');
+    div.className = 'feed-event new-event';
+    div.setAttribute('data-type', event.type || 'info');
+
+    const icon = FEED_ICONS[event.type] || '\u{2139}\uFE0F';
+    div.innerHTML = `<span class="feed-time">${event.time || ''}</span><span class="feed-icon">${icon}</span><span class="feed-msg">${escapeHtml(event.message || '')}</span>`;
+
+    body.appendChild(div);
+
+    // Retirer la classe new-event apres l'animation
+    setTimeout(() => div.classList.remove('new-event'), 2000);
+
+    // Limiter a 100 events dans le DOM
+    while (body.children.length > 100) body.removeChild(body.firstChild);
+
+    // Auto-scroll
+    const autoScroll = document.getElementById('feed-autoscroll');
+    if (autoScroll && autoScroll.checked) {
+        body.scrollTop = body.scrollHeight;
+    }
+}
+
+function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+}
+
+function connectSSE() {
+    const evtSource = new EventSource('/api/activity/stream');
+
+    evtSource.onopen = () => {
+        sseConnected = true;
+        const dot = document.querySelector('.live-dot');
+        if (dot) dot.style.background = '#4ade80';
+    };
+
+    evtSource.onmessage = (e) => {
+        try {
+            const event = JSON.parse(e.data);
+            addFeedEvent(event);
+        } catch (err) {}
+    };
+
+    evtSource.onerror = () => {
+        sseConnected = false;
+        const dot = document.querySelector('.live-dot');
+        if (dot) dot.style.background = '#fbbf24';
+        evtSource.close();
+        // Reconnect apres 5s
+        setTimeout(connectSSE, 5000);
+    };
+}
+
+// Charger l'historique recent puis connecter SSE
+async function initLiveFeed() {
+    try {
+        const resp = await fetch('/api/activity');
+        const events = await resp.json();
+        events.forEach(addFeedEvent);
+    } catch (e) {}
+    connectSSE();
+}
+
+initLiveFeed();
 </script>
 </body>
 </html>

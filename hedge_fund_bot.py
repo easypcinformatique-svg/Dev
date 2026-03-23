@@ -31,6 +31,7 @@ import signal
 import logging
 import argparse
 import threading
+import collections
 import requests as _requests
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -50,6 +51,57 @@ from trade_logger import TradeLogger, POLYMARKET_FEE_PCT
 from signal_detector import SignalDetector
 
 logger = logging.getLogger("hedge_fund_bot")
+
+
+# ================================================================
+#  ACTIVITY FEED — Flux d'activite temps reel
+# ================================================================
+
+class ActivityFeed:
+    """Collecte les evenements du bot pour affichage en temps reel (SSE)."""
+
+    def __init__(self, max_events: int = 200):
+        self._events: collections.deque = collections.deque(maxlen=max_events)
+        self._lock = threading.Lock()
+        self._listeners: list = []  # SSE listeners
+
+    def push(self, event_type: str, message: str, data: dict = None):
+        """Ajoute un evenement au flux."""
+        event = {
+            "id": int(time.time() * 1000),
+            "time": datetime.now().strftime("%H:%M:%S"),
+            "type": event_type,
+            "message": message,
+            "data": data or {},
+        }
+        with self._lock:
+            self._events.append(event)
+        # Notifier les listeners SSE
+        for q in self._listeners[:]:
+            try:
+                q.append(event)
+            except Exception:
+                pass
+
+    def get_recent(self, n: int = 50) -> list:
+        with self._lock:
+            return list(self._events)[-n:]
+
+    def subscribe(self) -> collections.deque:
+        """Retourne une queue pour recevoir les evenements en SSE."""
+        q = collections.deque(maxlen=50)
+        self._listeners.append(q)
+        return q
+
+    def unsubscribe(self, q):
+        try:
+            self._listeners.remove(q)
+        except ValueError:
+            pass
+
+
+# Singleton global
+activity_feed = ActivityFeed()
 
 
 # ================================================================
@@ -636,6 +688,7 @@ class HedgeFundBot:
         logger.info(f"\n{'='*50}")
         logger.info(f"  Iteration {self.state.iteration} | {now:%Y-%m-%d %H:%M:%S}")
         logger.info(f"{'='*50}")
+        activity_feed.push("iteration", f"Iteration #{self.state.iteration} demarree")
 
         # Reset daily PnL a minuit
         if now.hour == 0 and now.minute < 6:
@@ -658,6 +711,13 @@ class HedgeFundBot:
                     }
                 if twitter_signals:
                     logger.info(f"  Signaux Twitter: {len(twitter_signals)} detectes")
+                    for sig in twitter_signals:
+                        activity_feed.push("signal", f"Signal {sig.direction} (conf={sig.confidence:.0%}) via @{sig.author}", {
+                            "direction": sig.direction, "confidence": sig.confidence,
+                            "market": sig.market_question[:60], "author": sig.author,
+                        })
+                else:
+                    activity_feed.push("signal", "Aucun signal Twitter/News detecte")
             except Exception as e:
                 logger.debug(f"Scan Twitter echoue: {e}")
 
@@ -669,10 +729,9 @@ class HedgeFundBot:
                     pos = self.state.positions.pop(mid)
                     size = pos.get("size_usd", 0) if isinstance(pos, dict) else pos.size_usd
                     self.state.capital += size
-                    self.telegram.notify_alert(
-                        "Ordre annule (timeout)",
-                        f"Ordre sur {(pos.get('question','') if isinstance(pos,dict) else pos.question)[:60]} annule apres 5 min"
-                    )
+                    q = (pos.get('question','') if isinstance(pos,dict) else pos.question)[:60]
+                    self.telegram.notify_alert("Ordre annule (timeout)", f"Ordre sur {q} annule apres 5 min")
+                    activity_feed.push("timeout", f"Ordre annule (timeout 5min): {q}", {"market_id": mid})
 
             # 4. Detecter les marches resolus et fermer les positions
             self._check_resolved_markets()
@@ -718,6 +777,9 @@ class HedgeFundBot:
                     logger.info(
                         f"Marche resolu: {market.question[:50]} -> prix final {final_price:.2f}"
                     )
+                    activity_feed.push("resolved", f"Marche resolu: {market.question[:50]} -> {final_price:.2f}", {
+                        "market": market.question, "final_price": final_price,
+                    })
                     self._close_position(cid, final_price, "market_resolved")
             except Exception as e:
                 logger.debug(f"Check resolution {cid[:8]}: {e}")
@@ -751,6 +813,9 @@ class HedgeFundBot:
 
         self.state.markets_scanned = len(eligible)
         logger.info(f"  Marches scannes: {len(markets)} total, {len(eligible)} eligibles")
+        activity_feed.push("scan", f"{len(eligible)} marches eligibles sur {len(markets)} scannes", {
+            "total": len(markets), "eligible": len(eligible),
+        })
         return eligible
 
     # ================================================================
@@ -949,6 +1014,12 @@ class HedgeFundBot:
         # Notification Telegram
         self.telegram.notify_exit(side, question, pnl, pnl_pct, reason)
 
+        # Activity feed
+        activity_feed.push("close", f"CLOSE [{reason}] {side} | PnL: {pnl_str} ({pnl_pct:+.1%}) | {question[:50]}", {
+            "side": side, "pnl": pnl, "pnl_pct": pnl_pct, "reason": reason,
+            "question": question, "fees": fees_total,
+        })
+
     # ================================================================
     #  EVALUATION DES SIGNAUX
     # ================================================================
@@ -1002,6 +1073,10 @@ class HedgeFundBot:
         self.state.signals_generated += signals_count
         if signals_count > 0:
             logger.info(f"  Signaux evalues: {signals_count}")
+            activity_feed.push("evaluate", f"{signals_count} signaux evalues sur {len(markets)} marches", {
+                "signals": signals_count, "markets": len(markets),
+                "positions": len(self.state.positions),
+            })
 
     def _get_history(self, market: PolymarketMarket) -> Optional[pd.DataFrame]:
         """Recupere ou met a jour l'historique d'un marche."""
@@ -1129,6 +1204,12 @@ class HedgeFundBot:
 
         # Notification Telegram
         self.telegram.notify_entry(side, market.question, size_usd, price, confidence)
+
+        # Activity feed
+        activity_feed.push("open", f"OPEN {side} | ${size_usd:.0f} @ {price:.3f} (conf={confidence:.0%}) | {market.question[:50]}", {
+            "side": side, "size_usd": size_usd, "price": price,
+            "confidence": confidence, "question": market.question,
+        })
 
     # ================================================================
     #  EQUITY & REPORTING
@@ -1280,6 +1361,7 @@ class HedgeFundBot:
             "errors": self.state.errors[-10:],
             "strategy_attribution": getattr(self.strategy, '_last_signals', {}),
             "strategy_performance": getattr(self.strategy, '_strategy_performance', {}),
+            "activity_feed": activity_feed.get_recent(50),
         }
 
 
