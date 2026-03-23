@@ -11,3 +11,31 @@ services:
         value: 5050
       - key: PYTHONUNBUFFERED
         value: "1"
+
+  - type: web
+    name: sale-alert
+    runtime: docker
+    repo: https://github.com/easypcinformatique-svg/Dev
+    branch: claude/web-scraping-ticketing-5laiy
+    plan: free
+    dockerfilePath: ./sale_alert/Dockerfile
+    dockerContext: ./sale_alert
+    envVars:
+      - key: PORT
+        value: 5051
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: TM_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: ALERT_PHONE_NUMBER
+        sync: false
