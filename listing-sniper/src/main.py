@@ -102,6 +102,17 @@ class ListingSniper:
         self._recent_trades: list[dict] = []
         self._errors: list[dict] = []
 
+        # Scanner tracking for dashboard
+        self._scanners: dict[str, dict] = {
+            "binance": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+            "bybit": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+            "okx": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+            "kucoin": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+            "twitter": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+            "websocket": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+            "onchain": {"active": False, "scans": 0, "last_scan": None, "errors": 0},
+        }
+
     async def start(self) -> None:
         """Initialize all subsystems."""
         logger.info("=" * 60)
@@ -144,6 +155,33 @@ class ListingSniper:
 
         self._running = True
         logger.info("All subsystems started")
+
+        # Log activity
+        from src.web_dashboard import log_activity
+        log_activity("SYSTEM", "Bot demarre", f"mode={self._config.mode}, dry_run={self._config.dry_run}", "success")
+
+        # Mark active scanners
+        if self._config.get("signals", "binance", "enabled", default=True):
+            self._scanners["binance"]["active"] = True
+            log_activity("BINANCE", "Scanner active", "polling toutes les 2s")
+        if self._config.get("signals", "bybit", "enabled", default=True):
+            self._scanners["bybit"]["active"] = True
+            log_activity("BYBIT", "Scanner active", "polling toutes les 3s")
+        if self._config.get("signals", "okx", "enabled", default=True):
+            self._scanners["okx"]["active"] = True
+            log_activity("OKX", "Scanner active", "polling toutes les 3s")
+        if self._config.get("signals", "kucoin", "enabled", default=True):
+            self._scanners["kucoin"]["active"] = True
+            log_activity("KUCOIN", "Scanner active", "polling toutes les 5s")
+        if self._config.get("signals", "twitter", "enabled", default=True):
+            self._scanners["twitter"]["active"] = True
+            log_activity("TWITTER", "Scanner active", "monitoring comptes exchanges")
+        if self._config.get("signals", "websocket", "enabled", default=True):
+            self._scanners["websocket"]["active"] = True
+            log_activity("WEBSOCKET", "Scanner active", "surveillance nouveaux symboles")
+        if self._config.get("signals", "onchain", "enabled", default=False):
+            self._scanners["onchain"]["active"] = True
+            log_activity("ONCHAIN", "Scanner active", "monitoring hot wallets")
 
         # Send startup alert
         await self._alerter._send(
@@ -269,6 +307,19 @@ class ListingSniper:
 
         logger.info("Signal listeners active: %d", len(feeders))
 
+        # Heartbeat task — logs scanner polling to activity feed
+        async def _heartbeat() -> None:
+            from src.web_dashboard import log_activity
+            while self._running:
+                for key, sc in self._scanners.items():
+                    if sc["active"]:
+                        sc["scans"] += 1
+                        sc["last_scan"] = datetime.now(timezone.utc).isoformat()
+                log_activity("SYSTEM", f"Scan cycle complete", f"{len(feeders)} scanners actifs, {signal_queue.qsize()} signaux en queue")
+                await asyncio.sleep(15)
+
+        feeders.append(asyncio.create_task(_heartbeat()))
+
         # Process signals from queue
         while self._running:
             try:
@@ -286,14 +337,40 @@ class ListingSniper:
 
     async def _process_signal(self, raw_signal: Signal) -> None:
         """Full signal processing pipeline."""
+        from src.web_dashboard import log_activity
+
         start = time.monotonic()
         metrics.signals_detected.labels(
             exchange=raw_signal.exchange.value, source=raw_signal.source.value
         ).inc()
 
+        # Track scanner activity
+        scanner_key = raw_signal.exchange.value.lower()
+        if raw_signal.source.value == "TWITTER":
+            scanner_key = "twitter"
+        elif raw_signal.source.value == "WEBSOCKET":
+            scanner_key = "websocket"
+        elif raw_signal.source.value == "ONCHAIN":
+            scanner_key = "onchain"
+        if scanner_key in self._scanners:
+            self._scanners[scanner_key]["scans"] += 1
+            self._scanners[scanner_key]["last_scan"] = datetime.now(timezone.utc).isoformat()
+
+        log_activity(
+            raw_signal.source.value,
+            f"Signal brut: {raw_signal.token_symbol}",
+            f"exchange={raw_signal.exchange.value}, confidence={raw_signal.confidence:.0%}",
+        )
+
         # Step 1: Validate
         signal = await self._validator.validate(raw_signal)
         if not signal:
+            log_activity(
+                raw_signal.source.value,
+                f"Signal rejete: {raw_signal.token_symbol}",
+                "dedup/faux positif/token connu",
+                "warning",
+            )
             return
 
         metrics.signals_validated.labels(exchange=signal.exchange.value).inc()
@@ -302,6 +379,13 @@ class ListingSniper:
             signal.token_symbol,
             signal.exchange.value,
             signal.confidence,
+        )
+
+        log_activity(
+            signal.source.value,
+            f"SIGNAL VALIDE: {signal.token_symbol}",
+            f"exchange={signal.exchange.value}, confidence={signal.confidence:.0%}",
+            "success",
         )
 
         # Track for dashboard
@@ -467,6 +551,7 @@ class ListingSniper:
             },
             "risk_status": risk_status,
             "circuit_breaker": cb_status,
+            "scanners": self._scanners,
             "errors": self._errors[-20:],
             "uptime": uptime_str,
             "last_update": now.isoformat(),
