@@ -1,0 +1,32 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps — version prod (leger, sans Solana SDK / linters / tests)
+COPY listing-sniper/requirements-prod.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
+
+# Copier le code du listing-sniper
+COPY listing-sniper/ .
+
+# Non-root user
+RUN useradd -m sniper && chown -R sniper:sniper /app
+USER sniper
+
+# Health check sur le dashboard web
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-5050}/api/health || exit 1
+
+EXPOSE 5050
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Lance le bot avec dashboard web + keep-alive
+CMD ["python", "-m", "src.main", "--dashboard"]
