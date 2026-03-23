@@ -1,0 +1,10 @@
+events:
+  - artist: "Orelsan"
+    expected_onsale: null  # ISO datetime or null
+    min_price_eur: 30
+    max_price_eur: 120
+
+  - artist: "Stromae"
+    expected_onsale: "2026-05-15T10:00:00"
+    min_price_eur: 40
+    max_price_eur: 150
