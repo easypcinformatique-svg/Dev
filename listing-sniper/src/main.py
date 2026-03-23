@@ -97,6 +97,10 @@ class ListingSniper:
             config.get("portfolio", "initial_capital_usd", default=500)
         )
         self._sol_price_usd: float = 150.0  # Updated at runtime
+        self._start_time = datetime.now(timezone.utc)
+        self._recent_signals: list[dict] = []
+        self._recent_trades: list[dict] = []
+        self._errors: list[dict] = []
 
     async def start(self) -> None:
         """Initialize all subsystems."""
@@ -188,6 +192,7 @@ class ListingSniper:
                 ),
                 asyncio.create_task(self._update_sol_price(), name="sol_price"),
                 asyncio.create_task(self._update_metrics(), name="metrics"),
+                asyncio.create_task(self._save_state_loop(), name="state_saver"),
             ]
 
             # Wait for any task to complete (or fail)
@@ -299,6 +304,19 @@ class ListingSniper:
             signal.confidence,
         )
 
+        # Track for dashboard
+        self._recent_signals.append({
+            "token_symbol": signal.token_symbol,
+            "token_name": signal.token_name,
+            "exchange": signal.exchange.value,
+            "source": signal.source.value,
+            "confidence": signal.confidence,
+            "detection_time": signal.detection_time.isoformat() if signal.detection_time else "",
+            "raw_text": signal.raw_text[:200],
+        })
+        if len(self._recent_signals) > 100:
+            self._recent_signals = self._recent_signals[-50:]
+
         # Alert
         await self._alerter.signal_detected(signal)
 
@@ -387,6 +405,83 @@ class ListingSniper:
                 time.monotonic() - start,
             )
 
+    def get_dashboard_data(self) -> dict:
+        """Return current state for the web dashboard."""
+        now = datetime.now(timezone.utc)
+        uptime = now - self._start_time
+        uptime_str = f"{int(uptime.total_seconds() // 3600)}h{int((uptime.total_seconds() % 3600) // 60)}m"
+
+        open_pos = []
+        for p in self._position_mgr.open_positions:
+            open_pos.append({
+                "token_symbol": p.token_symbol,
+                "token_address": p.token_address,
+                "entry_price_usd": p.entry_price_usd,
+                "current_price_usd": p.current_price_usd,
+                "remaining_tokens": p.remaining_tokens,
+                "cost_basis_usd": p.cost_basis_usd,
+                "realized_pnl_usd": p.realized_pnl_usd,
+                "unrealized_pnl_usd": p.unrealized_pnl,
+                "hold_hours": p.hold_duration_hours,
+                "risk_score": p.risk_score,
+                "status": p.status.value,
+            })
+
+        perf = self._pnl.get_performance_stats()
+        cb_status = {
+            "is_tripped": self._circuit_breaker.is_tripped,
+            "rpc_error_rate": self._circuit_breaker.get_rpc_error_rate(),
+        }
+        risk_status = {
+            "trades_remaining": self._risk_mgr.trades_remaining_today,
+            "is_halted": self._risk_mgr.is_halted,
+            "exposure_pct": (
+                self._position_mgr.total_exposure_usd / self._portfolio_value_usd
+                if self._portfolio_value_usd > 0 else 0
+            ),
+            "daily_loss_pct": 0,
+        }
+
+        total_unrealized = sum(p.unrealized_pnl for p in self._position_mgr.open_positions)
+
+        return {
+            "status": "halted" if self._risk_mgr.is_halted else ("running" if self._running else "stopped"),
+            "mode": self._config.mode,
+            "portfolio_value_usd": self._portfolio_value_usd,
+            "sol_balance": 0,  # Updated by circuit breaker
+            "daily_pnl_usd": 0,
+            "total_pnl_usd": total_unrealized,
+            "sol_price_usd": self._sol_price_usd,
+            "open_positions": open_pos,
+            "recent_signals": self._recent_signals[-50:],
+            "recent_trades": self._recent_trades[-50:],
+            "performance": {
+                "total_trades": perf.total_trades,
+                "wins": perf.wins,
+                "losses": perf.losses,
+                "win_rate": perf.win_rate,
+                "profit_factor": perf.profit_factor,
+                "sharpe_ratio": perf.sharpe_ratio,
+                "sortino_ratio": perf.sortino_ratio,
+                "max_drawdown_pct": perf.max_drawdown_pct,
+            },
+            "risk_status": risk_status,
+            "circuit_breaker": cb_status,
+            "errors": self._errors[-20:],
+            "uptime": uptime_str,
+            "last_update": now.isoformat(),
+        }
+
+    async def _save_state_loop(self) -> None:
+        """Periodically save state to JSON for the dashboard."""
+        from src.web_dashboard import save_state
+        while self._running:
+            try:
+                save_state(self.get_dashboard_data())
+            except Exception:
+                pass
+            await asyncio.sleep(10)
+
     async def _update_sol_price(self) -> None:
         """Periodically update SOL/USD price."""
         import aiohttp
@@ -455,10 +550,37 @@ def setup_logging(level: str = "INFO") -> None:
 
 def main() -> None:
     """Entry point."""
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(description="Listing Sniper")
+    parser.add_argument("--dashboard", action="store_true", help="Launch with web dashboard")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", 5050)))
+    args = parser.parse_args()
+
     config = AppConfig.load()
     setup_logging(config.log_level)
 
-    app = ListingSniper(config)
+    sniper = ListingSniper(config)
+
+    if args.dashboard:
+        # Launch Flask dashboard in a separate thread
+        import threading
+        from src.web_dashboard import create_dashboard_app, _start_keep_alive
+
+        flask_app = create_dashboard_app(sniper=sniper)
+
+        def _run_flask() -> None:
+            flask_app.run(host="0.0.0.0", port=args.port, debug=False, use_reloader=False)
+
+        flask_thread = threading.Thread(target=_run_flask, daemon=True)
+        flask_thread.start()
+
+        # Start keep-alive to prevent free tier sleep
+        app_url = os.environ.get("RENDER_EXTERNAL_URL", f"http://localhost:{args.port}")
+        _start_keep_alive(app_url, interval=600)
+
+        logger.info("Dashboard started on port %d", args.port)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -472,7 +594,7 @@ def main() -> None:
         loop.add_signal_handler(sig, _signal_handler)
 
     try:
-        loop.run_until_complete(app.run())
+        loop.run_until_complete(sniper.run())
     except (KeyboardInterrupt, asyncio.CancelledError):
         pass
     finally:

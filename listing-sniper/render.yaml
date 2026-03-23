@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: listing-sniper
+    runtime: docker
+    repo: https://github.com/easypcinformatique-svg/Dev
+    branch: claude/crypto-trading-system-uDYt1
+    plan: free
+    dockerfilePath: ./listing-sniper/Dockerfile
+    dockerContext: ./listing-sniper
+    envVars:
+      - key: PORT
+        value: 5050
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DRY_RUN
+        value: "true"
+      - key: LOG_LEVEL
+        value: "INFO"

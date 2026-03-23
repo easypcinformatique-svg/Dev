@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Python deps
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # App code
 COPY . .
@@ -19,13 +19,14 @@ COPY . .
 RUN useradd -m sniper && chown -R sniper:sniper /app
 USER sniper
 
-# Health check
+# Health check sur le dashboard web
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD curl -f http://localhost:9090/metrics || exit 1
+    CMD curl -f http://localhost:${PORT:-5050}/api/health || exit 1
 
-EXPOSE 9090
+EXPOSE 5050
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-CMD ["python", "-m", "src.main"]
+# Lance le bot avec dashboard web + keep-alive
+CMD ["python", "-m", "src.main", "--dashboard"]

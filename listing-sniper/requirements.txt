@@ -17,6 +17,9 @@ pyyaml>=6.0
 # Monitoring
 prometheus-client>=0.20.0
 
+# Web dashboard
+Flask>=3.0.0
+
 # Telegram
 aiohttp>=3.9.0
 
