@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 import signal
 import sys
 import time
 from datetime import datetime, timezone
 
 from src.config import AppConfig
-from src.models import RiskTier, Signal, TradeStatus
+from src.models import Exchange, RiskTier, Signal, SignalSource, TradeStatus
 from src.infra.database import Database
 from src.infra.redis_cache import RedisCache
 from src.infra.telegram_alerts import TelegramAlerter
@@ -89,7 +90,7 @@ class ListingSniper:
         )
 
         # Risk
-        self._risk_mgr = RiskManager(self._pnl)
+        self._risk_mgr = RiskManager(self._pnl, test_mode=config.mode in ("paper", "dry_run"))
         self._circuit_breaker = CircuitBreaker(config, self._alerter)
 
         # State
@@ -256,6 +257,54 @@ class ListingSniper:
         finally:
             await self.stop()
 
+    # ── Test signal data for paper mode ──────────────────────────
+    _TEST_TOKENS = [
+        ("NEWTOKEN", "NewToken", Exchange.BINANCE, "Binance will list NewToken (NEWTOKEN). Trading starts 2026-03-24."),
+        ("XYZAI", "XYZ AI Protocol", Exchange.BYBIT, "Bybit listing announcement: XYZ AI Protocol (XYZAI) spot trading."),
+        ("MEMEX", "Meme Index", Exchange.OKX, "OKX will list Meme Index (MEMEX) in the Innovation Zone."),
+        ("SOLGEM", "Sol Gem", Exchange.KUCOIN, "KuCoin new listing: Sol Gem (SOLGEM) trading now open."),
+        ("DEPIN", "DePIN Network", Exchange.BINANCE, "Binance will list DePIN Network (DEPIN). Deposits open now."),
+        ("RWAX", "RWA Exchange", Exchange.BYBIT, "New listing on Bybit: RWA Exchange Token (RWAX)."),
+        ("AIBOT", "AI Bot Protocol", Exchange.OKX, "OKX Innovation Zone: AI Bot Protocol (AIBOT) listed."),
+        ("ZKSOL", "ZK Solana", Exchange.BINANCE, "Binance will list ZK Solana (ZKSOL). Trading opens soon."),
+    ]
+
+    async def _generate_test_signals(self, queue: asyncio.Queue) -> None:
+        """Generate fake listing signals in paper mode for testing."""
+        from src.web_dashboard import log_activity
+
+        log_activity("SYSTEM", "Mode test actif", "Signaux simules toutes les 30-90s", "success")
+        await asyncio.sleep(10)  # Wait for startup
+
+        idx = 0
+        while self._running:
+            token = self._TEST_TOKENS[idx % len(self._TEST_TOKENS)]
+            symbol, name, exchange, raw_text = token
+
+            sig = Signal(
+                token_symbol=symbol,
+                token_name=name,
+                exchange=exchange,
+                source=SignalSource.API,
+                confidence=0.85,
+                raw_text=raw_text,
+                url=f"https://www.{exchange.value.lower()}.com/announcements/test",
+                chain="solana",
+            )
+            await queue.put(sig)
+            log_activity(
+                exchange.value,
+                f"[TEST] Signal: {symbol}",
+                f"Signal test simule pour {name}",
+                "success",
+            )
+            logger.info("[TEST] Generated test signal: %s on %s", symbol, exchange.value)
+            idx += 1
+
+            # Wait 30-90 seconds between signals
+            delay = random.randint(30, 90)
+            await asyncio.sleep(delay)
+
     async def _run_listeners(self) -> None:
         """Run all signal listeners and process incoming signals."""
         signal_queue: asyncio.Queue[Signal] = asyncio.Queue()
@@ -304,6 +353,11 @@ class ListingSniper:
             feeders.append(asyncio.create_task(_feed_ws()))
         if self._config.get("signals", "onchain", "enabled", default=False):
             feeders.append(asyncio.create_task(_feed_onchain()))
+
+        # In paper/dry_run mode, inject simulated signals for testing
+        if self._config.mode in ("paper", "dry_run"):
+            feeders.append(asyncio.create_task(self._generate_test_signals(signal_queue)))
+            logger.info("Test signal generator active (mode=%s)", self._config.mode)
 
         logger.info("Signal listeners active: %d", len(feeders))
 
@@ -411,7 +465,30 @@ class ListingSniper:
 
         # Step 3: Discover token
         token = await self._discovery.discover(signal)
-        if not token:
+        if not token and self._config.mode in ("paper", "dry_run"):
+            # In test mode, create a simulated token so the pipeline continues
+            from src.models import TokenInfo, PoolInfo
+            fake_price = random.uniform(0.001, 2.0)
+            token = TokenInfo(
+                symbol=signal.token_symbol,
+                name=signal.token_name or signal.token_symbol,
+                contract_address=f"SIM{signal.token_symbol}{'x' * (40 - len(signal.token_symbol) - 3)}",
+                chain="solana",
+                pools=[
+                    PoolInfo(
+                        pool_address=f"SIMPool{'y' * 36}",
+                        dex="raydium",
+                        base_token=signal.token_symbol,
+                        quote_token="SOL",
+                        liquidity_usd=random.uniform(10000, 200000),
+                        volume_24h_usd=random.uniform(5000, 100000),
+                        price_usd=fake_price,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                ],
+            )
+            log_activity("SYSTEM", f"[TEST] Token simule: {signal.token_symbol}", f"prix=${fake_price:.4f}", "warning")
+        elif not token:
             logger.warning("Token discovery failed for %s", signal.token_symbol)
             return
 

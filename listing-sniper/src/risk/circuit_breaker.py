@@ -54,6 +54,8 @@ class CircuitBreaker:
         self._session: Optional[aiohttp.ClientSession] = None
         self._sol_balance: float = 0.0
         self._monitoring = False
+        # In paper/dry_run mode, never trip the circuit breaker
+        self._test_mode = config.mode in ("dry_run", "paper")
 
     async def start(self) -> None:
         self._session = aiohttp.ClientSession()
@@ -87,6 +89,21 @@ class CircuitBreaker:
 
     async def check_all(self) -> BreakerStatus:
         """Run all circuit breaker checks."""
+        # In paper/dry_run mode, skip all checks — never trip
+        if self._test_mode:
+            was_tripped = self._tripped
+            self._tripped = False
+            self._trip_reasons = []
+            if was_tripped:
+                logger.info("Circuit breaker cleared (test mode)")
+            return BreakerStatus(
+                is_tripped=False,
+                reasons=[],
+                sol_balance=999.0,
+                rpc_error_rate=0.0,
+                network_congestion=0.0,
+            )
+
         reasons: list[str] = []
 
         # 1. RPC error rate

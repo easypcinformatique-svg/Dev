@@ -35,6 +35,7 @@ class PositionSizer:
 
     def __init__(self, config: AppConfig) -> None:
         self._config = config
+        self._test_mode = config.mode in ("paper", "dry_run")
         self._max_slippage_bps = config.get(
             "execution", "max_slippage_bps", default=200
         )
@@ -58,8 +59,12 @@ class PositionSizer:
         if max_slippage_bps is None:
             max_slippage_bps = self._max_slippage_bps
 
+        # In test mode, use larger position limits for small portfolios
+        max_position_pct = 0.10 if self._test_mode else _MAX_PORTFOLIO_PCT
+        min_position_usd = 10.0 if self._test_mode else _MIN_POSITION_USD
+
         # Hard cap: % of portfolio
-        portfolio_cap = portfolio_value_usd * _MAX_PORTFOLIO_PCT
+        portfolio_cap = portfolio_value_usd * max_position_pct
 
         # Hard cap: % of pool liquidity (to limit price impact)
         liquidity_cap = risk.liquidity_usd * _MAX_POOL_LIQUIDITY_PCT
@@ -104,19 +109,19 @@ class PositionSizer:
         )
 
         # Apply minimum
-        if amount_usd < _MIN_POSITION_USD:
-            if portfolio_value_usd >= _MIN_POSITION_USD * 3:
+        if amount_usd < min_position_usd:
+            if portfolio_value_usd >= min_position_usd * 3:
                 # Portfolio big enough but position too small — skip
                 return PositionSize(
                     amount_usd=0,
                     amount_sol=0,
-                    reason=f"Position too small (${amount_usd:.0f} < ${_MIN_POSITION_USD})",
+                    reason=f"Position too small (${amount_usd:.0f} < ${min_position_usd})",
                     risk_tier=risk.risk_tier,
                     kelly_fraction=half_kelly,
                     liquidity_cap_usd=liquidity_cap,
                     portfolio_cap_usd=portfolio_cap,
                 )
-            amount_usd = _MIN_POSITION_USD
+            amount_usd = min_position_usd
 
         # Convert to SOL
         amount_sol = amount_usd / sol_price_usd if sol_price_usd > 0 else 0

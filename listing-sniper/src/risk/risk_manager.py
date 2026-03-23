@@ -53,8 +53,9 @@ class RiskManager:
     CONSECUTIVE_LOSSES_REVIEW: int = 3
     HALT_DURATION_HOURS: int = 48
 
-    def __init__(self, pnl_tracker: PnLTracker) -> None:
+    def __init__(self, pnl_tracker: PnLTracker, test_mode: bool = False) -> None:
         self._pnl = pnl_tracker
+        self._test_mode = test_mode
         self._trades_today: int = 0
         self._trades_date: str = ""
         self._consecutive_losses: int = 0
@@ -107,13 +108,14 @@ class RiskManager:
                 f"Daily trade limit reached ({self._trades_today}/{self.MAX_TRADES_PER_DAY})",
             )
 
-        # Position size limit
+        # Position size limit (relaxed in test mode for small portfolios)
+        max_pos_pct = 0.10 if self._test_mode else self.MAX_POSITION_PCT
         if portfolio_value_usd > 0:
             pos_pct = position_size_usd / portfolio_value_usd
-            if pos_pct > self.MAX_POSITION_PCT:
+            if pos_pct > max_pos_pct:
                 return RiskCheck(
                     False,
-                    f"Position too large: {pos_pct:.1%} > {self.MAX_POSITION_PCT:.1%}",
+                    f"Position too large: {pos_pct:.1%} > {max_pos_pct:.1%}",
                 )
 
         # Exposure limit

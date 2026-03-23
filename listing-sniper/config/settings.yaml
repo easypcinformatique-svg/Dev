@@ -2,7 +2,7 @@
 #  Listing Sniper — Master Configuration
 # ============================================================
 
-mode: dry_run  # dry_run | paper | live
+mode: paper  # dry_run | paper | live
 
 portfolio:
   initial_capital_usd: 500

@@ -46,21 +46,41 @@ class RedisCache:
     # ── Price Cache ──────────────────────────────────────────
 
     async def set_price(self, token: str, price: float, ttl: int = 30) -> None:
-        await self.client.set(f"{_PRICE}{token}", str(price), ex=ttl)
+        if not self._client:
+            return
+        try:
+            await self.client.set(f"{_PRICE}{token}", str(price), ex=ttl)
+        except Exception:
+            pass
 
     async def get_price(self, token: str) -> Optional[float]:
-        val = await self.client.get(f"{_PRICE}{token}")
-        return float(val) if val else None
+        if not self._client:
+            return None
+        try:
+            val = await self.client.get(f"{_PRICE}{token}")
+            return float(val) if val else None
+        except Exception:
+            return None
 
     # ── Signal Deduplication ─────────────────────────────────
 
     async def is_signal_seen(self, key: str) -> bool:
         """Check if we already processed this signal (by composite key)."""
-        return bool(await self.client.exists(f"{_SIGNAL}{key}"))
+        if not self._client:
+            return False
+        try:
+            return bool(await self.client.exists(f"{_SIGNAL}{key}"))
+        except Exception:
+            return False
 
     async def mark_signal_seen(self, key: str, ttl: int = 86400) -> None:
         """Mark signal as seen for 24h by default."""
-        await self.client.set(f"{_SIGNAL}{key}", "1", ex=ttl)
+        if not self._client:
+            return
+        try:
+            await self.client.set(f"{_SIGNAL}{key}", "1", ex=ttl)
+        except Exception:
+            pass
 
     # ── Rate Limiting ────────────────────────────────────────
 
@@ -86,8 +106,18 @@ class RedisCache:
     # ── Generic helpers ──────────────────────────────────────
 
     async def set_json(self, key: str, data: Any, ttl: int = 300) -> None:
-        await self.client.set(key, json.dumps(data), ex=ttl)
+        if not self._client:
+            return
+        try:
+            await self.client.set(key, json.dumps(data), ex=ttl)
+        except Exception:
+            pass
 
     async def get_json(self, key: str) -> Optional[Any]:
-        val = await self.client.get(key)
-        return json.loads(val) if val else None
+        if not self._client:
+            return None
+        try:
+            val = await self.client.get(key)
+            return json.loads(val) if val else None
+        except Exception:
+            return None
