@@ -866,6 +866,13 @@ img {
     flex-shrink: 0;
 }
 
+.avis-avatar-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 @media (max-width: 768px) {
     .avis-carousel .avis-card {
         min-width: 100%;

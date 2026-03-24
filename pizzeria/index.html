@@ -687,6 +687,18 @@
         </div>
     </footer>
 
+    <!--
+        Google Places API - Avis automatiques
+        ======================================
+        1. Allez sur https://console.cloud.google.com/
+        2. Activez "Places API" + "Maps JavaScript API"
+        3. Creez une cle API restreinte a votre domaine
+        4. Remplacez VOTRE_CLE_API ci-dessous
+        5. Dans js/google-reviews.js, remplacez le PLACE_ID par celui de Pizza Napoli
+           (trouvez-le sur https://developers.google.com/maps/documentation/places/web-service/place-id)
+    -->
+    <script src="js/google-reviews.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=VOTRE_CLE_API&libraries=places&callback=initGoogleReviews"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
