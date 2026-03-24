@@ -728,6 +728,38 @@ img {
     margin-top: 2px;
 }
 
+/* --- Google Reviews Widget --- */
+.section-subtitle-light {
+    color: rgba(255,255,255,0.7);
+    font-size: 1rem;
+    margin-top: 12px;
+}
+
+.google-reviews-widget {
+    margin-bottom: 30px;
+    min-height: 100px;
+}
+
+.google-cta {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn-google {
+    border-color: rgba(255,255,255,0.4);
+    gap: 10px;
+}
+
+.btn-google:hover {
+    background: var(--white);
+    color: var(--dark);
+    border-color: var(--white);
+}
+
+.google-icon {
+    flex-shrink: 0;
+}
+
 /* --- Order CTA --- */
 .commander {
     background: var(--light);

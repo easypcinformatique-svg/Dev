@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pizza Napoli - Pizzeria Artisanale a Carpentras</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -425,14 +426,36 @@
         </div>
     </section>
 
-    <!-- Testimonials -->
+    <!-- Avis Google -->
     <section class="section avis" id="avis">
         <div class="container">
             <div class="section-header section-header-light">
-                <span class="section-label">Temoignages</span>
-                <h2 class="section-title">Ce que disent nos clients</h2>
+                <span class="section-label">Avis Google</span>
+                <h2 class="section-title">Nos clients nous recommandent</h2>
                 <div class="section-divider"></div>
+                <p class="section-subtitle-light">Les meilleurs avis 5 etoiles de nos clients sur Google</p>
             </div>
+
+            <!--
+                ============================================================
+                WIDGET ELFSIGHT - AVIS GOOGLE
+                ============================================================
+                Pour activer le widget :
+                1. Allez sur https://elfsight.com/google-reviews-widget/
+                2. Creez un compte gratuit
+                3. Configurez votre widget en cherchant "Pizza Napoli Carpentras"
+                4. Filtrez pour afficher uniquement les avis 5 etoiles
+                5. Choisissez le layout "Carousel" ou "Grid"
+                6. Copiez votre Widget ID (ex: elfsight-app-xxxxxxxx)
+                7. Remplacez "VOTRE-WIDGET-ID" ci-dessous par votre ID
+                ============================================================
+            -->
+            <div class="google-reviews-widget">
+                <div class="elfsight-app-VOTRE-WIDGET-ID" data-elfsight-app-lazy></div>
+            </div>
+
+            <!-- Avis en dur (fallback si le widget n'est pas encore configure) -->
+            <noscript>
             <div class="avis-grid">
                 <div class="avis-card">
                     <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
@@ -441,7 +464,7 @@
                         <div class="avis-avatar">S</div>
                         <div>
                             <strong>Sophie M.</strong>
-                            <span>Cliente fidele</span>
+                            <span>Avis Google</span>
                         </div>
                     </div>
                 </div>
@@ -452,7 +475,7 @@
                         <div class="avis-avatar">T</div>
                         <div>
                             <strong>Thomas L.</strong>
-                            <span>Client regulier</span>
+                            <span>Avis Google</span>
                         </div>
                     </div>
                 </div>
@@ -467,6 +490,15 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            </noscript>
+
+            <div class="google-cta">
+                <!-- Remplacez # par le lien vers votre fiche Google Business -->
+                <a href="#" class="btn btn-secondary btn-google" target="_blank" rel="noopener">
+                    <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Voir tous nos avis sur Google
+                </a>
             </div>
         </div>
     </section>
@@ -620,6 +652,8 @@
         </div>
     </footer>
 
+    <!-- Elfsight Google Reviews Widget (remplacez VOTRE-WIDGET-ID dans la section avis) -->
+    <script src="https://static.elfsight.com/platform/platform.js" async></script>
     <script src="js/main.js"></script>
 </body>
 </html>
