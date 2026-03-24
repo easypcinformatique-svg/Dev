@@ -60,9 +60,9 @@ def _send_email_report(report: dict):
     date_str = datetime.now().strftime('%d/%m/%Y %H:%M')
 
     # Status emojis
-    pnl_icon = "\u2705" if pnl > 0 else ("\u26A0\uFE0F" if pnl == 0 else "\u274C")
-    dd_icon = "\u2705" if dd < 10 else ("\u26A0\uFE0F" if dd < 15 else "\u274C")
-    wr_icon = "\u2705" if wr >= 55 else ("\u26A0\uFE0F" if wr >= 45 else "\u274C")
+    pnl_icon = "\u2705" if pnl > 0 else ("\u26A0&#xFE0F;" if pnl == 0 else "\u274C")
+    dd_icon = "\u2705" if dd < 10 else ("\u26A0&#xFE0F;" if dd < 15 else "\u274C")
+    wr_icon = "\u2705" if wr >= 55 else ("\u26A0&#xFE0F;" if wr >= 45 else "\u274C")
 
     subject = f"Polymarket Bot - Rapport du {datetime.now().strftime('%d/%m/%Y')} | Equity: ${equity:.2f}"
 
@@ -1325,7 +1325,7 @@ tr:hover td { background: #1a2332; }
     </div>
     <div class="bot-about-bar" id="bot-about-bar">
         <div class="bot-about-item">
-            <span class="bot-about-icon">\u{1F916}</span>
+            <span class="bot-about-icon">&#x1F916;</span>
             <span><span class="bot-about-label">Type</span> <span class="bot-about-value">Hedge Fund Bot</span></span>
             <div class="about-tooltip">
                 <strong>AlphaPred</strong> est un bot de trading autonome pour <strong>Polymarket</strong> (marche de predictions).<br><br>
@@ -1333,45 +1333,45 @@ tr:hover td { background: #1a2332; }
             </div>
         </div>
         <div class="bot-about-item">
-            <span class="bot-about-icon">\u{1F9E0}</span>
+            <span class="bot-about-icon">&#x1F9E0;</span>
             <span><span class="bot-about-label">Strategie</span> <span class="bot-about-value" id="about-strategy">AlphaComposite</span></span>
             <div class="about-tooltip">
                 <strong>AlphaComposite</strong> combine 5 sous-strategies independantes :<br><br>
-                \u{2022} <strong>SmartMoney</strong> — detecte les flux de gros investisseurs<br>
-                \u{2022} <strong>Convergence</strong> — suit les tendances pre-resolution<br>
-                \u{2022} <strong>BayesianEdge</strong> — calcule les probabilites reelles<br>
-                \u{2022} <strong>AdaptiveMomentum</strong> — detecte les regimes de marche<br>
-                \u{2022} <strong>LiquidityEdge</strong> — exploite les contractions de spread<br><br>
+                &#x2022; <strong>SmartMoney</strong> &#x2014; detecte les flux de gros investisseurs<br>
+                &#x2022; <strong>Convergence</strong> &#x2014; suit les tendances pre-resolution<br>
+                &#x2022; <strong>BayesianEdge</strong> &#x2014; calcule les probabilites reelles<br>
+                &#x2022; <strong>AdaptiveMomentum</strong> &#x2014; detecte les regimes de marche<br>
+                &#x2022; <strong>LiquidityEdge</strong> &#x2014; exploite les contractions de spread<br><br>
                 Un trade n'est pris que si <strong>2+ strategies sont d'accord</strong>.
-                <div class="calc">Consensus = somme(poids × confiance) / poids_total<br>Minimum requis: 14%</div>
+                <div class="calc">Consensus = somme(poids &#xD7; confiance) / poids_total<br>Minimum requis: 14%</div>
             </div>
         </div>
         <div class="bot-about-item">
-            <span class="bot-about-icon">\u{1F6E1}</span>
+            <span class="bot-about-icon">&#x1F6E1;</span>
             <span><span class="bot-about-label">Risk</span> <span class="bot-about-value" id="about-risk">Multi-couche</span></span>
             <div class="about-tooltip">
                 <strong>Gestion du risque en 6 couches :</strong><br><br>
-                1. <strong>Stop-Loss</strong> — Coupe a -25% par position<br>
-                2. <strong>Take-Profit</strong> — Encaisse a +50%<br>
-                3. <strong>Trailing Stop adaptatif</strong> — Suit le prix (17%, ajuste selon volatilite)<br>
-                4. <strong>Limite perte journaliere</strong> — Max -5%/jour<br>
-                5. <strong>Drawdown max</strong> — Arret total a -15%<br>
-                6. <strong>Anti-tilt</strong> — Reduit la taille apres 3+ pertes consecutives
-                <div class="calc">Taille = Kelly × confiance × multiplicateur_risque<br>Si 4 pertes d'affilee: taille × 25%</div>
+                1. <strong>Stop-Loss</strong> &#x2014; Coupe a -25% par position<br>
+                2. <strong>Take-Profit</strong> &#x2014; Encaisse a +50%<br>
+                3. <strong>Trailing Stop adaptatif</strong> &#x2014; Suit le prix (17%, ajuste selon volatilite)<br>
+                4. <strong>Limite perte journaliere</strong> &#x2014; Max -5%/jour<br>
+                5. <strong>Drawdown max</strong> &#x2014; Arret total a -15%<br>
+                6. <strong>Anti-tilt</strong> &#x2014; Reduit la taille apres 3+ pertes consecutives
+                <div class="calc">Taille = Kelly &#xD7; confiance &#xD7; multiplicateur_risque<br>Si 4 pertes d'affilee: taille &#xD7; 25%</div>
             </div>
         </div>
         <div class="bot-about-item">
-            <span class="bot-about-icon">\u{1F4B0}</span>
+            <span class="bot-about-icon">&#x1F4B0;</span>
             <span><span class="bot-about-label">Frais</span> <span class="bot-about-value">2% Polymarket</span></span>
             <div class="about-tooltip">
                 <strong>Frais Polymarket = 2% par transaction</strong><br><br>
                 Chaque entree ET chaque sortie coute 2% du montant.<br>
                 Le bot calcule le PnL <strong>net apres frais</strong> pour chaque trade.
-                <div class="calc">Frais entree = taille × 2%<br>Frais sortie = shares × prix_sortie × 2%<br>PnL net = PnL brut - frais_entree - frais_sortie</div>
+                <div class="calc">Frais entree = taille &#xD7; 2%<br>Frais sortie = shares &#xD7; prix_sortie &#xD7; 2%<br>PnL net = PnL brut - frais_entree - frais_sortie</div>
             </div>
         </div>
         <div class="bot-about-item">
-            <span class="bot-about-icon">\u{23F1}</span>
+            <span class="bot-about-icon">&#x23F1;</span>
             <span><span class="bot-about-label">Scan</span> <span class="bot-about-value" id="about-scan">5 min</span></span>
             <div class="about-tooltip">
                 <strong>Frequence de scan des marches</strong><br><br>
@@ -1385,16 +1385,16 @@ tr:hover td { background: #1a2332; }
             </div>
         </div>
         <div class="bot-about-item">
-            <span class="bot-about-icon">\u{1F4E1}</span>
+            <span class="bot-about-icon">&#x1F4E1;</span>
             <span><span class="bot-about-label">Signaux</span> <span class="bot-about-value">Twitter + RSS</span></span>
             <div class="about-tooltip">
                 <strong>Sources de signaux externes</strong><br><br>
                 Le bot enrichit ses decisions avec :<br>
-                \u{2022} <strong>Twitter/X</strong> — Comptes cles (politique, crypto, economie)<br>
-                \u{2022} <strong>Nitter</strong> — Fallback si Twitter API down<br>
-                \u{2022} <strong>RSS</strong> — BBC, NYT, CoinDesk (dernier recours)<br><br>
+                &#x2022; <strong>Twitter/X</strong> &#x2014; Comptes cles (politique, crypto, economie)<br>
+                &#x2022; <strong>Nitter</strong> &#x2014; Fallback si Twitter API down<br>
+                &#x2022; <strong>RSS</strong> &#x2014; BBC, NYT, CoinDesk (dernier recours)<br><br>
                 Un signal Twitter pertinent <strong>booste la confiance de +30%</strong>.
-                <div class="calc">Si signal Twitter aligne avec strategie:<br>confiance = min(1.0, confiance + tweet_conf × 0.3)</div>
+                <div class="calc">Si signal Twitter aligne avec strategie:<br>confiance = min(1.0, confiance + tweet_conf &#xD7; 0.3)</div>
             </div>
         </div>
     </div>
@@ -1436,13 +1436,13 @@ tr:hover td { background: #1a2332; }
             <table id="positions-table">
                 <thead>
                     <tr>
-                        <th data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date et heure d'ouverture</strong> de la position.<br><br>Indique quand le bot a decide d'entrer sur ce marche. Plus une position est ancienne, plus elle a eu le temps d'evoluer.">Date</th>
-                        <th data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel la position est ouverte.<br><br>Chaque marche est une question oui/non (ex: 'Bitcoin depassera-t-il 100k ?'). Le bot choisit les marches les plus prometteurs.">Marche</th>
-                        <th data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> :<br><br><span style='color:#4ade80;font-weight:700'>YES</span> = Le bot parie que l'evenement va se produire (le prix va monter vers 1$)<br><br><span style='color:#f87171;font-weight:700'>NO</span> = Le bot parie que l'evenement ne se produira PAS (le prix va descendre vers 0$)">Side</th>
-                        <th data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi en dollars</strong> dans cette position.<br><br>Le bot dimensionne automatiquement chaque position selon le Kelly Criterion et les limites d'exposition configurees.">Taille</th>
-                        <th data-tip-title="Prix d'Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00).<br><br>Sur Polymarket, les prix representent des probabilites. Un prix de 0.60 signifie que le marche estime l'evenement a 60% de chances de se produire.">Entree</th>
-                        <th data-tip-title="Prix Actuel" data-tip-icon="\u{1F4CA}" data-tip-body="<strong>Prix actuel du marche</strong> en temps reel.<br><br>Si le prix actuel est superieur au prix d'entree (pour un YES) = la position est en gain. S'il est inferieur = la position est en perte.">Actuel</th>
-                        <th data-tip-title="PnL" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte non realise(e)</strong> sur cette position.<br><br>Ce montant change en temps reel avec le prix du marche. Il ne devient 'reel' que lorsque la position est fermee (vente).">PnL</th>
+                        <th data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date et heure d'ouverture</strong> de la position.<br><br>Indique quand le bot a decide d'entrer sur ce marche. Plus une position est ancienne, plus elle a eu le temps d'evoluer.">Date</th>
+                        <th data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel la position est ouverte.<br><br>Chaque marche est une question oui/non (ex: 'Bitcoin depassera-t-il 100k ?'). Le bot choisit les marches les plus prometteurs.">Marche</th>
+                        <th data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> :<br><br><span style='color:#4ade80;font-weight:700'>YES</span> = Le bot parie que l'evenement va se produire (le prix va monter vers 1$)<br><br><span style='color:#f87171;font-weight:700'>NO</span> = Le bot parie que l'evenement ne se produira PAS (le prix va descendre vers 0$)">Side</th>
+                        <th data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi en dollars</strong> dans cette position.<br><br>Le bot dimensionne automatiquement chaque position selon le Kelly Criterion et les limites d'exposition configurees.">Taille</th>
+                        <th data-tip-title="Prix d'Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00).<br><br>Sur Polymarket, les prix representent des probabilites. Un prix de 0.60 signifie que le marche estime l'evenement a 60% de chances de se produire.">Entree</th>
+                        <th data-tip-title="Prix Actuel" data-tip-icon="&#x1F4CA;" data-tip-body="<strong>Prix actuel du marche</strong> en temps reel.<br><br>Si le prix actuel est superieur au prix d'entree (pour un YES) = la position est en gain. S'il est inferieur = la position est en perte.">Actuel</th>
+                        <th data-tip-title="PnL" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte non realise(e)</strong> sur cette position.<br><br>Ce montant change en temps reel avec le prix du marche. Il ne devient 'reel' que lorsque la position est fermee (vente).">PnL</th>
                     </tr>
                 </thead>
                 <tbody id="positions-body"></tbody>
@@ -1461,14 +1461,14 @@ tr:hover td { background: #1a2332; }
         <table id="recent-trades-table">
             <thead>
                 <tr>
-                    <th data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date et heure de fermeture</strong> du trade.<br><br>Quand le bot a decide de vendre/fermer la position. Peut etre declenche par un take-profit, stop-loss, ou autre regle.">Date</th>
-                    <th data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue. La question complete est visible en survolant le texte dans le tableau.">Marche</th>
-                    <th data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80'>YES</span> = pari sur OUI | <span style='color:#f87171'>NO</span> = pari sur NON">Side</th>
-                    <th data-tip-title="Prix d'Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> au moment de l'ouverture du trade (entre 0 et 1).">Entree</th>
-                    <th data-tip-title="Prix de Sortie" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture du trade. La difference entre Sortie et Entree determine le profit ou la perte.">Sortie</th>
-                    <th data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. C'est la mise de depart.">Taille</th>
-                    <th data-tip-title="PnL" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte realise(e)</strong> sur ce trade (net de frais).<br><br><span style='color:#4ade80'>Vert</span> = gain | <span style='color:#f87171'>Rouge</span> = perte">PnL</th>
-                    <th data-tip-title="Raison" data-tip-icon="\u{1F3F3}\uFE0F" data-tip-body="<strong>Motif de fermeture du trade</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint<br><strong>stop_loss</strong> = Limite de perte declenchee<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
+                    <th data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date et heure de fermeture</strong> du trade.<br><br>Quand le bot a decide de vendre/fermer la position. Peut etre declenche par un take-profit, stop-loss, ou autre regle.">Date</th>
+                    <th data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue. La question complete est visible en survolant le texte dans le tableau.">Marche</th>
+                    <th data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80'>YES</span> = pari sur OUI | <span style='color:#f87171'>NO</span> = pari sur NON">Side</th>
+                    <th data-tip-title="Prix d'Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> au moment de l'ouverture du trade (entre 0 et 1).">Entree</th>
+                    <th data-tip-title="Prix de Sortie" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture du trade. La difference entre Sortie et Entree determine le profit ou la perte.">Sortie</th>
+                    <th data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. C'est la mise de depart.">Taille</th>
+                    <th data-tip-title="PnL" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte realise(e)</strong> sur ce trade (net de frais).<br><br><span style='color:#4ade80'>Vert</span> = gain | <span style='color:#f87171'>Rouge</span> = perte">PnL</th>
+                    <th data-tip-title="Raison" data-tip-icon="&#x1F3F3;&#xFE0F;" data-tip-body="<strong>Motif de fermeture du trade</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint<br><strong>stop_loss</strong> = Limite de perte declenchee<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
                 </tr>
             </thead>
             <tbody id="trades-body"></tbody>
@@ -1488,14 +1488,14 @@ tr:hover td { background: #1a2332; }
         <table id="history-trades-table">
             <thead>
                 <tr>
-                    <th data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date de fermeture</strong> du trade.">Date</th>
-                    <th data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue.">Marche</th>
-                    <th data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> : YES ou NO.">Side</th>
-                    <th data-tip-title="Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> de la position.">Entree</th>
-                    <th data-tip-title="Sortie" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix de vente</strong> de la position.">Sortie</th>
-                    <th data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi</strong> en dollars.">Taille</th>
-                    <th data-tip-title="PnL" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte realise(e)</strong> net de frais.">PnL</th>
-                    <th data-tip-title="Raison" data-tip-icon="\u{1F3F3}\uFE0F" data-tip-body="<strong>Motif de fermeture</strong> : take_profit, stop_loss, trailing_stop, expiration.">Raison</th>
+                    <th data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date de fermeture</strong> du trade.">Date</th>
+                    <th data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue.">Marche</th>
+                    <th data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> : YES ou NO.">Side</th>
+                    <th data-tip-title="Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> de la position.">Entree</th>
+                    <th data-tip-title="Sortie" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix de vente</strong> de la position.">Sortie</th>
+                    <th data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi</strong> en dollars.">Taille</th>
+                    <th data-tip-title="PnL" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte realise(e)</strong> net de frais.">PnL</th>
+                    <th data-tip-title="Raison" data-tip-icon="&#x1F3F3;&#xFE0F;" data-tip-body="<strong>Motif de fermeture</strong> : take_profit, stop_loss, trailing_stop, expiration.">Raison</th>
                 </tr>
             </thead>
             <tbody id="history-body"></tbody>
@@ -1524,7 +1524,7 @@ tr:hover td { background: #1a2332; }
     <!-- Confirmation modal -->
     <div class="modal-overlay" id="go-live-modal">
         <div class="modal-box">
-            <h3>\u{26A0}\uFE0F Confirmation passage EN LIGNE</h3>
+            <h3>&#x26A0;&#xFE0F; Confirmation passage EN LIGNE</h3>
             <p style="text-align:center;color:#9ca3af;font-size:13px;margin-bottom:20px;">
                 Tu es sur le point de passer en mode <strong style="color:#f87171;">ARGENT REEL</strong>.<br>Verifie une derniere fois :
             </p>
@@ -1654,28 +1654,28 @@ function truncate(s, len) {
 function renderMetrics(data) {
     const o = data.overview || {};
     const cards = [
-        { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '\u{1F4B0}',
+        { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '&#x1F4B0;',
           tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br><br>C\'est la <strong>valeur totale de ton portefeuille</strong> a cet instant precis. Elle monte quand tes positions gagnent, elle descend quand elles perdent.<br><br>C\'est le chiffre le plus important : il resume la sante globale de ton compte.',
           ex: 'Tu as 700$ de cash + 2 positions de 150$ chacune + 30$ de gains latents<br>= Equity de <strong>1 030$</strong>' },
-        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
+        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '&#x1F4B5;',
           tip: '<strong>L\'argent disponible</strong> sur ton compte qui n\'est <strong>pas investi</strong> dans des positions ouvertes.<br><br>C\'est ta reserve pour ouvrir de nouvelles positions. Plus il est bas, moins tu peux ouvrir de trades. Le bot gere automatiquement l\'allocation.',
           ex: 'Equity totale de 1000$, 300$ investis dans 3 positions<br>= <strong>700$ de cash disponible</strong> pour de nouveaux trades' },
-        { label: 'PnL Net (apr\u00e8s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '\u{1F4CA}', expanded: true,
+        { label: 'PnL Net (apr&#xE8;s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '&#x1F4CA;', expanded: true,
           tip: '<strong>Profit and Loss NET</strong> = Gains - Pertes - Frais<br><br>C\'est ton <strong>vrai benefice</strong> depuis le lancement du bot, une fois les frais Polymarket deduits (2% par trade).<br><br><strong>Vert</strong> = tu gagnes de l\'argent<br><strong>Rouge</strong> = tu en perds',
           ex: 'Gains bruts: +2 286$, Frais: -119$<br>= <strong>PnL Net: +2 167$</strong> (ce que tu gagnes vraiment)' },
-        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
+        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '&#x1F4C5;',
           tip: '<strong>Profit et perte du jour</strong> (depuis minuit UTC).<br><br>Se reinitialise a <strong>00h00 chaque jour</strong>. Le bot a une limite de perte journaliere configurable. Si cette limite est depassee, il arrete automatiquement de trader pour proteger ton capital.',
           ex: '+12$ = le bot a gagne 12$ aujourd\'hui<br>-30$ = il a perdu 30$ depuis minuit<br>Limite par defaut : -50$ = arret automatique' },
-        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '\u{23F3}',
+        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '&#x23F3;',
           tip: '<strong>Gains ou pertes des positions ENCORE OUVERTES</strong>.<br><br>Ce montant n\'est <strong>pas encore encaisse</strong>. Tant que la position n\'est pas fermee, ce PnL peut changer a tout moment : un gain de +20$ peut devenir une perte de -10$ si le marche se retourne.',
           ex: 'Position ouverte a 0.40$, prix actuel 0.55$<br>= +15$ de gain non realise<br>Mais si le prix retombe a 0.35$ = -5$ de perte latente' },
-        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '\u{1F3AF}',
+        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '&#x1F3AF;',
           tip: '<strong>Montant total investi</strong> dans tes positions ouvertes.<br><br>L\'exposition en % montre <strong>quelle part de ton capital est "en jeu"</strong>. Le bot limite l\'exposition max (par defaut 30%) pour eviter de tout risquer en meme temps.',
           ex: 'Equity de 1000$, 3 positions de 100$ chacune<br>= Exposition: <strong>300$ (30%)</strong><br>Il reste 70% du capital en securite' },
-        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '\u{1F4C9}',
+        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '&#x1F4C9;',
           tip: '<strong>Baisse depuis le plus haut historique</strong> de ton portefeuille.<br><br>Mesure "combien tu as perdu" depuis ton meilleur moment. C\'est un indicateur de risque cle.<br><br><strong>0-5%</strong> = Normal<br><strong>5-10%</strong> = Attention<br><strong>10-15%</strong> = Danger, le bot ralentit<br><strong>>15%</strong> = Le bot arrete TOUT',
           ex: 'Peak a 1 100$, equity actuelle 1 050$<br>= Drawdown de <strong>4.5%</strong> (normal)<br>A 15% (935$), le bot coupe toutes les positions' },
-        { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '\u{1F3D4}',
+        { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '&#x1F3D4;',
           tip: '<strong>Record historique</strong> de la valeur de ton portefeuille.<br><br>C\'est le <strong>plus haut sommet</strong> jamais atteint. Il sert de reference pour calculer le drawdown. L\'objectif est de toujours depasser ce chiffre !',
           ex: 'Peak 1 100$ = a un moment, ton portefeuille valait 1 100$<br>C\'est <strong>le record a battre</strong>. Chaque nouveau peak = le bot performe bien.' },
     ];
@@ -1896,40 +1896,40 @@ function renderPositions(data) {
 function renderStats(data) {
     const s = data.trade_stats || {};
     const rows = [
-        ['Total Trades', s.total_trades || 0, '\u{1F4CA}',
+        ['Total Trades', s.total_trades || 0, '&#x1F4CA;',
          'Nombre total de trades <strong>fermes</strong> (gagnants + perdants) depuis le lancement du bot.',
          '51 trades = le bot a ouvert et ferme 51 positions depuis le debut'],
-        ['Win Rate', fmt(s.win_rate, 1) + '%', '\u{1F3AF}',
+        ['Win Rate', fmt(s.win_rate, 1) + '%', '&#x1F3AF;',
          '<strong>Pourcentage de trades gagnants</strong> sur le total.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = Le bot perd plus souvent qu\'il gagne',
          '60% = sur 10 trades, 6 sont gagnants et 4 sont perdants'],
-        ['Trades Gagnants', s.winning_trades || 0, '\u{2705}',
+        ['Trades Gagnants', s.winning_trades || 0, '&#x2705;',
          'Nombre de trades qui ont <strong>rapporte de l\'argent</strong> (PnL > 0$). Plus ce chiffre est eleve par rapport aux perdants, mieux c\'est.',
          '35 trades gagnants sur 51 = le bot gagne dans 69% des cas'],
-        ['Trades Perdants', s.losing_trades || 0, '\u{274C}',
+        ['Trades Perdants', s.losing_trades || 0, '&#x274C;',
          'Nombre de trades qui ont <strong>coute de l\'argent</strong> (PnL < 0$). C\'est normal d\'en avoir, l\'important est que les gains compensent les pertes.',
          '16 trades perdants sur 51 = seulement 31% de pertes, c\'est bon'],
-        ['Gain Moyen', fmtUsd(s.avg_win), '\u{1F4B0}',
+        ['Gain Moyen', fmtUsd(s.avg_win), '&#x1F4B0;',
          'Combien un <strong>trade gagnant rapporte en moyenne</strong>. Plus c\'est eleve, mieux c\'est. Idealement, le gain moyen doit etre superieur a la perte moyenne.',
          '+85$ = chaque trade positif gagne 85$ en moyenne'],
-        ['Perte Moyenne', fmtUsd(s.avg_loss), '\u{1F4B8}',
+        ['Perte Moyenne', fmtUsd(s.avg_loss), '&#x1F4B8;',
          'Combien un <strong>trade perdant coute en moyenne</strong>. Le stop-loss limite cette valeur. Idealement, la perte moyenne doit etre inferieure au gain moyen.',
          '-25$ = chaque trade negatif perd 25$ en moyenne'],
-        ['Profit Factor', fmt(s.profit_factor), '\u{2696}\uFE0F',
+        ['Profit Factor', fmt(s.profit_factor), '&#x2696;&#xFE0F;',
          '<strong>Gains totaux / Pertes totales</strong>. C\'est LE ratio de rentabilite.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable (le bot perd de l\'argent)',
          '1.80 = pour chaque 1$ perdu, le bot gagne 1.80$'],
-        ['Plus Gros Gain', fmtUsd(s.largest_win), '\u{1F3C6}',
+        ['Plus Gros Gain', fmtUsd(s.largest_win), '&#x1F3C6;',
          'Le <strong>meilleur trade</strong> jamais realise par le bot. Montre le potentiel maximum sur un seul trade.',
          '+250$ sur un seul trade = le meilleur coup du bot'],
-        ['Plus Grosse Perte', fmtUsd(s.largest_loss), '\u{1F4A5}',
+        ['Plus Grosse Perte', fmtUsd(s.largest_loss), '&#x1F4A5;',
          'Le <strong>pire trade</strong> jamais realise. Montre le risque maximum. Le stop-loss devrait limiter ce chiffre.',
          '-80$ = la plus grosse perte, limitee par le stop-loss a 10%'],
-        ['Marches Scannes', data.markets_scanned || 0, '\u{1F50D}',
+        ['Marches Scannes', data.markets_scanned || 0, '&#x1F50D;',
          'Nombre de marches Polymarket <strong>analyses lors du dernier scan</strong>. Le bot filtre par volume et liquidite pour ne garder que les marches interessants.',
          '150 marches scannes, 12 retenus = le bot est selectif'],
-        ['Signaux Generes', data.signals_generated || 0, '\u{1F4E1}',
+        ['Signaux Generes', data.signals_generated || 0, '&#x1F4E1;',
          'Nombre total de <strong>signaux de trading detectes</strong> depuis le debut. Un signal ne mene pas toujours a un trade (filtrage, capital insuffisant, exposition max...).',
          '200 signaux, 51 trades = le bot ne prend que les meilleures opportunites'],
-        ['Iteration', data.iteration || 0, '\u{1F504}',
+        ['Iteration', data.iteration || 0, '&#x1F504;',
          'Nombre de <strong>cycles complets du bot</strong>. Chaque iteration : scan des marches, analyse des signaux, decisions de trading, mise a jour des positions.',
          'Iteration 340 = le bot a fait 340 cycles d\'analyse depuis le lancement'],
     ];
@@ -2190,7 +2190,7 @@ const ValidationChecker = {
         // Steps list
         const container = document.getElementById('validation-steps');
         container.innerHTML = steps.map((s, i) => {
-            const icon = s.valid ? '\u2705' : (s.pending ? '\u23F3' : '\u{1F534}');
+            const icon = s.valid ? '\u2705' : (s.pending ? '\u23F3' : '&#x1F534;');
             const cls = s.valid ? 'step-valid' : (s.pending ? 'step-pending' : 'step-invalid');
 
             if (s.isManual) {
@@ -2238,7 +2238,7 @@ const ValidationChecker = {
         } else {
             btn.disabled = true;
             btn.className = 'go-live-btn';
-            btn.innerHTML = 'Passer EN LIGNE \u{1F512} Verrouille';
+            btn.innerHTML = 'Passer EN LIGNE &#x1F512; Verrouille';
             btn.onclick = null;
         }
     },
@@ -2369,14 +2369,14 @@ setInterval(fetchAndRender, 10000);
 // ================================================================
 
 const FEED_ICONS = {
-    iteration: '\u{1F504}',
-    scan: '\u{1F50D}',
-    signal: '\u{1F4E1}',
-    evaluate: '\u{1F9E0}',
-    open: '\u{1F7E2}',
-    close: '\u{1F534}',
-    resolved: '\u{1F3C1}',
-    timeout: '\u{23F0}',
+    iteration: '&#x1F504;',
+    scan: '&#x1F50D;',
+    signal: '&#x1F4E1;',
+    evaluate: '&#x1F9E0;',
+    open: '&#x1F7E2;',
+    close: '&#x1F534;',
+    resolved: '&#x1F3C1;',
+    timeout: '&#x23F0;',
 };
 
 let feedEventCount = 0;
@@ -2396,7 +2396,7 @@ function addFeedEvent(event) {
     div.className = 'feed-event new-event';
     div.setAttribute('data-type', event.type || 'info');
 
-    const icon = FEED_ICONS[event.type] || '\u{2139}\uFE0F';
+    const icon = FEED_ICONS[event.type] || '&#x2139;&#xFE0F;';
     div.innerHTML = `<span class="feed-time">${event.time || ''}</span><span class="feed-icon">${icon}</span><span class="feed-msg">${escapeHtml(event.message || '')}</span>`;
 
     body.appendChild(div);
@@ -2957,11 +2957,11 @@ function renderSettings() {
 }
 
 const ICONS = {
-    dollar: '\u{1F4B0}', target: '\u{1F3AF}', shield: '\u{1F6E1}', layers: '\u{1F4DA}',
-    chart: '\u{1F4CA}', droplet: '\u{1F4A7}', arrows: '\u{2194}\uFE0F', clock: '\u{23F0}',
-    alert: '\u{26A0}\uFE0F', toggle: '\u{1F504}', brain: '\u{1F9E0}', users: '\u{1F465}',
-    filter: '\u{1F50D}', trendUp: '\u{1F4C8}', trendDown: '\u{1F4C9}', scissors: '\u{2702}\uFE0F',
-    trophy: '\u{1F3C6}',
+    dollar: '&#x1F4B0;', target: '&#x1F3AF;', shield: '&#x1F6E1;', layers: '&#x1F4DA;',
+    chart: '&#x1F4CA;', droplet: '&#x1F4A7;', arrows: '&#x2194;&#xFE0F;', clock: '&#x23F0;',
+    alert: '&#x26A0;&#xFE0F;', toggle: '&#x1F504;', brain: '&#x1F9E0;', users: '&#x1F465;',
+    filter: '&#x1F50D;', trendUp: '&#x1F4C8;', trendDown: '&#x1F4C9;', scissors: '&#x2702;&#xFE0F;',
+    trophy: '&#x1F3C6;',
 };
 
 function createParamRow(p) {
@@ -2971,7 +2971,7 @@ function createParamRow(p) {
 
     const displayValue = p.type === 'percent' ? (p.value * 100).toFixed(1) + '%' : p.value;
     const displayDefault = p.type === 'percent' ? (p.default * 100).toFixed(1) + '%' : p.default;
-    const icon = ICONS[p.icon] || '\u{2699}\uFE0F';
+    const icon = ICONS[p.icon] || '&#x2699;&#xFE0F;';
     const tooltipId = 'tip-' + p.key;
 
     // Info
@@ -3436,16 +3436,16 @@ th { cursor: help; }
                 <thead>
                     <tr>
                         <th data-sort="idx">#</th>
-                        <th data-sort="date" data-tip-title="Date" data-tip-icon="\u{1F4C5}" data-tip-body="<strong>Date d'ouverture</strong> du trade. Quand le bot a entre sur ce marche.">Date</th>
-                        <th data-sort="market" data-tip-title="Marche" data-tip-icon="\u{1F3E6}" data-tip-body="<strong>Question du marche Polymarket</strong>. Survolez le texte dans le tableau pour voir la question complete.">Marche</th>
-                        <th data-sort="side" data-tip-title="Side" data-tip-icon="\u{2194}\uFE0F" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80;font-weight:700'>YES</span> = pari que l'evenement se produit<br><span style='color:#f87171;font-weight:700'>NO</span> = pari que l'evenement ne se produit PAS">Side</th>
-                        <th data-sort="entry" data-tip-title="Prix d'Entree" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00). Represente la probabilite estimee par le marche au moment de l'achat.">Entree</th>
-                        <th data-sort="exit" data-tip-title="Prix de Sortie" data-tip-icon="\u{1F3F7}\uFE0F" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture. La difference Sortie - Entree determine le profit ou la perte.">Sortie</th>
-                        <th data-sort="size" data-tip-title="Taille" data-tip-icon="\u{1F4B5}" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. Dimensionne automatiquement par le bot selon le Kelly Criterion.">Taille</th>
-                        <th data-sort="fees" data-tip-title="Frais" data-tip-icon="\u{1F4B8}" data-tip-body="<strong>Frais Polymarket</strong> preleves sur ce trade (2% du montant engage). Ces frais sont deduits du PnL brut pour obtenir le PnL net.">Frais</th>
-                        <th data-sort="pnl" data-tip-title="PnL Net" data-tip-icon="\u{1F4B0}" data-tip-body="<strong>Profit ou perte NET</strong> apres deduction des frais.<br><br><span style='color:#4ade80'>Vert</span> = trade gagnant<br><span style='color:#f87171'>Rouge</span> = trade perdant">PnL Net</th>
-                        <th data-sort="pct" data-tip-title="Rendement %" data-tip-icon="\u{1F4CA}" data-tip-body="<strong>Rendement en pourcentage</strong> du trade par rapport au montant investi. Ex: +80% sur 100$ = +80$ de gain.">%</th>
-                        <th data-sort="reason" data-tip-title="Raison" data-tip-icon="\u{1F3F3}\uFE0F" data-tip-body="<strong>Motif de fermeture</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint (+20% par defaut)<br><strong>stop_loss</strong> = Limite de perte declenchee (-10% par defaut)<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
+                        <th data-sort="date" data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date d'ouverture</strong> du trade. Quand le bot a entre sur ce marche.">Date</th>
+                        <th data-sort="market" data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Question du marche Polymarket</strong>. Survolez le texte dans le tableau pour voir la question complete.">Marche</th>
+                        <th data-sort="side" data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80;font-weight:700'>YES</span> = pari que l'evenement se produit<br><span style='color:#f87171;font-weight:700'>NO</span> = pari que l'evenement ne se produit PAS">Side</th>
+                        <th data-sort="entry" data-tip-title="Prix d'Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00). Represente la probabilite estimee par le marche au moment de l'achat.">Entree</th>
+                        <th data-sort="exit" data-tip-title="Prix de Sortie" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture. La difference Sortie - Entree determine le profit ou la perte.">Sortie</th>
+                        <th data-sort="size" data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. Dimensionne automatiquement par le bot selon le Kelly Criterion.">Taille</th>
+                        <th data-sort="fees" data-tip-title="Frais" data-tip-icon="&#x1F4B8;" data-tip-body="<strong>Frais Polymarket</strong> preleves sur ce trade (2% du montant engage). Ces frais sont deduits du PnL brut pour obtenir le PnL net.">Frais</th>
+                        <th data-sort="pnl" data-tip-title="PnL Net" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte NET</strong> apres deduction des frais.<br><br><span style='color:#4ade80'>Vert</span> = trade gagnant<br><span style='color:#f87171'>Rouge</span> = trade perdant">PnL Net</th>
+                        <th data-sort="pct" data-tip-title="Rendement %" data-tip-icon="&#x1F4CA;" data-tip-body="<strong>Rendement en pourcentage</strong> du trade par rapport au montant investi. Ex: +80% sur 100$ = +80$ de gain.">%</th>
+                        <th data-sort="reason" data-tip-title="Raison" data-tip-icon="&#x1F3F3;&#xFE0F;" data-tip-body="<strong>Motif de fermeture</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint (+20% par defaut)<br><strong>stop_loss</strong> = Limite de perte declenchee (-10% par defaut)<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
                     </tr>
                 </thead>
                 <tbody id="trades-body"></tbody>
@@ -3564,25 +3564,25 @@ function renderKPIs(data) {
 
     const cards = [
         { label: 'PnL Brut', value: fmtUsd(totalPnlGross), cls: totalPnlGross >= 0 ? 'positive' : 'negative',
-          icon: '\u{1F4B0}', tip: '<strong>Gains totaux AVANT deduction des frais</strong>.<br><br>C\'est la somme de tous les profits et pertes de tes trades, sans compter les frais Polymarket.', tipEx: 'PnL Brut +2 286$ = le bot a genere 2 286$ de gains bruts avant frais' },
+          icon: '&#x1F4B0;', tip: '<strong>Gains totaux AVANT deduction des frais</strong>.<br><br>C\'est la somme de tous les profits et pertes de tes trades, sans compter les frais Polymarket.', tipEx: 'PnL Brut +2 286$ = le bot a genere 2 286$ de gains bruts avant frais' },
         { label: 'Frais Totaux', value: fmtUsd(totalFees), cls: 'negative',
-          icon: '\u{1F4B8}', tip: '<strong>Total des frais Polymarket</strong> preleves sur tous tes trades.<br><br>Polymarket applique des frais de <strong>2%</strong> sur le montant engage de chaque trade. Ces frais sont deduits automatiquement.', tipEx: '119$ de frais sur 5 963$ engages au total = 2% de frais' },
+          icon: '&#x1F4B8;', tip: '<strong>Total des frais Polymarket</strong> preleves sur tous tes trades.<br><br>Polymarket applique des frais de <strong>2%</strong> sur le montant engage de chaque trade. Ces frais sont deduits automatiquement.', tipEx: '119$ de frais sur 5 963$ engages au total = 2% de frais' },
         { label: 'PnL Net', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative',
-          icon: '\u{1F4CA}', tip: '<strong>Profit REEL apres frais</strong> = PnL Brut - Frais.<br><br>C\'est le chiffre le plus important : c\'est ce que tu gagnes (ou perds) vraiment, apres toutes les deductions.', tipEx: 'PnL Brut 2 286$ - Frais 119$ = <strong>PnL Net 2 167$</strong>' },
+          icon: '&#x1F4CA;', tip: '<strong>Profit REEL apres frais</strong> = PnL Brut - Frais.<br><br>C\'est le chiffre le plus important : c\'est ce que tu gagnes (ou perds) vraiment, apres toutes les deductions.', tipEx: 'PnL Brut 2 286$ - Frais 119$ = <strong>PnL Net 2 167$</strong>' },
         { label: 'Total Trades', value: s.total_trades || trades.length, cls: 'neutral',
-          icon: '\u{1F4CA}', tip: '<strong>Nombre total de trades fermes</strong> (gagnants + perdants). Plus ce nombre est eleve, plus les statistiques sont fiables.' },
+          icon: '&#x1F4CA;', tip: '<strong>Nombre total de trades fermes</strong> (gagnants + perdants). Plus ce nombre est eleve, plus les statistiques sont fiables.' },
         { label: 'Win Rate', value: fmt(s.win_rate, 1) + '%', cls: (s.win_rate || 0) >= 50 ? 'positive' : 'negative',
-          icon: '\u{1F3AF}', tip: '<strong>Pourcentage de trades gagnants</strong>.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = A surveiller' },
+          icon: '&#x1F3AF;', tip: '<strong>Pourcentage de trades gagnants</strong>.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = A surveiller' },
         { label: 'Profit Factor', value: fmt(s.profit_factor), cls: (s.profit_factor || 0) >= 1 ? 'positive' : 'negative',
-          icon: '\u{2696}\uFE0F', tip: '<strong>Gains totaux / Pertes totales</strong>.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable' },
+          icon: '&#x2696;&#xFE0F;', tip: '<strong>Gains totaux / Pertes totales</strong>.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable' },
         { label: 'Gain Moyen', value: fmtUsd(s.avg_win), cls: 'positive',
-          icon: '\u{1F4B0}', tip: '<strong>Montant moyen gagne</strong> par trade gagnant. Idealement superieur a la perte moyenne.' },
+          icon: '&#x1F4B0;', tip: '<strong>Montant moyen gagne</strong> par trade gagnant. Idealement superieur a la perte moyenne.' },
         { label: 'Perte Moyenne', value: fmtUsd(s.avg_loss), cls: 'negative',
-          icon: '\u{1F4B8}', tip: '<strong>Montant moyen perdu</strong> par trade perdant. Limite par le stop-loss configure.' },
+          icon: '&#x1F4B8;', tip: '<strong>Montant moyen perdu</strong> par trade perdant. Limite par le stop-loss configure.' },
         { label: 'Esperance/Trade', value: fmtUsd(expectancy), cls: expectancy >= 0 ? 'positive' : 'negative',
-          icon: '\u{1F9E0}', tip: '<strong>Gain moyen attendu par trade</strong> en combinant le win rate et les gains/pertes moyens.<br><br>Positif = le bot est statistiquement rentable sur le long terme.', tipEx: '(Win% x Gain moyen) + (Loss% x Perte moy.) = esperance par trade' },
+          icon: '&#x1F9E0;', tip: '<strong>Gain moyen attendu par trade</strong> en combinant le win rate et les gains/pertes moyens.<br><br>Positif = le bot est statistiquement rentable sur le long terme.', tipEx: '(Win% x Gain moyen) + (Loss% x Perte moy.) = esperance par trade' },
         { label: 'Max Drawdown', value: fmt(maxDD, 1) + '%', cls: 'negative',
-          icon: '\u{1F4C9}', tip: '<strong>Plus grosse baisse</strong> depuis un sommet de PnL cumule.<br><br>Mesure le pire moment traverse. Plus c\'est bas, mieux c\'est. Au-dessus de 15%, le bot arrete tout.' },
+          icon: '&#x1F4C9;', tip: '<strong>Plus grosse baisse</strong> depuis un sommet de PnL cumule.<br><br>Mesure le pire moment traverse. Plus c\'est bas, mieux c\'est. Au-dessus de 15%, le bot arrete tout.' },
     ];
 
     const kpiGrid = document.getElementById('kpi-grid');
