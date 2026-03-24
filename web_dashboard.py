@@ -1296,6 +1296,67 @@ tr:hover td { background: #1a2332; }
 .about-tooltip strong { color: #a5b4fc; }
 .about-tooltip .calc { background: #111827; border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-family: monospace; font-size: 11px; color: #4ade80; }
 
+/* ======== Bot Explainer (collapsible) ======== */
+.bot-explainer {
+    background: linear-gradient(135deg, #0c1425 0%, #111b30 100%);
+    border: 1px solid #1e3a5f;
+    border-radius: 12px;
+    margin: 16px 24px 0;
+    overflow: hidden;
+}
+.bot-explainer.open .bot-explainer-content { display: flex; }
+.bot-explainer-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    color: #a5b4fc;
+    font-weight: 600;
+    font-size: 14px;
+    user-select: none;
+    transition: background 0.2s;
+}
+.bot-explainer-toggle:hover { background: rgba(99,102,241,0.08); }
+.explainer-arrow { font-size: 12px; color: #6b7280; }
+.bot-explainer-content {
+    display: none;
+    gap: 30px;
+    padding: 0 20px 20px;
+    border-top: 1px solid #1e3a5f;
+}
+.explainer-col { flex: 1; min-width: 280px; }
+.explainer-col p { font-size: 13px; color: #9ca3af; line-height: 1.7; }
+.explainer-col strong { color: #e0e6ed; }
+.explainer-steps {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+    margin: 0;
+}
+.explainer-steps li {
+    counter-increment: step;
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 6px 0 6px 0;
+    line-height: 1.5;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.explainer-steps li::before {
+    content: counter(step) '.';
+    color: #6366f1;
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 18px;
+}
+
+@media (max-width: 768px) {
+    .bot-explainer-content { flex-direction: column; }
+    .bot-explainer { margin: 12px 12px 0; }
+}
+
 @media (max-width: 640px) {
     .bot-hero-top { flex-direction: column; gap: 10px; text-align: center; }
     .bot-about-bar { flex-wrap: wrap; }
@@ -1396,6 +1457,35 @@ tr:hover td { background: #1a2332; }
                 Un signal Twitter pertinent <strong>booste la confiance de +30%</strong>.
                 <div class="calc">Si signal Twitter aligne avec strategie:<br>confiance = min(1.0, confiance + tweet_conf &#xD7; 0.3)</div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section depliable "Qu'est-ce que AlphaPred ?" -->
+<div class="bot-explainer" id="bot-explainer">
+    <div class="bot-explainer-toggle" onclick="var e=document.getElementById('bot-explainer'),a=document.getElementById('explainer-arrow');e.classList.toggle('open');a.innerHTML=e.classList.contains('open')?'&#x25B2; Masquer':'&#x25BC; Afficher';">
+        <span>&#x25C6; Qu'est-ce que AlphaPred ?</span>
+        <span class="explainer-arrow" id="explainer-arrow">&#x25BC; Afficher</span>
+    </div>
+    <div class="bot-explainer-content">
+        <div class="explainer-col">
+            <h4 style="color:#6366f1;margin-bottom:10px;">Le concept</h4>
+            <p>AlphaPred est un <strong>bot de trading autonome</strong> pour <strong style="color:#a78bfa;">Polymarket</strong> (marche de predictions). Il analyse en continu les marches de predictions, detecte les <strong style="color:#4ade80;">opportunites sous-evaluees</strong> via 5 sous-strategies IA, et execute automatiquement des trades avec un risk management institutionnel.</p>
+            <p style="margin-top:10px;">L'idee : quand la probabilite estimee par le bot differe significativement du prix du marche, il y a une <strong style="color:#fbbf24;">edge exploitable</strong>. Le bot achete a prix bas et revend quand le marche corrige vers la vraie probabilite, generant un profit.</p>
+            <p style="margin-top:10px;">Le bot detecte ces opportunites en <strong>&lt;5 minutes</strong> et execute un trade automatique avec une gestion du risque stricte (stop-loss, trailing stop, limites d'exposition).</p>
+        </div>
+        <div class="explainer-col">
+            <h4 style="color:#6366f1;margin-bottom:10px;">Le pipeline (en 8 etapes)</h4>
+            <ol class="explainer-steps">
+                <li><strong style="color:#38bdf8;">Le Scanner</strong> analyse 100+ marches Polymarket actifs (volume, liquidite, spread)</li>
+                <li><strong style="color:#38bdf8;">Le Filtre</strong> retient ~20 marches eligibles par scan (criteres de qualite)</li>
+                <li><strong style="color:#a78bfa;">AlphaComposite</strong> evalue chaque marche via 5 sous-strategies independantes</li>
+                <li><strong style="color:#a78bfa;">Le Consensus</strong> ne retient que les signaux ou 2+ strategies sont d'accord (min 14%)</li>
+                <li><strong style="color:#fbbf24;">Le Risk Assessor</strong> evalue le risque de chaque signal (volatilite, correlation, drawdown)</li>
+                <li><strong style="color:#fbbf24;">Le Position Sizer</strong> calcule la taille optimale via Kelly Criterion (max 5% par trade)</li>
+                <li><strong style="color:#4ade80;">L'Executeur</strong> place l'ordre sur Polymarket via l'API CLOB</li>
+                <li><strong style="color:#4ade80;">Le Position Manager</strong> gere les stop-loss, take-profit et trailing stops 24/7</li>
+            </ol>
         </div>
     </div>
 </div>
