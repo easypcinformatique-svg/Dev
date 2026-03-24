@@ -4,7 +4,7 @@
 
 set -e
 
-REPO_URL="https://github.com/easypcinformatique-svg/livraison-pizza-carpentras.git"
+REPO_URL="https://github.com/carpentraspizzanapoli-design/livraison-pizza-carpentras.git"
 SITE_DIR="$(cd "$(dirname "$0")/livraison-site" && pwd)"
 TEMP_DIR=$(mktemp -d)
 
@@ -47,7 +47,7 @@ echo "   - Type A : 185.199.108.153"
 echo "   - Type A : 185.199.109.153"
 echo "   - Type A : 185.199.110.153"
 echo "   - Type A : 185.199.111.153"
-echo "   - OU Type CNAME : livraison-pizza-carpentras.fr -> easypcinformatique-svg.github.io"
+echo "   - OU Type CNAME : livraison-pizza-carpentras.fr -> carpentraspizzanapoli-design.github.io"
 echo "5. Active 'Enforce HTTPS' dans les settings GitHub Pages"
 
 # Cleanup
