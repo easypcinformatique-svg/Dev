@@ -112,7 +112,8 @@ class Database:
     # ── Signals ──────────────────────────────────────────────
 
     async def insert_signal(self, s: dict[str, Any]) -> None:
-        assert self._pool
+        if not self._pool:
+            return
         await self._pool.execute(
             """INSERT INTO signals (id, token_symbol, token_name, exchange,
                listing_time, detection_time, source, confidence, raw_text,
@@ -128,7 +129,8 @@ class Database:
         )
 
     async def get_recent_signals(self, limit: int = 50) -> list[dict[str, Any]]:
-        assert self._pool
+        if not self._pool:
+            return []
         rows = await self._pool.fetch(
             "SELECT * FROM signals ORDER BY detection_time DESC LIMIT $1", limit
         )
@@ -137,7 +139,8 @@ class Database:
     # ── Trades ───────────────────────────────────────────────
 
     async def insert_trade(self, t: dict[str, Any]) -> None:
-        assert self._pool
+        if not self._pool:
+            return
         await self._pool.execute(
             """INSERT INTO trades (id, signal_id, token_address, token_symbol,
                side, amount_sol, amount_usd, amount_tokens, price_usd,
@@ -155,7 +158,8 @@ class Database:
         )
 
     async def update_trade_status(self, trade_id: str, status: str, **kwargs: Any) -> None:
-        assert self._pool
+        if not self._pool:
+            return
         sets = ["status = $2"]
         vals: list[Any] = [trade_id, status]
         idx = 3
@@ -170,7 +174,8 @@ class Database:
     # ── Positions ────────────────────────────────────────────
 
     async def insert_position(self, p: dict[str, Any]) -> None:
-        assert self._pool
+        if not self._pool:
+            return
         await self._pool.execute(
             """INSERT INTO positions (id, signal_id, token_address, token_symbol,
                entry_price_usd, current_price_usd, amount_tokens,
@@ -187,14 +192,16 @@ class Database:
         )
 
     async def get_open_positions(self) -> list[dict[str, Any]]:
-        assert self._pool
+        if not self._pool:
+            return []
         rows = await self._pool.fetch(
             "SELECT * FROM positions WHERE status IN ('OPEN','PARTIALLY_CLOSED') ORDER BY opened_at"
         )
         return [dict(r) for r in rows]
 
     async def update_position(self, pos_id: str, **kwargs: Any) -> None:
-        assert self._pool
+        if not self._pool:
+            return
         if not kwargs:
             return
         sets = []
@@ -211,7 +218,8 @@ class Database:
     # ── Daily PnL ────────────────────────────────────────────
 
     async def upsert_daily_pnl(self, d: dict[str, Any]) -> None:
-        assert self._pool
+        if not self._pool:
+            return
         await self._pool.execute(
             """INSERT INTO daily_pnl (date, trades_count, wins, losses,
                total_pnl_usd, total_pnl_pct, max_drawdown_pct, portfolio_value_usd)
@@ -226,7 +234,8 @@ class Database:
         )
 
     async def get_daily_pnl(self, days: int = 30) -> list[dict[str, Any]]:
-        assert self._pool
+        if not self._pool:
+            return []
         rows = await self._pool.fetch(
             "SELECT * FROM daily_pnl ORDER BY date DESC LIMIT $1", days
         )

@@ -493,7 +493,29 @@ class ListingSniper:
             return
 
         # Step 4: Risk assessment
-        risk = await self._risk_assessor.assess(token)
+        if self._config.mode in ("paper", "dry_run"):
+            # In test mode, create simulated risk assessment (real APIs fail on fake tokens)
+            from src.models import TokenRiskAssessment
+            risk = TokenRiskAssessment(
+                token_address=token.contract_address,
+                liquidity_usd=token.pools[0].liquidity_usd if token.pools else 50000,
+                pool_age_hours=random.uniform(1, 48),
+                holder_count=random.randint(100, 2000),
+                top10_concentration=random.uniform(0.20, 0.60),
+                is_renounced=random.choice([True, True, False]),
+                is_honeypot=False,
+                has_mint_authority=random.choice([False, False, True]),
+                rug_pull_score=random.randint(10, 50),
+            )
+            risk.calculate_risk_score()
+            log_activity(
+                "SYSTEM",
+                f"[TEST] Risk: {signal.token_symbol}",
+                f"score={risk.risk_score}, tier={risk.risk_tier.value}",
+                "success" if risk.risk_tier.value in ("SAFE", "MEDIUM") else "warning",
+            )
+        else:
+            risk = await self._risk_assessor.assess(token)
 
         # Step 5: Position sizing
         size = self._sizer.calculate(
@@ -506,6 +528,7 @@ class ListingSniper:
             logger.info(
                 "Skipping %s: %s", signal.token_symbol, size.reason
             )
+            log_activity("SIZER", f"Skip: {signal.token_symbol}", size.reason, "warning")
             return
 
         # Step 6: Risk manager check
@@ -518,6 +541,7 @@ class ListingSniper:
             logger.warning(
                 "Risk check failed for %s: %s", signal.token_symbol, check.reason
             )
+            log_activity("RISK", f"Bloque: {signal.token_symbol}", check.reason, "warning")
             await self._alerter.risk_alert(
                 f"Trade blocked for {signal.token_symbol}: {check.reason}"
             )
@@ -553,6 +577,13 @@ class ListingSniper:
             elapsed,
         )
 
+        log_activity(
+            "TRADE",
+            f"Execution: {signal.token_symbol}",
+            f"${size.amount_usd:.2f} ({size.amount_sol:.4f} SOL), risk={risk.risk_tier.value}",
+            "success",
+        )
+
         position = await self._position_mgr.open_position(
             signal, token, risk, size.amount_sol, size.amount_usd, self._sol_price_usd
         )
@@ -560,10 +591,23 @@ class ListingSniper:
         if position:
             metrics.signal_to_trade_latency.observe(time.monotonic() - start)
             self._risk_mgr.record_trade(0)  # PnL recorded on close
+            log_activity(
+                "TRADE",
+                f"POSITION OUVERTE: {signal.token_symbol}",
+                f"${size.amount_usd:.2f}, pipeline={time.monotonic() - start:.2f}s",
+                "success",
+            )
             logger.info(
                 "Position opened for %s — total pipeline: %.2fs",
                 signal.token_symbol,
                 time.monotonic() - start,
+            )
+        else:
+            log_activity(
+                "TRADE",
+                f"Echec ouverture: {signal.token_symbol}",
+                "L'executeur n'a pas pu ouvrir la position",
+                "error",
             )
 
     def get_dashboard_data(self) -> dict:
