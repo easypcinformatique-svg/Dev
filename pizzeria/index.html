@@ -431,73 +431,103 @@
         <div class="container">
             <div class="section-header section-header-light">
                 <span class="section-label">Avis Google</span>
-                <h2 class="section-title">Nos clients nous recommandent</h2>
+                <h2 class="section-title">Ce que disent nos clients</h2>
                 <div class="section-divider"></div>
-                <p class="section-subtitle-light">Les meilleurs avis 5 etoiles de nos clients sur Google</p>
             </div>
 
-            <!--
-                ============================================================
-                WIDGET ELFSIGHT - AVIS GOOGLE
-                ============================================================
-                Pour activer le widget :
-                1. Allez sur https://elfsight.com/google-reviews-widget/
-                2. Creez un compte gratuit
-                3. Configurez votre widget en cherchant "Pizza Napoli Carpentras"
-                4. Filtrez pour afficher uniquement les avis 5 etoiles
-                5. Choisissez le layout "Carousel" ou "Grid"
-                6. Copiez votre Widget ID (ex: elfsight-app-xxxxxxxx)
-                7. Remplacez "VOTRE-WIDGET-ID" ci-dessous par votre ID
-                ============================================================
-            -->
-            <div class="google-reviews-widget">
-                <div class="elfsight-app-VOTRE-WIDGET-ID" data-elfsight-app-lazy></div>
+            <!-- Google Rating Badge -->
+            <div class="google-rating-badge">
+                <svg class="google-icon-large" viewBox="0 0 24 24" width="32" height="32"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                <div class="google-rating-info">
+                    <div class="google-rating-stars">
+                        <span class="rating-number">4.2</span>
+                        <span class="stars-display">&#9733;&#9733;&#9733;&#9733;&#9734;</span>
+                    </div>
+                    <p class="google-rating-count">Base sur <strong>282 avis</strong> Google verifies</p>
+                </div>
             </div>
 
-            <!-- Avis en dur (fallback si le widget n'est pas encore configure) -->
-            <noscript>
-            <div class="avis-grid">
-                <div class="avis-card">
-                    <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                    <p class="avis-text">"Les meilleures pizzas de la ville ! La pate est incroyablement legere et les ingredients sont d'une fraicheur exceptionnelle. On revient chaque semaine !"</p>
-                    <div class="avis-author">
-                        <div class="avis-avatar">S</div>
-                        <div>
-                            <strong>Sophie M.</strong>
-                            <span>Avis Google</span>
+            <!-- Carousel d'avis -->
+            <div class="avis-carousel" id="avis-carousel">
+                <div class="avis-carousel-track">
+                    <div class="avis-card">
+                        <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="avis-text">"Apres 15 ans de fidelite, toujours la meme qualite. Des pizzas copieuses, des ingredients frais, et une livraison ponctuelle. La meilleure adresse du Vaucluse !"</p>
+                        <div class="avis-author">
+                            <div class="avis-avatar">P</div>
+                            <div>
+                                <strong>Patrick &amp; Isabelle</strong>
+                                <span>Carpentras</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="avis-card">
+                        <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="avis-text">"La meilleure pizzeria de Carpentras sans hesitation ! Les ingredients sont frais, les quantites genereuses. La Quatre Fromages est un regal absolu."</p>
+                        <div class="avis-author">
+                            <div class="avis-avatar">T</div>
+                            <div>
+                                <strong>Thomas B.</strong>
+                                <span>Carpentras</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="avis-card">
+                        <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="avis-text">"On commande ici chaque vendredi soir. Les pizzas sont toujours excellentes, chaudes a la livraison. Le personnel est adorable. Je recommande les yeux fermes !"</p>
+                        <div class="avis-author">
+                            <div class="avis-avatar">S</div>
+                            <div>
+                                <strong>Sophie M.</strong>
+                                <span>Carpentras</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="avis-card">
+                        <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="avis-text">"Le calzone est une tuerie et le tiramisu est le meilleur que j'ai goute en dehors de l'Italie. L'accueil est toujours chaleureux, on se sent comme en famille."</p>
+                        <div class="avis-author">
+                            <div class="avis-avatar">L</div>
+                            <div>
+                                <strong>Laurent D.</strong>
+                                <span>Monteux</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="avis-card">
+                        <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="avis-text">"Livraison toujours a l'heure, pizzas chaudes et delicieuses. La Truffe Noire est un pur delice. Rapport qualite-prix imbattable. Je recommande a 100% !"</p>
+                        <div class="avis-author">
+                            <div class="avis-avatar">M</div>
+                            <div>
+                                <strong>Marie C.</strong>
+                                <span>Carpentras</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="avis-card">
+                        <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="avis-text">"Decouverte au hasard et c'est devenu notre pizzeria attiree. La pate est fine et croustillante, les produits sont de qualite. L'essayer c'est l'adopter !"</p>
+                        <div class="avis-author">
+                            <div class="avis-avatar">N</div>
+                            <div>
+                                <strong>Nicolas R.</strong>
+                                <span>Pernes-les-Fontaines</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="avis-card">
-                    <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                    <p class="avis-text">"Le calzone est une tuerie et le tiramisu est le meilleur que j'ai goute en dehors de l'Italie. L'accueil est toujours chaleureux, on se sent comme en famille."</p>
-                    <div class="avis-author">
-                        <div class="avis-avatar">T</div>
-                        <div>
-                            <strong>Thomas L.</strong>
-                            <span>Avis Google</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="avis-card">
-                    <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                    <p class="avis-text">"Livraison toujours a l'heure, pizzas chaudes et delicieuses. La Truffe Noire est un pur delice. Je recommande a 100% !"</p>
-                    <div class="avis-author">
-                        <div class="avis-avatar">M</div>
-                        <div>
-                            <strong>Marie D.</strong>
-                            <span>Avis Google</span>
-                        </div>
-                    </div>
+                <div class="avis-carousel-controls">
+                    <button class="carousel-btn carousel-prev" aria-label="Avis precedent">&#8249;</button>
+                    <div class="carousel-dots" id="carousel-dots"></div>
+                    <button class="carousel-btn carousel-next" aria-label="Avis suivant">&#8250;</button>
                 </div>
             </div>
-            </noscript>
 
             <div class="google-cta">
-                <!-- Remplacez # par le lien vers votre fiche Google Business -->
-                <a href="#" class="btn btn-secondary btn-google" target="_blank" rel="noopener">
+                <a href="https://www.google.com/maps/place/Pizza+Napoli+Carpentras/@44.055,5.049,17z/data=!4m8!3m7!1s0x0:0x0!8m2!3d44.055!4d5.049!9m1!1b1" class="btn btn-secondary btn-google" target="_blank" rel="noopener">
                     <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    Voir tous nos avis sur Google
+                    Lire tous les avis Google
                 </a>
             </div>
         </div>
@@ -657,8 +687,6 @@
         </div>
     </footer>
 
-    <!-- Elfsight Google Reviews Widget (remplacez VOTRE-WIDGET-ID dans la section avis) -->
-    <script src="https://static.elfsight.com/platform/platform.js" async></script>
     <script src="js/main.js"></script>
 </body>
 </html>

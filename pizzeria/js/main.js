@@ -100,6 +100,74 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- Avis Carousel ---
+    var carousel = document.getElementById('avis-carousel');
+    if (carousel) {
+        var track = carousel.querySelector('.avis-carousel-track');
+        var cards = track.querySelectorAll('.avis-card');
+        var prevBtn = carousel.querySelector('.carousel-prev');
+        var nextBtn = carousel.querySelector('.carousel-next');
+        var dotsContainer = document.getElementById('carousel-dots');
+        var currentIndex = 0;
+
+        // Determine cards per view based on screen width
+        function getCardsPerView() {
+            if (window.innerWidth <= 768) return 1;
+            if (window.innerWidth <= 1024) return 2;
+            return 3;
+        }
+
+        var cardsPerView = getCardsPerView();
+        var totalPages = Math.ceil(cards.length / cardsPerView);
+
+        // Create dots
+        function createDots() {
+            dotsContainer.innerHTML = '';
+            totalPages = Math.ceil(cards.length / cardsPerView);
+            for (var i = 0; i < totalPages; i++) {
+                var dot = document.createElement('span');
+                dot.classList.add('carousel-dot');
+                if (i === currentIndex) dot.classList.add('active');
+                dot.setAttribute('data-index', i);
+                dot.addEventListener('click', function () {
+                    goToSlide(parseInt(this.getAttribute('data-index')));
+                });
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function goToSlide(index) {
+            if (index < 0) index = totalPages - 1;
+            if (index >= totalPages) index = 0;
+            currentIndex = index;
+            var cardWidth = cards[0].offsetWidth + 20; // card width + gap
+            track.style.transform = 'translateX(-' + (currentIndex * cardsPerView * cardWidth) + 'px)';
+            var dots = dotsContainer.querySelectorAll('.carousel-dot');
+            dots.forEach(function (d) { d.classList.remove('active'); });
+            if (dots[currentIndex]) dots[currentIndex].classList.add('active');
+        }
+
+        prevBtn.addEventListener('click', function () { goToSlide(currentIndex - 1); });
+        nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
+
+        createDots();
+
+        // Auto-play
+        var autoPlay = setInterval(function () { goToSlide(currentIndex + 1); }, 5000);
+        carousel.addEventListener('mouseenter', function () { clearInterval(autoPlay); });
+        carousel.addEventListener('mouseleave', function () {
+            autoPlay = setInterval(function () { goToSlide(currentIndex + 1); }, 5000);
+        });
+
+        // Responsive
+        window.addEventListener('resize', function () {
+            cardsPerView = getCardsPerView();
+            currentIndex = 0;
+            createDots();
+            goToSlide(0);
+        });
+    }
+
     // --- Active nav link on scroll ---
     var sections = document.querySelectorAll('section[id]');
     window.addEventListener('scroll', function () {
