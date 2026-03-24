@@ -70,7 +70,7 @@ def _send_email_report(report: dict):
     <html>
     <body style="font-family: 'Segoe UI', Arial, sans-serif; background: #0a0e17; color: #e0e6ed; padding: 24px;">
       <div style="max-width: 600px; margin: 0 auto; background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937;">
-        <h1 style="color: #6c63ff; font-size: 22px; margin-bottom: 4px;">POLYMARKET Hedge Fund Bot</h1>
+        <h1 style="color: #6c63ff; font-size: 22px; margin-bottom: 4px;">ALPHAPRED v2.0 — Hedge Fund Bot</h1>
         <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">Rapport journalier du {date_str} | Mode: <strong style="color: #a5b4fc;">{mode}</strong></p>
 
         <table style="width: 100%; border-collapse: collapse;">
@@ -544,7 +544,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Polymarket Hedge Fund Bot</title>
+<title>AlphaPred v2.0 — Hedge Fund Bot Polymarket</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1202,19 +1202,201 @@ tr:hover td { background: #1a2332; }
 .feed-event[data-type="timeout"] { border-left: 3px solid #ef4444; }
 .feed-event.new-event { background: rgba(99,102,241,0.08); }
 .feed-count { font-size: 11px; color: #6b7280; background: #1f2937; padding: 2px 8px; border-radius: 10px; }
+
+/* ======== Bot Identity / Hero ======== */
+.bot-hero {
+    background: linear-gradient(135deg, #0d1321 0%, #1a1f35 50%, #1e1b4b 100%);
+    border-bottom: 1px solid #2a3a5c;
+    padding: 0;
+}
+.bot-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+}
+.bot-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.bot-logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+}
+.bot-name { font-size: 20px; font-weight: 700; color: #fff; }
+.bot-name span { color: #8b5cf6; }
+.bot-version {
+    font-size: 10px;
+    color: #6b7280;
+    background: #1f2937;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+.bot-tagline { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.header-right { display: flex; gap: 10px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+
+/* About bar */
+.bot-about-bar {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid #1f2937;
+    overflow-x: auto;
+}
+.bot-about-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-right: 1px solid #1f2937;
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+    min-width: 0;
+    cursor: help;
+    position: relative;
+}
+.bot-about-item:last-child { border-right: none; }
+.bot-about-icon { font-size: 14px; }
+.bot-about-label { color: #6b7280; }
+.bot-about-value { color: #e0e6ed; font-weight: 600; }
+
+/* Tooltip on about items */
+.bot-about-item .about-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #d1d5db;
+    width: 280px;
+    white-space: normal;
+    line-height: 1.5;
+    z-index: 100;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    pointer-events: none;
+}
+.bot-about-item:hover .about-tooltip { display: block; }
+.about-tooltip strong { color: #a5b4fc; }
+.about-tooltip .calc { background: #111827; border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-family: monospace; font-size: 11px; color: #4ade80; }
+
+@media (max-width: 640px) {
+    .bot-hero-top { flex-direction: column; gap: 10px; text-align: center; }
+    .bot-about-bar { flex-wrap: wrap; }
+    .bot-about-item { min-width: 50%; }
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
-    <div class="header-right">
-        <a href="/report" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Rapport</a>
-        <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Parametres</a>
-        <span id="strategy-name"></span>
-        <span id="mode-badge" class="mode-badge"></span>
-        <span id="status-badge" class="status-badge"></span>
-        <span id="last-update" style="color:#6b7280;font-size:12px;"></span>
+<div class="bot-hero">
+    <div class="bot-hero-top">
+        <div class="bot-identity">
+            <div class="bot-logo">A</div>
+            <div>
+                <div class="bot-name"><span>ALPHA</span>PRED <span class="bot-version">v2.0.0 — __BUILD_VERSION__</span></div>
+                <div class="bot-tagline">Hedge Fund Bot autonome — Prediction Markets Intelligence</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="/report" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;">Rapport</a>
+            <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;">Parametres</a>
+            <span id="strategy-name"></span>
+            <span id="mode-badge" class="mode-badge"></span>
+            <span id="status-badge" class="status-badge"></span>
+            <span id="last-update" style="color:#6b7280;font-size:12px;"></span>
+        </div>
+    </div>
+    <div class="bot-about-bar" id="bot-about-bar">
+        <div class="bot-about-item">
+            <span class="bot-about-icon">\u{1F916}</span>
+            <span><span class="bot-about-label">Type</span> <span class="bot-about-value">Hedge Fund Bot</span></span>
+            <div class="about-tooltip">
+                <strong>AlphaPred</strong> est un bot de trading autonome pour <strong>Polymarket</strong> (marche de predictions).<br><br>
+                Il analyse les marches en continu 24/7, detecte les opportunites via 5 sous-strategies IA, et gere automatiquement les positions avec un risk management de niveau institutionnel.
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">\u{1F9E0}</span>
+            <span><span class="bot-about-label">Strategie</span> <span class="bot-about-value" id="about-strategy">AlphaComposite</span></span>
+            <div class="about-tooltip">
+                <strong>AlphaComposite</strong> combine 5 sous-strategies independantes :<br><br>
+                \u{2022} <strong>SmartMoney</strong> — detecte les flux de gros investisseurs<br>
+                \u{2022} <strong>Convergence</strong> — suit les tendances pre-resolution<br>
+                \u{2022} <strong>BayesianEdge</strong> — calcule les probabilites reelles<br>
+                \u{2022} <strong>AdaptiveMomentum</strong> — detecte les regimes de marche<br>
+                \u{2022} <strong>LiquidityEdge</strong> — exploite les contractions de spread<br><br>
+                Un trade n'est pris que si <strong>2+ strategies sont d'accord</strong>.
+                <div class="calc">Consensus = somme(poids × confiance) / poids_total<br>Minimum requis: 14%</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">\u{1F6E1}</span>
+            <span><span class="bot-about-label">Risk</span> <span class="bot-about-value" id="about-risk">Multi-couche</span></span>
+            <div class="about-tooltip">
+                <strong>Gestion du risque en 6 couches :</strong><br><br>
+                1. <strong>Stop-Loss</strong> — Coupe a -25% par position<br>
+                2. <strong>Take-Profit</strong> — Encaisse a +50%<br>
+                3. <strong>Trailing Stop adaptatif</strong> — Suit le prix (17%, ajuste selon volatilite)<br>
+                4. <strong>Limite perte journaliere</strong> — Max -5%/jour<br>
+                5. <strong>Drawdown max</strong> — Arret total a -15%<br>
+                6. <strong>Anti-tilt</strong> — Reduit la taille apres 3+ pertes consecutives
+                <div class="calc">Taille = Kelly × confiance × multiplicateur_risque<br>Si 4 pertes d'affilee: taille × 25%</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">\u{1F4B0}</span>
+            <span><span class="bot-about-label">Frais</span> <span class="bot-about-value">2% Polymarket</span></span>
+            <div class="about-tooltip">
+                <strong>Frais Polymarket = 2% par transaction</strong><br><br>
+                Chaque entree ET chaque sortie coute 2% du montant.<br>
+                Le bot calcule le PnL <strong>net apres frais</strong> pour chaque trade.
+                <div class="calc">Frais entree = taille × 2%<br>Frais sortie = shares × prix_sortie × 2%<br>PnL net = PnL brut - frais_entree - frais_sortie</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">\u{23F1}</span>
+            <span><span class="bot-about-label">Scan</span> <span class="bot-about-value" id="about-scan">5 min</span></span>
+            <div class="about-tooltip">
+                <strong>Frequence de scan des marches</strong><br><br>
+                Toutes les 5 minutes, le bot :<br>
+                1. Scanne 100+ marches Polymarket actifs<br>
+                2. Filtre par volume, liquidite et spread<br>
+                3. Analyse l'historique de chaque marche eligible<br>
+                4. Genere des signaux via AlphaComposite<br>
+                5. Verifie les positions existantes (stop-loss, take-profit)
+                <div class="calc">~20 marches eligibles par scan<br>~3-5 signaux par heure<br>~1-2 trades par jour</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">\u{1F4E1}</span>
+            <span><span class="bot-about-label">Signaux</span> <span class="bot-about-value">Twitter + RSS</span></span>
+            <div class="about-tooltip">
+                <strong>Sources de signaux externes</strong><br><br>
+                Le bot enrichit ses decisions avec :<br>
+                \u{2022} <strong>Twitter/X</strong> — Comptes cles (politique, crypto, economie)<br>
+                \u{2022} <strong>Nitter</strong> — Fallback si Twitter API down<br>
+                \u{2022} <strong>RSS</strong> — BBC, NYT, CoinDesk (dernier recours)<br><br>
+                Un signal Twitter pertinent <strong>booste la confiance de +30%</strong>.
+                <div class="calc">Si signal Twitter aligne avec strategie:<br>confiance = min(1.0, confiance + tweet_conf × 0.3)</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1854,6 +2036,18 @@ function updateHeader(data) {
 
     document.getElementById('last-update').textContent =
         'MAJ: ' + new Date().toLocaleTimeString('fr-FR');
+
+    // Update about bar
+    const aboutStrat = document.getElementById('about-strategy');
+    if (aboutStrat) aboutStrat.textContent = data.strategy || 'AlphaComposite';
+    const aboutScan = document.getElementById('about-scan');
+    if (aboutScan && data.iteration) {
+        const started = data.started_at ? new Date(data.started_at) : null;
+        if (started) {
+            const hours = ((Date.now() - started.getTime()) / 3600000).toFixed(1);
+            aboutScan.textContent = hours + 'h uptime';
+        }
+    }
 }
 
 // ======== Validation Checklist System ========
@@ -2278,7 +2472,7 @@ SETTINGS_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parametres - Polymarket Bot</title>
+<title>AlphaPred — Parametres</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -2643,7 +2837,7 @@ input:checked + .toggle-slider:before { transform: translateX(24px); }
 <body>
 
 <div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
+    <h1><span style="color:#8b5cf6;">ALPHA</span>PRED <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v2.0.0 — __BUILD_VERSION__</span></h1>
     <div class="header-right">
         <a href="/" class="nav-link">Dashboard</a>
         <a href="/report" class="nav-link">Rapport</a>
@@ -3070,7 +3264,7 @@ REPORT_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rapport - Polymarket Bot</title>
+<title>AlphaPred — Rapport</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -3200,7 +3394,7 @@ th { cursor: help; }
 <body>
 
 <div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
+    <h1><span style="color:#8b5cf6;">ALPHA</span>PRED <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v2.0.0 — __BUILD_VERSION__</span></h1>
     <div class="header-right">
         <a href="/" class="nav-link">Dashboard</a>
         <a href="/report" class="nav-link active">Rapport</a>
