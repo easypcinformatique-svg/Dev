@@ -21,7 +21,7 @@
 
     // Place ID de Pizza Napoli Carpentras
     // Pour trouver votre Place ID : https://developers.google.com/maps/documentation/places/web-service/place-id
-    var PLACE_ID = 'ChIJ_____PLACEHOLDER_____'; // <-- REMPLACEZ PAR VOTRE PLACE ID
+    var PLACE_ID = 'ChIJ6-i2vRmKtRIRwMwe1UNYRZY';
 
     // Filtre : note minimum des avis a afficher (5 = uniquement 5 etoiles)
     var MIN_RATING = 5;
