@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Bella Pizza - Pizzeria Artisanale</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#accueil" class="nav-logo">
+                <span class="logo-icon">&#127829;</span>
+                <span class="logo-text">La Bella Pizza</span>
+            </a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#accueil" class="nav-link">Accueil</a></li>
+                <li><a href="#a-propos" class="nav-link">Notre Histoire</a></li>
+                <li><a href="#menu" class="nav-link">La Carte</a></li>
+                <li><a href="#specialites" class="nav-link">Nos Pizzas</a></li>
+                <li><a href="#galerie" class="nav-link">Galerie</a></li>
+                <li><a href="#avis" class="nav-link">Avis</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+                <li><a href="#commander" class="nav-link nav-cta">Commander</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="accueil">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <p class="hero-subtitle">Bienvenue chez</p>
+            <h1 class="hero-title">La Bella Pizza</h1>
+            <p class="hero-tagline">Pizzeria artisanale depuis 1998</p>
+            <p class="hero-description">Des pizzas cuites au feu de bois, des ingredients frais et une pate petrie avec amour chaque jour.</p>
+            <div class="hero-buttons">
+                <a href="#menu" class="btn btn-primary">Voir la Carte</a>
+                <a href="#commander" class="btn btn-secondary">Commander en Ligne</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <a href="#a-propos" aria-label="Defiler vers le bas">
+                <span class="scroll-arrow"></span>
+            </a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section about" id="a-propos">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Notre Histoire</span>
+                <h2 class="section-title">Une passion familiale</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="about-grid">
+                <div class="about-image">
+                    <div class="about-image-placeholder">
+                        <span>&#127859;</span>
+                        <p>Four a bois traditionnel</p>
+                    </div>
+                </div>
+                <div class="about-content">
+                    <h3>Depuis 1998, la tradition italienne au coeur de votre ville</h3>
+                    <p>Fondee par Marco et Isabella Rossi, La Bella Pizza est nee d'une passion transmise de generation en generation. Notre secret ? Des ingredients soigneusement selectionnes, une pate preparee chaque matin et un four a bois qui donne a nos pizzas ce gout unique et authentique.</p>
+                    <p>Chaque pizza est une oeuvre d'art, preparee avec soin et cuite a la perfection dans notre four traditionnel a plus de 400 degres. Le resultat : une pate croustillante a l'exterieur, moelleuse a l'interieur.</p>
+                    <div class="about-stats">
+                        <div class="stat">
+                            <span class="stat-number">25+</span>
+                            <span class="stat-label">Annees d'experience</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">30</span>
+                            <span class="stat-label">Pizzas artisanales</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">Produits frais</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">&#128293;</div>
+                    <h3>Four a Bois</h3>
+                    <p>Cuisson traditionnelle dans notre four a bois a plus de 400 degres pour une pate parfaite.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#127813;</div>
+                    <h3>Ingredients Frais</h3>
+                    <p>Produits locaux et de saison selectionnes chaque matin chez nos producteurs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#129379;</div>
+                    <h3>Fait Maison</h3>
+                    <p>Pate petrie a la main chaque jour selon notre recette familiale italienne.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128666;</div>
+                    <h3>Livraison Rapide</h3>
+                    <p>Livraison gratuite a partir de 20EUR dans un rayon de 5 km en 30 min.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section class="section menu-section" id="menu">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">La Carte</span>
+                <h2 class="section-title">Notre Menu</h2>
+                <div class="section-divider"></div>
+            </div>
+
+            <!-- Menu Tabs -->
+            <div class="menu-tabs">
+                <button class="menu-tab active" data-tab="pizzas">Pizzas</button>
+                <button class="menu-tab" data-tab="entrees">Entrees</button>
+                <button class="menu-tab" data-tab="desserts">Desserts</button>
+                <button class="menu-tab" data-tab="boissons">Boissons</button>
+            </div>
+
+            <!-- Pizzas -->
+            <div class="menu-content active" id="tab-pizzas">
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Margherita</h3>
+                            <span class="menu-price">9.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Sauce tomate, mozzarella fior di latte, basilic frais, huile d'olive</p>
+                        <span class="menu-badge vegetarien">Vegetarien</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Napolitaine</h3>
+                            <span class="menu-price">10.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Sauce tomate, anchois, olives noires, capres, origan</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Regina</h3>
+                            <span class="menu-price">11.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Sauce tomate, mozzarella, jambon blanc, champignons frais</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>4 Fromages</h3>
+                            <span class="menu-price">12.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Mozzarella, gorgonzola, chevre, parmesan, creme fraiche</p>
+                        <span class="menu-badge vegetarien">Vegetarien</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Calzone</h3>
+                            <span class="menu-price">12.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Pizza pliee, sauce tomate, mozzarella, jambon, champignons, oeuf</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Diavola</h3>
+                            <span class="menu-price">11.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Sauce tomate, mozzarella, salami piquant, piment, poivrons</p>
+                        <span class="menu-badge piquant">Piquant</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Bella Pizza</h3>
+                            <span class="menu-price">13.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Sauce tomate, mozzarella di bufala, jambon de Parme, roquette, parmesan</p>
+                        <span class="menu-badge specialite">Specialite</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Truffe Noire</h3>
+                            <span class="menu-price">15.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Creme de truffe, mozzarella, champignons, copeaux de truffe noire</p>
+                        <span class="menu-badge specialite">Specialite</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Vegetariana</h3>
+                            <span class="menu-price">11.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Sauce tomate, mozzarella, aubergines, courgettes, poivrons, olives</p>
+                        <span class="menu-badge vegetarien">Vegetarien</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Saumon Fumee</h3>
+                            <span class="menu-price">13.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Creme fraiche, saumon fume, oignons rouges, aneth, citron</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entrees -->
+            <div class="menu-content" id="tab-entrees">
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Bruschetta Classique</h3>
+                            <span class="menu-price">6.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Tomates fraiches, basilic, ail, huile d'olive extra vierge sur pain grille</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Antipasti Misti</h3>
+                            <span class="menu-price">9.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Assortiment de charcuteries italiennes, olives, tomates sechees, mozzarella</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Salade Caprese</h3>
+                            <span class="menu-price">8.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Mozzarella di bufala, tomates coeur de boeuf, basilic, huile d'olive</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Soupe Minestrone</h3>
+                            <span class="menu-price">7.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Soupe de legumes traditionnelle italienne, pates, parmesan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desserts -->
+            <div class="menu-content" id="tab-desserts">
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Tiramisu</h3>
+                            <span class="menu-price">6.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Notre tiramisu maison au mascarpone et cafe, recette de la Nonna</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Panna Cotta</h3>
+                            <span class="menu-price">6.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Creme onctueuse a la vanille, coulis de fruits rouges</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Nutella Pizza</h3>
+                            <span class="menu-price">7.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Pate a pizza sucree, Nutella, banane, noisettes concassees</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Glace Artisanale</h3>
+                            <span class="menu-price">4.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">2 boules au choix : vanille, chocolat, pistache, stracciatella</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boissons -->
+            <div class="menu-content" id="tab-boissons">
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Limonade Maison</h3>
+                            <span class="menu-price">3.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Citrons presses, sucre de canne, eau petillante, menthe fraiche</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Vin Rouge (Chianti)</h3>
+                            <span class="menu-price">4.50 EUR</span>
+                        </div>
+                        <p class="menu-desc">Verre de Chianti Classico DOCG, Toscane</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Birra Peroni</h3>
+                            <span class="menu-price">4.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Biere italienne blonde, 33cl</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header">
+                            <h3>Cafe Espresso</h3>
+                            <span class="menu-price">2.00 EUR</span>
+                        </div>
+                        <p class="menu-desc">Espresso italien traditionnel, cafe torrefie artisanalement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Specialties Showcase -->
+    <section class="section specialites" id="specialites">
+        <div class="container">
+            <div class="section-header section-header-light">
+                <span class="section-label">Nos Best-Sellers</span>
+                <h2 class="section-title">Les Pizzas Preferees</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="specialites-grid">
+                <div class="specialite-card">
+                    <div class="specialite-image">
+                        <div class="specialite-placeholder">&#127829;</div>
+                        <div class="specialite-overlay">
+                            <span class="specialite-number">#1</span>
+                        </div>
+                    </div>
+                    <div class="specialite-info">
+                        <h3>Bella Pizza</h3>
+                        <p>Jambon de Parme, mozzarella di bufala, roquette, parmesan</p>
+                        <span class="specialite-price">13.50 EUR</span>
+                    </div>
+                </div>
+                <div class="specialite-card">
+                    <div class="specialite-image">
+                        <div class="specialite-placeholder">&#127829;</div>
+                        <div class="specialite-overlay">
+                            <span class="specialite-number">#2</span>
+                        </div>
+                    </div>
+                    <div class="specialite-info">
+                        <h3>Truffe Noire</h3>
+                        <p>Creme de truffe, champignons, copeaux de truffe noire</p>
+                        <span class="specialite-price">15.00 EUR</span>
+                    </div>
+                </div>
+                <div class="specialite-card">
+                    <div class="specialite-image">
+                        <div class="specialite-placeholder">&#127829;</div>
+                        <div class="specialite-overlay">
+                            <span class="specialite-number">#3</span>
+                        </div>
+                    </div>
+                    <div class="specialite-info">
+                        <h3>4 Fromages</h3>
+                        <p>Mozzarella, gorgonzola, chevre, parmesan</p>
+                        <span class="specialite-price">12.00 EUR</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="section galerie" id="galerie">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Galerie</span>
+                <h2 class="section-title">Notre Univers</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="gallery-grid">
+                <div class="gallery-item gallery-large">
+                    <div class="gallery-placeholder">
+                        <span>&#127829;</span>
+                        <p>Pizza sortant du four</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="gallery-placeholder">
+                        <span>&#129379;</span>
+                        <p>Preparation de la pate</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="gallery-placeholder">
+                        <span>&#128293;</span>
+                        <p>Notre four a bois</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="gallery-placeholder">
+                        <span>&#127813;</span>
+                        <p>Ingredients frais</p>
+                    </div>
+                </div>
+                <div class="gallery-item gallery-large">
+                    <div class="gallery-placeholder">
+                        <span>&#127860;</span>
+                        <p>Notre salle de restaurant</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="gallery-placeholder">
+                        <span>&#127863;</span>
+                        <p>Selection de vins</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section avis" id="avis">
+        <div class="container">
+            <div class="section-header section-header-light">
+                <span class="section-label">Temoignages</span>
+                <h2 class="section-title">Ce que disent nos clients</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="avis-grid">
+                <div class="avis-card">
+                    <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="avis-text">"Les meilleures pizzas de la ville ! La pate est incroyablement legere et les ingredients sont d'une fraicheur exceptionnelle. On revient chaque semaine !"</p>
+                    <div class="avis-author">
+                        <div class="avis-avatar">S</div>
+                        <div>
+                            <strong>Sophie M.</strong>
+                            <span>Cliente fidele</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="avis-card">
+                    <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="avis-text">"Le calzone est une tuerie et le tiramisu est le meilleur que j'ai goute en dehors de l'Italie. L'accueil est toujours chaleureux, on se sent comme en famille."</p>
+                    <div class="avis-author">
+                        <div class="avis-avatar">T</div>
+                        <div>
+                            <strong>Thomas L.</strong>
+                            <span>Client regulier</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="avis-card">
+                    <div class="avis-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="avis-text">"Livraison toujours a l'heure, pizzas chaudes et delicieuses. La Truffe Noire est un pur delice. Je recommande a 100% !"</p>
+                    <div class="avis-author">
+                        <div class="avis-avatar">M</div>
+                        <div>
+                            <strong>Marie D.</strong>
+                            <span>Avis Google</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order CTA -->
+    <section class="section commander" id="commander">
+        <div class="container">
+            <div class="order-banner">
+                <div class="order-content">
+                    <h2>Envie d'une pizza ?</h2>
+                    <p>Commandez en ligne ou appelez-nous pour une livraison rapide !</p>
+                    <div class="order-buttons">
+                        <a href="tel:+33123456789" class="btn btn-primary btn-large">
+                            <span>&#128222;</span> 01 23 45 67 89
+                        </a>
+                        <a href="#contact" class="btn btn-secondary btn-large">Commander en Ligne</a>
+                    </div>
+                    <p class="order-info">Livraison gratuite a partir de 20 EUR | 7j/7 de 11h a 22h30</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section contact" id="contact">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Contact</span>
+                <h2 class="section-title">Nous Trouver</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">&#128205;</div>
+                        <div>
+                            <h3>Adresse</h3>
+                            <p>12 Rue de la Paix<br>75002 Paris, France</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">&#128222;</div>
+                        <div>
+                            <h3>Telephone</h3>
+                            <p>01 23 45 67 89</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">&#128231;</div>
+                        <div>
+                            <h3>Email</h3>
+                            <p>contact@labellapizza.fr</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">&#128336;</div>
+                        <div>
+                            <h3>Horaires</h3>
+                            <p>Lundi - Dimanche<br>11h00 - 14h30 | 18h00 - 22h30</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form-wrapper">
+                    <h3>Reservez ou Commandez</h3>
+                    <form class="contact-form" id="contact-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Nom</label>
+                                <input type="text" id="name" name="name" placeholder="Votre nom" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Telephone</label>
+                                <input type="tel" id="phone" name="phone" placeholder="06 12 34 56 78" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="votre@email.fr">
+                        </div>
+                        <div class="form-group">
+                            <label for="type">Type de demande</label>
+                            <select id="type" name="type">
+                                <option value="reservation">Reservation</option>
+                                <option value="commande">Commande a emporter</option>
+                                <option value="livraison">Livraison</option>
+                                <option value="evenement">Evenement prive</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="4" placeholder="Votre message ou commande..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Envoyer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map placeholder -->
+    <section class="map-section">
+        <div class="map-placeholder">
+            <span>&#127758;</span>
+            <p>12 Rue de la Paix, 75002 Paris</p>
+            <p class="map-note">Integrez ici votre carte Google Maps</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3><span>&#127829;</span> La Bella Pizza</h3>
+                    <p>Pizzeria artisanale depuis 1998. Des pizzas cuites au feu de bois avec des ingredients frais et de qualite.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" aria-label="Facebook">f</a>
+                        <a href="#" class="social-link" aria-label="Instagram">in</a>
+                        <a href="#" class="social-link" aria-label="TikTok">tk</a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#accueil">Accueil</a></li>
+                        <li><a href="#a-propos">Notre Histoire</a></li>
+                        <li><a href="#menu">La Carte</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#">Sur place</a></li>
+                        <li><a href="#">A emporter</a></li>
+                        <li><a href="#">Livraison</a></li>
+                        <li><a href="#">Evenements prives</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact</h4>
+                    <p>12 Rue de la Paix<br>75002 Paris</p>
+                    <p>01 23 45 67 89</p>
+                    <p>contact@labellapizza.fr</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 La Bella Pizza. Tous droits reserves.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
