@@ -1458,6 +1458,19 @@ tr:hover td { background: #1a2332; }
                 <div class="calc">Si signal Twitter aligne avec strategie:<br>confiance = min(1.0, confiance + tweet_conf &#xD7; 0.3)</div>
             </div>
         </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F9E0;</span>
+            <span><span class="bot-about-label">IA</span> <span class="bot-about-value">Auto-adaptatif</span></span>
+            <div class="about-tooltip">
+                <strong>Le bot s'entraine et se corrige tout seul :</strong><br><br>
+                &#x2022; Analyse chaque trade pour <strong>apprendre</strong> de ses erreurs<br>
+                &#x2022; Ajuste les poids des strategies selon leurs <strong>performances</strong><br>
+                &#x2022; <strong>Reduit le risque</strong> automatiquement apres des pertes consecutives<br>
+                &#x2022; Detecte le <strong>regime de marche</strong> et adapte son comportement<br><br>
+                Plus il trade, plus il devient precis.
+                <div class="calc">Poids strategie = base &#xD7; (win_rate / avg_win_rate)<br>Anti-tilt: 3 pertes = taille &#xD7;50%, 4+ = &#xD7;25%</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1486,6 +1499,28 @@ tr:hover td { background: #1a2332; }
                 <li><strong style="color:#4ade80;">L'Executeur</strong> place l'ordre sur Polymarket via l'API CLOB</li>
                 <li><strong style="color:#4ade80;">Le Position Manager</strong> gere les stop-loss, take-profit et trailing stops 24/7</li>
             </ol>
+        </div>
+        <div class="explainer-col">
+            <h4 style="color:#6366f1;margin-bottom:10px;">&#x1F9E0; Intelligence adaptative</h4>
+            <p>AlphaPred <strong style="color:#4ade80;">s'entraine, s'ameliore et se corrige automatiquement</strong> en continu. Apres chaque trade, il tire des conclusions et ajuste ses parametres :</p>
+            <div style="margin-top:12px;">
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                    <span style="color:#a78bfa;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#a78bfa;">Auto-apprentissage</strong> &#x2014; Analyse chaque trade ferme (gagnant ou perdant) pour identifier les patterns qui fonctionnent. Les poids des 5 sous-strategies sont ajustes dynamiquement selon leurs performances recentes.</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                    <span style="color:#fbbf24;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#fbbf24;">Auto-correction</strong> &#x2014; Si le bot detecte une serie de pertes (3+), il reduit automatiquement la taille des positions (anti-tilt), resserre les stop-loss et augmente le seuil de confiance requis pour trader.</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                    <span style="color:#4ade80;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#4ade80;">Conclusions</strong> &#x2014; A chaque iteration, le bot evalue : quel type de marche performe le mieux, quelles strategies ont le meilleur win rate, et quels niveaux de confiance sont optimaux. Il adapte ses decisions en consequence.</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                    <span style="color:#38bdf8;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#38bdf8;">Regime adaptatif</strong> &#x2014; Detecte automatiquement le regime de marche (calme, volatile, trending) et ajuste son comportement : plus agressif en tendance forte, plus defensif en marche incertain.</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
