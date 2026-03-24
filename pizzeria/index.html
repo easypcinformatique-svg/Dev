@@ -9,6 +9,85 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/blog.css">
+
+    <!-- SEO - Schema.org LocalBusiness pour Google Maps -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "@id": "https://pizzanapolicarpentras.fr",
+        "name": "Pizza Napoli Carpentras",
+        "image": "https://pizzanapolicarpentras.fr/images/pizza-napoli.jpg",
+        "url": "https://pizzanapolicarpentras.fr",
+        "telephone": "+33761083608",
+        "priceRange": "$$",
+        "servesCuisine": ["Pizza", "Italienne", "Napolitaine"],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "209 Avenue Pierre Semard",
+            "addressLocality": "Carpentras",
+            "postalCode": "84200",
+            "addressRegion": "Vaucluse",
+            "addressCountry": "FR"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 44.055,
+            "longitude": 5.049
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                "opens": "11:30",
+                "closes": "14:00"
+            },
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                "opens": "18:00",
+                "closes": "22:00"
+            }
+        ],
+        "menu": "https://pizzanapolicarpentras.fr/#menu",
+        "acceptsReservations": "True",
+        "hasMenu": {
+            "@type": "Menu",
+            "hasMenuSection": [
+                {
+                    "@type": "MenuSection",
+                    "name": "Pizzas",
+                    "hasMenuItem": [
+                        {"@type": "MenuItem", "name": "Margherita", "description": "Sauce tomate, mozzarella, basilic frais, huile d'olive", "offers": {"@type": "Offer", "price": "9.50", "priceCurrency": "EUR"}},
+                        {"@type": "MenuItem", "name": "Napoli Speciale", "description": "Mozzarella di bufala, tomates cerises, jambon de Parme, roquette, parmesan", "offers": {"@type": "Offer", "price": "14.50", "priceCurrency": "EUR"}},
+                        {"@type": "MenuItem", "name": "Truffe Noire", "description": "Creme de truffe, mozzarella, champignons, copeaux de truffe noire du Ventoux", "offers": {"@type": "Offer", "price": "16.90", "priceCurrency": "EUR"}}
+                    ]
+                }
+            ]
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.2",
+            "reviewCount": "271",
+            "bestRating": "5"
+        },
+        "areaServed": [
+            {"@type": "City", "name": "Carpentras"},
+            {"@type": "City", "name": "Monteux"},
+            {"@type": "City", "name": "Pernes-les-Fontaines"},
+            {"@type": "City", "name": "Mazan"},
+            {"@type": "City", "name": "Aubignan"},
+            {"@type": "City", "name": "Sarrians"},
+            {"@type": "City", "name": "Loriol-du-Comtat"},
+            {"@type": "City", "name": "Althen-des-Paluds"},
+            {"@type": "City", "name": "Entraigues-sur-la-Sorgue"}
+        ],
+        "sameAs": [
+            "https://www.google.com/maps/place/?q=place_id:ChIJ6-i2vRmKtRIRwMwe1UNYRZY"
+        ]
+    }
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -31,6 +110,7 @@
                 <li><a href="#galerie" class="nav-link">Galerie</a></li>
                 <li><a href="#avis" class="nav-link">Avis</a></li>
                 <li><a href="#contact" class="nav-link">Contact</a></li>
+                <li><a href="#blog" class="nav-link">Blog</a></li>
                 <li><a href="#commander" class="nav-link nav-cta">Commander</a></li>
             </ul>
         </div>
@@ -625,6 +705,92 @@
                         <button type="submit" class="btn btn-primary btn-full">Envoyer</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog / Zones de Livraison -->
+    <section class="section blog-preview" id="blog">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Livraison</span>
+                <h2 class="section-title">Nous Livrons pres de Chez Vous</h2>
+                <div class="section-divider"></div>
+                <p style="color: #666; margin-top: 15px; max-width: 600px; margin-left: auto; margin-right: auto;">Decouvrez nos guides locaux pour chaque ville desservie par Pizza Napoli. Livraison rapide et gratuite !</p>
+            </div>
+            <div class="blog-grid">
+                <a href="blog/pizzeria-carpentras.html" class="blog-card">
+                    <div class="blog-card-image">&#127963;&#65039;</div>
+                    <div class="blog-card-content">
+                        <h3>Carpentras - Guide du Routard</h3>
+                        <p>Cathedrale, marche aux truffes, Mont Ventoux... Decouvrez pourquoi Pizza Napoli est la reference a Carpentras.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-monteux.html" class="blog-card">
+                    <div class="blog-card-image">&#127386;</div>
+                    <div class="blog-card-content">
+                        <h3>Monteux - Parc Spirou & Feu d'Artifice</h3>
+                        <p>Apres le Parc Spirou ou le celebre feu d'artifice du 14 juillet, commandez une pizza livree chez vous.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-pernes-les-fontaines.html" class="blog-card">
+                    <div class="blog-card-image">&#9970;&#65039;</div>
+                    <div class="blog-card-content">
+                        <h3>Pernes-les-Fontaines - 40 Fontaines</h3>
+                        <p>La Perle du Comtat et ses 40 fontaines. Tour Ferrande, patrimoine medieval et livraison pizza.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-mazan.html" class="blog-card">
+                    <div class="blog-card-image">&#127956;&#65039;</div>
+                    <div class="blog-card-content">
+                        <h3>Mazan - Porte du Mont Ventoux</h3>
+                        <p>Village du Marquis de Sade aux portes du Ventoux. Ideal pour les cyclistes affames !</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-aubignan.html" class="blog-card">
+                    <div class="blog-card-image">&#127863;</div>
+                    <div class="blog-card-content">
+                        <h3>Aubignan - Vignobles du Ventoux</h3>
+                        <p>Au coeur des vignobles AOC Ventoux. Pizza et vin rouge, l'accord parfait !</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-sarrians.html" class="blog-card">
+                    <div class="blog-card-image">&#9728;&#65039;</div>
+                    <div class="blog-card-content">
+                        <h3>Sarrians - Dentelles de Montmirail</h3>
+                        <p>Entre Ventoux et Dentelles, porte des grands crus : Gigondas, Vacqueyras, Beaumes-de-Venise.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-loriol-du-comtat.html" class="blog-card">
+                    <div class="blog-card-image">&#127793;</div>
+                    <div class="blog-card-content">
+                        <h3>Loriol-du-Comtat</h3>
+                        <p>Village provencal authentique au coeur du verger du Comtat Venaissin.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-althen-des-paluds.html" class="blog-card">
+                    <div class="blog-card-image">&#127806;</div>
+                    <div class="blog-card-content">
+                        <h3>Althen-des-Paluds</h3>
+                        <p>Ancienne capitale de la garance, entre Carpentras et Avignon.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
+                <a href="blog/pizzeria-entraigues.html" class="blog-card">
+                    <div class="blog-card-image">&#128166;</div>
+                    <div class="blog-card-content">
+                        <h3>Entraigues-sur-la-Sorgue</h3>
+                        <p>Au confluent des Sorgues, a deux pas de L'Isle-sur-la-Sorgue et ses antiquaires.</p>
+                        <span class="blog-card-link">Lire l'article &rarr;</span>
+                    </div>
+                </a>
             </div>
         </div>
     </section>
