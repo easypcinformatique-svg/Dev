@@ -1,19 +1,31 @@
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Cell } from "recharts";
 
+// Génère l'URL de recherche réelle selon la source
+const buildSourceUrl = (source, ville, cp) => {
+  const slug = ville.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/'/g,"-");
+  switch(source) {
+    case "LeBonCoin": return `https://www.leboncoin.fr/recherche?category=9&locations=${encodeURIComponent(ville)}__${cp}`;
+    case "SeLoger": return `https://www.seloger.com/immobilier/achat/immo-${slug}-${cp.substring(0,2)}/`;
+    case "PAP": return `https://www.pap.fr/annonce/vente-immobilier-${slug}-${cp}`;
+    case "BienIci": return `https://www.bienici.com/recherche/achat/${slug}-${cp}`;
+    default: return "#";
+  }
+};
+
 const ANNONCES = [
-  { id:1, score:91, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Vitrolles", cp:"13127", prix:187000, surface:112, terrain:420, pieces:5, prix_m2:1669, median_m2:2450, decote:31.9, source:"LeBonCoin", vendeur:"particulier", age:"38min", dpe:"D", mots:["succession","urgent"], statut:"nouveau", est_enchere:false, url:"https://www.leboncoin.fr/recherche?category=9&locations=Vitrolles__13127&real_estate_type=1" },
-  { id:2, score:84, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Terrain", ville:"Marignane", cp:"13700", prix:95000, surface:1200, terrain:1200, pieces:null, prix_m2:79, median_m2:130, decote:39.2, source:"PAP", vendeur:"particulier", age:"1h12", dpe:null, mots:["mutation","vente rapide"], statut:"nouveau", est_enchere:false, url:"https://www.pap.fr/annonces/terrain-r-marignane-13700" },
-  { id:3, score:79, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Gignac-la-Nerthe", cp:"13180", prix:265000, surface:135, terrain:600, pieces:6, prix_m2:1963, median_m2:2680, decote:26.8, source:"SeLoger", vendeur:"agence", age:"2h05", dpe:"E", mots:["travaux","à rénover"], statut:"nouveau", est_enchere:false, url:"https://www.seloger.com/immobilier/achat/immo-gignac-la-nerthe-13/bien-maison/" },
-  { id:4, score:88, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Local commercial", ville:"Marseille 14e", cp:"13014", prix:142000, surface:85, terrain:null, pieces:null, prix_m2:1671, median_m2:2200, decote:24.0, source:"BienIci", vendeur:"particulier", age:"47min", dpe:"F", mots:["divorce","urgent"], statut:"nouveau", est_enchere:false, url:"https://www.bienici.com/recherche/achat/marseille-13e-arrondissement-13014" },
-  { id:5, score:95, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Les Pennes-Mirabeau", cp:"13170", prix:310000, surface:158, terrain:850, pieces:7, prix_m2:1962, median_m2:3100, decote:36.7, source:"LeBonCoin", vendeur:"particulier", age:"12min", dpe:"C", mots:["succession","liquidation"], statut:"nouveau", est_enchere:true, url:"https://www.leboncoin.fr/recherche?category=9&locations=Les_Pennes-Mirabeau__13170&real_estate_type=1" },
-  { id:6, score:67, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Rognac", cp:"13340", prix:298000, surface:140, terrain:380, pieces:5, prix_m2:2129, median_m2:2750, decote:22.6, source:"SeLoger", vendeur:"agence", age:"4h30", dpe:"D", mots:["baisse de prix"], statut:"en_cours", est_enchere:false, url:"https://www.seloger.com/immobilier/achat/immo-rognac-13/bien-maison/" },
-  { id:7, score:72, niveau:"FORTE OPPORTUNITE", type:"Parking", ville:"Marseille 2e", cp:"13002", prix:8500, surface:12, terrain:null, pieces:null, prix_m2:708, median_m2:1000, decote:29.2, source:"PAP", vendeur:"particulier", age:"3h20", dpe:null, mots:["urgent"], statut:"nouveau", est_enchere:false, url:"https://www.pap.fr/annonces/parking-box-r-marseille-2e-13002" },
-  { id:8, score:58, niveau:"OPPORTUNITE", type:"Terrain", ville:"Carry-le-Rouet", cp:"13620", prix:185000, surface:780, terrain:780, pieces:null, prix_m2:237, median_m2:310, decote:23.5, source:"BienIci", vendeur:"agence", age:"6h00", dpe:null, mots:["à saisir"], statut:"nouveau", est_enchere:false, url:"https://www.bienici.com/recherche/achat/carry-le-rouet-13620/terrain" },
-  { id:9, score:62, niveau:"FORTE OPPORTUNITE", type:"Immeuble", ville:"Marseille 3e", cp:"13003", prix:520000, surface:280, terrain:null, pieces:8, prix_m2:1857, median_m2:2400, decote:22.6, source:"SeLoger", vendeur:"agence", age:"5h15", dpe:"E", mots:["travaux"], statut:"traite", est_enchere:false, url:"https://www.seloger.com/immobilier/achat/immo-marseille-3eme-13/" },
-  { id:10, score:44, niveau:"A SURVEILLER", type:"Maison", ville:"Chateauneuf-les-Martigues", cp:"13220", prix:340000, surface:148, terrain:500, pieces:6, prix_m2:2297, median_m2:2600, decote:11.7, source:"LeBonCoin", vendeur:"particulier", age:"8h45", dpe:"C", mots:[], statut:"nouveau", est_enchere:false, url:"https://www.leboncoin.fr/recherche?category=9&locations=Chateauneuf-les-Martigues__13220&real_estate_type=1" },
-  { id:11, score:76, niveau:"FORTE OPPORTUNITE", type:"Local commercial", ville:"Aix-en-Provence", cp:"13100", prix:198000, surface:110, terrain:null, pieces:null, prix_m2:1800, median_m2:2500, decote:28.0, source:"PAP", vendeur:"particulier", age:"1h55", dpe:"D", mots:["divorce","vente rapide"], statut:"nouveau", est_enchere:false, url:"https://www.pap.fr/annonces/achat-local-commercial-r-aix-en-provence-13100" },
-];
+  { id:1, score:91, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Vitrolles", cp:"13127", prix:187000, surface:112, terrain:420, pieces:5, prix_m2:1669, median_m2:2450, decote:31.9, source:"LeBonCoin", vendeur:"particulier", age:"38min", dpe:"D", mots:["succession","urgent"], statut:"nouveau", est_enchere:false },
+  { id:2, score:84, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Terrain", ville:"Marignane", cp:"13700", prix:95000, surface:1200, terrain:1200, pieces:null, prix_m2:79, median_m2:130, decote:39.2, source:"PAP", vendeur:"particulier", age:"1h12", dpe:null, mots:["mutation","vente rapide"], statut:"nouveau", est_enchere:false },
+  { id:3, score:79, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Gignac-la-Nerthe", cp:"13180", prix:265000, surface:135, terrain:600, pieces:6, prix_m2:1963, median_m2:2680, decote:26.8, source:"SeLoger", vendeur:"agence", age:"2h05", dpe:"E", mots:["travaux","à rénover"], statut:"nouveau", est_enchere:false },
+  { id:4, score:88, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Local commercial", ville:"Marseille 14e", cp:"13014", prix:142000, surface:85, terrain:null, pieces:null, prix_m2:1671, median_m2:2200, decote:24.0, source:"BienIci", vendeur:"particulier", age:"47min", dpe:"F", mots:["divorce","urgent"], statut:"nouveau", est_enchere:false },
+  { id:5, score:95, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Les Pennes-Mirabeau", cp:"13170", prix:310000, surface:158, terrain:850, pieces:7, prix_m2:1962, median_m2:3100, decote:36.7, source:"LeBonCoin", vendeur:"particulier", age:"12min", dpe:"C", mots:["succession","liquidation"], statut:"nouveau", est_enchere:true },
+  { id:6, score:67, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Rognac", cp:"13340", prix:298000, surface:140, terrain:380, pieces:5, prix_m2:2129, median_m2:2750, decote:22.6, source:"SeLoger", vendeur:"agence", age:"4h30", dpe:"D", mots:["baisse de prix"], statut:"en_cours", est_enchere:false },
+  { id:7, score:72, niveau:"FORTE OPPORTUNITE", type:"Parking", ville:"Marseille 2e", cp:"13002", prix:8500, surface:12, terrain:null, pieces:null, prix_m2:708, median_m2:1000, decote:29.2, source:"PAP", vendeur:"particulier", age:"3h20", dpe:null, mots:["urgent"], statut:"nouveau", est_enchere:false },
+  { id:8, score:58, niveau:"OPPORTUNITE", type:"Terrain", ville:"Carry-le-Rouet", cp:"13620", prix:185000, surface:780, terrain:780, pieces:null, prix_m2:237, median_m2:310, decote:23.5, source:"BienIci", vendeur:"agence", age:"6h00", dpe:null, mots:["à saisir"], statut:"nouveau", est_enchere:false },
+  { id:9, score:62, niveau:"FORTE OPPORTUNITE", type:"Immeuble", ville:"Marseille 3e", cp:"13003", prix:520000, surface:280, terrain:null, pieces:8, prix_m2:1857, median_m2:2400, decote:22.6, source:"SeLoger", vendeur:"agence", age:"5h15", dpe:"E", mots:["travaux"], statut:"traite", est_enchere:false },
+  { id:10, score:44, niveau:"A SURVEILLER", type:"Maison", ville:"Chateauneuf-les-Martigues", cp:"13220", prix:340000, surface:148, terrain:500, pieces:6, prix_m2:2297, median_m2:2600, decote:11.7, source:"LeBonCoin", vendeur:"particulier", age:"8h45", dpe:"C", mots:[], statut:"nouveau", est_enchere:false },
+  { id:11, score:76, niveau:"FORTE OPPORTUNITE", type:"Local commercial", ville:"Aix-en-Provence", cp:"13100", prix:198000, surface:110, terrain:null, pieces:null, prix_m2:1800, median_m2:2500, decote:28.0, source:"PAP", vendeur:"particulier", age:"1h55", dpe:"D", mots:["divorce","vente rapide"], statut:"nouveau", est_enchere:false },
+].map(a => ({...a, url: buildSourceUrl(a.source, a.ville, a.cp)}));
 
 const ENCHERES = [
   { id:1, type:"JUDICIAIRE", bien:"Maison T5 - 127m²", ville:"Vitrolles", cp:"13127", mise_a_prix:155000, estimation:280000, decote_potentielle:44.6, date_audience:new Date(Date.now()+3*24*3600*1000), tribunal:"TJ Aix-en-Provence", avocat:"Me. Rousseau", rg:"2024/00342", visites:"14 et 21 mars 14h-16h", score:94, surface:127, terrain:320 },
@@ -199,7 +211,7 @@ function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreS
                     {a.mots.length===0 && <span style={{color:"#2a4060",fontSize:"10px"}}>Aucun signal détecté</span>}
                   </div>
                   <div style={{color:"#3a6080",fontSize:"10px"}}>Statut: <span style={{color:a.statut==="nouveau"?"#00ff88":a.statut==="en_cours"?"#ffb300":"#64748b"}}>{a.statut.toUpperCase()}</span></div>
-                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"8px",background:"rgba(0,150,255,0.15)",color:"#60b8ff",padding:"4px 10px",borderRadius:"2px",fontSize:"10px",textDecoration:"none",border:"1px solid #0088ff33"}}>VOIR L'ANNONCE SUR {a.source.toUpperCase()} ↗</a>
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"8px",background:"rgba(0,150,255,0.15)",color:"#60b8ff",padding:"4px 10px",borderRadius:"2px",fontSize:"10px",textDecoration:"none",border:"1px solid #0088ff33"}}>RECHERCHER SUR {a.source.toUpperCase()} ↗</a>
                 </div>
               </div>
             )}
@@ -468,6 +480,11 @@ export default function ImmoSniperDashboard() {
         .tb{background:none;border:none;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;padding:10px 16px;transition:all 0.15s}
         input{outline:none}
       `}</style>
+
+      {/* BANDEAU DEMO */}
+      <div style={{background:"linear-gradient(90deg,#ff6b35,#ff3b3b,#ff6b35)",padding:"6px 20px",textAlign:"center",fontSize:"11px",color:"#fff",fontWeight:"600",letterSpacing:"0.08em"}}>
+        INTERFACE DE DEMONSTRATION — Les annonces affichées sont fictives. Les liens redirigent vers les pages de recherche des plateformes immobilières correspondantes.
+      </div>
 
       {/* TOP BAR */}
       <div style={S.topbar}>
