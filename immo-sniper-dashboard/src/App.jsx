@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Cell } from "recharts";
 
 const ANNONCES = [
-  { id:1, score:91, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Vitrolles", cp:"13127", prix:187000, surface:112, terrain:420, pieces:5, prix_m2:1669, median_m2:2450, decote:31.9, source:"LeBonCoin", vendeur:"particulier", age:"38min", dpe:"D", mots:["succession","urgent"], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:2, score:84, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Terrain", ville:"Marignane", cp:"13700", prix:95000, surface:1200, terrain:1200, pieces:null, prix_m2:79, median_m2:130, decote:39.2, source:"PAP", vendeur:"particulier", age:"1h12", dpe:null, mots:["mutation","vente rapide"], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:3, score:79, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Gignac-la-Nerthe", cp:"13180", prix:265000, surface:135, terrain:600, pieces:6, prix_m2:1963, median_m2:2680, decote:26.8, source:"SeLoger", vendeur:"agence", age:"2h05", dpe:"E", mots:["travaux","à rénover"], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:4, score:88, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Local commercial", ville:"Marseille 14e", cp:"13014", prix:142000, surface:85, terrain:null, pieces:null, prix_m2:1671, median_m2:2200, decote:24.0, source:"BienIci", vendeur:"particulier", age:"47min", dpe:"F", mots:["divorce","urgent"], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:5, score:95, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Les Pennes-Mirabeau", cp:"13170", prix:310000, surface:158, terrain:850, pieces:7, prix_m2:1962, median_m2:3100, decote:36.7, source:"LeBonCoin", vendeur:"particulier", age:"12min", dpe:"C", mots:["succession","liquidation"], statut:"nouveau", est_enchere:true, url:"#" },
-  { id:6, score:67, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Rognac", cp:"13340", prix:298000, surface:140, terrain:380, pieces:5, prix_m2:2129, median_m2:2750, decote:22.6, source:"SeLoger", vendeur:"agence", age:"4h30", dpe:"D", mots:["baisse de prix"], statut:"en_cours", est_enchere:false, url:"#" },
-  { id:7, score:72, niveau:"FORTE OPPORTUNITE", type:"Parking", ville:"Marseille 2e", cp:"13002", prix:8500, surface:12, terrain:null, pieces:null, prix_m2:708, median_m2:1000, decote:29.2, source:"PAP", vendeur:"particulier", age:"3h20", dpe:null, mots:["urgent"], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:8, score:58, niveau:"OPPORTUNITE", type:"Terrain", ville:"Carry-le-Rouet", cp:"13620", prix:185000, surface:780, terrain:780, pieces:null, prix_m2:237, median_m2:310, decote:23.5, source:"BienIci", vendeur:"agence", age:"6h00", dpe:null, mots:["à saisir"], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:9, score:62, niveau:"FORTE OPPORTUNITE", type:"Immeuble", ville:"Marseille 3e", cp:"13003", prix:520000, surface:280, terrain:null, pieces:8, prix_m2:1857, median_m2:2400, decote:22.6, source:"SeLoger", vendeur:"agence", age:"5h15", dpe:"E", mots:["travaux"], statut:"traite", est_enchere:false, url:"#" },
-  { id:10, score:44, niveau:"A SURVEILLER", type:"Maison", ville:"Chateauneuf-les-Martigues", cp:"13220", prix:340000, surface:148, terrain:500, pieces:6, prix_m2:2297, median_m2:2600, decote:11.7, source:"LeBonCoin", vendeur:"particulier", age:"8h45", dpe:"C", mots:[], statut:"nouveau", est_enchere:false, url:"#" },
-  { id:11, score:76, niveau:"FORTE OPPORTUNITE", type:"Local commercial", ville:"Aix-en-Provence", cp:"13100", prix:198000, surface:110, terrain:null, pieces:null, prix_m2:1800, median_m2:2500, decote:28.0, source:"PAP", vendeur:"particulier", age:"1h55", dpe:"D", mots:["divorce","vente rapide"], statut:"nouveau", est_enchere:false, url:"#" },
+  { id:1, score:91, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Vitrolles", cp:"13127", prix:187000, surface:112, terrain:420, pieces:5, prix_m2:1669, median_m2:2450, decote:31.9, source:"LeBonCoin", vendeur:"particulier", age:"38min", dpe:"D", mots:["succession","urgent"], statut:"nouveau", est_enchere:false, url:"https://www.leboncoin.fr/ventes_immobilieres/vitrolles" },
+  { id:2, score:84, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Terrain", ville:"Marignane", cp:"13700", prix:95000, surface:1200, terrain:1200, pieces:null, prix_m2:79, median_m2:130, decote:39.2, source:"PAP", vendeur:"particulier", age:"1h12", dpe:null, mots:["mutation","vente rapide"], statut:"nouveau", est_enchere:false, url:"https://www.pap.fr/annonce/terrain-marignane" },
+  { id:3, score:79, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Gignac-la-Nerthe", cp:"13180", prix:265000, surface:135, terrain:600, pieces:6, prix_m2:1963, median_m2:2680, decote:26.8, source:"SeLoger", vendeur:"agence", age:"2h05", dpe:"E", mots:["travaux","à rénover"], statut:"nouveau", est_enchere:false, url:"https://www.seloger.com/annonces/achat/maison/gignac-la-nerthe-13" },
+  { id:4, score:88, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Local commercial", ville:"Marseille 14e", cp:"13014", prix:142000, surface:85, terrain:null, pieces:null, prix_m2:1671, median_m2:2200, decote:24.0, source:"BienIci", vendeur:"particulier", age:"47min", dpe:"F", mots:["divorce","urgent"], statut:"nouveau", est_enchere:false, url:"https://www.bienici.com/recherche/achat/marseille-13014" },
+  { id:5, score:95, niveau:"OPPORTUNITE EXCEPTIONNELLE", type:"Maison", ville:"Les Pennes-Mirabeau", cp:"13170", prix:310000, surface:158, terrain:850, pieces:7, prix_m2:1962, median_m2:3100, decote:36.7, source:"LeBonCoin", vendeur:"particulier", age:"12min", dpe:"C", mots:["succession","liquidation"], statut:"nouveau", est_enchere:true, url:"https://www.leboncoin.fr/ventes_immobilieres/les-pennes-mirabeau" },
+  { id:6, score:67, niveau:"FORTE OPPORTUNITE", type:"Maison", ville:"Rognac", cp:"13340", prix:298000, surface:140, terrain:380, pieces:5, prix_m2:2129, median_m2:2750, decote:22.6, source:"SeLoger", vendeur:"agence", age:"4h30", dpe:"D", mots:["baisse de prix"], statut:"en_cours", est_enchere:false, url:"https://www.seloger.com/annonces/achat/maison/rognac-13" },
+  { id:7, score:72, niveau:"FORTE OPPORTUNITE", type:"Parking", ville:"Marseille 2e", cp:"13002", prix:8500, surface:12, terrain:null, pieces:null, prix_m2:708, median_m2:1000, decote:29.2, source:"PAP", vendeur:"particulier", age:"3h20", dpe:null, mots:["urgent"], statut:"nouveau", est_enchere:false, url:"https://www.pap.fr/annonce/parking-marseille-2e" },
+  { id:8, score:58, niveau:"OPPORTUNITE", type:"Terrain", ville:"Carry-le-Rouet", cp:"13620", prix:185000, surface:780, terrain:780, pieces:null, prix_m2:237, median_m2:310, decote:23.5, source:"BienIci", vendeur:"agence", age:"6h00", dpe:null, mots:["à saisir"], statut:"nouveau", est_enchere:false, url:"https://www.bienici.com/recherche/achat/carry-le-rouet-13620" },
+  { id:9, score:62, niveau:"FORTE OPPORTUNITE", type:"Immeuble", ville:"Marseille 3e", cp:"13003", prix:520000, surface:280, terrain:null, pieces:8, prix_m2:1857, median_m2:2400, decote:22.6, source:"SeLoger", vendeur:"agence", age:"5h15", dpe:"E", mots:["travaux"], statut:"traite", est_enchere:false, url:"https://www.seloger.com/annonces/achat/immeuble/marseille-3e-13" },
+  { id:10, score:44, niveau:"A SURVEILLER", type:"Maison", ville:"Chateauneuf-les-Martigues", cp:"13220", prix:340000, surface:148, terrain:500, pieces:6, prix_m2:2297, median_m2:2600, decote:11.7, source:"LeBonCoin", vendeur:"particulier", age:"8h45", dpe:"C", mots:[], statut:"nouveau", est_enchere:false, url:"https://www.leboncoin.fr/ventes_immobilieres/chateauneuf-les-martigues" },
+  { id:11, score:76, niveau:"FORTE OPPORTUNITE", type:"Local commercial", ville:"Aix-en-Provence", cp:"13100", prix:198000, surface:110, terrain:null, pieces:null, prix_m2:1800, median_m2:2500, decote:28.0, source:"PAP", vendeur:"particulier", age:"1h55", dpe:"D", mots:["divorce","vente rapide"], statut:"nouveau", est_enchere:false, url:"https://www.pap.fr/annonce/local-commercial-aix-en-provence" },
 ];
 
 const ENCHERES = [
@@ -46,27 +46,50 @@ const scoreBg = (s) => { if (s>=80) return "rgba(0,255,136,0.12)"; if (s>=65) re
 const niveauShort = (n) => { if (n==="OPPORTUNITE EXCEPTIONNELLE") return "EXCEPT."; if (n==="FORTE OPPORTUNITE") return "FORTE"; if (n==="OPPORTUNITE") return "OPPORT."; return "SURV."; };
 const joursAvant = (d) => Math.ceil((d - Date.now()) / (1000*3600*24));
 
+function InfoBulle({ text, children }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span style={{position:"relative",display:"inline-flex",alignItems:"center"}} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)}>
+      {children}
+      {show && (
+        <div style={{position:"absolute",bottom:"calc(100% + 8px)",left:"50%",transform:"translateX(-50%)",background:"#0a1e38",border:"1px solid #1a4070",borderRadius:"4px",padding:"8px 12px",color:"#c8d8e8",fontSize:"11px",lineHeight:1.5,whiteSpace:"normal",width:"260px",zIndex:1000,boxShadow:"0 4px 20px rgba(0,0,0,0.5)",pointerEvents:"none"}}>
+          {text}
+          <div style={{position:"absolute",bottom:"-5px",left:"50%",transform:"translateX(-50%) rotate(45deg)",width:"8px",height:"8px",background:"#0a1e38",borderRight:"1px solid #1a4070",borderBottom:"1px solid #1a4070"}}/>
+        </div>
+      )}
+    </span>
+  );
+}
+
+function HelpIcon({ text }) {
+  return (
+    <InfoBulle text={text}>
+      <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:"14px",height:"14px",borderRadius:"50%",background:"rgba(96,184,255,0.1)",border:"1px solid #1a4070",color:"#60b8ff",fontSize:"9px",cursor:"help",marginLeft:"4px",flexShrink:0}}>?</span>
+    </InfoBulle>
+  );
+}
+
 function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreScore, filtreVendeur, setFiltreVendeur, filtreFraicheur, setFiltreFraicheur, filteredAnnonces, selectedRow, setSelectedRow, handleStatut }) {
   return (
     <div className="si">
       {/* FILTRES */}
       <div style={{display:"flex",gap:"8px",marginBottom:"12px",flexWrap:"wrap",alignItems:"center"}}>
-        <span style={{color:"#2a4060",fontSize:"10px"}}>TYPE</span>
+        <InfoBulle text="Filtrer par type de bien immobilier"><span style={{color:"#2a4060",fontSize:"10px",cursor:"help"}}>TYPE</span></InfoBulle>
         {[["tous","TOUS"],["maison","MAISONS"],["terrain","TERRAINS"],["local_commercial","LOCAUX"],["parking","PARKINGS"],["immeuble","IMMEUBLES"]].map(([v,l])=>(
           <button key={v} className={`fb ${filtreType===v?"on":""}`} onClick={()=>setFiltreType(v)}>{l}</button>
         ))}
         <div style={{width:"1px",height:"16px",background:"#0d2040",margin:"0 4px"}}/>
-        <span style={{color:"#2a4060",fontSize:"10px"}}>SCORE</span>
+        <InfoBulle text="Filtrer par score minimum. >80 = exceptionnelles, >65 = fortes opportunités, >50 = à surveiller"><span style={{color:"#2a4060",fontSize:"10px",cursor:"help"}}>SCORE</span></InfoBulle>
         {[[0,"TOUS"],[50,">50"],[65,">65"],[80,">80"]].map(([v,l])=>(
           <button key={v} className={`fb ${filtreScore===v?"on":""}`} onClick={()=>setFiltreScore(v)}>{l}</button>
         ))}
         <div style={{width:"1px",height:"16px",background:"#0d2040",margin:"0 4px"}}/>
-        <span style={{color:"#2a4060",fontSize:"10px"}}>VENDEUR</span>
+        <InfoBulle text="Filtrer par type de vendeur. Les particuliers offrent souvent de meilleures marges de négociation que les agences."><span style={{color:"#2a4060",fontSize:"10px",cursor:"help"}}>VENDEUR</span></InfoBulle>
         {[["tous","TOUS"],["particulier","PARTIC."],["agence","AGENCE"]].map(([v,l])=>(
           <button key={v} className={`fb ${filtreVendeur===v?"on":""}`} onClick={()=>setFiltreVendeur(v)}>{l}</button>
         ))}
         <div style={{width:"1px",height:"16px",background:"#0d2040",margin:"0 4px"}}/>
-        <span style={{color:"#2a4060",fontSize:"10px"}}>FRAICHEUR</span>
+        <InfoBulle text="Filtrer par ancienneté de publication. Les annonces de moins d'1h sont les plus intéressantes : moins de concurrence."><span style={{color:"#2a4060",fontSize:"10px",cursor:"help"}}>FRAICHEUR</span></InfoBulle>
         {[["tous","TOUS"],["1h","< 1H"],["24h","< 24H"]].map(([v,l])=>(
           <button key={v} className={`fb ${filtreFraicheur===v?"on":""}`} onClick={()=>setFiltreFraicheur(v)}>{l}</button>
         ))}
@@ -76,8 +99,25 @@ function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreS
       {/* TABLE */}
       <div style={{background:"#030c18",border:"1px solid #0d2040",borderRadius:"3px",overflow:"auto"}}>
         <div style={{display:"grid",gridTemplateColumns:colTpl,background:"#020810",borderBottom:"1px solid #0d2040",padding:"6px 0",minWidth:"1100px"}}>
-          {["SCORE","NIVEAU","TYPE","VILLE","CP","PRIX","€/M²","MÉDIAN","DÉCOTE","M²","SOURCE","VENDEUR","PUB.","ACTIONS"].map((h,i)=>(
-            <div key={i} style={{padding:"0 8px",color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",borderRight:i<13?"1px solid #0a1e30":"none"}}>{h}</div>
+          {[
+            {h:"SCORE",tip:"Score d'opportunité de 0 à 100. Calculé automatiquement selon la décote, les mots-clés, le type de vendeur, la fraîcheur et le DPE."},
+            {h:"NIVEAU",tip:"Niveau d'opportunité : EXCEPT. (≥80), FORTE (≥65), OPPORT. (≥50), SURV. (<50). Plus le score est élevé, plus l'affaire est intéressante."},
+            {h:"TYPE",tip:"Type de bien immobilier : Maison, Terrain, Local commercial, Parking, Immeuble. L'icône ⚡ indique un bien aussi en vente aux enchères."},
+            {h:"VILLE",tip:"Commune où se situe le bien. Le bot surveille 45 communes dans un rayon de 30km autour des Pennes-Mirabeau."},
+            {h:"CP",tip:"Code postal de la commune."},
+            {h:"PRIX",tip:"Prix de vente affiché sur l'annonce."},
+            {h:"€/M²",tip:"Prix au mètre carré calculé à partir du prix et de la surface du bien."},
+            {h:"MÉDIAN",tip:"Prix médian au m² dans cette commune selon les données DVF (Demandes de Valeurs Foncières) 2023. Sert de référence pour calculer la décote."},
+            {h:"DÉCOTE",tip:"Pourcentage de décote par rapport au prix médian DVF. Ex: -30% signifie que le bien est 30% moins cher que la médiane du marché."},
+            {h:"M²",tip:"Surface habitable ou surface du terrain en mètres carrés."},
+            {h:"SOURCE",tip:"Site d'origine de l'annonce : LeBonCoin, SeLoger, PAP, BienIci. Le bot scrape ces plateformes automatiquement."},
+            {h:"VENDEUR",tip:"PART. = particulier (bonus +5 pts au score), AGCE = agence immobilière. Les particuliers proposent souvent de meilleures affaires."},
+            {h:"PUB.",tip:"Ancienneté de la publication. Les annonces récentes (<1h) sont les plus intéressantes car moins de concurrence."},
+            {h:"ACTIONS",tip:"✓ = Marquer en cours de traitement, ✕ = Marquer comme traité (grisé), ↗ = Ouvrir l'annonce sur le site source."},
+          ].map((col,i)=>(
+            <div key={i} style={{padding:"0 8px",color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",borderRight:i<13?"1px solid #0a1e30":"none",display:"flex",alignItems:"center"}}>
+              <InfoBulle text={col.tip}><span style={{cursor:"help",borderBottom:"1px dotted #2a5070"}}>{col.h}</span></InfoBulle>
+            </div>
           ))}
         </div>
         {filteredAnnonces.map((a,idx)=>(
@@ -125,7 +165,7 @@ function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreS
               <div style={{padding:"8px",display:"flex",alignItems:"center",gap:"4px"}}>
                 <button className="ab abg" onClick={(e)=>{e.stopPropagation();handleStatut(a.id,"en_cours")}} title="Marquer en cours">✓</button>
                 <button className="ab abr" onClick={(e)=>{e.stopPropagation();handleStatut(a.id,"traite")}} title="Marquer traité">✕</button>
-                <button className="ab" onClick={(e)=>{e.stopPropagation()}} title="Voir l'annonce">↗</button>
+                <a href={a.url} target="_blank" rel="noopener noreferrer" className="ab" onClick={(e)=>{e.stopPropagation()}} title="Voir l'annonce" style={{textDecoration:"none",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>↗</a>
               </div>
             </div>
 
@@ -159,6 +199,7 @@ function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreS
                     {a.mots.length===0 && <span style={{color:"#2a4060",fontSize:"10px"}}>Aucun signal détecté</span>}
                   </div>
                   <div style={{color:"#3a6080",fontSize:"10px"}}>Statut: <span style={{color:a.statut==="nouveau"?"#00ff88":a.statut==="en_cours"?"#ffb300":"#64748b"}}>{a.statut.toUpperCase()}</span></div>
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"8px",background:"rgba(0,150,255,0.15)",color:"#60b8ff",padding:"4px 10px",borderRadius:"2px",fontSize:"10px",textDecoration:"none",border:"1px solid #0088ff33"}}>VOIR L'ANNONCE SUR {a.source.toUpperCase()} ↗</a>
                 </div>
               </div>
             )}
@@ -282,9 +323,43 @@ function StatsTab({ S }) {
 function ParamsTab({ S }) {
   return (
     <div className="si">
+      {/* EXPLICATION DU BOT */}
+      <div style={{...S.card,marginBottom:"16px",borderLeft:"3px solid #60b8ff"}}>
+        <div style={{color:"#60b8ff",fontSize:"11px",letterSpacing:"0.1em",marginBottom:"10px",fontWeight:"600",display:"flex",alignItems:"center",gap:"8px"}}>
+          <span style={{fontSize:"16px"}}>&#9432;</span> COMMENT FONCTIONNE IMMOSNIPER
+        </div>
+        <div style={{color:"#a0b8d0",fontSize:"12px",lineHeight:1.9}}>
+          <p style={{margin:"0 0 10px 0"}}>
+            <strong style={{color:"#c8d8e8"}}>ImmoSniper</strong> est un bot automatisé de détection d'opportunités immobilières. Il scanne en continu les principales plateformes d'annonces (LeBonCoin, SeLoger, PAP, BienIci) ainsi que les ventes aux enchères judiciaires et notariales.
+          </p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",margin:"12px 0"}}>
+            <div>
+              <div style={{color:"#00ff88",fontSize:"10px",letterSpacing:"0.08em",marginBottom:"6px",fontWeight:"600"}}>1. SCAN AUTOMATIQUE</div>
+              <div style={{fontSize:"11px",color:"#8aa8c8"}}>Toutes les 45 minutes, le bot parcourt les sites immobiliers et collecte les nouvelles annonces dans votre zone géographique (45 communes, rayon 30km).</div>
+            </div>
+            <div>
+              <div style={{color:"#ffb300",fontSize:"10px",letterSpacing:"0.08em",marginBottom:"6px",fontWeight:"600"}}>2. ANALYSE & SCORING</div>
+              <div style={{fontSize:"11px",color:"#8aa8c8"}}>Chaque annonce est analysée et reçoit un score de 0 à 100 basé sur : la décote par rapport aux prix DVF, les mots-clés d'urgence (succession, divorce...), le type de vendeur et la fraîcheur.</div>
+            </div>
+            <div>
+              <div style={{color:"#ff6b35",fontSize:"10px",letterSpacing:"0.08em",marginBottom:"6px",fontWeight:"600"}}>3. ENCHÈRES IMMOBILIÈRES</div>
+              <div style={{fontSize:"11px",color:"#8aa8c8"}}>Le bot surveille aussi les ventes aux enchères judiciaires (TJ) et notariales. Ces ventes offrent des décotes de 40 à 55% mais nécessitent un avocat pour enchérir.</div>
+            </div>
+            <div>
+              <div style={{color:"#a78bfa",fontSize:"10px",letterSpacing:"0.08em",marginBottom:"6px",fontWeight:"600"}}>4. ALERTES EN TEMPS RÉEL</div>
+              <div style={{fontSize:"11px",color:"#8aa8c8"}}>Quand une opportunité exceptionnelle est détectée (score ≥ 80), vous recevez une alerte par email et SMS pour agir rapidement avant la concurrence.</div>
+            </div>
+          </div>
+          <div style={{background:"rgba(0,255,136,0.06)",border:"1px solid rgba(0,255,136,0.15)",borderRadius:"3px",padding:"10px 14px",marginTop:"8px"}}>
+            <div style={{color:"#00ff88",fontSize:"10px",letterSpacing:"0.08em",marginBottom:"4px",fontWeight:"600"}}>DONNÉES DVF — RÉFÉRENCE DE PRIX</div>
+            <div style={{fontSize:"11px",color:"#8aa8c8"}}>Les prix médians proviennent de la base DVF (Demandes de Valeurs Foncières), qui recense toutes les transactions immobilières réelles enregistrées par les notaires. C'est la référence la plus fiable pour évaluer si un bien est en dessous du marché.</div>
+          </div>
+        </div>
+      </div>
+
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px"}}>
         <div style={S.card}>
-          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px"}}>ZONE DE RECHERCHE</div>
+          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px",display:"flex",alignItems:"center"}}>ZONE DE RECHERCHE<HelpIcon text="Zone géographique surveillée par le bot. Toutes les annonces dans ce périmètre sont automatiquement scannées et analysées."/></div>
           <div style={{color:"#c8d8e8",fontSize:"11px",lineHeight:2}}>
             <div><span style={{color:"#3a6080"}}>Centre:</span> Les Pennes-Mirabeau (13170)</div>
             <div><span style={{color:"#3a6080"}}>Rayon:</span> 30 km</div>
@@ -293,7 +368,7 @@ function ParamsTab({ S }) {
           </div>
         </div>
         <div style={S.card}>
-          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px"}}>SOURCES ACTIVES</div>
+          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px",display:"flex",alignItems:"center"}}>SOURCES ACTIVES<HelpIcon text="Plateformes immobilières que le bot scrape automatiquement. Chaque source est vérifiée toutes les 45 minutes pour détecter les nouvelles annonces."/></div>
           <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
             {[["LeBonCoin","Actif","#00ff88"],["SeLoger","Actif","#00ff88"],["PAP","Actif","#00ff88"],["BienIci","Actif","#00ff88"],["Enchères judiciaires","Actif","#00ff88"],["Enchères notariales","Actif","#00ff88"]].map(([nom,st,c],i)=>(
               <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:"1px solid #0a1e30"}}>
@@ -307,7 +382,7 @@ function ParamsTab({ S }) {
           </div>
         </div>
         <div style={S.card}>
-          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px"}}>CRITÈRES DE SCORING</div>
+          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px",display:"flex",alignItems:"center"}}>CRITÈRES DE SCORING<HelpIcon text="Règles utilisées pour calculer le score de chaque annonce. Le score combine la décote DVF, les signaux d'urgence, le vendeur et la fraîcheur de l'annonce."/></div>
           <div style={{color:"#c8d8e8",fontSize:"11px",lineHeight:2}}>
             <div><span style={{color:"#3a6080"}}>Décote min:</span> 15% vs médiane DVF</div>
             <div><span style={{color:"#3a6080"}}>Mots-clés bonus:</span> succession, divorce, urgent, liquidation, mutation</div>
@@ -317,7 +392,7 @@ function ParamsTab({ S }) {
           </div>
         </div>
         <div style={S.card}>
-          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px"}}>ALERTES</div>
+          <div style={{color:"#2a5070",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"12px",display:"flex",alignItems:"center"}}>ALERTES<HelpIcon text="Notifications envoyées quand une opportunité exceptionnelle (score ≥ 80) est détectée. Vous êtes alerté par email et SMS pour agir rapidement."/></div>
           <div style={{color:"#c8d8e8",fontSize:"11px",lineHeight:2}}>
             <div><span style={{color:"#3a6080"}}>Email:</span> alert@immosniper.fr</div>
             <div><span style={{color:"#3a6080"}}>SMS:</span> +33 6 XX XX XX XX</div>
@@ -406,7 +481,7 @@ export default function ImmoSniperDashboard() {
           <span style={{color:"#3a6080",fontSize:"10px"}}>DEPT. 13 — LES PENNES-MIRABEAU +30KM</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
-          <span style={{color:"#3a6080",fontSize:"10px"}}>SCAN SUIVANT</span>
+          <InfoBulle text="Temps restant avant le prochain scan automatique des plateformes immobilières. Le bot scrape toutes les sources toutes les 45 minutes."><span style={{color:"#3a6080",fontSize:"10px",cursor:"help"}}>SCAN SUIVANT</span></InfoBulle>
           <span style={{color:"#60b8ff",fontSize:"11px"}}>42:17</span>
           <div style={{width:"1px",height:"18px",background:"#0d2040"}}/>
           <span style={{color:"#3a6080",fontSize:"10px"}}>HEURE</span>
@@ -417,16 +492,16 @@ export default function ImmoSniperDashboard() {
       {/* METRICS */}
       <div style={S.metrics}>
         {[
-          {l:"ANNONCES SCANNÉES",v:"347",s:"Ce cycle",c:"#c8d8e8"},
-          {l:"OPPORTUNITÉS",v:String(nbOpportunites),s:"Score ≥ 65",c:"#ffb300"},
-          {l:"EXCEPTIONNELLES",v:String(nbExceptionnelles),s:"Score ≥ 80",c:"#00ff88"},
-          {l:"ENCHÈRES ACTIVES",v:String(ENCHERES.length),s:"Dept. 13",c:"#ff6b35"},
-          {l:"PRIX MÉDIAN",v:fmtM2(prixMedianMoyen),s:"DVF 2023",c:"#60b8ff"},
-          {l:"DÉCOTE MOY.",v:"-"+decoteMoyenne+"%",s:"Annonces du jour",c:"#a78bfa"},
-          {l:"PROCHAINE AUDIENCE",v:joursAvant(prochaine.date_audience)+"J",s:prochaine.ville,c:"#ff3b3b"},
+          {l:"ANNONCES SCANNÉES",v:"347",s:"Ce cycle",c:"#c8d8e8",tip:"Nombre total d'annonces analysées lors du dernier cycle de scan (toutes les 45 min). Le bot parcourt LeBonCoin, SeLoger, PAP et BienIci."},
+          {l:"OPPORTUNITÉS",v:String(nbOpportunites),s:"Score ≥ 65",c:"#ffb300",tip:"Nombre d'annonces avec un score ≥ 65. Ces biens présentent une décote significative par rapport au marché et méritent votre attention."},
+          {l:"EXCEPTIONNELLES",v:String(nbExceptionnelles),s:"Score ≥ 80",c:"#00ff88",tip:"Annonces avec un score ≥ 80. Ce sont les meilleures affaires détectées : forte décote, vendeur particulier, mots-clés d'urgence. À traiter en priorité !"},
+          {l:"ENCHÈRES ACTIVES",v:String(ENCHERES.length),s:"Dept. 13",c:"#ff6b35",tip:"Ventes aux enchères judiciaires et notariales en cours dans le département 13. Souvent des décotes de 40-55% par rapport à l'estimation."},
+          {l:"PRIX MÉDIAN",v:fmtM2(prixMedianMoyen),s:"DVF 2023",c:"#60b8ff",tip:"Prix médian au m² moyen des communes surveillées, basé sur les données DVF (transactions réelles enregistrées par les notaires en 2023)."},
+          {l:"DÉCOTE MOY.",v:"-"+decoteMoyenne+"%",s:"Annonces du jour",c:"#a78bfa",tip:"Décote moyenne de toutes les annonces affichées par rapport au prix médian DVF de leur commune. Plus c'est élevé, meilleures sont les affaires."},
+          {l:"PROCHAINE AUDIENCE",v:joursAvant(prochaine.date_audience)+"J",s:prochaine.ville,c:"#ff3b3b",tip:"Compte à rebours avant la prochaine audience d'enchères. Pensez à mandater un avocat et à visiter le bien avant cette date."},
         ].map((m,i)=>(
-          <div key={i} style={{padding:"6px 12px",borderRight:i<6?"1px solid #0d2040":"none"}}>
-            <div style={{color:"#3a6080",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"2px"}}>{m.l}</div>
+          <div key={i} style={{padding:"6px 12px",borderRight:i<6?"1px solid #0d2040":"none",cursor:"help"}} title={m.tip}>
+            <div style={{color:"#3a6080",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"2px",display:"flex",alignItems:"center"}}>{m.l}<HelpIcon text={m.tip}/></div>
             <div className="mv" style={{fontSize:"22px",color:m.c,lineHeight:1}}>{m.v}</div>
             <div style={{color:"#2a4060",fontSize:"9px",marginTop:"2px"}}>{m.s}</div>
           </div>
@@ -435,8 +510,13 @@ export default function ImmoSniperDashboard() {
 
       {/* NAV */}
       <div style={S.nav}>
-        {[{id:"flux",l:"FLUX EN DIRECT",n:annonces.length},{id:"encheres",l:"ENCHÈRES ACTIVES",n:ENCHERES.length,u:true},{id:"stats",l:"STATISTIQUES"},{id:"params",l:"PARAMÈTRES"}].map(t=>(
-          <button key={t.id} className="tb" onClick={()=>setTab(t.id)}
+        {[
+          {id:"flux",l:"FLUX EN DIRECT",n:annonces.length,tip:"Toutes les annonces immobilières détectées par le bot, triées par score d'opportunité. Cliquez sur une ligne pour voir le détail."},
+          {id:"encheres",l:"ENCHÈRES ACTIVES",n:ENCHERES.length,u:true,tip:"Ventes aux enchères judiciaires et notariales à venir. Les décotes peuvent atteindre 40 à 55% par rapport à l'estimation."},
+          {id:"stats",l:"STATISTIQUES",tip:"Graphiques d'activité du bot : nombre d'annonces scannées, opportunités détectées et prix médians par commune."},
+          {id:"params",l:"PARAMÈTRES",tip:"Configuration du bot : zone de recherche, sources actives, critères de scoring et paramètres d'alertes."},
+        ].map(t=>(
+          <button key={t.id} className="tb" onClick={()=>setTab(t.id)} title={t.tip}
             style={{color:tab===t.id?"#60b8ff":"#3a6080",borderBottom:tab===t.id?"2px solid #60b8ff":"2px solid transparent",display:"flex",alignItems:"center",gap:"6px"}}>
             {t.l}
             {t.n!==undefined && <span style={{background:tab===t.id?"rgba(96,184,255,0.15)":"rgba(255,255,255,0.05)",color:tab===t.id?"#60b8ff":"#3a6080",padding:"1px 5px",borderRadius:"2px",fontSize:"9px"}}>{t.n}</span>}
