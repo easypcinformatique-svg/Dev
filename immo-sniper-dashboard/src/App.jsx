@@ -233,7 +233,7 @@ function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreS
                     {a.mots.length===0 && <span style={{color:"#2a4060",fontSize:"10px"}}>Aucun signal détecté</span>}
                   </div>
                   <div style={{color:"#3a6080",fontSize:"10px"}}>Statut: <span style={{color:a.statut==="nouveau"?"#00ff88":a.statut==="en_cours"?"#ffb300":"#64748b"}}>{a.statut.toUpperCase()}</span></div>
-                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"8px",background:"rgba(0,150,255,0.15)",color:"#60b8ff",padding:"4px 10px",borderRadius:"2px",fontSize:"10px",textDecoration:"none",border:"1px solid #0088ff33"}}>RECHERCHER SUR {a.source.toUpperCase()} ↗</a>
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"8px",background:"rgba(0,150,255,0.15)",color:"#60b8ff",padding:"4px 10px",borderRadius:"2px",fontSize:"10px",textDecoration:"none",border:"1px solid #0088ff33"}}>VOIR L'ANNONCE SUR {a.source.toUpperCase()} ↗</a>
                 </div>
               </div>
             )}
@@ -440,6 +440,9 @@ function ParamsTab({ S }) {
   );
 }
 
+// URL de l'API backend (même serveur en production, localhost en dev)
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 export default function ImmoSniperDashboard() {
   const [tab, setTab] = useState("flux");
   const [filtreType, setFiltreType] = useState("tous");
@@ -448,9 +451,87 @@ export default function ImmoSniperDashboard() {
   const [filtreFraicheur, setFiltreFraicheur] = useState("tous");
   const [selectedRow, setSelectedRow] = useState(null);
   const [now, setNow] = useState(new Date());
-  const [annonces, setAnnonces] = useState(ANNONCES);
+  const [annonces, setAnnonces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lastScan, setLastScan] = useState(0);
+  const [nextScanIn, setNextScanIn] = useState(0);
+  const [scanCount, setScanCount] = useState(0);
+  const [scanning, setScanning] = useState(false);
+
+  // Fetch annonces depuis l'API backend
+  const fetchAnnonces = async () => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/annonces`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      setAnnonces(data.annonces || []);
+      setLastScan(data.last_scan || 0);
+      setNextScanIn(data.next_scan_in || 0);
+      setScanCount(data.scan_count || 0);
+      setLoading(false);
+    } catch (e) {
+      console.error("[API] Erreur fetch annonces:", e);
+      // Fallback sur données locales si l'API n'est pas dispo
+      if (annonces.length === 0) {
+        setAnnonces(ANNONCES);
+      }
+      setLoading(false);
+    }
+  };
+
+  // Forcer un scan
+  const forceScan = async () => {
+    setScanning(true);
+    try {
+      await fetch(`${API_BASE}/api/scan`, { method: "POST" });
+      // Attendre un peu puis rafraîchir
+      setTimeout(fetchAnnonces, 3000);
+      setTimeout(fetchAnnonces, 10000);
+      setTimeout(fetchAnnonces, 30000);
+    } catch (e) {
+      console.error("[API] Erreur force scan:", e);
+    }
+    setTimeout(() => setScanning(false), 5000);
+  };
+
+  // Mettre à jour le statut via l'API
+  const handleStatut = async (id, statut) => {
+    setAnnonces(prev => prev.map(a => a.id === id ? { ...a, statut } : a));
+    setSelectedRow(null);
+    try {
+      await fetch(`${API_BASE}/api/annonces/${id}/statut`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ statut }),
+      });
+    } catch (e) {
+      console.error("[API] Erreur update statut:", e);
+    }
+  };
+
+  // Polling : fetch les annonces toutes les 30s
+  useEffect(() => {
+    fetchAnnonces();
+    const t = setInterval(fetchAnnonces, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+
+  // Countdown du prochain scan
+  const [countdown, setCountdown] = useState("");
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (lastScan > 0) {
+        const elapsed = Date.now() / 1000 - lastScan;
+        const remaining = Math.max(0, 45 * 60 - elapsed);
+        const m = Math.floor(remaining / 60);
+        const s = Math.floor(remaining % 60);
+        setCountdown(`${m}:${s.toString().padStart(2, "0")}`);
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [lastScan]);
 
   const filteredAnnonces = annonces.filter(a => {
     if (filtreType !== "tous" && a.type.toLowerCase().replace(/ /g,"_") !== filtreType) return false;
@@ -463,11 +544,9 @@ export default function ImmoSniperDashboard() {
 
   const nbOpportunites = annonces.filter(a => a.score >= 65).length;
   const nbExceptionnelles = annonces.filter(a => a.score >= 80).length;
-  const decoteMoyenne = Math.round(annonces.reduce((s,a) => s+a.decote,0)/annonces.length*10)/10;
-  const prixMedianMoyen = Math.round(annonces.filter(a=>a.median_m2).reduce((s,a)=>s+a.median_m2,0)/annonces.filter(a=>a.median_m2).length);
-  const prochaine = [...ENCHERES].sort((a,b)=>a.date_audience-b.date_audience)[0];
-
-  const handleStatut = (id, statut) => { setAnnonces(prev => prev.map(a => a.id===id ? {...a, statut} : a)); setSelectedRow(null); };
+  const decoteMoyenne = annonces.length > 0 ? Math.round(annonces.reduce((s,a) => s+(a.decote||0),0)/annonces.length*10)/10 : 0;
+  const prixMedianMoyen = (() => { const withMedian = annonces.filter(a=>a.median_m2); return withMedian.length > 0 ? Math.round(withMedian.reduce((s,a)=>s+a.median_m2,0)/withMedian.length) : 0; })();
+  const prochaine = ENCHERES.length > 0 ? [...ENCHERES].sort((a,b)=>a.date_audience-b.date_audience)[0] : null;
 
   const S = {
     root: { background:"#040d18", minHeight:"100vh", fontFamily:"'IBM Plex Mono','Courier New',monospace", color:"#c8d8e8", fontSize:"12px", backgroundImage:"radial-gradient(ellipse at 20% 0%, rgba(0,80,200,0.07) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgba(0,200,100,0.04) 0%, transparent 60%)" },
@@ -503,10 +582,17 @@ export default function ImmoSniperDashboard() {
         input{outline:none}
       `}</style>
 
-      {/* BANDEAU DEMO */}
-      <div style={{background:"linear-gradient(90deg,#ff6b35,#ff3b3b,#ff6b35)",padding:"6px 20px",textAlign:"center",fontSize:"11px",color:"#fff",fontWeight:"600",letterSpacing:"0.08em"}}>
-        INTERFACE DE DEMONSTRATION — Les annonces affichées sont fictives. Les liens redirigent vers les pages de recherche des plateformes immobilières correspondantes.
-      </div>
+      {/* BANDEAU STATUS */}
+      {loading && (
+        <div style={{background:"linear-gradient(90deg,#0066ff,#0088ff,#0066ff)",padding:"6px 20px",textAlign:"center",fontSize:"11px",color:"#fff",fontWeight:"600",letterSpacing:"0.08em"}}>
+          CHARGEMENT DES ANNONCES EN COURS... Scan des plateformes immobilières.
+        </div>
+      )}
+      {!loading && annonces.length === 0 && (
+        <div style={{background:"linear-gradient(90deg,#ff6b35,#ff3b3b,#ff6b35)",padding:"6px 20px",textAlign:"center",fontSize:"11px",color:"#fff",fontWeight:"600",letterSpacing:"0.08em"}}>
+          AUCUNE ANNONCE — Le premier scan est en cours. Les résultats apparaîtront dans quelques instants.
+        </div>
+      )}
 
       {/* TOP BAR */}
       <div style={S.topbar}>
@@ -521,7 +607,9 @@ export default function ImmoSniperDashboard() {
         </div>
         <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
           <InfoBulle text="Temps restant avant le prochain scan automatique des plateformes immobilières. Le bot scrape toutes les sources toutes les 45 minutes."><span style={{color:"#3a6080",fontSize:"10px",cursor:"help"}}>SCAN SUIVANT</span></InfoBulle>
-          <span style={{color:"#60b8ff",fontSize:"11px"}}>42:17</span>
+          <span style={{color:"#60b8ff",fontSize:"11px"}}>{countdown || "--:--"}</span>
+          <button onClick={forceScan} disabled={scanning} style={{background:scanning?"#1a3050":"rgba(0,150,255,0.15)",border:"1px solid #0088ff44",borderRadius:"2px",color:scanning?"#3a6080":"#60b8ff",fontSize:"9px",padding:"2px 8px",cursor:scanning?"wait":"pointer",fontFamily:"inherit",letterSpacing:"0.05em"}}>{scanning?"SCAN...":"SCANNER"}</button>
+          <span style={{color:"#2a4060",fontSize:"9px"}}>#{scanCount}</span>
           <div style={{width:"1px",height:"18px",background:"#0d2040"}}/>
           <span style={{color:"#3a6080",fontSize:"10px"}}>HEURE</span>
           <span style={{color:"#c8d8e8",fontSize:"11px"}}>{now.toLocaleTimeString("fr-FR")}</span>
@@ -531,13 +619,13 @@ export default function ImmoSniperDashboard() {
       {/* METRICS */}
       <div style={S.metrics}>
         {[
-          {l:"ANNONCES SCANNÉES",v:"347",s:"Ce cycle",c:"#c8d8e8",tip:"Nombre total d'annonces analysées lors du dernier cycle de scan (toutes les 45 min). Le bot parcourt LeBonCoin, SeLoger, PAP et BienIci."},
+          {l:"ANNONCES SCANNÉES",v:String(annonces.length),s:`Scan #${scanCount}`,c:"#c8d8e8",tip:"Nombre total d'annonces analysées lors du dernier cycle de scan (toutes les 45 min). Le bot parcourt LeBonCoin et BienIci."},
           {l:"OPPORTUNITÉS",v:String(nbOpportunites),s:"Score ≥ 65",c:"#ffb300",tip:"Nombre d'annonces avec un score ≥ 65. Ces biens présentent une décote significative par rapport au marché et méritent votre attention."},
           {l:"EXCEPTIONNELLES",v:String(nbExceptionnelles),s:"Score ≥ 80",c:"#00ff88",tip:"Annonces avec un score ≥ 80. Ce sont les meilleures affaires détectées : forte décote, vendeur particulier, mots-clés d'urgence. À traiter en priorité !"},
           {l:"ENCHÈRES ACTIVES",v:String(ENCHERES.length),s:"Dept. 13",c:"#ff6b35",tip:"Ventes aux enchères judiciaires et notariales en cours dans le département 13. Souvent des décotes de 40-55% par rapport à l'estimation."},
           {l:"PRIX MÉDIAN",v:fmtM2(prixMedianMoyen),s:"DVF 2023",c:"#60b8ff",tip:"Prix médian au m² moyen des communes surveillées, basé sur les données DVF (transactions réelles enregistrées par les notaires en 2023)."},
           {l:"DÉCOTE MOY.",v:"-"+decoteMoyenne+"%",s:"Annonces du jour",c:"#a78bfa",tip:"Décote moyenne de toutes les annonces affichées par rapport au prix médian DVF de leur commune. Plus c'est élevé, meilleures sont les affaires."},
-          {l:"PROCHAINE AUDIENCE",v:joursAvant(prochaine.date_audience)+"J",s:prochaine.ville,c:"#ff3b3b",tip:"Compte à rebours avant la prochaine audience d'enchères. Pensez à mandater un avocat et à visiter le bien avant cette date."},
+          {l:"PROCHAINE AUDIENCE",v:prochaine?joursAvant(prochaine.date_audience)+"J":"--",s:prochaine?prochaine.ville:"--",c:"#ff3b3b",tip:"Compte à rebours avant la prochaine audience d'enchères. Pensez à mandater un avocat et à visiter le bien avant cette date."},
         ].map((m,i)=>(
           <div key={i} style={{padding:"6px 12px",borderRight:i<6?"1px solid #0d2040":"none",cursor:"help"}} title={m.tip}>
             <div style={{color:"#3a6080",fontSize:"9px",letterSpacing:"0.1em",marginBottom:"2px",display:"flex",alignItems:"center"}}>{m.l}<HelpIcon text={m.tip}/></div>
