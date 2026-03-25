@@ -1,7 +1,7 @@
 """
-Scraper multi-sources pour annonces immobilières.
-Source principale : DVF (Demandes de Valeurs Foncières) — transactions réelles des notaires.
-Les liens pointent vers les vraies annonces actives sur les plateformes.
+Scraper multi-sources pour annonces immobilières réelles.
+Source principale : BienIci (API JSON) — annonces actives avec liens directs.
+Comparaison prix : DVF (data.gouv.fr) — transactions notariales pour calculer les décotes.
 """
 import requests
 import gzip
@@ -10,65 +10,43 @@ import io
 import time
 import re
 import hashlib
-import random
-from datetime import datetime, timedelta
+import json
+from datetime import datetime
 from collections import defaultdict
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Accept-Language": "fr-FR,fr;q=0.9",
-}
+try:
+    from curl_cffi import requests as cffi_requests
+    HAS_CFFI = True
+except ImportError:
+    HAS_CFFI = False
+    print("[WARN] curl_cffi non installé, fallback sur requests")
 
-# Codes postaux surveillés (rayon 30km autour Les Pennes-Mirabeau)
-CODES_POSTAUX = [
+# ── Configuration zone de recherche ──
+VILLES_RECHERCHE = [
+    "vitrolles", "marignane", "les pennes mirabeau", "gignac la nerthe",
+    "rognac", "marseille", "aix en provence", "carry le rouet",
+    "chateauneuf les martigues", "martigues", "berre l etang",
+    "gardanne", "bouc bel air", "cabries", "septemes les vallons",
+    "velaux", "ensuès la redonne", "sausset les pins", "istres",
+    "la ciotat",
+]
+
+CODES_POSTAUX_SURVEILLES = [
     "13170", "13127", "13700", "13180", "13340", "13130",
     "13220", "13620", "13500", "13100", "13120", "13880",
     "13240", "13320", "13480", "13960", "13820",
     "13001", "13002", "13003", "13004", "13005", "13006",
     "13007", "13008", "13009", "13010", "13011", "13012",
-    "13013", "13014", "13015", "13016",
+    "13013", "13014", "13015", "13016", "13600", "13800",
 ]
-
-# Mapping source pour les liens
-SOURCES = ["LeBonCoin", "SeLoger", "PAP", "BienIci"]
 
 
 def _gen_id(source, key):
     return hashlib.md5(f"{source}:{key}".encode()).hexdigest()[:12]
 
 
-def _build_source_url(source, ville, cp, type_bien, prix, surface):
-    """Génère l'URL de recherche ciblée vers la plateforme source."""
-    slug = ville.lower().replace(" ", "-").replace("'", "-")
-    for c in "àâäéèêëïîôùûüç":
-        slug = slug.replace(c, {"à":"a","â":"a","ä":"a","é":"e","è":"e","ê":"e","ë":"e","ï":"i","î":"i","ô":"o","ù":"u","û":"u","ü":"u","ç":"c"}.get(c, c))
-
-    prix_min = int(prix * 0.85)
-    prix_max = int(prix * 1.15)
-    surf_min = max(1, int(surface * 0.8)) if surface else 0
-    surf_max = int(surface * 1.2) if surface else 0
-
-    type_map_lbc = {"Maison": "1", "Appartement": "2", "Terrain": "4", "Parking": "3", "Local commercial": "6", "Immeuble": "6"}
-    type_map_seloger = {"Maison": "bien-maison", "Appartement": "bien-appartement", "Terrain": "bien-terrain"}
-
-    if source == "LeBonCoin":
-        t = type_map_lbc.get(type_bien, "1")
-        url = f"https://www.leboncoin.fr/recherche?category=9&locations={ville.replace(' ', '_')}__{cp}&real_estate_type={t}&price={prix_min}-{prix_max}"
-        if surf_min:
-            url += f"&square={surf_min}-{surf_max}"
-        return url
-    elif source == "SeLoger":
-        t = type_map_seloger.get(type_bien, "")
-        return f"https://www.seloger.com/immobilier/achat/immo-{slug}-{cp[:2]}/{t}/?prix={prix_min}_{prix_max}"
-    elif source == "PAP":
-        return f"https://www.pap.fr/annonce/vente-immobilier-{slug}-{cp}"
-    elif source == "BienIci":
-        return f"https://www.bienici.com/recherche/achat/{slug}-{cp}"
-    return "#"
-
-
 def _detect_mots_cles(text):
-    """Détecte les mots-clés d'urgence."""
+    """Détecte les mots-clés d'urgence dans le texte."""
     if not text:
         return []
     text_lower = text.lower()
@@ -76,194 +54,316 @@ def _detect_mots_cles(text):
         "succession": "succession", "divorce": "divorce", "urgent": "urgent",
         "liquidation": "liquidation", "mutation": "mutation", "vente rapide": "vente rapide",
         "travaux": "travaux", "à rénover": "à rénover", "baisse de prix": "baisse de prix",
-        "négociable": "négociable", "viager": "viager",
+        "négociable": "négociable", "viager": "viager", "départ": "départ",
+        "cause déménagement": "déménagement", "idéal investisseur": "investisseur",
+        "première offre": "première offre", "exclusivité": "exclusivité",
+        "occupé": "occupé", "libre": "libre de suite",
     }
     return [label for k, label in keywords.items() if k in text_lower]
 
 
-def _map_type_local(raw):
-    """Mappe le type DVF vers un type normalisé."""
-    if not raw:
-        return None
-    raw = raw.strip()
-    mapping = {
-        "Maison": "Maison",
-        "Appartement": "Appartement",
-        "Dépendance": None,
-        "Local industriel. commercial ou assimilé": "Local commercial",
-    }
-    return mapping.get(raw, raw)
+def _parse_age(date_str):
+    """Convertit une date ISO en ancienneté lisible."""
+    try:
+        dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+        diff = datetime.now().timestamp() - dt.timestamp()
+        if diff < 3600:
+            return f"{max(1,int(diff/60))}min"
+        elif diff < 86400:
+            h = int(diff / 3600)
+            m = int((diff % 3600) / 60)
+            return f"{h}h{m:02d}"
+        elif diff < 86400 * 30:
+            return f"{int(diff/86400)}j"
+        else:
+            return f"{int(diff/86400/30)}mois"
+    except:
+        return "?"
 
 
 # ──────────────────────────────────────────────
-# SOURCE : DVF (Demandes de Valeurs Foncières)
-# Transactions immobilières réelles enregistrées par les notaires
+# SOURCE : BienIci (API JSON — annonces actives)
 # ──────────────────────────────────────────────
-def fetch_dvf_data():
-    """Télécharge les données DVF récentes pour le département 13."""
-    annonces = []
 
-    for year in [2024, 2023]:
+def _get_bienici_session():
+    """Crée une session BienIci avec cookies."""
+    if HAS_CFFI:
+        session = cffi_requests.Session(impersonate="chrome")
+    else:
+        session = requests.Session()
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        })
+    # Charger la page d'accueil pour les cookies
+    try:
+        session.get("https://www.bienici.com/", timeout=10)
+    except:
+        pass
+    return session
+
+
+def _get_zone_ids(session, villes):
+    """Récupère les zoneIds BienIci pour les villes données."""
+    zone_ids = []
+    for ville in villes:
         try:
-            print(f"[DVF] Téléchargement données {year} dept 13...")
-            url = f"https://files.data.gouv.fr/geo-dvf/latest/csv/{year}/departements/13.csv.gz"
-            resp = requests.get(url, headers=HEADERS, timeout=30)
-            if resp.status_code != 200:
-                print(f"[DVF] Erreur {resp.status_code} pour {year}")
-                continue
+            r = session.get(f"https://res.bienici.com/suggest.json?q={ville}", timeout=8)
+            if r.status_code == 200:
+                results = r.json()
+                if results:
+                    zones = results[0].get("zoneIds", [])
+                    zone_ids.extend(zones)
+                    print(f"[BienIci] {results[0].get('name')}: zones={zones}")
+            time.sleep(0.2)
+        except Exception as e:
+            print(f"[BienIci] Erreur suggest {ville}: {e}")
+    return list(set(zone_ids))
 
-            data = gzip.decompress(resp.content).decode("utf-8")
-            reader = csv.DictReader(io.StringIO(data))
 
-            # Grouper les mutations par id_mutation pour avoir le bon prix total
-            mutations = defaultdict(list)
-            for row in reader:
-                if row.get("nature_mutation") == "Vente" and row.get("code_postal") in CODES_POSTAUX:
-                    mutations[row["id_mutation"]].append(row)
+def scrape_bienici():
+    """Scrape les annonces actives depuis l'API BienIci."""
+    annonces = []
+    try:
+        session = _get_bienici_session()
+        zone_ids = _get_zone_ids(session, VILLES_RECHERCHE)
 
-            print(f"[DVF] {len(mutations)} mutations trouvées pour {year}")
+        if not zone_ids:
+            print("[BienIci] Aucun zoneId trouvé")
+            return annonces
 
-            for mut_id, rows in mutations.items():
-                try:
-                    # Prendre la première ligne avec un type_local
-                    main_row = None
-                    for r in rows:
-                        if r.get("type_local") and r["type_local"].strip():
-                            main_row = r
-                            break
+        print(f"[BienIci] Recherche dans {len(zone_ids)} zones...")
 
-                    if not main_row:
-                        # Vérifier si c'est un terrain
-                        if any(r.get("nature_culture") == "terres" or r.get("nature_culture") == "sols" or r.get("surface_terrain") for r in rows):
-                            main_row = rows[0]
-                            main_row["_is_terrain"] = True
-                        else:
+        # Récupérer les annonces par batch (max 100 par requête)
+        property_types = ["house", "flat", "land", "parking", "office", "building"]
+        type_map = {
+            "house": "Maison", "flat": "Appartement", "land": "Terrain",
+            "parking": "Parking", "office": "Local commercial", "building": "Immeuble",
+        }
+
+        for page_from in range(0, 500, 100):
+            filters = {
+                "size": 100,
+                "from": page_from,
+                "filterType": "buy",
+                "propertyType": property_types,
+                "zoneIdsByTypes": {"zoneIds": zone_ids},
+                "sortBy": "publicationDate",
+                "sortOrder": "desc",
+            }
+
+            try:
+                params = json.dumps(filters)
+                r = session.get(
+                    f"https://www.bienici.com/realEstateAds.json?filters={params}",
+                    timeout=20,
+                )
+
+                if r.status_code != 200:
+                    print(f"[BienIci] Code {r.status_code} page {page_from}")
+                    break
+
+                data = r.json()
+                ads = data.get("realEstateAds", [])
+                total = data.get("total", 0)
+
+                if not ads:
+                    break
+
+                for ad in ads:
+                    try:
+                        ad_id = ad.get("id", "")
+                        prix = ad.get("price")
+                        if not prix or prix <= 0:
                             continue
 
-                    type_bien = _map_type_local(main_row.get("type_local"))
-                    if main_row.get("_is_terrain"):
-                        type_bien = "Terrain"
-                    if not type_bien:
+                        surface = ad.get("surfaceArea", 0) or 0
+                        prop_type = ad.get("propertyType", "")
+                        type_bien = type_map.get(prop_type, "Autre")
+                        ville = ad.get("city", "")
+                        cp = ad.get("postalCode", "")
+                        pieces = ad.get("roomsQuantity") or None
+                        dpe = ad.get("energyClassification") or None
+                        terrain = ad.get("landSurfaceArea") or None
+
+                        pub_date = ad.get("publicationDate", "")
+                        modif_date = ad.get("modificationDate", "")
+                        age = _parse_age(pub_date) if pub_date else "?"
+                        try:
+                            age_ts = datetime.fromisoformat(pub_date.replace("Z", "+00:00")).timestamp()
+                        except:
+                            age_ts = time.time()
+
+                        surface_val = round(surface) if surface else 0
+                        prix_m2 = round(prix / surface_val) if surface_val > 0 else 0
+
+                        description = ad.get("description", "")
+                        title = ad.get("title", "") or f"{type_bien} {surface_val}m² {ville}"
+
+                        # Lien DIRECT vers l'annonce
+                        annonce_url = f"https://www.bienici.com/annonce/{ad_id}"
+
+                        # Déterminer vendeur
+                        account_type = ad.get("accountType", "")
+                        vendeur = "agence" if account_type in ("agency", "network") else "particulier"
+
+                        # Photos
+                        photos = ad.get("photos", [])
+                        photo = photos[0].get("url", "") if photos else ""
+
+                        annonces.append({
+                            "id": _gen_id("BienIci", ad_id),
+                            "ad_id": ad_id,
+                            "type": type_bien,
+                            "ville": ville,
+                            "cp": cp,
+                            "prix": int(prix),
+                            "surface": surface_val,
+                            "terrain": round(terrain) if terrain else None,
+                            "pieces": pieces,
+                            "prix_m2": prix_m2,
+                            "dpe": dpe if dpe and dpe in "ABCDEFG" else None,
+                            "source": "BienIci",
+                            "vendeur": vendeur,
+                            "age": age,
+                            "age_ts": age_ts,
+                            "mots": _detect_mots_cles(f"{title} {description}"),
+                            "url": annonce_url,
+                            "titre": title,
+                            "photo": photo,
+                            "statut": "nouveau",
+                            "est_enchere": False,
+                        })
+
+                    except Exception as e:
                         continue
 
-                    valeur = main_row.get("valeur_fonciere", "0").replace(",", ".")
-                    prix = int(float(valeur)) if valeur else 0
-                    if prix < 5000 or prix > 5000000:
-                        continue
+                print(f"[BienIci] Page {page_from}: {len(ads)} annonces (total: {total})")
+                time.sleep(0.3)
 
-                    surface = int(float(main_row.get("surface_reelle_bati", 0) or 0))
-                    terrain = int(float(main_row.get("surface_terrain", 0) or 0)) or None
-                    pieces = int(main_row.get("nombre_pieces_principales", 0) or 0) or None
-                    ville = main_row.get("nom_commune", "")
-                    cp = main_row.get("code_postal", "")
-                    date_mutation = main_row.get("date_mutation", "")
-                    adresse_num = main_row.get("adresse_numero", "")
-                    adresse_voie = main_row.get("adresse_nom_voie", "")
-                    lat = main_row.get("latitude", "")
-                    lon = main_row.get("longitude", "")
+                if page_from + 100 >= total:
+                    break
 
-                    if type_bien == "Terrain":
-                        surface_calc = terrain or surface or 0
-                    else:
-                        surface_calc = surface
-
-                    prix_m2 = round(prix / surface_calc) if surface_calc and surface_calc > 0 else 0
-
-                    # Calculer l'ancienneté
-                    try:
-                        dt = datetime.strptime(date_mutation, "%Y-%m-%d")
-                        days_ago = (datetime.now() - dt).days
-                        if days_ago <= 0:
-                            age = "Aujourd'hui"
-                        elif days_ago <= 30:
-                            age = f"{days_ago}j"
-                        elif days_ago <= 365:
-                            age = f"{days_ago // 30}mois"
-                        else:
-                            age = f"{days_ago // 365}an"
-                        age_ts = dt.timestamp()
-                    except:
-                        age = "?"
-                        age_ts = time.time()
-
-                    # Assigner une source aléatoire (la vraie source est DVF/notaire)
-                    source = random.choice(SOURCES)
-                    annonce_url = _build_source_url(source, ville, cp, type_bien, prix, surface_calc)
-
-                    adresse = f"{adresse_num} {adresse_voie}".strip()
-                    titre = f"{type_bien} {surface_calc}m² - {ville}"
-                    if pieces:
-                        titre = f"{type_bien} {pieces}p {surface_calc}m² - {ville}"
-
-                    annonces.append({
-                        "id": _gen_id("DVF", mut_id),
-                        "type": type_bien,
-                        "ville": ville,
-                        "cp": cp,
-                        "prix": prix,
-                        "surface": surface_calc,
-                        "terrain": terrain,
-                        "pieces": pieces,
-                        "prix_m2": prix_m2,
-                        "dpe": None,  # DVF n'a pas le DPE
-                        "source": source,
-                        "source_data": "DVF",
-                        "vendeur": "particulier",  # DVF ne distingue pas
-                        "age": age,
-                        "age_ts": age_ts,
-                        "date_mutation": date_mutation,
-                        "mots": [],  # DVF n'a pas de description
-                        "url": annonce_url,
-                        "titre": titre,
-                        "adresse": adresse,
-                        "lat": lat,
-                        "lon": lon,
-                        "statut": "nouveau",
-                        "est_enchere": False,
-                    })
-
-                except Exception as e:
-                    continue
-
-            print(f"[DVF] {len(annonces)} annonces valides après parsing de {year}")
-            if len(annonces) >= 200:
+            except Exception as e:
+                print(f"[BienIci] Erreur page {page_from}: {e}")
                 break
 
-        except Exception as e:
-            print(f"[DVF] Erreur globale {year}: {e}")
+        print(f"[BienIci] Total: {len(annonces)} annonces récupérées")
+
+    except Exception as e:
+        print(f"[BienIci] Erreur globale: {e}")
 
     return annonces
+
+
+# ──────────────────────────────────────────────
+# DVF : Prix médians pour le scoring
+# ──────────────────────────────────────────────
+
+_dvf_medians = {}
+_dvf_loaded = False
+
+
+def _load_dvf_medians():
+    """Charge les médianes DVF depuis data.gouv.fr."""
+    global _dvf_medians, _dvf_loaded
+
+    if _dvf_loaded:
+        return _dvf_medians
+
+    try:
+        print("[DVF] Téléchargement données 2024 dept 13...")
+        url = "https://files.data.gouv.fr/geo-dvf/latest/csv/2024/departements/13.csv.gz"
+        resp = requests.get(url, timeout=30)
+        if resp.status_code != 200:
+            print(f"[DVF] Erreur {resp.status_code}")
+            _dvf_loaded = True
+            return _dvf_medians
+
+        data = gzip.decompress(resp.content).decode("utf-8")
+        reader = csv.DictReader(io.StringIO(data))
+
+        by_key = defaultdict(list)
+        for row in reader:
+            if row.get("nature_mutation") != "Vente":
+                continue
+            cp = row.get("code_postal", "")
+            type_local = row.get("type_local", "").strip()
+            valeur = row.get("valeur_fonciere", "0").replace(",", ".")
+            surface = float(row.get("surface_reelle_bati", 0) or 0)
+
+            if not type_local or not surface or surface < 10:
+                continue
+
+            try:
+                prix = float(valeur)
+                if prix < 10000:
+                    continue
+                prix_m2 = prix / surface
+                if prix_m2 < 100 or prix_m2 > 20000:
+                    continue
+
+                # Normaliser le type
+                if "Maison" in type_local:
+                    t = "Maison"
+                elif "Appartement" in type_local:
+                    t = "Appartement"
+                else:
+                    t = "Local commercial"
+
+                by_key[(cp, t)].append(prix_m2)
+                by_key[(cp, "all")].append(prix_m2)
+            except:
+                continue
+
+        for key, values in by_key.items():
+            values.sort()
+            _dvf_medians[key] = round(values[len(values) // 2])
+
+        print(f"[DVF] {len(_dvf_medians)} médianes calculées")
+        _dvf_loaded = True
+
+    except Exception as e:
+        print(f"[DVF] Erreur: {e}")
+        _dvf_loaded = True
+
+    return _dvf_medians
+
+
+# Fallback médians si DVF pas dispo
+FALLBACK_MEDIANS = {
+    "13127": 2450, "13700": 2800, "13170": 3100, "13180": 2680,
+    "13340": 2750, "13130": 2100, "13220": 2600, "13620": 3200,
+    "13500": 2050, "13100": 3450, "13001": 3000, "13002": 2800,
+    "13003": 2400, "13004": 2600, "13005": 3100, "13006": 3500,
+    "13007": 3800, "13008": 3500, "13009": 3300, "13010": 2700,
+    "13011": 2500, "13012": 2800, "13013": 2600, "13014": 2200,
+    "13015": 2000, "13016": 2500, "13120": 2800, "13320": 3200,
+    "13480": 3000, "13240": 2500, "13600": 3400, "13800": 2300,
+}
 
 
 # ──────────────────────────────────────────────
 # SCORING
 # ──────────────────────────────────────────────
 
-# Prix médians DVF calculés (fallback)
-MEDIAN_CACHE = {}
-
-
-def _compute_medians(annonces):
-    """Calcule les prix médians par CP et type à partir des données."""
-    by_key = defaultdict(list)
-    for a in annonces:
-        if a["prix_m2"] and a["prix_m2"] > 0 and a["prix_m2"] < 20000:
-            by_key[(a["cp"], a["type"])].append(a["prix_m2"])
-            by_key[(a["cp"], "all")].append(a["prix_m2"])
-
-    medians = {}
-    for key, values in by_key.items():
-        values.sort()
-        medians[key] = values[len(values) // 2]
-    return medians
+MOTS_BONUS = {
+    "succession": 15, "divorce": 12, "urgent": 10, "liquidation": 15,
+    "mutation": 8, "vente rapide": 10, "à saisir": 6, "départ": 5,
+    "négociable": 4, "déménagement": 5, "travaux": 3, "à rénover": 3,
+    "baisse de prix": 8, "viager": 2, "investisseur": 3,
+    "première offre": 5, "libre de suite": 3,
+}
 
 
 def score_annonce(a, medians):
-    """Calcule le score d'opportunité."""
-    score = 30
+    """Calcule le score d'opportunité (0-100)."""
+    score = 25  # Base
 
-    # 1. Décote par rapport à la médiane locale (max 40 pts)
-    median = medians.get((a["cp"], a["type"])) or medians.get((a["cp"], "all"))
+    # 1. Décote par rapport à la médiane DVF locale (max 40 pts)
+    cp = a.get("cp", "")
+    type_bien = a.get("type", "Maison")
+    median = medians.get((cp, type_bien)) or medians.get((cp, "all")) or FALLBACK_MEDIANS.get(cp)
+
     if median:
         a["median_m2"] = median
         if a["prix_m2"] and a["prix_m2"] > 0:
@@ -282,36 +382,42 @@ def score_annonce(a, medians):
             elif decote >= 5:
                 score += 3
             else:
-                score -= 15
+                score -= 10
         else:
             a["decote"] = 0
     else:
         a["median_m2"] = 0
         a["decote"] = 0
 
-    # 2. Fraîcheur de la transaction
-    try:
-        dt = datetime.strptime(a.get("date_mutation", ""), "%Y-%m-%d")
-        days = (datetime.now() - dt).days
-        if days <= 30:
-            score += 10
-        elif days <= 90:
-            score += 6
-        elif days <= 180:
+    # 2. Mots-clés d'urgence (max 25 pts cumulés)
+    mot_bonus = sum(MOTS_BONUS.get(m, 2) for m in a.get("mots", []))
+    score += min(25, mot_bonus)
+
+    # 3. Vendeur particulier (+5 pts)
+    if a.get("vendeur") == "particulier":
+        score += 5
+
+    # 4. Fraîcheur de l'annonce (max 10 pts)
+    age = a.get("age", "")
+    if "min" in age:
+        score += 10
+    elif "h" in age:
+        h = int(re.search(r"(\d+)h", age).group(1)) if re.search(r"(\d+)h", age) else 24
+        if h <= 1:
+            score += 8
+        elif h <= 3:
+            score += 5
+        elif h <= 6:
             score += 3
-    except:
-        pass
 
-    # 3. Prix attractif absolu (biens à petit prix)
-    if a["prix"] < 100000 and a["type"] in ("Maison", "Appartement"):
-        score += 8
-    elif a["prix"] < 150000 and a["type"] in ("Maison", "Appartement"):
-        score += 4
+    # 5. DPE malus
+    if a.get("dpe") in ("F", "G"):
+        score -= 5
 
-    # 4. Grande surface
-    if a["surface"] and a["surface"] > 100 and a["type"] == "Maison":
-        score += 3
-    if a["terrain"] and a["terrain"] > 500:
+    # 6. Petits prix attractifs
+    if a["prix"] < 100000 and type_bien in ("Maison", "Appartement"):
+        score += 5
+    elif a["prix"] < 150000 and type_bien in ("Maison", "Appartement"):
         score += 2
 
     # Clamp
@@ -330,29 +436,30 @@ def score_annonce(a, medians):
     return a
 
 
+# ──────────────────────────────────────────────
+# ORCHESTRATEUR
+# ──────────────────────────────────────────────
+
 def scan_all_sources():
     """Lance le scan complet et retourne les annonces scorées."""
-    print("[SCAN] Démarrage du scan...")
+    print("[SCAN] Démarrage du scan multi-sources...")
     start = time.time()
 
-    all_annonces = fetch_dvf_data()
+    # 1. Charger les médianes DVF pour le scoring
+    medians = _load_dvf_medians()
 
-    # Calculer les médianes à partir de toutes les données
-    medians = _compute_medians(all_annonces)
-    print(f"[SCAN] Médianes calculées pour {len(medians)} zones")
+    # 2. Scraper les annonces actives
+    all_annonces = scrape_bienici()
 
-    # Scorer chaque annonce
+    # 3. Scorer chaque annonce
     scored = [score_annonce(a, medians) for a in all_annonces]
 
-    # Filtrer : garder seulement les annonces avec une décote significative ou un bon score
-    filtered = [a for a in scored if a["score"] >= 35 and a.get("decote", 0) >= 5]
+    # 4. Trier par score décroissant
+    scored.sort(key=lambda x: x["score"], reverse=True)
 
-    # Trier par score décroissant
-    filtered.sort(key=lambda x: x["score"], reverse=True)
-
-    # Limiter à 200 meilleures
-    filtered = filtered[:200]
+    # 5. Garder les meilleures
+    scored = scored[:500]
 
     elapsed = round(time.time() - start, 1)
-    print(f"[SCAN] Terminé en {elapsed}s: {len(all_annonces)} brutes -> {len(filtered)} filtrées")
-    return filtered
+    print(f"[SCAN] Terminé en {elapsed}s: {len(all_annonces)} brutes -> {len(scored)} retenues")
+    return scored
