@@ -1,14 +1,36 @@
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Cell } from "recharts";
 
-// Génère l'URL de recherche réelle selon la source
-const buildSourceUrl = (source, ville, cp) => {
+// Mapping type de bien vers les paramètres de chaque plateforme
+const LBC_TYPES = {"Maison":"1","Terrain":"4","Local commercial":"6","Parking":"3","Immeuble":"6","Appartement":"2"};
+const PAP_TYPES = {"Maison":"maison","Terrain":"terrain","Local commercial":"local-commercial","Parking":"parking","Immeuble":"immeuble","Appartement":"appartement"};
+const SELOGER_TYPES = {"Maison":"bien-maison","Terrain":"bien-terrain","Local commercial":"bien-local-commercial","Parking":"bien-parking","Immeuble":"bien-immeuble","Appartement":"bien-appartement"};
+const BIENICI_TYPES = {"Maison":"maison","Terrain":"terrain","Local commercial":"local","Parking":"parking","Immeuble":"immeuble","Appartement":"appartement"};
+
+// Génère l'URL de recherche réelle ciblée selon la source, le type, le prix et la surface
+const buildSourceUrl = (source, ville, cp, type, prix, surface) => {
   const slug = ville.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/'/g,"-");
+  const prixMin = Math.round(prix * 0.8);
+  const prixMax = Math.round(prix * 1.2);
+  const surfMin = Math.round(surface * 0.8);
+  const surfMax = Math.round(surface * 1.2);
   switch(source) {
-    case "LeBonCoin": return `https://www.leboncoin.fr/recherche?category=9&locations=${encodeURIComponent(ville)}__${cp}`;
-    case "SeLoger": return `https://www.seloger.com/immobilier/achat/immo-${slug}-${cp.substring(0,2)}/`;
-    case "PAP": return `https://www.pap.fr/annonce/vente-immobilier-${slug}-${cp}`;
-    case "BienIci": return `https://www.bienici.com/recherche/achat/${slug}-${cp}`;
+    case "LeBonCoin": {
+      const t = LBC_TYPES[type] || "1";
+      return `https://www.leboncoin.fr/recherche?category=9&locations=${encodeURIComponent(ville)}__${cp}&real_estate_type=${t}&price=${prixMin}-${prixMax}&square=${surfMin}-${surfMax}`;
+    }
+    case "SeLoger": {
+      const t = SELOGER_TYPES[type] || "";
+      return `https://www.seloger.com/immobilier/achat/immo-${slug}-${cp.substring(0,2)}/${t}/?prix=${prixMin}_${prixMax}&surface=${surfMin}_${surfMax}`;
+    }
+    case "PAP": {
+      const t = PAP_TYPES[type] || "immobilier";
+      return `https://www.pap.fr/annonce/vente-${t}-${slug}-${cp}-g${cp}-du-${prixMin}-au-${prixMax}-euros-a-partir-de-${surfMin}-m2`;
+    }
+    case "BienIci": {
+      const t = BIENICI_TYPES[type] || "";
+      return `https://www.bienici.com/recherche/achat/${slug}-${cp}/${t}?prix-min=${prixMin}&prix-max=${prixMax}&surface-min=${surfMin}`;
+    }
     default: return "#";
   }
 };
@@ -25,7 +47,7 @@ const ANNONCES = [
   { id:9, score:62, niveau:"FORTE OPPORTUNITE", type:"Immeuble", ville:"Marseille 3e", cp:"13003", prix:520000, surface:280, terrain:null, pieces:8, prix_m2:1857, median_m2:2400, decote:22.6, source:"SeLoger", vendeur:"agence", age:"5h15", dpe:"E", mots:["travaux"], statut:"traite", est_enchere:false },
   { id:10, score:44, niveau:"A SURVEILLER", type:"Maison", ville:"Chateauneuf-les-Martigues", cp:"13220", prix:340000, surface:148, terrain:500, pieces:6, prix_m2:2297, median_m2:2600, decote:11.7, source:"LeBonCoin", vendeur:"particulier", age:"8h45", dpe:"C", mots:[], statut:"nouveau", est_enchere:false },
   { id:11, score:76, niveau:"FORTE OPPORTUNITE", type:"Local commercial", ville:"Aix-en-Provence", cp:"13100", prix:198000, surface:110, terrain:null, pieces:null, prix_m2:1800, median_m2:2500, decote:28.0, source:"PAP", vendeur:"particulier", age:"1h55", dpe:"D", mots:["divorce","vente rapide"], statut:"nouveau", est_enchere:false },
-].map(a => ({...a, url: buildSourceUrl(a.source, a.ville, a.cp)}));
+].map(a => ({...a, url: buildSourceUrl(a.source, a.ville, a.cp, a.type, a.prix, a.surface)}));
 
 const ENCHERES = [
   { id:1, type:"JUDICIAIRE", bien:"Maison T5 - 127m²", ville:"Vitrolles", cp:"13127", mise_a_prix:155000, estimation:280000, decote_potentielle:44.6, date_audience:new Date(Date.now()+3*24*3600*1000), tribunal:"TJ Aix-en-Provence", avocat:"Me. Rousseau", rg:"2024/00342", visites:"14 et 21 mars 14h-16h", score:94, surface:127, terrain:320 },
