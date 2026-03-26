@@ -1,13 +1,14 @@
-name: Deploy blog guides to satellite repos
+name: Auto-deploy livraison site to all repos
 
 on:
   push:
     branches: [master]
     paths:
-      - 'pizzeria/livraison-site/blog/**'
+      - 'pizzeria/livraison-site/**'
 
 jobs:
-  deploy:
+  # Job 1 : Deploy blog guides to satellite city repos
+  deploy-blog:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,7 +23,7 @@ jobs:
       - name: Checkout source repo
         uses: actions/checkout@v4
 
-      - name: Clone and update satellite repo
+      - name: Deploy blog to satellite repo
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
         run: |
@@ -35,9 +36,37 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "No changes to deploy for ${{ matrix.repo }}"
+            echo "No changes for ${{ matrix.repo }}"
           else
-            git commit -m "Auto-deploy updated blog guides"
+            git commit -m "Auto-deploy: update blog guides"
             git push origin main
             echo "Deployed to ${{ matrix.repo }}"
+          fi
+
+  # Job 2 : Deploy entire livraison site to main Carpentras repo
+  deploy-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to livraison-pizza-carpentras
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/livraison-pizza-carpentras.git satellite
+          cd satellite
+
+          # Copy all site files (except .git)
+          rsync -av --delete --exclude='.git' ../pizzeria/livraison-site/ ./
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes for livraison-pizza-carpentras"
+          else
+            git commit -m "Auto-deploy: update livraison site"
+            git push origin main
+            echo "Deployed to livraison-pizza-carpentras"
           fi
