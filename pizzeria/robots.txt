@@ -6,3 +6,4 @@ Sitemap: https://pizzanapolicarpentras.fr/sitemap.xml
 
 # Block internal/admin paths
 Disallow: /redirect/
+
