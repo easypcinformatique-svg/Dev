@@ -2,8 +2,8 @@ name: Auto-update Google reviews count
 
 on:
   schedule:
-    # Run daily at 6:00 AM UTC (8:00 AM Paris time)
-    - cron: '0 6 * * *'
+    # Run every Monday at 6:00 AM UTC (8:00 AM Paris time)
+    - cron: '0 6 * * 1'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
