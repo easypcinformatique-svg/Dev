@@ -16,6 +16,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Fix typo: Pizzerie -> Pizzeria
+          sed -i 's/Pizzerie/Pizzeria/g' index.html
+          echo "Fixed Pizzerie -> Pizzeria"
+
           python3 << 'PYEOF'
           with open('index.html', 'r', encoding='utf-8') as f:
               content = f.read()
