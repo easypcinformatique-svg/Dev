@@ -398,7 +398,7 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .blog-hero {
         padding: 100px 0 35px;
     }

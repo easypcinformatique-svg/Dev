@@ -1136,7 +1136,7 @@ img {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     /* Base mobile adjustments */
     .section {
         padding: 60px 0;
