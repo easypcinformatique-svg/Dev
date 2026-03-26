@@ -1,0 +1,49 @@
+name: Fix loader text size
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update loader text size
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          python3 << 'PYEOF'
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          # Pizza Napoli: 2rem -> 3.5rem
+          content = content.replace(
+              '.loader-pizza{font-family:\'Cinzel\',serif;font-size:2rem;',
+              '.loader-pizza{font-family:\'Cinzel\',serif;font-size:3.5rem;'
+          )
+
+          # Carpentras Vaucluse: .75rem -> 1.2rem
+          content = content.replace(
+              '.loader-sub{font-family:\'Josefin Sans\',sans-serif;font-size:.75rem;',
+              '.loader-sub{font-family:\'Josefin Sans\',sans-serif;font-size:1.2rem;'
+          )
+
+          # Since 2008: .6rem -> .9rem
+          content = content.replace(
+              'font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:#555;margin-top:.6rem;',
+              'font-size:.9rem;letter-spacing:.25em;text-transform:uppercase;color:#555;margin-top:.8rem;'
+          )
+
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(content)
+          print('Loader text sizes doubled')
+          PYEOF
+
+          git add index.html
+          git commit -m "Double loader splash screen text size"
+          git push origin main
+          echo "Done!"
