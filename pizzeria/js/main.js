@@ -137,6 +137,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function goToSlide(index) {
+            // Re-query cards in case google-reviews.js replaced carousel content
+            cards = track.querySelectorAll('.avis-card');
+            if (cards.length === 0) return;
+            cardsPerView = getCardsPerView();
+            totalPages = Math.ceil(cards.length / cardsPerView);
             if (index < 0) index = totalPages - 1;
             if (index >= totalPages) index = 0;
             currentIndex = index;
