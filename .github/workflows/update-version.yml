@@ -26,26 +26,38 @@ jobs:
 
           python3 << 'PYEOF'
           import re, os
+
           with open('index.html', 'r', encoding='utf-8') as f:
               content = f.read()
+
           vdate = os.environ['VERSION_DATE']
           vtime = os.environ['VERSION_TIME']
-          pattern = r'v\.\s*\d{2}/\d{2}/\d{4}\s*&middot;\s*\d{2}h\d{2}'
-          replacement = f'v. {vdate} &middot; {vtime}'
+
+          # Pattern: the entire div containing the version inside nav-logo
+          # Matches: >v. DD/MM/YYYY &middot; HHhMM</div>
+          pattern = r'>v\.[\s\S]*?</div>(\s*</div>\s*</nav>)'
+
+          # Simpler approach: find the exact version text pattern
+          # v. DD/MM/YYYY &middot; HHhMM (with possible garbage from previous bad edits)
+          pattern = r'v\.[^<]*\d{2}h\d{2}[^<]*'
+          replacement = f'v. {vdate} \u0026middot; {vtime}'
+
           new_content, count = re.subn(pattern, replacement, content, count=1)
+
           if count > 0:
               with open('index.html', 'w', encoding='utf-8') as f:
                   f.write(new_content)
-              print(f'Version updated to: v. {vdate} - {vtime}')
+              print(f'Replaced {count} occurrence(s)')
+              print(f'Version set to: v. {vdate} &middot; {vtime}')
           else:
-              print('No version pattern found')
+              print('WARNING: No version pattern found in index.html')
           PYEOF
 
           if git diff --quiet; then
-            echo "No changes"
+            echo "No changes needed"
           else
             git add index.html
             git commit -m "Update version: ${VERSION_DATE} ${VERSION_TIME}"
             git push origin main
-            echo "Pushed!"
+            echo "Version updated and pushed!"
           fi
