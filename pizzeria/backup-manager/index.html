@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizza Napoli - Backup Manager</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Arial,sans-serif; background:#1a0a00; color:#fff; min-height:100vh; }
+.flag { display:flex; height:5px; }
+.flag div { flex:1; }
+.flag .g { background:#009246; }
+.flag .w { background:#fff; }
+.flag .r { background:#ce2b37; }
+header { text-align:center; padding:30px 20px 15px; }
+header h1 { font-family:Georgia,serif; font-size:1.8em; color:#f39c12; }
+header p { color:#ccc; font-size:0.9em; margin-top:5px; }
+.status { text-align:center; padding:10px; font-size:0.95em; color:#27ae60; min-height:40px; }
+.status.loading { color:#f39c12; }
+.status.error { color:#e74c3c; }
+.buttons { display:flex; justify-content:center; gap:15px; padding:10px 20px 20px; flex-wrap:wrap; }
+.btn { border:none; padding:14px 28px; border-radius:8px; font-size:1em; font-weight:bold; cursor:pointer; color:#fff; transition:0.2s; }
+.btn:hover { transform:translateY(-2px); filter:brightness(1.1); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.btn-backup { background:#27ae60; }
+.btn-restore { background:#e67e22; }
+.btn-refresh { background:#3498db; }
+.sep { height:2px; background:#c0392b; margin:0 20px; }
+.list-title { padding:15px 20px 10px; color:#ccc; font-size:0.9em; }
+table { width:calc(100% - 40px); margin:0 20px; border-collapse:collapse; }
+th { text-align:left; padding:10px 12px; background:#2c2c2c; color:#f39c12; font-size:0.85em; }
+td { padding:10px 12px; border-bottom:1px solid #333; font-size:0.85em; color:#ddd; }
+tr:hover td { background:#2c1a00; }
+tr.selected td { background:#3d1500; }
+tr { cursor:pointer; }
+footer { text-align:center; padding:20px; color:#666; font-size:0.8em; }
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; align-items:center; justify-content:center; }
+.modal-bg.show { display:flex; }
+.modal { background:#2c2c2c; border-radius:12px; padding:30px; max-width:400px; text-align:center; }
+.modal h3 { color:#f39c12; margin-bottom:15px; }
+.modal p { color:#ccc; margin-bottom:20px; font-size:0.9em; }
+.modal-btns { display:flex; gap:10px; justify-content:center; }
+.modal .btn { padding:10px 25px; font-size:0.9em; }
+.btn-cancel { background:#555; }
+</style>
+</head>
+<body>
+<div class="flag"><div class="g"></div><div class="w"></div><div class="r"></div></div>
+<header>
+  <h1>Pizza Napoli Carpentras</h1>
+  <p>Gestionnaire de Backups</p>
+</header>
+<div class="status" id="status">Chargement...</div>
+<div class="buttons">
+  <button class="btn btn-backup" id="btnBackup" onclick="doBackup()">BACKUP MAINTENANT</button>
+  <button class="btn btn-restore" id="btnRestore" onclick="confirmRestore()">RESTAURER</button>
+  <button class="btn btn-refresh" onclick="loadBackups()">Rafraichir</button>
+</div>
+<div class="sep"></div>
+<div class="list-title">Historique des backups</div>
+<table>
+  <thead><tr><th>Date</th><th>Heure</th><th>Taille</th><th>Tag</th></tr></thead>
+  <tbody id="backupList"></tbody>
+</table>
+<footer>Backups auto: chaque dimanche 3h | Stockage: GitHub Releases</footer>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle">Confirmer</h3>
+    <p id="modalText"></p>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-restore" id="modalConfirm" onclick="executeRestore()">Restaurer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN = "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";
+const REPO = "easypcinformatique-svg/Dev";
+const API = "https://api.github.com";
+let selectedTag = null;
+let backups = [];
+
+function headers() {
+  return { "Authorization": "token " + TOKEN, "Accept": "application/vnd.github+json" };
+}
+
+function setStatus(txt, cls) {
+  const el = document.getElementById("status");
+  el.textContent = txt;
+  el.className = "status " + (cls||"");
+}
+
+async function loadBackups() {
+  setStatus("Chargement des backups...", "loading");
+  try {
+    const r = await fetch(API + "/repos/" + REPO + "/releases?per_page=30", { headers: headers() });
+    const data = await r.json();
+    backups = [];
+    data.forEach(rel => {
+      if (rel.tag_name.toLowerCase().includes("backup")) {
+        let size = "";
+        rel.assets.forEach(a => { size = Math.round(a.size/1024/1024) + " MB"; });
+        let prodTag = rel.tag_name;
+        (rel.body||"").split("\n").forEach(line => {
+          if (line.includes("Tag production")) {
+            const m = line.match(/`([^`]+)`/);
+            if (m) prodTag = m[1];
+          }
+        });
+        backups.push({
+          date: rel.created_at.slice(0,10),
+          time: rel.created_at.slice(11,16),
+          size: size,
+          tag: prodTag,
+          name: rel.name
+        });
+      }
+    });
+    renderBackups();
+    setStatus(backups.length + " backup(s) disponible(s)");
+  } catch(e) {
+    setStatus("Erreur: " + e.message, "error");
+  }
+}
+
+function renderBackups() {
+  const tbody = document.getElementById("backupList");
+  tbody.innerHTML = "";
+  backups.forEach((b,i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>"+b.date+"</td><td>"+b.time+"</td><td>"+b.size+"</td><td>"+b.tag+"</td>";
+    tr.onclick = () => {
+      document.querySelectorAll("tr.selected").forEach(t => t.classList.remove("selected"));
+      tr.classList.add("selected");
+      selectedTag = b.tag;
+    };
+    tbody.appendChild(tr);
+  });
+}
+
+async function doBackup() {
+  const btn = document.getElementById("btnBackup");
+  btn.disabled = true;
+  setStatus("Backup en cours...", "loading");
+  try {
+    await fetch(API + "/repos/" + REPO + "/actions/workflows/backup-pizzeria.yml/dispatches", {
+      method: "POST", headers: {...headers(), "Content-Type":"application/json"},
+      body: JSON.stringify({ref:"master", inputs:{reason:"Backup manuel depuis le navigateur"}})
+    });
+    setStatus("Backup lance ! Surveillance...", "loading");
+    let ok = false;
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const resp = await fetch(API + "/repos/" + REPO + "/actions/workflows/backup-pizzeria.yml/runs?per_page=1", { headers: headers() });
+      const d = await resp.json();
+      if (d.workflow_runs && d.workflow_runs[0]) {
+        const run = d.workflow_runs[0];
+        if (run.status === "completed") {
+          if (run.conclusion === "success") {
+            setStatus("Backup termine avec succes !");
+            loadBackups();
+          } else {
+            setStatus("Backup echoue: " + run.conclusion, "error");
+          }
+          ok = true; break;
+        }
+        setStatus("Backup en cours... " + ((i+1)*5) + "s", "loading");
+      }
+    }
+    if (!ok) setStatus("Timeout - verifiez sur GitHub", "error");
+  } catch(e) {
+    setStatus("Erreur: " + e.message, "error");
+  }
+  btn.disabled = false;
+}
+
+function confirmRestore() {
+  if (!selectedTag) { alert("Selectionne un backup dans la liste !"); return; }
+  document.getElementById("modalText").textContent =
+    "Tu vas restaurer le site au backup : " + selectedTag + "\n\nLe site actuel sera ecrase.";
+  document.getElementById("modal").classList.add("show");
+}
+
+function closeModal() { document.getElementById("modal").classList.remove("show"); }
+
+async function executeRestore() {
+  closeModal();
+  const btn = document.getElementById("btnRestore");
+  btn.disabled = true;
+  setStatus("Restauration en cours...", "loading");
+  try {
+    await fetch(API + "/repos/" + REPO + "/actions/workflows/restore-pizzeria.yml/dispatches", {
+      method: "POST", headers: {...headers(), "Content-Type":"application/json"},
+      body: JSON.stringify({ref:"master", inputs:{tag_or_commit: selectedTag, confirm:"CONFIRMER"}})
+    });
+    setStatus("Restauration lancee ! Surveillance...", "loading");
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const resp = await fetch(API + "/repos/" + REPO + "/actions/workflows/restore-pizzeria.yml/runs?per_page=1", { headers: headers() });
+      const d = await resp.json();
+      if (d.workflow_runs && d.workflow_runs[0] && d.workflow_runs[0].status === "completed") {
+        if (d.workflow_runs[0].conclusion === "success") {
+          setStatus("Site restaure avec succes !");
+        } else {
+          setStatus("Restauration echouee: " + d.workflow_runs[0].conclusion, "error");
+        }
+        break;
+      }
+      setStatus("Restauration en cours... " + ((i+1)*5) + "s", "loading");
+    }
+  } catch(e) {
+    setStatus("Erreur: " + e.message, "error");
+  }
+  btn.disabled = false;
+}
+
+loadBackups();
+</script>
+</body>
+</html>
