@@ -1,0 +1,51 @@
+name: Update site version date on every deploy
+
+on:
+  # Se déclenche après chaque workflow qui modifie le site
+  workflow_run:
+    workflows: ["Backup pizzeria site", "Restore pizzeria site from backup", "Auto-deploy livraison site to all repos"]
+    types: [completed]
+
+  # Déclenchement manuel
+  workflow_dispatch:
+
+  # À chaque push sur master qui touche les fichiers pizzeria
+  push:
+    branches: [master]
+    paths:
+      - 'pizzeria/**'
+      - '.github/workflows/update-version.yml'
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update version in production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Générer la date et l'heure (Paris)
+          VERSION_DATE=$(TZ='Europe/Paris' date '+%d/%m/%Y')
+          VERSION_TIME=$(TZ='Europe/Paris' date '+%Hh%M')
+          VERSION_STRING="v. ${VERSION_DATE} &middot; ${VERSION_TIME}"
+
+          echo "New version: $VERSION_STRING"
+
+          # Remplacer la version dans index.html
+          # Le pattern cherche: v. JJ/MM/AAAA · HHhMM
+          sed -i "s|v\. [0-9]\{2\}/[0-9]\{2\}/[0-9]\{4\} \&middot; [0-9]\{2\}h[0-9]\{2\}|${VERSION_STRING}|g" index.html
+
+          # Vérifier si le fichier a changé
+          if git diff --quiet; then
+            echo "Version already up to date"
+          else
+            git add index.html
+            git commit -m "Update version: ${VERSION_DATE} ${VERSION_TIME}"
+            git push origin main
+            echo "Version updated to: ${VERSION_DATE} ${VERSION_TIME}"
+          fi
