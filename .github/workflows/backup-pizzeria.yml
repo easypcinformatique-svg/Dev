@@ -1,0 +1,72 @@
+name: Backup pizzeria site to Google Drive
+
+on:
+  # Backup automatique chaque dimanche à 3h du matin (heure Paris)
+  schedule:
+    - cron: '0 1 * * 0'  # 1h UTC = 3h Paris (heure d'été)
+
+  # Backup manuel à tout moment
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Raison du backup (optionnel)'
+        required: false
+        default: 'Backup manuel'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "date=$(TZ='Europe/Paris' date '+%Y-%m-%d_%Hh%M')" >> $GITHUB_OUTPUT
+
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          COMMIT=$(git rev-parse --short HEAD)
+          echo "COMMIT_SHA=$COMMIT" >> $GITHUB_ENV
+          echo "Cloned at commit: $COMMIT"
+          echo "COMMIT_MSG=$(git log -1 --pretty=%s)" >> $GITHUB_ENV
+
+      - name: Create backup archive
+        run: |
+          cd site
+          BACKUP_NAME="pizzeria-backup-${{ steps.date.outputs.date }}-${COMMIT_SHA}"
+          tar -czf /tmp/${BACKUP_NAME}.tar.gz --exclude='.git' .
+          echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+          echo "BACKUP_PATH=/tmp/${BACKUP_NAME}.tar.gz" >> $GITHUB_ENV
+          ls -lh /tmp/${BACKUP_NAME}.tar.gz
+
+      - name: Upload to Google Drive
+        uses: adityak74/google-drive-upload-git-action@main
+        with:
+          credentials: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
+          filename: ${{ env.BACKUP_PATH }}
+          folderId: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          overwrite: "false"
+
+      - name: Create backup tag in production repo
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG_NAME="backup/${{ steps.date.outputs.date }}"
+          git tag -a "$TAG_NAME" -m "Backup: ${{ steps.date.outputs.date }} | ${{ github.event.inputs.reason || 'Auto backup hebdomadaire' }} | Commit: ${COMMIT_SHA}"
+          git push origin "$TAG_NAME"
+          echo "Tag created: $TAG_NAME"
+
+      - name: Summary
+        run: |
+          echo "## Backup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Date**: ${{ steps.date.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${COMMIT_SHA} - ${COMMIT_MSG}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Archive**: ${BACKUP_NAME}.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: backup/${{ steps.date.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Raison**: ${{ github.event.inputs.reason || 'Auto backup hebdomadaire' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Google Drive**: Uploaded ✅" >> $GITHUB_STEP_SUMMARY

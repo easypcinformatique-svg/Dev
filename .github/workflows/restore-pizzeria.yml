@@ -1,13 +1,21 @@
-name: Restore original pizzeria site
+name: Restore pizzeria site from backup
 
 on:
   workflow_dispatch:
+    inputs:
+      tag_or_commit:
+        description: 'Tag de backup (ex: backup/2026-03-26_15h30) ou SHA du commit'
+        required: true
+      confirm:
+        description: 'Tape CONFIRMER pour valider la restauration'
+        required: true
 
 jobs:
-  restore-site:
+  restore:
     runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'CONFIRMER'
     steps:
-      - name: Restore original site
+      - name: Restore site
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
         run: |
@@ -16,15 +24,31 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Find the commit before auto-deploy and reset to it
-          TARGET=$(git log --oneline --all | grep "Fix gallery: Saint-Jacques" | head -1 | cut -d' ' -f1)
-          echo "Restoring to commit: $TARGET"
+          echo "Current HEAD: $(git rev-parse --short HEAD)"
+          echo "Restoring to: ${{ github.event.inputs.tag_or_commit }}"
 
-          if [ -z "$TARGET" ]; then
-            echo "ERROR: Could not find target commit"
-            exit 1
-          fi
+          # Create a safety tag before restoring
+          SAFETY_TAG="pre-restore/$(TZ='Europe/Paris' date '+%Y-%m-%d_%Hh%M')"
+          git tag -a "$SAFETY_TAG" -m "Safety snapshot before restore to ${{ github.event.inputs.tag_or_commit }}"
+          git push origin "$SAFETY_TAG"
+          echo "Safety tag created: $SAFETY_TAG"
 
-          git reset --hard $TARGET
+          # Reset to the target
+          git reset --hard ${{ github.event.inputs.tag_or_commit }}
           git push --force origin main
-          echo "Successfully restored original site to $TARGET"
+          echo "Successfully restored to ${{ github.event.inputs.tag_or_commit }}"
+
+      - name: Summary
+        run: |
+          echo "## Restore Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Restored to**: ${{ github.event.inputs.tag_or_commit }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: Restored ✅" >> $GITHUB_STEP_SUMMARY
+
+  denied:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm != 'CONFIRMER'
+    steps:
+      - name: Denied
+        run: |
+          echo "❌ Restauration annulée - tu dois taper CONFIRMER"
+          exit 1
