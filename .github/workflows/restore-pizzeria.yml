@@ -1,0 +1,23 @@
+name: Restore original pizzeria site
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restore-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore original site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git satellite
+          cd satellite
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Revert all auto-deploy commits back to the original site
+          git revert --no-commit decf89c 9d5b1ad b4f78d9 1577e6e e15ad5a
+          git commit -m "Restore original site - revert all auto-deploy commits"
+          git push origin main
+          echo "Successfully restored original site"
