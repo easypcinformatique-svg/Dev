@@ -1,0 +1,105 @@
+name: Auto-update Google reviews count
+
+on:
+  schedule:
+    # Run every Monday at 6:00 AM UTC (8:00 AM Paris time)
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-reviews:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Google Places data
+        id: fetch
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          PLACE_ID: ${{ secrets.GOOGLE_PLACE_ID }}
+        run: |
+          # Fetch place details from Google Places API
+          RESPONSE=$(curl -s "https://maps.googleapis.com/maps/api/place/details/json?place_id=${PLACE_ID}&fields=rating,user_ratings_total,reviews&key=${GOOGLE_PLACES_API_KEY}&language=fr")
+
+          # Extract rating and review count
+          RATING=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['result']['rating'])")
+          REVIEW_COUNT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['result']['user_ratings_total'])")
+
+          # Extract latest 5 reviews
+          python3 -c "
+          import sys, json
+          d = json.loads('''$RESPONSE''')
+          reviews = d.get('result', {}).get('reviews', [])
+          output = []
+          for r in reviews[:6]:
+              author = r.get('author_name', 'Client')
+              text = r.get('text', '').replace('\"', '\\\\\"').replace('\n', ' ')[:200]
+              stars = r.get('rating', 5)
+              output.append(f'{author}|{stars}|{text}')
+          with open('/tmp/reviews.txt', 'w') as f:
+              f.write('\n'.join(output))
+          " 2>/dev/null || true
+
+          echo "rating=$RATING" >> $GITHUB_OUTPUT
+          echo "count=$REVIEW_COUNT" >> $GITHUB_OUTPUT
+          echo "Rating: $RATING, Reviews: $REVIEW_COUNT"
+
+      - name: Checkout pizza-napoli repo
+        uses: actions/checkout@v4
+        with:
+          repository: carpentraspizzanapoli-design/pizza-napoli
+          token: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+          path: pizza-napoli
+
+      - name: Update review data in index.html
+        env:
+          RATING: ${{ steps.fetch.outputs.rating }}
+          COUNT: ${{ steps.fetch.outputs.count }}
+        run: |
+          cd pizza-napoli
+
+          # Update review count in all locations
+          # 1. Info bar
+          sed -i "s|[0-9]\+,[0-9]/5 — [0-9]\+ avis clients|${RATING}/5 — ${COUNT} avis clients|g" index.html
+
+          # 2. Counter data-target
+          sed -i "s|data-target=\"[0-9]*\">\(0\)</span><span class=\"counter-lbl\">Avis Google|data-target=\"${COUNT}\">\1</span><span class=\"counter-lbl\">Avis Google|g" index.html
+
+          # 3. Review section text
+          sed -i "s|[0-9]\+,[0-9]/5 basé sur <strong>[0-9]\+ avis Google|${RATING}/5 basé sur <strong>${COUNT} avis Google|g" index.html
+
+          # 4. Schema.org reviewCount
+          sed -i "s|\"reviewCount\":\"[0-9]*\"|\"reviewCount\":\"${COUNT}\"|g" index.html
+
+          # 5. Schema.org ratingValue
+          sed -i "s|\"ratingValue\":\"[0-9.]*\"|\"ratingValue\":\"${RATING}\"|g" index.html
+
+          # 6. FAQ text (approximate count)
+          APPROX=$((COUNT / 10 * 10))
+          sed -i "s|par plus de [0-9]\+ clients|par plus de ${APPROX} clients|g" index.html
+
+          # 7. Rating badge (Note Google X.X/5)
+          sed -i "s|[0-9]\.[0-9]</div><div[^>]*>Note Google|${RATING}</div><div style=\"font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:#888;margin-top:.3rem;\">Note Google|g" index.html
+
+          # 8. Update version date + time (Paris timezone)
+          TODAY=$(TZ='Europe/Paris' date +%d/%m/%Y)
+          HOUR=$(TZ='Europe/Paris' date +%Hh%M)
+          sed -i "s|v\. [0-9]\{2\}/[0-9]\{2\}/[0-9]\{4\}[^<]*|v. ${TODAY} \&middot; ${HOUR}|g" index.html
+
+          # 9. Years of experience counter (calculated from 2008)
+          YEARS=$(($(date +%Y) - 2008))
+          sed -i "s|data-target=\"[0-9]*\">\(0\)</span><span class=\"counter-lbl\">Ans d|data-target=\"${YEARS}\">\1</span><span class=\"counter-lbl\">Ans d|g" index.html
+
+          echo "Updated to: ${RATING}/5, ${COUNT} reviews, ${YEARS} years, version ${TODAY}"
+
+      - name: Commit and push
+        run: |
+          cd pizza-napoli
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes - reviews unchanged"
+          else
+            git commit -m "Auto-update Google reviews: ${{ steps.fetch.outputs.rating }}/5, ${{ steps.fetch.outputs.count }} avis"
+            git push origin main
+            echo "Pushed updated reviews!"
+          fi
