@@ -1695,7 +1695,7 @@ const GT = {
     show(target, opts) {
         if (!this.el) this.init();
         clearTimeout(this.hideTimeout);
-        this.icon.textContent = opts.icon || '';
+        this.icon.innerHTML = opts.icon || '';
         this.title.textContent = opts.title || '';
         this.body.innerHTML = opts.body || '';
         if (opts.example) {
@@ -3612,7 +3612,7 @@ const GT = {
     show(target, opts) {
         if (!this.el) this.init();
         clearTimeout(this.hideTimeout);
-        this.icon.textContent = opts.icon || '';
+        this.icon.innerHTML = opts.icon || '';
         this.title.textContent = opts.title || '';
         this.body.innerHTML = opts.body || '';
         if (opts.example) {
