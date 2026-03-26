@@ -16,8 +16,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Revert all auto-deploy commits back to the original site
-          git revert --no-commit decf89c 9d5b1ad b4f78d9 1577e6e e15ad5a
-          git commit -m "Restore original site - revert all auto-deploy commits"
-          git push origin main
-          echo "Successfully restored original site"
+          # Find the commit before auto-deploy and reset to it
+          TARGET=$(git log --oneline --all | grep "Fix gallery: Saint-Jacques" | head -1 | cut -d' ' -f1)
+          echo "Restoring to commit: $TARGET"
+
+          if [ -z "$TARGET" ]; then
+            echo "ERROR: Could not find target commit"
+            exit 1
+          fi
+
+          git reset --hard $TARGET
+          git push --force origin main
+          echo "Successfully restored original site to $TARGET"
