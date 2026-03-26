@@ -70,3 +70,30 @@ jobs:
             git push origin main
             echo "Deployed to livraison-pizza-carpentras"
           fi
+
+  # Job 3 : Deploy blog guides to main pizzanapoli site
+  deploy-pizzanapoli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+
+      - name: Deploy blog to pizza-napoli repo
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git satellite
+          cd satellite
+          mkdir -p blog
+          cp ../pizzeria/livraison-site/blog/blog.css blog/
+          cp ../pizzeria/livraison-site/blog/guide-*.html blog/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes for pizza-napoli"
+          else
+            git commit -m "Auto-deploy: update blog guides"
+            git push origin main
+            echo "Deployed to pizza-napoli"
+          fi
