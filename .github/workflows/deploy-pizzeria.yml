@@ -24,6 +24,9 @@ jobs:
           git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git satellite
           cd satellite
 
+          # Force clean CSS and JS directories first
+          rm -rf css/ js/
+
           # Copy main site files
           cp ../pizzeria/index.html ./
           cp ../pizzeria/favicon.svg ./
