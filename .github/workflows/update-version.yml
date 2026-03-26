@@ -37,8 +37,30 @@ jobs:
           echo "New version: $VERSION_STRING"
 
           # Remplacer la version dans index.html
-          # Le pattern cherche: v. JJ/MM/AAAA · HHhMM
-          sed -i "s|v\. [0-9]\{2\}/[0-9]\{2\}/[0-9]\{4\} \&middot; [0-9]\{2\}h[0-9]\{2\}|${VERSION_STRING}|g" index.html
+          # Le pattern cible exactement la ligne du logo nav avec la version
+          python3 -c "
+import re
+with open('index.html', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Pattern exact: v. DD/MM/YYYY &middot; HHhMM (dans le div du nav-logo)
+pattern = r'v\.\s*\d{2}/\d{2}/\d{4}\s*&middot;\s*\d{2}h\d{2}'
+replacement = 'v. ${VERSION_DATE} \&middot; ${VERSION_TIME}'
+
+import os
+vdate = os.environ['VERSION_DATE']
+vtime = os.environ['VERSION_TIME']
+replacement = f'v. {vdate} \&middot; {vtime}'
+
+new_content = re.sub(pattern, replacement, content, count=1)
+
+if new_content != content:
+    with open('index.html', 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    print(f'Version updated to: {vdate} {vtime}')
+else:
+    print('No version pattern found or already up to date')
+"
 
           # Vérifier si le fichier a changé
           if git diff --quiet; then
