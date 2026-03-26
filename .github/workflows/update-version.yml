@@ -19,16 +19,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          VERSION_DATE=$(TZ='Europe/Paris' date '+%d/%m/%Y')
-          VERSION_TIME=$(TZ='Europe/Paris' date '+%Hh%M')
+          export VERSION_DATE=$(TZ='Europe/Paris' date '+%d/%m/%Y')
+          export VERSION_TIME=$(TZ='Europe/Paris' date '+%Hh%M')
 
           echo "New version: v. ${VERSION_DATE} - ${VERSION_TIME}"
 
           python3 << 'PYEOF'
-          import re
+          import re, os
           with open('index.html', 'r', encoding='utf-8') as f:
               content = f.read()
-          import os
           vdate = os.environ['VERSION_DATE']
           vtime = os.environ['VERSION_TIME']
           pattern = r'v\.\s*\d{2}/\d{2}/\d{4}\s*&middot;\s*\d{2}h\d{2}'
