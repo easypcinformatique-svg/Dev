@@ -20,25 +20,161 @@ Usage :
     python hedge_fund_bot.py --dashboard --port 5050
 """
 
+import csv
 import json
+import logging
 import argparse
+import smtplib
 import threading
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from flask import Flask, jsonify, Response, request
 
 from config_manager import ConfigManager
 
 
+def _send_email_report(report: dict):
+    """Envoie un rapport journalier par email."""
+    import os
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    email_to = os.environ.get("REPORT_EMAIL", "easypc.informatique@gmail.com")
+
+    if not smtp_user or not smtp_pass:
+        logging.getLogger("web_dashboard").warning(
+            "Email non envoye: SMTP_USER et SMTP_PASS non configures sur Render")
+        return False
+
+    pnl = report.get('pnl', 0)
+    equity = report.get('equity', 0)
+    dd = report.get('drawdown', 0)
+    trades = report.get('trades', 0)
+    wr = report.get('win_rate', 0)
+    positions = report.get('open_positions', 0)
+    uptime = report.get('uptime_hours', 0)
+    validation = report.get('validation', '?')
+    mode = report.get('mode', 'DRY RUN')
+    date_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+
+    # Status emojis
+    pnl_icon = "\u2705" if pnl > 0 else ("\u26A0&#xFE0F;" if pnl == 0 else "\u274C")
+    dd_icon = "\u2705" if dd < 10 else ("\u26A0&#xFE0F;" if dd < 15 else "\u274C")
+    wr_icon = "\u2705" if wr >= 55 else ("\u26A0&#xFE0F;" if wr >= 45 else "\u274C")
+
+    subject = f"Polymarket Bot - Rapport du {datetime.now().strftime('%d/%m/%Y')} | Equity: ${equity:.2f}"
+
+    html = f"""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; background: #0a0e17; color: #e0e6ed; padding: 24px;">
+      <div style="max-width: 600px; margin: 0 auto; background: #111827; border-radius: 12px; padding: 24px; border: 1px solid #1f2937;">
+        <h1 style="color: #6c63ff; font-size: 22px; margin-bottom: 4px;">ALPHAPRED v2.0 — Hedge Fund Bot</h1>
+        <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">Rapport journalier du {date_str} | Mode: <strong style="color: #a5b4fc;">{mode}</strong></p>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Equity</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">${equity:.2f}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">{pnl_icon} PNL Net</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: {'#4ade80' if pnl >= 0 else '#f87171'};">{'+' if pnl >= 0 else ''}${pnl:.2f}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">{dd_icon} Drawdown</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: {'#4ade80' if dd < 10 else '#f87171'};">{dd:.1f}%</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Trades fermes</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">{trades} / 50</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">{wr_icon} Win Rate</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: {'#4ade80' if wr >= 55 else '#f87171'};">{wr:.1f}%</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Positions ouvertes</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">{positions}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 8px; color: #6b7280; font-size: 13px;">Uptime</td>
+            <td style="padding: 12px 8px; text-align: right; font-size: 18px; font-weight: 700; color: #fff;">{uptime:.1f}h</td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 20px; padding: 16px; background: #0d1117; border-radius: 8px; border: 1px solid #1f2937;">
+          <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">Validation passage EN LIGNE</p>
+          <p style="font-size: 16px; font-weight: 700; color: #a5b4fc;">{validation}</p>
+        </div>
+
+        <p style="color: #374151; font-size: 11px; text-align: center; margin-top: 20px;">
+          <a href="https://polymarket-bot-d86.onrender.com" style="color: #6366f1;">Ouvrir le dashboard</a>
+        </p>
+      </div>
+    </body>
+    </html>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = smtp_user
+    msg["To"] = email_to
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, email_to, msg.as_string())
+        logging.getLogger("web_dashboard").info(f"Rapport journalier envoye a {email_to}")
+        return True
+    except Exception as e:
+        logging.getLogger("web_dashboard").error(f"Erreur envoi email: {e}")
+        return False
+
+
 def _start_keep_alive(app_url: str, interval: int = 600):
-    """Ping le serveur toutes les 10 min pour eviter le sleep du free tier."""
+    """Ping le serveur toutes les 5 min pour eviter le sleep du free tier.
+    Log un rapport toutes les heures, envoie un email une fois par jour."""
     import urllib.request
+
+    ping_count = [0]
+    last_email_day = [None]
 
     def _ping():
         while True:
             try:
                 urllib.request.urlopen(f"{app_url}/api/health", timeout=10)
+                ping_count[0] += 1
+                # Rapport de statut toutes les 12 pings (= 1 heure si interval=300)
+                if ping_count[0] % 12 == 0:
+                    try:
+                        resp = urllib.request.urlopen(f"{app_url}/api/status-report", timeout=15)
+                        report = json.loads(resp.read().decode())
+                        log = logging.getLogger("web_dashboard")
+                        log.info("=" * 60)
+                        log.info("RAPPORT AUTOMATIQUE HORAIRE")
+                        log.info(f"  Uptime        : {report.get('uptime_hours', '?')}h")
+                        log.info(f"  Mode          : {report.get('mode', '?')}")
+                        log.info(f"  Equity        : ${report.get('equity', 0):.2f}")
+                        log.info(f"  PNL Net       : ${report.get('pnl', 0):.2f}")
+                        log.info(f"  Drawdown      : {report.get('drawdown', 0):.1f}%")
+                        log.info(f"  Trades        : {report.get('trades', 0)}")
+                        log.info(f"  Win Rate      : {report.get('win_rate', 0):.1f}%")
+                        log.info(f"  Positions     : {report.get('open_positions', 0)}")
+                        log.info(f"  Validation    : {report.get('validation', '?')}")
+                        log.info("=" * 60)
+
+                        # Email journalier a 8h du matin (ou au premier rapport du jour)
+                        today = datetime.now().strftime('%Y-%m-%d')
+                        current_hour = datetime.now().hour
+                        if last_email_day[0] != today and current_hour >= 8:
+                            if _send_email_report(report):
+                                last_email_day[0] = today
+                    except Exception:
+                        pass
             except Exception:
                 pass
             import time
@@ -75,9 +211,81 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
 
             positions = state.get("positions", {})
             trades = state.get("trades", [])
-            pnls = [t.get("pnl", 0) for t in trades]
+
+            # Fallback: charger l'historique depuis TradeLogger ou backtest
+            if not trades:
+                base = Path(state_file).parent
+                # 1) TradeLogger JSON (logs/trades_real.json) — trades du bot live
+                trade_logger_json = base / "logs" / "trades_real.json"
+                if trade_logger_json.exists():
+                    try:
+                        with open(trade_logger_json) as f:
+                            tl_data = json.load(f)
+                        for ct in tl_data.get("closed_trades", []):
+                            trades.append({
+                                "market_id": ct.get("market_id", ""),
+                                "question": ct.get("question", ct.get("market_id", "")),
+                                "side": ct.get("side", ""),
+                                "entry_price": float(ct.get("entry_price", 0)),
+                                "exit_price": float(ct.get("exit_price", 0)),
+                                "size_usd": float(ct.get("size_usd", 0)),
+                                "pnl": float(ct.get("pnl_net", ct.get("pnl_gross", 0))),
+                                "pnl_pct": float(ct.get("pnl_pct", 0)),
+                                "entry_time": ct.get("entry_time", ""),
+                                "exit_time": ct.get("exit_time", ""),
+                                "reason": ct.get("exit_reason", ""),
+                                "fees_total": float(ct.get("fees_total", 0)),
+                            })
+                    except Exception:
+                        pass
+
+                # 2) Backtest CSV (trades_report.csv) — historique backtest
+                if not trades:
+                    csv_path = base / "trades_report.csv"
+                    if csv_path.exists():
+                        try:
+                            with open(csv_path) as csvf:
+                                reader = csv.DictReader(csvf)
+                                for row in reader:
+                                    trades.append({
+                                        "market_id": row.get("market_id", ""),
+                                        "question": row.get("market_id", ""),
+                                        "side": row.get("side", ""),
+                                        "entry_price": float(row.get("entry_price", 0)),
+                                        "exit_price": float(row.get("exit_price", 0)),
+                                        "size_usd": float(row.get("montant_engage", 0)),
+                                        "pnl": float(row.get("gain_perte", 0)),
+                                        "pnl_pct": float(row.get("rendement_%", 0)),
+                                        "entry_time": row.get("entry_time", ""),
+                                        "exit_time": row.get("exit_time", ""),
+                                        "reason": row.get("exit_reason", ""),
+                                    })
+                        except Exception:
+                            pass
+
+            # Calculer les frais si absents (2% du montant engagé)
+            for t in trades:
+                if "fees_total" not in t:
+                    t["fees_total"] = round(t.get("size_usd", 0) * 0.02, 2)
+                if "pnl_gross" not in t:
+                    t["pnl_gross"] = t.get("pnl", 0) + t["fees_total"]
+                if "pnl_net" not in t:
+                    t["pnl_net"] = t.get("pnl", 0)
+
+            # Filter trades to only those since bot started (exclude backtest)
+            started_at = state.get("started_at", "")
+            start_date = started_at[:10] if started_at else ""
+            if start_date:
+                live_trades = [t for t in trades if (t.get("exit_time") or t.get("entry_time") or "")[:10] >= start_date]
+            else:
+                live_trades = trades
+
+            pnls = [t.get("pnl", 0) for t in live_trades]
             wins = [p for p in pnls if p > 0]
             losses = [p for p in pnls if p < 0]
+            total_fees = round(sum(t.get("fees_total", 0) for t in live_trades), 2)
+            live_pnl = round(sum(pnls), 2)
+            live_pnl_gross = round(live_pnl + total_fees, 2)
 
             total_exposure = sum(
                 p.get("size_usd", 0) for p in
@@ -88,22 +296,28 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                 (positions.values() if isinstance(positions, dict) else positions)
             )
             capital = state.get("capital", 0)
-            equity = capital + total_exposure + total_unrealized
-            peak = state.get("peak_equity", equity)
             initial = 1000.0
+            equity = initial + live_pnl + total_unrealized + total_exposure - sum(
+                p.get("size_usd", 0) for p in
+                (positions.values() if isinstance(positions, dict) else positions)
+            )
+            equity = capital + total_exposure + total_unrealized
+            peak = max(equity, initial)
             dd = (peak - equity) / peak if peak > 0 else 0
 
             return {
                 "status": "running",
                 "mode": "DRY RUN",
                 "strategy": "AlphaComposite",
-                "started_at": state.get("started_at", ""),
+                "started_at": started_at,
                 "last_scan": state.get("last_scan", ""),
                 "iteration": state.get("iteration", 0),
                 "overview": {
                     "capital": round(capital, 2),
                     "equity": round(equity, 2),
-                    "total_pnl": round(state.get("total_pnl", 0), 2),
+                    "total_pnl": live_pnl,
+                    "total_fees": total_fees,
+                    "total_pnl_gross": live_pnl_gross,
                     "daily_pnl": round(state.get("daily_pnl", 0), 2),
                     "unrealized_pnl": round(total_unrealized, 2),
                     "exposure": round(total_exposure, 2),
@@ -114,13 +328,13 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
                     "total_return_pct": round((equity / initial - 1) * 100, 2),
                 },
                 "positions": list(positions.values()) if isinstance(positions, dict) else positions,
-                "recent_trades": trades[-20:],
-                "all_trades": trades,
+                "recent_trades": live_trades[-20:],
+                "all_trades": live_trades,
                 "trade_stats": {
-                    "total_trades": len(trades),
+                    "total_trades": len(live_trades),
                     "winning_trades": len(wins),
                     "losing_trades": len(losses),
-                    "win_rate": round(len(wins) / max(len(trades), 1) * 100, 1),
+                    "win_rate": round(len(wins) / max(len(live_trades), 1) * 100, 1),
                     "avg_win": round(sum(wins) / max(len(wins), 1), 2),
                     "avg_loss": round(sum(losses) / max(len(losses), 1), 2),
                     "profit_factor": round(abs(sum(wins) / sum(losses)), 2) if losses else 0,
@@ -199,13 +413,111 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
             return jsonify({"error": "Nom requis"}), 400
         return jsonify(cm.delete_profile(name))
 
+    @app.route("/api/strategy-attribution")
+    def api_strategy_attribution():
+        """Retourne l'attribution par sous-strategie."""
+        data = _get_data()
+        return jsonify({
+            "attribution": data.get("strategy_attribution", {}),
+            "performance": data.get("strategy_performance", {}),
+        })
+
+    @app.route("/api/activity")
+    def api_activity():
+        """Retourne les derniers evenements du flux d'activite."""
+        data = _get_data()
+        return jsonify(data.get("activity_feed", []))
+
+    @app.route("/api/activity/stream")
+    def api_activity_stream():
+        """Server-Sent Events — flux d'activite temps reel."""
+        try:
+            from hedge_fund_bot import activity_feed as _af
+        except ImportError:
+            return jsonify({"error": "activity_feed not available"}), 500
+
+        def event_stream():
+            q = _af.subscribe()
+            try:
+                while True:
+                    if q:
+                        event = q.popleft()
+                        yield f"data: {json.dumps(event)}\n\n"
+                    else:
+                        import time as _time
+                        _time.sleep(1)
+                        yield ": keepalive\n\n"
+            except GeneratorExit:
+                _af.unsubscribe(q)
+
+        return Response(event_stream(), mimetype="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     @app.route("/api/health")
     def api_health():
         """Endpoint de sante pour le keep-alive."""
         return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
+    @app.route("/api/status-report")
+    def api_status_report():
+        """Rapport de statut condense pour le monitoring automatique."""
+        data = _get_data()
+        o = data.get("overview", {})
+        ts = data.get("trade_stats", {})
+        started = data.get("started_at", "")
+        uptime_hours = 0
+        if started:
+            try:
+                from datetime import datetime as dt
+                start = dt.fromisoformat(started)
+                uptime_hours = round((dt.now() - start).total_seconds() / 3600, 1)
+            except Exception:
+                pass
+        # Validation progress
+        valid_count = 0
+        total_steps = 6
+        pnl = o.get("total_pnl", 0)
+        dd = o.get("drawdown_pct", 0)
+        trades = ts.get("total_trades", 0)
+        wr = ts.get("win_rate", 0)
+        days = round(uptime_hours / 24, 1)
+        if days >= 30: valid_count += 1
+        if pnl > 0: valid_count += 1
+        if dd < 15: valid_count += 1
+        if trades >= 50: valid_count += 1
+        if wr >= 55: valid_count += 1
+        return jsonify({
+            "mode": data.get("mode", "DRY RUN"),
+            "uptime_hours": uptime_hours,
+            "equity": o.get("equity", 0),
+            "pnl": pnl,
+            "drawdown": dd,
+            "trades": trades,
+            "win_rate": wr,
+            "open_positions": len(data.get("positions", [])),
+            "validation": f"{valid_count}/{total_steps} (manuelle non comptee)",
+        })
+
     def _inject_version(html: str) -> str:
-        version = datetime.now().strftime("%Y-%m-%d %H:%M")
+        """Injecte la version basee sur le dernier commit git ou la date du fichier."""
+        import subprocess, os
+        version = os.environ.get("BUILD_VERSION", "")
+        if not version:
+            try:
+                result = subprocess.run(
+                    ["git", "log", "-1", "--format=%cd", "--date=format:%Y-%m-%d %H:%M"],
+                    capture_output=True, text=True, timeout=5,
+                )
+                version = result.stdout.strip() if result.returncode == 0 else ""
+            except Exception:
+                pass
+        if not version:
+            try:
+                mtime = os.path.getmtime(__file__)
+                from datetime import datetime as _dt
+                version = _dt.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                version = "1.0.0"
         return html.replace("__BUILD_VERSION__", version)
 
     @app.route("/")
@@ -215,6 +527,10 @@ def create_dashboard_app(bot=None, state_file="bot_state.json", config_manager=N
     @app.route("/settings")
     def settings_page():
         return Response(_inject_version(SETTINGS_HTML), mimetype="text/html")
+
+    @app.route("/report")
+    def report_page():
+        return Response(_inject_version(REPORT_HTML), mimetype="text/html")
 
     return app
 
@@ -228,7 +544,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Polymarket Hedge Fund Bot</title>
+<title>AlphaPred v2.0 — Hedge Fund Bot Polymarket</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -304,50 +620,180 @@ body {
     color: #6b7280;
     margin-top: 4px;
 }
-/* Dashboard tooltips */
-.metric-card { position: relative; cursor: help; }
-.metric-tooltip {
-    display: none;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 100%;
-    z-index: 100;
-    width: 300px;
-    background: #1a1f35;
-    border: 1px solid #6366f1;
-    border-radius: 8px;
-    padding: 10px 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    margin-bottom: 8px;
-    font-size: 12px;
-    color: #d1d5db;
-    line-height: 1.5;
-    pointer-events: none;
+
+/* PnL Net expanded card - spans 2 columns */
+.metric-card.pnl-expanded {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+    border: 1px solid #1f2937;
 }
-.metric-card:hover .metric-tooltip { display: block; }
-.metric-tooltip strong { color: #a5b4fc; }
-.metric-tooltip .tip-example { color: #4ade80; margin-top: 6px; font-size: 11px; }
-.stat-row { position: relative; cursor: help; }
-.stat-tooltip {
-    display: none;
-    position: absolute;
-    left: 0;
-    bottom: 100%;
-    z-index: 100;
-    width: 280px;
-    background: #1a1f35;
-    border: 1px solid #6366f1;
-    border-radius: 8px;
-    padding: 8px 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    margin-bottom: 6px;
+.pnl-main-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.pnl-main-value {
+    font-size: 28px;
+    font-weight: 700;
+}
+.pnl-return-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 4px;
+}
+.pnl-return-badge.positive { background: #4ade8022; color: #4ade80; }
+.pnl-return-badge.negative { background: #f8717122; color: #f87171; }
+
+.pnl-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid #1f2937;
+    border-bottom: 1px solid #1f2937;
+    margin-bottom: 12px;
+}
+.pnl-breakdown-item {
+    text-align: center;
+}
+.pnl-breakdown-label {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.pnl-breakdown-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #d1d5db;
+}
+
+.pnl-daily-section h4 {
     font-size: 11px;
-    color: #d1d5db;
-    line-height: 1.4;
-    pointer-events: none;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
 }
-.stat-row:hover .stat-tooltip { display: block; }
+.pnl-daily-grid {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.pnl-day-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #1a2332;
+    border: 1px solid #1f2937;
+    min-width: 72px;
+}
+.pnl-day-chip.day-positive { border-color: #16a34a44; }
+.pnl-day-chip.day-negative { border-color: #dc262644; }
+.pnl-day-date {
+    font-size: 10px;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+.pnl-day-value {
+    font-size: 13px;
+    font-weight: 600;
+}
+.pnl-day-value.positive { color: #4ade80; }
+.pnl-day-value.negative { color: #f87171; }
+.pnl-day-trades {
+    font-size: 9px;
+    color: #4b5563;
+    margin-top: 1px;
+}
+
+/* Global tooltip overlay */
+.metric-card { cursor: help; }
+.stat-row { cursor: help; }
+#global-tooltip {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    width: 360px;
+    max-width: 90vw;
+    background: linear-gradient(135deg, #1a1f35 0%, #1e2340 100%);
+    border: 2px solid #818cf8;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 12px 40px rgba(99,102,241,0.3), 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 13px;
+    color: #e0e6ed;
+    line-height: 1.7;
+    pointer-events: none;
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+#global-tooltip .gt-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2d3460;
+}
+#global-tooltip .gt-icon { font-size: 20px; }
+#global-tooltip .gt-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #a5b4fc;
+}
+#global-tooltip .gt-body {
+    color: #d1d5db;
+    font-size: 13px;
+    line-height: 1.7;
+}
+#global-tooltip .gt-body strong { color: #c7d2fe; }
+#global-tooltip .gt-example {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #0d1321;
+    border: 1px solid #2a3a5c;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #4ade80;
+    line-height: 1.6;
+}
+#global-tooltip .gt-example-label {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+#global-tooltip .gt-arrow {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #1a1f35;
+    border: 2px solid #818cf8;
+    transform: rotate(45deg);
+    border-right: none;
+    border-bottom: none;
+}
+#global-tooltip .gt-arrow.arrow-top {
+    top: -7px;
+    border-top: 2px solid #818cf8;
+    border-left: 2px solid #818cf8;
+}
+#global-tooltip .gt-arrow.arrow-bottom {
+    bottom: -7px;
+    transform: rotate(225deg);
+}
 
 /* Chart */
 .chart-container {
@@ -391,29 +837,8 @@ th {
     position: relative;
     cursor: help;
 }
-.th-tooltip {
-    display: none;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 100%;
-    z-index: 100;
-    width: 250px;
-    background: #1a1f35;
-    border: 1px solid #6366f1;
-    border-radius: 8px;
-    padding: 8px 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    margin-bottom: 6px;
-    font-size: 11px;
-    color: #d1d5db;
-    line-height: 1.4;
-    pointer-events: none;
-    text-transform: none;
-    letter-spacing: normal;
-    font-weight: 400;
-}
-th:hover .th-tooltip { display: block; }
+/* th-tooltip now handled by global tooltip system */
+.th-tooltip { display: none; }
 td {
     padding: 10px 12px;
     border-bottom: 1px solid #111827;
@@ -467,18 +892,636 @@ tr:hover td { background: #1a2332; }
     font-size: 12px;
     padding: 16px;
 }
+
+/* ======== Validation Panel ======== */
+.validation-panel {
+    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 16px;
+}
+.validation-panel h2 {
+    font-size: 18px;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.validation-progress-bar {
+    background: #1f2937;
+    border-radius: 8px;
+    height: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.validation-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #6366f1, #4ade80);
+    transition: width 0.5s ease;
+}
+.validation-progress-label {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    text-align: right;
+}
+.validation-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.validation-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 14px 18px;
+    transition: border-color 0.2s;
+}
+.validation-step:hover { border-color: #374151; }
+.validation-step .step-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+}
+.validation-step .step-info { flex: 1; }
+.validation-step .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e0e6ed;
+    margin-bottom: 2px;
+}
+.validation-step .step-detail {
+    font-size: 12px;
+    color: #6b7280;
+}
+.validation-step .step-detail .val-highlight {
+    font-weight: 600;
+    color: #a5b4fc;
+}
+.validation-step.step-valid { border-color: #22c55e33; }
+.validation-step.step-valid .step-title { color: #4ade80; }
+.validation-step.step-invalid { border-color: #ef444433; }
+.validation-step.step-pending { border-color: #eab30833; }
+
+/* Manual checkbox step */
+.validation-step label.step-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+.validation-step label.step-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+/* Go Live button */
+.go-live-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: not-allowed;
+    transition: all 0.3s ease;
+    background: #1f2937;
+    color: #4b5563;
+}
+.go-live-btn.ready {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+.go-live-btn.ready:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+}
+
+/* Confirmation modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+    background: #111827;
+    border: 1px solid #2a3a5c;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-box h3 {
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.modal-recap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.modal-recap-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #e0e6ed;
+    padding: 8px 12px;
+    background: #0d1117;
+    border-radius: 8px;
+}
+.modal-recap-item .recap-icon { font-size: 18px; }
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+.modal-btn-cancel {
+    padding: 12px 24px;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.modal-btn-cancel:hover { background: #1f2937; }
+.modal-btn-confirm {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.modal-btn-confirm:hover { background: #b91c1c; }
+
+@media (max-width: 768px) {
+    .validation-panel { padding: 16px; }
+    .validation-step { padding: 10px 12px; flex-wrap: wrap; }
+}
+
+/* ======== Mobile Responsive ======== */
+@media (max-width: 640px) {
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 16px;
+        text-align: center;
+    }
+    .header h1 { font-size: 16px; }
+    .header-right {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    .container { padding: 12px 8px; }
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .metric-card { padding: 12px; }
+    .metric-value { font-size: 18px; }
+    .metric-label { font-size: 10px; }
+    .chart-container { padding: 12px; }
+    .chart-wrapper { height: 200px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat-row { font-size: 12px; }
+    table { font-size: 11px; }
+    th, td { padding: 6px 4px; }
+    .section-title { font-size: 15px; }
+    .trade-row td { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 400px) {
+    .metrics-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .metric-card { padding: 8px; border-radius: 8px; }
+    .metric-value { font-size: 16px; }
+}
+
+/* ======== Live Activity Feed ======== */
+.live-feed {
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+.live-feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: #111827;
+    border-bottom: 1px solid #1f2937;
+}
+.live-feed-header h2 {
+    font-size: 16px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.live-dot {
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+}
+.live-feed-body {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+.live-feed-body::-webkit-scrollbar { width: 6px; }
+.live-feed-body::-webkit-scrollbar-track { background: #0d1117; }
+.live-feed-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+.feed-event {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 20px;
+    border-bottom: 1px solid #111827;
+    font-size: 13px;
+    transition: background 0.3s;
+    animation: feedSlideIn 0.3s ease-out;
+}
+@keyframes feedSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.feed-event:hover { background: #111827; }
+.feed-time { color: #6b7280; font-size: 11px; font-family: monospace; white-space: nowrap; min-width: 60px; margin-top: 1px; }
+.feed-icon { font-size: 14px; min-width: 20px; text-align: center; margin-top: 1px; }
+.feed-msg { color: #d1d5db; flex: 1; line-height: 1.4; }
+.feed-event[data-type="open"] { border-left: 3px solid #4ade80; }
+.feed-event[data-type="close"] { border-left: 3px solid #f87171; }
+.feed-event[data-type="signal"] { border-left: 3px solid #a78bfa; }
+.feed-event[data-type="scan"] { border-left: 3px solid #38bdf8; }
+.feed-event[data-type="evaluate"] { border-left: 3px solid #fbbf24; }
+.feed-event[data-type="iteration"] { border-left: 3px solid #6b7280; }
+.feed-event[data-type="resolved"] { border-left: 3px solid #fb923c; }
+.feed-event[data-type="timeout"] { border-left: 3px solid #ef4444; }
+.feed-event.new-event { background: rgba(99,102,241,0.08); }
+.feed-count { font-size: 11px; color: #6b7280; background: #1f2937; padding: 2px 8px; border-radius: 10px; }
+
+/* ======== Bot Identity / Hero ======== */
+.bot-hero {
+    background: linear-gradient(135deg, #0d1321 0%, #1a1f35 50%, #1e1b4b 100%);
+    border-bottom: 1px solid #2a3a5c;
+    padding: 0;
+}
+.bot-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+}
+.bot-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.bot-logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+}
+.bot-name { font-size: 20px; font-weight: 700; color: #fff; }
+.bot-name span { color: #8b5cf6; }
+.bot-version {
+    font-size: 10px;
+    color: #6b7280;
+    background: #1f2937;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+.bot-tagline { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.header-right { display: flex; gap: 10px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+
+/* About bar */
+.bot-about-bar {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid #1f2937;
+    overflow-x: auto;
+}
+.bot-about-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-right: 1px solid #1f2937;
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+    min-width: 0;
+    cursor: help;
+    position: relative;
+}
+.bot-about-item:last-child { border-right: none; }
+.bot-about-icon { font-size: 14px; }
+.bot-about-label { color: #6b7280; }
+.bot-about-value { color: #e0e6ed; font-weight: 600; }
+
+/* Tooltip on about items */
+.bot-about-item .about-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #d1d5db;
+    width: 280px;
+    white-space: normal;
+    line-height: 1.5;
+    z-index: 100;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    pointer-events: none;
+}
+.bot-about-item:hover .about-tooltip { display: block; }
+.about-tooltip strong { color: #a5b4fc; }
+.about-tooltip .calc { background: #111827; border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-family: monospace; font-size: 11px; color: #4ade80; }
+
+/* ======== Bot Explainer (collapsible) ======== */
+.bot-explainer {
+    background: linear-gradient(135deg, #0c1425 0%, #111b30 100%);
+    border: 1px solid #1e3a5f;
+    border-radius: 12px;
+    margin: 16px 24px 0;
+    overflow: hidden;
+}
+.bot-explainer.open .bot-explainer-content { display: flex; }
+.bot-explainer-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    color: #a5b4fc;
+    font-weight: 600;
+    font-size: 14px;
+    user-select: none;
+    transition: background 0.2s;
+}
+.bot-explainer-toggle:hover { background: rgba(99,102,241,0.08); }
+.explainer-arrow { font-size: 12px; color: #6b7280; }
+.bot-explainer-content {
+    display: none;
+    gap: 30px;
+    padding: 0 20px 20px;
+    border-top: 1px solid #1e3a5f;
+}
+.explainer-col { flex: 1; min-width: 280px; }
+.explainer-col p { font-size: 13px; color: #9ca3af; line-height: 1.7; }
+.explainer-col strong { color: #e0e6ed; }
+.explainer-steps {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+    margin: 0;
+}
+.explainer-steps li {
+    counter-increment: step;
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 6px 0 6px 0;
+    line-height: 1.5;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.explainer-steps li::before {
+    content: counter(step) '.';
+    color: #6366f1;
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 18px;
+}
+
+@media (max-width: 768px) {
+    .bot-explainer-content { flex-direction: column; }
+    .bot-explainer { margin: 12px 12px 0; }
+}
+
+@media (max-width: 640px) {
+    .bot-hero-top { flex-direction: column; gap: 10px; text-align: center; }
+    .bot-about-bar { flex-wrap: wrap; }
+    .bot-about-item { min-width: 50%; }
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
-    <div class="header-right">
-        <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;margin-right:8px;">Parametres</a>
-        <span id="strategy-name"></span>
-        <span id="mode-badge" class="mode-badge"></span>
-        <span id="status-badge" class="status-badge"></span>
-        <span id="last-update" style="color:#6b7280;font-size:12px;"></span>
+<div class="bot-hero">
+    <div class="bot-hero-top">
+        <div class="bot-identity">
+            <div class="bot-logo">A</div>
+            <div>
+                <div class="bot-name"><span>ALPHA</span>PRED <span class="bot-version">v2.0.0 — __BUILD_VERSION__</span></div>
+                <div class="bot-tagline">Hedge Fund Bot autonome — Prediction Markets Intelligence</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="/report" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;">Rapport</a>
+            <a href="/settings" style="color:#a5b4fc;text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid #6366f1;border-radius:20px;">Parametres</a>
+            <span id="strategy-name"></span>
+            <span id="mode-badge" class="mode-badge"></span>
+            <span id="status-badge" class="status-badge"></span>
+            <span id="last-update" style="color:#6b7280;font-size:12px;"></span>
+        </div>
+    </div>
+    <div class="bot-about-bar" id="bot-about-bar">
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F916;</span>
+            <span><span class="bot-about-label">Type</span> <span class="bot-about-value">Hedge Fund Bot</span></span>
+            <div class="about-tooltip">
+                <strong>AlphaPred</strong> est un bot de trading autonome pour <strong>Polymarket</strong> (marche de predictions).<br><br>
+                Il analyse les marches en continu 24/7, detecte les opportunites via 5 sous-strategies IA, et gere automatiquement les positions avec un risk management de niveau institutionnel.
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F9E0;</span>
+            <span><span class="bot-about-label">Strategie</span> <span class="bot-about-value" id="about-strategy">AlphaComposite</span></span>
+            <div class="about-tooltip">
+                <strong>AlphaComposite</strong> combine 5 sous-strategies independantes :<br><br>
+                &#x2022; <strong>SmartMoney</strong> &#x2014; detecte les flux de gros investisseurs<br>
+                &#x2022; <strong>Convergence</strong> &#x2014; suit les tendances pre-resolution<br>
+                &#x2022; <strong>BayesianEdge</strong> &#x2014; calcule les probabilites reelles<br>
+                &#x2022; <strong>AdaptiveMomentum</strong> &#x2014; detecte les regimes de marche<br>
+                &#x2022; <strong>LiquidityEdge</strong> &#x2014; exploite les contractions de spread<br><br>
+                Un trade n'est pris que si <strong>2+ strategies sont d'accord</strong>.
+                <div class="calc">Consensus = somme(poids &#xD7; confiance) / poids_total<br>Minimum requis: 14%</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F6E1;</span>
+            <span><span class="bot-about-label">Risk</span> <span class="bot-about-value" id="about-risk">Multi-couche</span></span>
+            <div class="about-tooltip">
+                <strong>Gestion du risque en 6 couches :</strong><br><br>
+                1. <strong>Stop-Loss</strong> &#x2014; Coupe a -25% par position<br>
+                2. <strong>Take-Profit</strong> &#x2014; Encaisse a +50%<br>
+                3. <strong>Trailing Stop adaptatif</strong> &#x2014; Suit le prix (17%, ajuste selon volatilite)<br>
+                4. <strong>Limite perte journaliere</strong> &#x2014; Max -5%/jour<br>
+                5. <strong>Drawdown max</strong> &#x2014; Arret total a -15%<br>
+                6. <strong>Anti-tilt</strong> &#x2014; Reduit la taille apres 3+ pertes consecutives
+                <div class="calc">Taille = Kelly &#xD7; confiance &#xD7; multiplicateur_risque<br>Si 4 pertes d'affilee: taille &#xD7; 25%</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F4B0;</span>
+            <span><span class="bot-about-label">Frais</span> <span class="bot-about-value">2% Polymarket</span></span>
+            <div class="about-tooltip">
+                <strong>Frais Polymarket = 2% par transaction</strong><br><br>
+                Chaque entree ET chaque sortie coute 2% du montant.<br>
+                Le bot calcule le PnL <strong>net apres frais</strong> pour chaque trade.
+                <div class="calc">Frais entree = taille &#xD7; 2%<br>Frais sortie = shares &#xD7; prix_sortie &#xD7; 2%<br>PnL net = PnL brut - frais_entree - frais_sortie</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x23F1;</span>
+            <span><span class="bot-about-label">Scan</span> <span class="bot-about-value" id="about-scan">5 min</span></span>
+            <div class="about-tooltip">
+                <strong>Frequence de scan des marches</strong><br><br>
+                Toutes les 5 minutes, le bot :<br>
+                1. Scanne 100+ marches Polymarket actifs<br>
+                2. Filtre par volume, liquidite et spread<br>
+                3. Analyse l'historique de chaque marche eligible<br>
+                4. Genere des signaux via AlphaComposite<br>
+                5. Verifie les positions existantes (stop-loss, take-profit)
+                <div class="calc">~20 marches eligibles par scan<br>~3-5 signaux par heure<br>~1-2 trades par jour</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F4E1;</span>
+            <span><span class="bot-about-label">Signaux</span> <span class="bot-about-value">Twitter + RSS</span></span>
+            <div class="about-tooltip">
+                <strong>Sources de signaux externes</strong><br><br>
+                Le bot enrichit ses decisions avec :<br>
+                &#x2022; <strong>Twitter/X</strong> &#x2014; Comptes cles (politique, crypto, economie)<br>
+                &#x2022; <strong>Nitter</strong> &#x2014; Fallback si Twitter API down<br>
+                &#x2022; <strong>RSS</strong> &#x2014; BBC, NYT, CoinDesk (dernier recours)<br><br>
+                Un signal Twitter pertinent <strong>booste la confiance de +30%</strong>.
+                <div class="calc">Si signal Twitter aligne avec strategie:<br>confiance = min(1.0, confiance + tweet_conf &#xD7; 0.3)</div>
+            </div>
+        </div>
+        <div class="bot-about-item">
+            <span class="bot-about-icon">&#x1F9E0;</span>
+            <span><span class="bot-about-label">IA</span> <span class="bot-about-value">Auto-adaptatif</span></span>
+            <div class="about-tooltip">
+                <strong>Le bot s'entraine et se corrige tout seul :</strong><br><br>
+                &#x2022; Analyse chaque trade pour <strong>apprendre</strong> de ses erreurs<br>
+                &#x2022; Ajuste les poids des strategies selon leurs <strong>performances</strong><br>
+                &#x2022; <strong>Reduit le risque</strong> automatiquement apres des pertes consecutives<br>
+                &#x2022; Detecte le <strong>regime de marche</strong> et adapte son comportement<br><br>
+                Plus il trade, plus il devient precis.
+                <div class="calc">Poids strategie = base &#xD7; (win_rate / avg_win_rate)<br>Anti-tilt: 3 pertes = taille &#xD7;50%, 4+ = &#xD7;25%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section depliable "Qu'est-ce que AlphaPred ?" -->
+<div class="bot-explainer" id="bot-explainer">
+    <div class="bot-explainer-toggle" onclick="var e=document.getElementById('bot-explainer'),a=document.getElementById('explainer-arrow');e.classList.toggle('open');a.innerHTML=e.classList.contains('open')?'&#x25B2; Masquer':'&#x25BC; Afficher';">
+        <span>&#x25C6; Qu'est-ce que AlphaPred ?</span>
+        <span class="explainer-arrow" id="explainer-arrow">&#x25BC; Afficher</span>
+    </div>
+    <div class="bot-explainer-content">
+        <div class="explainer-col">
+            <h4 style="color:#6366f1;margin-bottom:10px;">Le concept</h4>
+            <p>AlphaPred est un <strong>bot de trading autonome</strong> pour <strong style="color:#a78bfa;">Polymarket</strong> (marche de predictions). Il analyse en continu les marches de predictions, detecte les <strong style="color:#4ade80;">opportunites sous-evaluees</strong> via 5 sous-strategies IA, et execute automatiquement des trades avec un risk management institutionnel.</p>
+            <p style="margin-top:10px;">L'idee : quand la probabilite estimee par le bot differe significativement du prix du marche, il y a une <strong style="color:#fbbf24;">edge exploitable</strong>. Le bot achete a prix bas et revend quand le marche corrige vers la vraie probabilite, generant un profit.</p>
+            <p style="margin-top:10px;">Le bot detecte ces opportunites en <strong>&lt;5 minutes</strong> et execute un trade automatique avec une gestion du risque stricte (stop-loss, trailing stop, limites d'exposition).</p>
+        </div>
+        <div class="explainer-col">
+            <h4 style="color:#6366f1;margin-bottom:10px;">Le pipeline (en 8 etapes)</h4>
+            <ol class="explainer-steps">
+                <li><strong style="color:#38bdf8;">Le Scanner</strong> analyse 100+ marches Polymarket actifs (volume, liquidite, spread)</li>
+                <li><strong style="color:#38bdf8;">Le Filtre</strong> retient ~20 marches eligibles par scan (criteres de qualite)</li>
+                <li><strong style="color:#a78bfa;">AlphaComposite</strong> evalue chaque marche via 5 sous-strategies independantes</li>
+                <li><strong style="color:#a78bfa;">Le Consensus</strong> ne retient que les signaux ou 2+ strategies sont d'accord (min 14%)</li>
+                <li><strong style="color:#fbbf24;">Le Risk Assessor</strong> evalue le risque de chaque signal (volatilite, correlation, drawdown)</li>
+                <li><strong style="color:#fbbf24;">Le Position Sizer</strong> calcule la taille optimale via Kelly Criterion (max 5% par trade)</li>
+                <li><strong style="color:#4ade80;">L'Executeur</strong> place l'ordre sur Polymarket via l'API CLOB</li>
+                <li><strong style="color:#4ade80;">Le Position Manager</strong> gere les stop-loss, take-profit et trailing stops 24/7</li>
+            </ol>
+        </div>
+        <div class="explainer-col">
+            <h4 style="color:#6366f1;margin-bottom:10px;">&#x1F9E0; Intelligence adaptative</h4>
+            <p>AlphaPred <strong style="color:#4ade80;">s'entraine, s'ameliore et se corrige automatiquement</strong> en continu. Apres chaque trade, il tire des conclusions et ajuste ses parametres :</p>
+            <div style="margin-top:12px;">
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                    <span style="color:#a78bfa;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#a78bfa;">Auto-apprentissage</strong> &#x2014; Analyse chaque trade ferme (gagnant ou perdant) pour identifier les patterns qui fonctionnent. Les poids des 5 sous-strategies sont ajustes dynamiquement selon leurs performances recentes.</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                    <span style="color:#fbbf24;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#fbbf24;">Auto-correction</strong> &#x2014; Si le bot detecte une serie de pertes (3+), il reduit automatiquement la taille des positions (anti-tilt), resserre les stop-loss et augmente le seuil de confiance requis pour trader.</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                    <span style="color:#4ade80;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#4ade80;">Conclusions</strong> &#x2014; A chaque iteration, le bot evalue : quel type de marche performe le mieux, quelles strategies ont le meilleur win rate, et quels niveaux de confiance sont optimaux. Il adapte ses decisions en consequence.</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                    <span style="color:#38bdf8;font-weight:700;font-size:14px;">&#x27A4;</span>
+                    <span style="font-size:13px;color:#9ca3af;"><strong style="color:#38bdf8;">Regime adaptatif</strong> &#x2014; Detecte automatiquement le regime de marche (calme, volatile, trending) et ajuste son comportement : plus agressif en tendance forte, plus defensif en marche incertain.</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -494,20 +1537,37 @@ tr:hover td { background: #1a2332; }
         </div>
     </div>
 
+    <!-- Live Activity Feed -->
+    <div class="live-feed" id="live-feed">
+        <div class="live-feed-header">
+            <h2><span class="live-dot"></span> Activite en direct <span class="feed-count" id="feed-count">0</span></h2>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                    <input type="checkbox" id="feed-autoscroll" checked style="accent-color:#6366f1;"> Auto-scroll
+                </label>
+                <button onclick="document.getElementById('feed-body').innerHTML='';feedEventCount=0;document.getElementById('feed-count').textContent='0';"
+                    style="font-size:11px;color:#6b7280;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:3px 10px;cursor:pointer;">Effacer</button>
+            </div>
+        </div>
+        <div class="live-feed-body" id="feed-body">
+            <div style="padding:20px;text-align:center;color:#374151;font-size:13px;">En attente d'evenements...</div>
+        </div>
+    </div>
+
     <!-- Positions & Stats -->
     <div class="two-col">
         <div class="table-container">
             <h2>Positions Ouvertes (<span id="pos-count">0</span>)</h2>
-            <table>
+            <table id="positions-table">
                 <thead>
                     <tr>
-                        <th>Date<span class="th-tooltip">Date et heure d'ouverture de la position</span></th>
-                        <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel la position est ouverte</span></th>
-                        <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
-                        <th>Taille<span class="th-tooltip">Montant investi en dollars dans cette position</span></th>
-                        <th>Entree<span class="th-tooltip">Prix d'achat de la position (entre 0 et 1)</span></th>
-                        <th>Actuel<span class="th-tooltip">Prix actuel du marche en temps reel</span></th>
-                        <th>PnL<span class="th-tooltip">Profit ou perte non realise(e) sur cette position</span></th>
+                        <th data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date et heure d'ouverture</strong> de la position.<br><br>Indique quand le bot a decide d'entrer sur ce marche. Plus une position est ancienne, plus elle a eu le temps d'evoluer.">Date</th>
+                        <th data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel la position est ouverte.<br><br>Chaque marche est une question oui/non (ex: 'Bitcoin depassera-t-il 100k ?'). Le bot choisit les marches les plus prometteurs.">Marche</th>
+                        <th data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> :<br><br><span style='color:#4ade80;font-weight:700'>YES</span> = Le bot parie que l'evenement va se produire (le prix va monter vers 1$)<br><br><span style='color:#f87171;font-weight:700'>NO</span> = Le bot parie que l'evenement ne se produira PAS (le prix va descendre vers 0$)">Side</th>
+                        <th data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi en dollars</strong> dans cette position.<br><br>Le bot dimensionne automatiquement chaque position selon le Kelly Criterion et les limites d'exposition configurees.">Taille</th>
+                        <th data-tip-title="Prix d'Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00).<br><br>Sur Polymarket, les prix representent des probabilites. Un prix de 0.60 signifie que le marche estime l'evenement a 60% de chances de se produire.">Entree</th>
+                        <th data-tip-title="Prix Actuel" data-tip-icon="&#x1F4CA;" data-tip-body="<strong>Prix actuel du marche</strong> en temps reel.<br><br>Si le prix actuel est superieur au prix d'entree (pour un YES) = la position est en gain. S'il est inferieur = la position est en perte.">Actuel</th>
+                        <th data-tip-title="PnL" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte non realise(e)</strong> sur cette position.<br><br>Ce montant change en temps reel avec le prix du marche. Il ne devient 'reel' que lorsque la position est fermee (vente).">PnL</th>
                     </tr>
                 </thead>
                 <tbody id="positions-body"></tbody>
@@ -523,37 +1583,44 @@ tr:hover td { background: #1a2332; }
     <!-- Trades recents -->
     <div class="table-container">
         <h2>Trades Recents</h2>
-        <table>
+        <table id="recent-trades-table">
             <thead>
                 <tr>
-                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
-                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
-                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
-                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
-                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
-                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
-                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
-                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
+                    <th data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date et heure de fermeture</strong> du trade.<br><br>Quand le bot a decide de vendre/fermer la position. Peut etre declenche par un take-profit, stop-loss, ou autre regle.">Date</th>
+                    <th data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue. La question complete est visible en survolant le texte dans le tableau.">Marche</th>
+                    <th data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80'>YES</span> = pari sur OUI | <span style='color:#f87171'>NO</span> = pari sur NON">Side</th>
+                    <th data-tip-title="Prix d'Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> au moment de l'ouverture du trade (entre 0 et 1).">Entree</th>
+                    <th data-tip-title="Prix de Sortie" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture du trade. La difference entre Sortie et Entree determine le profit ou la perte.">Sortie</th>
+                    <th data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. C'est la mise de depart.">Taille</th>
+                    <th data-tip-title="PnL" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte realise(e)</strong> sur ce trade (net de frais).<br><br><span style='color:#4ade80'>Vert</span> = gain | <span style='color:#f87171'>Rouge</span> = perte">PnL</th>
+                    <th data-tip-title="Raison" data-tip-icon="&#x1F3F3;&#xFE0F;" data-tip-body="<strong>Motif de fermeture du trade</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint<br><strong>stop_loss</strong> = Limite de perte declenchee<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
                 </tr>
             </thead>
             <tbody id="trades-body"></tbody>
         </table>
     </div>
 
+    <!-- Attribution par Strategie -->
+    <div class="table-container" id="attribution-container">
+        <h2>Attribution par Strategie</h2>
+        <p style="color:#6b7280;font-size:12px;margin-bottom:12px;">Derniers signaux generes par chaque sous-strategie</p>
+        <div id="attribution-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+    </div>
+
     <!-- Historique complet des trades -->
     <div class="table-container" id="history-container" style="display:none;">
         <h2>Historique des Trades (<span id="history-count">0</span>)</h2>
-        <table>
+        <table id="history-trades-table">
             <thead>
                 <tr>
-                    <th>Date<span class="th-tooltip">Date et heure de cloture du trade</span></th>
-                    <th>Marche<span class="th-tooltip">Nom du marche Polymarket sur lequel le trade a ete effectue</span></th>
-                    <th>Side<span class="th-tooltip">Direction du pari : YES (hausse) ou NO (baisse)</span></th>
-                    <th>Entree<span class="th-tooltip">Prix d'achat au moment de l'ouverture du trade</span></th>
-                    <th>Sortie<span class="th-tooltip">Prix de vente au moment de la fermeture du trade</span></th>
-                    <th>Taille<span class="th-tooltip">Montant investi en dollars dans ce trade</span></th>
-                    <th>PnL<span class="th-tooltip">Profit ou perte realise(e) sur ce trade</span></th>
-                    <th>Raison<span class="th-tooltip">Motif de fermeture : stop-loss, take-profit, trailing-stop, expiration...</span></th>
+                    <th data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date de fermeture</strong> du trade.">Date</th>
+                    <th data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Nom du marche Polymarket</strong> sur lequel le trade a ete effectue.">Marche</th>
+                    <th data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> : YES ou NO.">Side</th>
+                    <th data-tip-title="Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> de la position.">Entree</th>
+                    <th data-tip-title="Sortie" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix de vente</strong> de la position.">Sortie</th>
+                    <th data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi</strong> en dollars.">Taille</th>
+                    <th data-tip-title="PnL" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte realise(e)</strong> net de frais.">PnL</th>
+                    <th data-tip-title="Raison" data-tip-icon="&#x1F3F3;&#xFE0F;" data-tip-body="<strong>Motif de fermeture</strong> : take_profit, stop_loss, trailing_stop, expiration.">Raison</th>
                 </tr>
             </thead>
             <tbody id="history-body"></tbody>
@@ -566,10 +1633,123 @@ tr:hover td { background: #1a2332; }
         <div id="errors-list"></div>
     </div>
 
+    <!-- Validation Panel -->
+    <div class="validation-panel" id="validation-panel">
+        <h2>&#x1F512; Conditions de passage EN LIGNE</h2>
+        <div class="validation-progress-label" id="val-progress-label">0 / 6 etapes validees</div>
+        <div class="validation-progress-bar">
+            <div class="validation-progress-fill" id="val-progress-fill" style="width:0%"></div>
+        </div>
+        <div class="validation-steps" id="validation-steps"></div>
+        <div style="text-align:center;">
+            <button class="go-live-btn" id="go-live-btn" disabled>Passer EN LIGNE &#x1F512; Verrouille</button>
+        </div>
+    </div>
+
+    <!-- Confirmation modal -->
+    <div class="modal-overlay" id="go-live-modal">
+        <div class="modal-box">
+            <h3>&#x26A0;&#xFE0F; Confirmation passage EN LIGNE</h3>
+            <p style="text-align:center;color:#9ca3af;font-size:13px;margin-bottom:20px;">
+                Tu es sur le point de passer en mode <strong style="color:#f87171;">ARGENT REEL</strong>.<br>Verifie une derniere fois :
+            </p>
+            <div class="modal-recap" id="modal-recap"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn-cancel" id="modal-cancel">Annuler</button>
+                <button class="modal-btn-confirm" id="modal-confirm">Confirmer le passage en reel</button>
+            </div>
+        </div>
+    </div>
+
     <div class="refresh-info">Rafraichissement automatique toutes les 10 secondes</div>
 </div>
 
+<!-- Global tooltip overlay -->
+<div id="global-tooltip">
+    <div class="gt-arrow" id="gt-arrow"></div>
+    <div class="gt-header">
+        <span class="gt-icon" id="gt-icon"></span>
+        <span class="gt-title" id="gt-title"></span>
+    </div>
+    <div class="gt-body" id="gt-body"></div>
+    <div class="gt-example" id="gt-example" style="display:none;">
+        <div class="gt-example-label">Exemple concret</div>
+        <div id="gt-example-text"></div>
+    </div>
+</div>
+
 <script>
+// ---- Global Tooltip System ----
+const GT = {
+    el: null, arrow: null, icon: null, title: null, body: null, example: null, exText: null,
+    hideTimeout: null,
+    init() {
+        this.el = document.getElementById('global-tooltip');
+        this.arrow = document.getElementById('gt-arrow');
+        this.icon = document.getElementById('gt-icon');
+        this.title = document.getElementById('gt-title');
+        this.body = document.getElementById('gt-body');
+        this.example = document.getElementById('gt-example');
+        this.exText = document.getElementById('gt-example-text');
+    },
+    show(target, opts) {
+        if (!this.el) this.init();
+        clearTimeout(this.hideTimeout);
+        this.icon.textContent = opts.icon || '';
+        this.title.textContent = opts.title || '';
+        this.body.innerHTML = opts.body || '';
+        if (opts.example) {
+            this.example.style.display = '';
+            this.exText.innerHTML = opts.example;
+        } else {
+            this.example.style.display = 'none';
+        }
+        this.el.style.display = 'block';
+        // Position
+        const rect = target.getBoundingClientRect();
+        const ttRect = this.el.getBoundingClientRect();
+        const pad = 12;
+        let top, arrowTop;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        // Prefer below
+        if (spaceBelow >= ttRect.height + pad || spaceBelow >= spaceAbove) {
+            top = rect.bottom + pad;
+            this.arrow.className = 'gt-arrow arrow-top';
+            arrowTop = true;
+        } else {
+            top = rect.top - ttRect.height - pad;
+            this.arrow.className = 'gt-arrow arrow-bottom';
+            arrowTop = false;
+        }
+        // Horizontal: center on target, clamp to viewport
+        let left = rect.left + rect.width / 2 - ttRect.width / 2;
+        left = Math.max(pad, Math.min(left, window.innerWidth - ttRect.width - pad));
+        // Clamp vertical
+        top = Math.max(pad, Math.min(top, window.innerHeight - ttRect.height - pad));
+        this.el.style.left = left + 'px';
+        this.el.style.top = top + 'px';
+        // Arrow horizontal position
+        const arrowLeft = Math.max(16, Math.min(rect.left + rect.width / 2 - left, ttRect.width - 16));
+        this.arrow.style.left = arrowLeft + 'px';
+    },
+    hide() {
+        this.hideTimeout = setTimeout(() => {
+            if (this.el) this.el.style.display = 'none';
+        }, 100);
+    }
+};
+
+function bindTooltip(el, opts) {
+    el.addEventListener('mouseenter', () => GT.show(el, opts));
+    el.addEventListener('mouseleave', () => GT.hide());
+    el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        GT.show(el, opts);
+        setTimeout(() => GT.hide(), 4000);
+    });
+}
+
 let equityChart = null;
 
 function fmt(n, decimals=2) {
@@ -599,41 +1779,144 @@ function truncate(s, len) {
 function renderMetrics(data) {
     const o = data.overview || {};
     const cards = [
-        { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '\u{1F4B0}',
-          tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br>C\'est la valeur totale de ton portefeuille a cet instant.',
-          ex: 'Capital 700$ + 2 positions de 150$ + 30$ de gains = Equity 1030$' },
-        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '\u{1F4B5}',
-          tip: '<strong>L\'argent disponible</strong> qui n\'est pas investi dans des positions. C\'est ta reserve pour ouvrir de nouvelles positions.',
-          ex: 'Sur 1000$ total, si 300$ sont investis, il reste 700$ de cash' },
-        { label: 'PnL Total', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '%', icon: '\u{1F4CA}',
-          tip: '<strong>Profit and Loss total</strong> depuis le lancement du bot. Somme de tous les trades fermes (gains - pertes).',
-          ex: '+45$ = le bot a gagne 45$ depuis le debut. -20$ = il a perdu 20$ au total' },
-        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '\u{1F4C5}',
-          tip: '<strong>Profit et perte du jour</strong>. Se reinitialise a minuit. Si ca depasse la limite journaliere, le bot arrete de trader.',
-          ex: '+12$ = le bot a gagne 12$ aujourd\'hui. -30$ = il a perdu 30$ depuis minuit' },
-        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '\u{23F3}',
-          tip: '<strong>Gains/pertes des positions encore ouvertes</strong>. Ce n\'est pas du vrai profit tant que la position n\'est pas fermee. Ca peut changer a tout moment.',
-          ex: '+15$ = tes positions ouvertes sont en gain de 15$. Mais si le marche bouge, ca peut devenir -15$' },
-        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '\u{1F3AF}',
-          tip: '<strong>Montant total investi</strong> dans les positions ouvertes. L\'exposition en % = combien de ton capital est "a risque".',
-          ex: '300$ (30%) = 300$ sont investis sur les marches, soit 30% de ton equity' },
-        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '\u{1F4C9}',
-          tip: '<strong>Baisse depuis le plus haut</strong> (peak equity). Mesure combien tu as "perdu" depuis ton meilleur moment. Si ca depasse le max (15%), le bot s\'arrete.',
-          ex: 'Peak a 1100$, equity actuelle 1050$ = drawdown de 4.5%. A 15% le bot coupe tout' },
-        { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '\u{1F3D4}',
-          tip: '<strong>La plus haute valeur atteinte</strong> par ton portefeuille. Sert de reference pour calculer le drawdown.',
-          ex: 'Peak 1100$ = a un moment, ton portefeuille valait 1100$. C\'est le record a battre' },
+        { label: 'Equity', value: fmtUsd(o.equity), cls: '', icon: '&#x1F4B0;',
+          tip: '<strong>Equity = Capital cash + Positions ouvertes + Gains non realises</strong><br><br>C\'est la <strong>valeur totale de ton portefeuille</strong> a cet instant precis. Elle monte quand tes positions gagnent, elle descend quand elles perdent.<br><br>C\'est le chiffre le plus important : il resume la sante globale de ton compte.',
+          ex: 'Tu as 700$ de cash + 2 positions de 150$ chacune + 30$ de gains latents<br>= Equity de <strong>1 030$</strong>' },
+        { label: 'Capital Cash', value: fmtUsd(o.capital), cls: '', icon: '&#x1F4B5;',
+          tip: '<strong>L\'argent disponible</strong> sur ton compte qui n\'est <strong>pas investi</strong> dans des positions ouvertes.<br><br>C\'est ta reserve pour ouvrir de nouvelles positions. Plus il est bas, moins tu peux ouvrir de trades. Le bot gere automatiquement l\'allocation.',
+          ex: 'Equity totale de 1000$, 300$ investis dans 3 positions<br>= <strong>700$ de cash disponible</strong> pour de nouveaux trades' },
+        { label: 'PnL Net (apr&#xE8;s frais)', value: fmtUsd(o.total_pnl), cls: valueClass(o.total_pnl), sub: fmt(o.total_return_pct) + '% | Frais: ' + fmtUsd(o.total_fees || 0), icon: '&#x1F4CA;', expanded: true,
+          tip: '<strong>Profit and Loss NET</strong> = Gains - Pertes - Frais<br><br>C\'est ton <strong>vrai benefice</strong> depuis le lancement du bot, une fois les frais Polymarket deduits (2% par trade).<br><br><strong>Vert</strong> = tu gagnes de l\'argent<br><strong>Rouge</strong> = tu en perds',
+          ex: 'Gains bruts: +2 286$, Frais: -119$<br>= <strong>PnL Net: +2 167$</strong> (ce que tu gagnes vraiment)' },
+        { label: 'PnL Journalier', value: fmtUsd(o.daily_pnl), cls: valueClass(o.daily_pnl), icon: '&#x1F4C5;',
+          tip: '<strong>Profit et perte du jour</strong> (depuis minuit UTC).<br><br>Se reinitialise a <strong>00h00 chaque jour</strong>. Le bot a une limite de perte journaliere configurable. Si cette limite est depassee, il arrete automatiquement de trader pour proteger ton capital.',
+          ex: '+12$ = le bot a gagne 12$ aujourd\'hui<br>-30$ = il a perdu 30$ depuis minuit<br>Limite par defaut : -50$ = arret automatique' },
+        { label: 'PnL Non Realise', value: fmtUsd(o.unrealized_pnl), cls: valueClass(o.unrealized_pnl), icon: '&#x23F3;',
+          tip: '<strong>Gains ou pertes des positions ENCORE OUVERTES</strong>.<br><br>Ce montant n\'est <strong>pas encore encaisse</strong>. Tant que la position n\'est pas fermee, ce PnL peut changer a tout moment : un gain de +20$ peut devenir une perte de -10$ si le marche se retourne.',
+          ex: 'Position ouverte a 0.40$, prix actuel 0.55$<br>= +15$ de gain non realise<br>Mais si le prix retombe a 0.35$ = -5$ de perte latente' },
+        { label: 'Exposition', value: fmtUsd(o.exposure), sub: fmt(o.exposure_pct, 1) + '%', icon: '&#x1F3AF;',
+          tip: '<strong>Montant total investi</strong> dans tes positions ouvertes.<br><br>L\'exposition en % montre <strong>quelle part de ton capital est "en jeu"</strong>. Le bot limite l\'exposition max (par defaut 30%) pour eviter de tout risquer en meme temps.',
+          ex: 'Equity de 1000$, 3 positions de 100$ chacune<br>= Exposition: <strong>300$ (30%)</strong><br>Il reste 70% du capital en securite' },
+        { label: 'Drawdown', value: fmt(o.drawdown_pct, 1) + '%', cls: o.drawdown_pct > 5 ? 'negative' : '', icon: '&#x1F4C9;',
+          tip: '<strong>Baisse depuis le plus haut historique</strong> de ton portefeuille.<br><br>Mesure "combien tu as perdu" depuis ton meilleur moment. C\'est un indicateur de risque cle.<br><br><strong>0-5%</strong> = Normal<br><strong>5-10%</strong> = Attention<br><strong>10-15%</strong> = Danger, le bot ralentit<br><strong>>15%</strong> = Le bot arrete TOUT',
+          ex: 'Peak a 1 100$, equity actuelle 1 050$<br>= Drawdown de <strong>4.5%</strong> (normal)<br>A 15% (935$), le bot coupe toutes les positions' },
+        { label: 'Peak Equity', value: fmtUsd(o.peak_equity), icon: '&#x1F3D4;',
+          tip: '<strong>Record historique</strong> de la valeur de ton portefeuille.<br><br>C\'est le <strong>plus haut sommet</strong> jamais atteint. Il sert de reference pour calculer le drawdown. L\'objectif est de toujours depasser ce chiffre !',
+          ex: 'Peak 1 100$ = a un moment, ton portefeuille valait 1 100$<br>C\'est <strong>le record a battre</strong>. Chaque nouveau peak = le bot performe bien.' },
     ];
 
+    // --- Build daily PnL from all_trades (only since bot started / last 30 days) ---
+    const allTrades = data.all_trades || data.recent_trades || [];
+    const startedAt = data.started_at || '';
+    const startDate = startedAt ? startedAt.substring(0, 10) : '';
+    const dailyMap = {};
+    allTrades.forEach(t => {
+        const d = t.exit_time || t.entry_time || '';
+        if (!d) return;
+        const day = d.substring(0, 10); // YYYY-MM-DD
+        // Only include trades from the current live session
+        if (startDate && day < startDate) return;
+        if (!dailyMap[day]) dailyMap[day] = { pnl: 0, count: 0 };
+        dailyMap[day].pnl += (t.pnl || 0);
+        dailyMap[day].count += 1;
+    });
+    const dailyDays = Object.keys(dailyMap).sort().slice(-7);
+
     const grid = document.getElementById('metrics-grid');
-    grid.innerHTML = cards.map(c => `
-        <div class="metric-card">
-            <div class="metric-tooltip">${c.tip}${c.ex ? '<div class="tip-example">' + c.icon + ' ' + c.ex + '</div>' : ''}</div>
+    grid.innerHTML = cards.map((c, i) => {
+        if (c.expanded) {
+            const initCap = o.initial_capital || 1000;
+            const pnlGross = o.total_pnl_gross || (o.total_pnl + (o.total_fees || 0));
+            const totalFees = o.total_fees || 0;
+            const totalPnl = o.total_pnl || 0;
+            const returnPct = o.total_return_pct || 0;
+            const equity = o.equity || (initCap + totalPnl);
+
+            let dailyHtml = '';
+            const liveStartLabel = startDate ? new Date(startDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+            if (dailyDays.length > 0) {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+
+                dailyHtml = '<div class="pnl-daily-section"><h4>Gains par jour de trading (depuis le ' + liveStartLabel + ')</h4><div class="pnl-daily-grid">' +
+                    dailyDays.map(day => {
+                        const d = dailyMap[day];
+                        const cls = d.pnl >= 0 ? 'day-positive' : 'day-negative';
+                        const vCls = d.pnl >= 0 ? 'positive' : 'negative';
+                        const dateObj = new Date(day + 'T00:00:00');
+                        const showYear = dateObj.getFullYear() !== currentYear;
+                        const dayLabel = dateObj.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: showYear ? 'numeric' : undefined });
+                        return '<div class="pnl-day-chip ' + cls + '">' +
+                            '<span class="pnl-day-date">' + dayLabel + '</span>' +
+                            '<span class="pnl-day-value ' + vCls + '">' + (d.pnl >= 0 ? '+' : '') + fmtUsd(d.pnl) + '</span>' +
+                            '<span class="pnl-day-trades">' + d.count + ' trade' + (d.count > 1 ? 's' : '') + '</span>' +
+                            '</div>';
+                    }).join('') +
+                    '</div></div>';
+            } else {
+                dailyHtml = '<div class="pnl-daily-section"><h4>Gains par jour de trading' + (liveStartLabel ? ' (live depuis le ' + liveStartLabel + ')' : '') + '</h4>' +
+                    '<div style="text-align:center;color:#4b5563;padding:12px 0;font-size:12px;">Aucun trade ferme depuis le passage en live. En attente du premier trade...</div></div>';
+            }
+
+            // Count trades since live
+            const liveTradeCount = allTrades.filter(t => {
+                const d = (t.exit_time || t.entry_time || '').substring(0, 10);
+                return !startDate || d >= startDate;
+            }).length;
+            const oldTradeCount = allTrades.length - liveTradeCount;
+
+            return `
+            <div class="metric-card pnl-expanded" data-tip-idx="${i}">
+                <div class="metric-label">${c.icon} ${c.label}${liveStartLabel ? ' <span style="font-size:10px;color:#818cf8;font-weight:400;text-transform:none;letter-spacing:0;">Live depuis le ' + liveStartLabel + '</span>' : ''}</div>
+                <div class="pnl-main-row">
+                    <div class="pnl-main-value ${c.cls}">${c.value}</div>
+                    <span class="pnl-return-badge ${returnPct >= 0 ? 'positive' : 'negative'}">${returnPct >= 0 ? '+' : ''}${fmt(returnPct, 2)}%</span>
+                    ${oldTradeCount > 0 ? '<span style="font-size:10px;color:#6b7280;margin-bottom:4px;">dont ' + oldTradeCount + ' trades historiques</span>' : ''}
+                </div>
+                <div class="pnl-breakdown">
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">Capital Initial</div>
+                        <div class="pnl-breakdown-value">${fmtUsd(initCap)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">PnL Brut</div>
+                        <div class="pnl-breakdown-value" style="color:${pnlGross >= 0 ? '#4ade80' : '#f87171'}">${pnlGross >= 0 ? '+' : ''}${fmtUsd(pnlGross)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">Frais (2%)</div>
+                        <div class="pnl-breakdown-value" style="color:#f59e0b">-${fmtUsd(Math.abs(totalFees))}</div>
+                    </div>
+                </div>
+                <div class="pnl-breakdown" style="border-top:none;padding-top:0;margin-top:-12px;">
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">Equity Actuelle</div>
+                        <div class="pnl-breakdown-value" style="color:#818cf8;font-size:17px;font-weight:700">${fmtUsd(equity)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">PnL Aujourd'hui</div>
+                        <div class="pnl-breakdown-value" style="color:${(o.daily_pnl||0) >= 0 ? '#4ade80' : '#f87171'}">${(o.daily_pnl||0) >= 0 ? '+' : ''}${fmtUsd(o.daily_pnl || 0)}</div>
+                    </div>
+                    <div class="pnl-breakdown-item">
+                        <div class="pnl-breakdown-label">PnL Non Realise</div>
+                        <div class="pnl-breakdown-value" style="color:${(o.unrealized_pnl||0) >= 0 ? '#4ade80' : '#f87171'}">${(o.unrealized_pnl||0) >= 0 ? '+' : ''}${fmtUsd(o.unrealized_pnl || 0)}</div>
+                    </div>
+                </div>
+                ${dailyHtml}
+            </div>`;
+        }
+        return `
+        <div class="metric-card" data-tip-idx="${i}">
             <div class="metric-label">${c.icon} ${c.label}</div>
             <div class="metric-value ${c.cls}">${c.value}</div>
             ${c.sub ? '<div class="metric-sub">' + c.sub + '</div>' : ''}
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
+
+    // Bind tooltips
+    grid.querySelectorAll('.metric-card').forEach((el, i) => {
+        const c = cards[i];
+        bindTooltip(el, { icon: c.icon, title: c.label, body: c.tip, example: c.ex });
+    });
 }
 
 function renderEquityChart(data) {
@@ -738,27 +2021,57 @@ function renderPositions(data) {
 function renderStats(data) {
     const s = data.trade_stats || {};
     const rows = [
-        ['Total Trades', s.total_trades || 0, 'Nombre total de trades fermes (gagnes + perdus) depuis le lancement'],
-        ['Win Rate', fmt(s.win_rate, 1) + '%', 'Pourcentage de trades gagnants. Ex: 60% = 6 trades sur 10 sont positifs. Au-dessus de 50% c\'est bon signe'],
-        ['Trades Gagnants', s.winning_trades || 0, 'Nombre de trades qui ont rapporte de l\'argent (PnL > 0)'],
-        ['Trades Perdants', s.losing_trades || 0, 'Nombre de trades qui ont perdu de l\'argent (PnL < 0)'],
-        ['Gain Moyen', fmtUsd(s.avg_win), 'Combien un trade gagnant rapporte en moyenne. Ex: +8.50$ = chaque trade positif gagne 8.50$ en moyenne'],
-        ['Perte Moyenne', fmtUsd(s.avg_loss), 'Combien un trade perdant coute en moyenne. Ex: -5.20$ = chaque trade negatif perd 5.20$ en moyenne'],
-        ['Profit Factor', fmt(s.profit_factor), 'Gains totaux / Pertes totales. > 1 = rentable. Ex: 1.5 = pour chaque 1$ perdu, le bot gagne 1.50$. < 1 = non rentable'],
-        ['Plus Gros Gain', fmtUsd(s.largest_win), 'Le meilleur trade jamais realise. Montre le potentiel max du bot'],
-        ['Plus Grosse Perte', fmtUsd(s.largest_loss), 'Le pire trade jamais realise. Montre le risque max par trade'],
-        ['Marches Scannes', data.markets_scanned || 0, 'Nombre de marches Polymarket analyses a la derniere iteration (apres filtrage volume/liquidite)'],
-        ['Signaux Generes', data.signals_generated || 0, 'Nombre total de signaux de trading generes depuis le debut. Pas tous ne menent a un trade'],
-        ['Iteration', data.iteration || 0, 'Nombre de cycles complets du bot. Chaque iteration = scan + analyse + decisions + mise a jour'],
+        ['Total Trades', s.total_trades || 0, '&#x1F4CA;',
+         'Nombre total de trades <strong>fermes</strong> (gagnants + perdants) depuis le lancement du bot.',
+         '51 trades = le bot a ouvert et ferme 51 positions depuis le debut'],
+        ['Win Rate', fmt(s.win_rate, 1) + '%', '&#x1F3AF;',
+         '<strong>Pourcentage de trades gagnants</strong> sur le total.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = Le bot perd plus souvent qu\'il gagne',
+         '60% = sur 10 trades, 6 sont gagnants et 4 sont perdants'],
+        ['Trades Gagnants', s.winning_trades || 0, '&#x2705;',
+         'Nombre de trades qui ont <strong>rapporte de l\'argent</strong> (PnL > 0$). Plus ce chiffre est eleve par rapport aux perdants, mieux c\'est.',
+         '35 trades gagnants sur 51 = le bot gagne dans 69% des cas'],
+        ['Trades Perdants', s.losing_trades || 0, '&#x274C;',
+         'Nombre de trades qui ont <strong>coute de l\'argent</strong> (PnL < 0$). C\'est normal d\'en avoir, l\'important est que les gains compensent les pertes.',
+         '16 trades perdants sur 51 = seulement 31% de pertes, c\'est bon'],
+        ['Gain Moyen', fmtUsd(s.avg_win), '&#x1F4B0;',
+         'Combien un <strong>trade gagnant rapporte en moyenne</strong>. Plus c\'est eleve, mieux c\'est. Idealement, le gain moyen doit etre superieur a la perte moyenne.',
+         '+85$ = chaque trade positif gagne 85$ en moyenne'],
+        ['Perte Moyenne', fmtUsd(s.avg_loss), '&#x1F4B8;',
+         'Combien un <strong>trade perdant coute en moyenne</strong>. Le stop-loss limite cette valeur. Idealement, la perte moyenne doit etre inferieure au gain moyen.',
+         '-25$ = chaque trade negatif perd 25$ en moyenne'],
+        ['Profit Factor', fmt(s.profit_factor), '&#x2696;&#xFE0F;',
+         '<strong>Gains totaux / Pertes totales</strong>. C\'est LE ratio de rentabilite.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable (le bot perd de l\'argent)',
+         '1.80 = pour chaque 1$ perdu, le bot gagne 1.80$'],
+        ['Plus Gros Gain', fmtUsd(s.largest_win), '&#x1F3C6;',
+         'Le <strong>meilleur trade</strong> jamais realise par le bot. Montre le potentiel maximum sur un seul trade.',
+         '+250$ sur un seul trade = le meilleur coup du bot'],
+        ['Plus Grosse Perte', fmtUsd(s.largest_loss), '&#x1F4A5;',
+         'Le <strong>pire trade</strong> jamais realise. Montre le risque maximum. Le stop-loss devrait limiter ce chiffre.',
+         '-80$ = la plus grosse perte, limitee par le stop-loss a 10%'],
+        ['Marches Scannes', data.markets_scanned || 0, '&#x1F50D;',
+         'Nombre de marches Polymarket <strong>analyses lors du dernier scan</strong>. Le bot filtre par volume et liquidite pour ne garder que les marches interessants.',
+         '150 marches scannes, 12 retenus = le bot est selectif'],
+        ['Signaux Generes', data.signals_generated || 0, '&#x1F4E1;',
+         'Nombre total de <strong>signaux de trading detectes</strong> depuis le debut. Un signal ne mene pas toujours a un trade (filtrage, capital insuffisant, exposition max...).',
+         '200 signaux, 51 trades = le bot ne prend que les meilleures opportunites'],
+        ['Iteration', data.iteration || 0, '&#x1F504;',
+         'Nombre de <strong>cycles complets du bot</strong>. Chaque iteration : scan des marches, analyse des signaux, decisions de trading, mise a jour des positions.',
+         'Iteration 340 = le bot a fait 340 cycles d\'analyse depuis le lancement'],
     ];
 
-    document.getElementById('stats-grid').innerHTML = rows.map(([label, value, tip]) => `
+    const statsGrid = document.getElementById('stats-grid');
+    statsGrid.innerHTML = rows.map(([label, value]) => `
         <div class="stat-row">
-            <div class="stat-tooltip">${tip}</div>
             <span class="stat-label">${label}</span>
             <span class="stat-value">${value}</span>
         </div>
     `).join('');
+
+    // Bind tooltips to stat rows
+    statsGrid.querySelectorAll('.stat-row').forEach((el, i) => {
+        const [label, value, icon, tip, ex] = rows[i];
+        bindTooltip(el, { icon, title: label, body: tip, example: ex });
+    });
 }
 
 function renderTrades(data) {
@@ -848,7 +2161,251 @@ function updateHeader(data) {
 
     document.getElementById('last-update').textContent =
         'MAJ: ' + new Date().toLocaleTimeString('fr-FR');
+
+    // Update about bar
+    const aboutStrat = document.getElementById('about-strategy');
+    if (aboutStrat) aboutStrat.textContent = data.strategy || 'AlphaComposite';
+    const aboutScan = document.getElementById('about-scan');
+    if (aboutScan && data.iteration) {
+        const started = data.started_at ? new Date(data.started_at) : null;
+        if (started) {
+            const hours = ((Date.now() - started.getTime()) / 3600000).toFixed(1);
+            aboutScan.textContent = hours + 'h uptime';
+        }
+    }
 }
+
+// ======== Validation Checklist System ========
+const ValidationChecker = {
+    LS_KEY: 'polymarket_validation',
+
+    getState() {
+        try {
+            const raw = localStorage.getItem(this.LS_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return { dryRunStartDate: null, manualConfirm: false };
+    },
+
+    saveState(state) {
+        localStorage.setItem(this.LS_KEY, JSON.stringify(state));
+    },
+
+    ensureDryRunStart(data) {
+        const state = this.getState();
+        // Use backend started_at if available, otherwise track locally
+        if (data.started_at) {
+            state.dryRunStartDate = data.started_at;
+            this.saveState(state);
+        } else if ((data.mode || '').toUpperCase().includes('DRY')) {
+            if (!state.dryRunStartDate) {
+                state.dryRunStartDate = new Date().toISOString();
+                this.saveState(state);
+            }
+        }
+        return state;
+    },
+
+    computeSteps(data) {
+        const state = this.ensureDryRunStart(data);
+        const o = data.overview || {};
+        const steps = [];
+
+        // Filter trades to only those AFTER the DRY RUN start date
+        const startDate = (state.dryRunStartDate || '').substring(0, 10);
+        const allTrades = data.all_trades || data.recent_trades || [];
+        const liveTrades = startDate
+            ? allTrades.filter(t => {
+                const d = (t.exit_time || t.entry_time || '').substring(0, 10);
+                return d >= startDate;
+            })
+            : allTrades;
+
+        // Compute live-only stats
+        const liveTradeCount = liveTrades.length;
+        const liveWins = liveTrades.filter(t => (t.pnl || 0) > 0).length;
+        const livePnl = liveTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const liveWinRate = liveTradeCount > 0 ? (liveWins / liveTradeCount * 100) : 0;
+
+        // STEP 1 - Dry run duration >= 30 days
+        let dryDays = 0;
+        if (state.dryRunStartDate) {
+            const start = new Date(state.dryRunStartDate);
+            const now = new Date();
+            dryDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        }
+        steps.push({
+            title: 'Duree minimum de DRY RUN',
+            detail: 'Jour ' + dryDays + ' / 30',
+            valid: dryDays >= 30,
+            pending: dryDays > 0 && dryDays < 30
+        });
+
+        // STEP 2 - PNL Net > 0 (only trades since DRY RUN start)
+        steps.push({
+            title: 'PNL Net positif',
+            detail: 'PNL Net : ' + (livePnl >= 0 ? '+' : '') + '$' + Math.abs(livePnl).toFixed(2),
+            valid: livePnl > 0,
+            pending: false
+        });
+
+        // STEP 3 - Drawdown < 15% (current session)
+        const dd = o.drawdown_pct || 0;
+        let maxDd = dd;
+        if (data.equity_history && data.equity_history.length > 0) {
+            let peak = 0;
+            const startTs = state.dryRunStartDate ? new Date(state.dryRunStartDate).getTime() : 0;
+            data.equity_history.forEach(p => {
+                // Only consider equity points since DRY RUN start
+                const pTime = p.timestamp ? new Date(p.timestamp).getTime() : 0;
+                if (startTs && pTime < startTs) return;
+                const eq = p.equity || p.value || 0;
+                if (eq > peak) peak = eq;
+                if (peak > 0) {
+                    const d = (peak - eq) / peak * 100;
+                    if (d > maxDd) maxDd = d;
+                }
+            });
+        }
+        steps.push({
+            title: 'Drawdown sous controle',
+            detail: 'Drawdown max : ' + maxDd.toFixed(1) + '%',
+            valid: maxDd < 15,
+            pending: false
+        });
+
+        // STEP 4 - At least 50 trades (since DRY RUN start)
+        steps.push({
+            title: 'Nombre de trades minimum',
+            detail: liveTradeCount + ' / 50 trades',
+            valid: liveTradeCount >= 50,
+            pending: liveTradeCount > 0 && liveTradeCount < 50
+        });
+
+        // STEP 5 - Win rate >= 55% (since DRY RUN start)
+        steps.push({
+            title: 'Win Rate acceptable',
+            detail: 'Win rate : ' + liveWinRate.toFixed(1) + '%',
+            valid: liveWinRate >= 55,
+            pending: liveTradeCount > 0 && liveWinRate < 55
+        });
+
+        // STEP 6 - Manual confirmation
+        steps.push({
+            title: 'Validation manuelle',
+            detail: 'manual',
+            valid: state.manualConfirm === true,
+            pending: false,
+            isManual: true
+        });
+
+        return steps;
+    },
+
+    render(data) {
+        const steps = this.computeSteps(data);
+        const validCount = steps.filter(s => s.valid).length;
+        const total = steps.length;
+        const allValid = validCount === total;
+
+        // Progress
+        document.getElementById('val-progress-label').textContent = validCount + ' / ' + total + ' etapes validees';
+        document.getElementById('val-progress-fill').style.width = (validCount / total * 100) + '%';
+
+        // Steps list
+        const container = document.getElementById('validation-steps');
+        container.innerHTML = steps.map((s, i) => {
+            const icon = s.valid ? '\u2705' : (s.pending ? '\u23F3' : '&#x1F534;');
+            const cls = s.valid ? 'step-valid' : (s.pending ? 'step-pending' : 'step-invalid');
+
+            if (s.isManual) {
+                const state = this.getState();
+                const checked = state.manualConfirm ? 'checked' : '';
+                return '<div class="validation-step ' + cls + '">' +
+                    '<span class="step-icon">' + icon + '</span>' +
+                    '<div class="step-info">' +
+                        '<div class="step-title">Etape ' + (i + 1) + ' \u2014 ' + s.title + '</div>' +
+                        '<label class="step-checkbox">' +
+                            '<input type="checkbox" id="manual-confirm-cb" ' + checked + '>' +
+                            '<span>Je confirme avoir relu les parametres de risque et accepte de trader avec de l\'argent reel</span>' +
+                        '</label>' +
+                    '</div>' +
+                '</div>';
+            }
+
+            return '<div class="validation-step ' + cls + '">' +
+                '<span class="step-icon">' + icon + '</span>' +
+                '<div class="step-info">' +
+                    '<div class="step-title">Etape ' + (i + 1) + ' \u2014 ' + s.title + '</div>' +
+                    '<div class="step-detail"><span class="val-highlight">' + s.detail + '</span></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        // Bind manual checkbox
+        const cb = document.getElementById('manual-confirm-cb');
+        if (cb) {
+            cb.onchange = () => {
+                const state = this.getState();
+                state.manualConfirm = cb.checked;
+                this.saveState(state);
+                this.render(data);
+            };
+        }
+
+        // Go live button
+        const btn = document.getElementById('go-live-btn');
+        if (allValid) {
+            btn.disabled = false;
+            btn.className = 'go-live-btn ready';
+            btn.innerHTML = 'Passer EN LIGNE \u2705 Pret';
+            btn.onclick = () => this.showModal(steps);
+        } else {
+            btn.disabled = true;
+            btn.className = 'go-live-btn';
+            btn.innerHTML = 'Passer EN LIGNE &#x1F512; Verrouille';
+            btn.onclick = null;
+        }
+    },
+
+    showModal(steps) {
+        const recap = document.getElementById('modal-recap');
+        recap.innerHTML = steps.map((s, i) => {
+            return '<div class="modal-recap-item">' +
+                '<span class="recap-icon">\u2705</span>' +
+                '<span>Etape ' + (i + 1) + ' \u2014 ' + s.title + (s.isManual ? '' : ' : <strong>' + s.detail + '</strong>') + '</span>' +
+            '</div>';
+        }).join('');
+
+        document.getElementById('go-live-modal').classList.add('active');
+    },
+
+    hideModal() {
+        document.getElementById('go-live-modal').classList.remove('active');
+    },
+
+    init() {
+        document.getElementById('modal-cancel').onclick = () => this.hideModal();
+        document.getElementById('modal-confirm').onclick = () => {
+            this.hideModal();
+            // Send go-live request to backend
+            fetch('/api/settings/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dry_run: false })
+            }).then(() => {
+                alert('Mode EN LIGNE active ! Le bot va maintenant trader avec de l\'argent reel.');
+                location.reload();
+            }).catch(err => {
+                alert('Erreur lors du passage en live : ' + err.message);
+            });
+        };
+        // Close modal on overlay click
+        document.getElementById('go-live-modal').onclick = (e) => {
+            if (e.target === document.getElementById('go-live-modal')) this.hideModal();
+        };
+    }
+};
 
 async function fetchAndRender() {
     try {
@@ -863,14 +2420,168 @@ async function fetchAndRender() {
         renderTrades(data);
         renderTradesHistory(data);
         renderErrors(data);
+        renderAttribution(data);
+        ValidationChecker.render(data);
     } catch (err) {
         console.error('Erreur de chargement:', err);
     }
 }
 
+function renderAttribution(data) {
+    const grid = document.getElementById('attribution-grid');
+    if (!grid) return;
+    const attr = data.strategy_attribution || {};
+    const perf = data.strategy_performance || {};
+
+    if (Object.keys(attr).length === 0) {
+        grid.innerHTML = '<p style="color:#374151;font-size:13px;">Aucun signal genere pour le moment</p>';
+        return;
+    }
+
+    // Aggreger les signaux par sous-strategie
+    const stratCounts = {};
+    for (const [marketId, signals] of Object.entries(attr)) {
+        for (const [stratName, action] of Object.entries(signals)) {
+            if (!stratCounts[stratName]) stratCounts[stratName] = {BUY_YES:0, BUY_NO:0, HOLD:0, total:0};
+            stratCounts[stratName][action] = (stratCounts[stratName][action] || 0) + 1;
+            stratCounts[stratName].total++;
+        }
+    }
+
+    let html = '';
+    for (const [name, counts] of Object.entries(stratCounts)) {
+        const active = counts.BUY_YES + counts.BUY_NO;
+        const pct = counts.total > 0 ? Math.round(active / counts.total * 100) : 0;
+        const perfData = perf[name] || {};
+        const wr = perfData.win_rate ? perfData.win_rate.toFixed(0) + '%' : '-';
+        html += `<div style="background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px;">
+            <div style="font-weight:600;color:#fff;font-size:14px;margin-bottom:8px;">${name}</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;">
+                <span>YES: <span style="color:#4ade80">${counts.BUY_YES}</span></span>
+                <span>NO: <span style="color:#f87171">${counts.BUY_NO}</span></span>
+                <span>HOLD: ${counts.HOLD}</span>
+            </div>
+            <div style="margin-top:8px;height:4px;background:#1f2937;border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;"></div>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:4px;">Activite: ${pct}%</div>
+        </div>`;
+    }
+    grid.innerHTML = html;
+}
+
+// Bind tooltips on table headers (data-tip-* attributes)
+function bindTableHeaderTooltips() {
+    document.querySelectorAll('th[data-tip-title]').forEach(th => {
+        bindTooltip(th, {
+            icon: th.dataset.tipIcon || '',
+            title: th.dataset.tipTitle || '',
+            body: th.dataset.tipBody || '',
+            example: th.dataset.tipExample || ''
+        });
+    });
+}
+
+ValidationChecker.init();
+
 // Premier chargement + refresh automatique
 fetchAndRender();
+bindTableHeaderTooltips();
 setInterval(fetchAndRender, 10000);
+
+// ================================================================
+//  LIVE ACTIVITY FEED — SSE + Fallback polling
+// ================================================================
+
+const FEED_ICONS = {
+    iteration: '&#x1F504;',
+    scan: '&#x1F50D;',
+    signal: '&#x1F4E1;',
+    evaluate: '&#x1F9E0;',
+    open: '&#x1F7E2;',
+    close: '&#x1F534;',
+    resolved: '&#x1F3C1;',
+    timeout: '&#x23F0;',
+};
+
+let feedEventCount = 0;
+let sseConnected = false;
+
+function addFeedEvent(event) {
+    const body = document.getElementById('feed-body');
+    if (!body) return;
+
+    // Retirer le message "En attente..."
+    if (feedEventCount === 0) body.innerHTML = '';
+
+    feedEventCount++;
+    document.getElementById('feed-count').textContent = feedEventCount;
+
+    const div = document.createElement('div');
+    div.className = 'feed-event new-event';
+    div.setAttribute('data-type', event.type || 'info');
+
+    const icon = FEED_ICONS[event.type] || '&#x2139;&#xFE0F;';
+    div.innerHTML = `<span class="feed-time">${event.time || ''}</span><span class="feed-icon">${icon}</span><span class="feed-msg">${escapeHtml(event.message || '')}</span>`;
+
+    body.appendChild(div);
+
+    // Retirer la classe new-event apres l'animation
+    setTimeout(() => div.classList.remove('new-event'), 2000);
+
+    // Limiter a 100 events dans le DOM
+    while (body.children.length > 100) body.removeChild(body.firstChild);
+
+    // Auto-scroll
+    const autoScroll = document.getElementById('feed-autoscroll');
+    if (autoScroll && autoScroll.checked) {
+        body.scrollTop = body.scrollHeight;
+    }
+}
+
+function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+}
+
+function connectSSE() {
+    const evtSource = new EventSource('/api/activity/stream');
+
+    evtSource.onopen = () => {
+        sseConnected = true;
+        const dot = document.querySelector('.live-dot');
+        if (dot) dot.style.background = '#4ade80';
+    };
+
+    evtSource.onmessage = (e) => {
+        try {
+            const event = JSON.parse(e.data);
+            addFeedEvent(event);
+        } catch (err) {}
+    };
+
+    evtSource.onerror = () => {
+        sseConnected = false;
+        const dot = document.querySelector('.live-dot');
+        if (dot) dot.style.background = '#fbbf24';
+        evtSource.close();
+        // Reconnect apres 5s
+        setTimeout(connectSSE, 5000);
+    };
+}
+
+// Charger l'historique recent puis connecter SSE
+async function initLiveFeed() {
+    try {
+        const resp = await fetch('/api/activity');
+        const events = await resp.json();
+        events.forEach(addFeedEvent);
+    } catch (e) {}
+    connectSSE();
+}
+
+initLiveFeed();
 </script>
 </body>
 </html>
@@ -886,7 +2597,7 @@ SETTINGS_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parametres - Polymarket Bot</title>
+<title>AlphaPred — Parametres</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1251,9 +2962,10 @@ input:checked + .toggle-slider:before { transform: translateX(24px); }
 <body>
 
 <div class="header">
-    <h1><span>POLYMARKET</span> Hedge Fund Bot <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v__BUILD_VERSION__</span></h1>
+    <h1><span style="color:#8b5cf6;">ALPHA</span>PRED <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v2.0.0 — __BUILD_VERSION__</span></h1>
     <div class="header-right">
         <a href="/" class="nav-link">Dashboard</a>
+        <a href="/report" class="nav-link">Rapport</a>
         <a href="/settings" class="nav-link active">Parametres</a>
     </div>
 </div>
@@ -1370,11 +3082,11 @@ function renderSettings() {
 }
 
 const ICONS = {
-    dollar: '\u{1F4B0}', target: '\u{1F3AF}', shield: '\u{1F6E1}', layers: '\u{1F4DA}',
-    chart: '\u{1F4CA}', droplet: '\u{1F4A7}', arrows: '\u{2194}\uFE0F', clock: '\u{23F0}',
-    alert: '\u{26A0}\uFE0F', toggle: '\u{1F504}', brain: '\u{1F9E0}', users: '\u{1F465}',
-    filter: '\u{1F50D}', trendUp: '\u{1F4C8}', trendDown: '\u{1F4C9}', scissors: '\u{2702}\uFE0F',
-    trophy: '\u{1F3C6}',
+    dollar: '&#x1F4B0;', target: '&#x1F3AF;', shield: '&#x1F6E1;', layers: '&#x1F4DA;',
+    chart: '&#x1F4CA;', droplet: '&#x1F4A7;', arrows: '&#x2194;&#xFE0F;', clock: '&#x23F0;',
+    alert: '&#x26A0;&#xFE0F;', toggle: '&#x1F504;', brain: '&#x1F9E0;', users: '&#x1F465;',
+    filter: '&#x1F50D;', trendUp: '&#x1F4C8;', trendDown: '&#x1F4C9;', scissors: '&#x2702;&#xFE0F;',
+    trophy: '&#x1F3C6;',
 };
 
 function createParamRow(p) {
@@ -1384,7 +3096,7 @@ function createParamRow(p) {
 
     const displayValue = p.type === 'percent' ? (p.value * 100).toFixed(1) + '%' : p.value;
     const displayDefault = p.type === 'percent' ? (p.default * 100).toFixed(1) + '%' : p.default;
-    const icon = ICONS[p.icon] || '\u{2699}\uFE0F';
+    const icon = ICONS[p.icon] || '&#x2699;&#xFE0F;';
     const tooltipId = 'tip-' + p.key;
 
     // Info
@@ -1669,6 +3381,536 @@ loadSettings();
 
 
 # ================================================================
+#  REPORT HTML/CSS/JS COMPLET (EMBARQUE)
+# ================================================================
+
+REPORT_HTML = r"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaPred — Rapport</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f1117; color: #e5e7eb; font-family: 'Inter', system-ui, sans-serif; }
+.header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; background: #161822; border-bottom: 1px solid #1e2030;
+}
+.header h1 { font-size: 16px; font-weight: 600; color: #e5e7eb; }
+.header h1 span:first-child { color: #818cf8; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+    color: #a5b4fc; text-decoration: none; font-size: 13px;
+    padding: 4px 12px; border: 1px solid #6366f1; border-radius: 20px;
+}
+.nav-link:hover { background: #6366f1; color: #fff; }
+.nav-link.active { background: #6366f1; color: #fff; }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+/* KPI Cards */
+.kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+}
+.kpi-card {
+    background: #161822; border: 1px solid #1e2030; border-radius: 10px;
+    padding: 16px; text-align: center;
+}
+.kpi-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 700; }
+.kpi-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.positive { color: #4ade80; }
+.negative { color: #f87171; }
+.neutral { color: #a5b4fc; }
+
+/* Charts */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+.chart-box {
+    background: #161822; border: 1px solid #1e2030; border-radius: 10px;
+    padding: 16px;
+}
+.chart-box h2 { font-size: 14px; color: #818cf8; margin-bottom: 12px; }
+.chart-box canvas { width: 100% !important; height: 250px !important; }
+
+/* Table */
+.table-box {
+    background: #161822; border: 1px solid #1e2030; border-radius: 10px;
+    padding: 16px; margin-bottom: 24px;
+}
+.table-box h2 { font-size: 14px; color: #818cf8; margin-bottom: 12px; }
+.table-box .controls { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.table-box input, .table-box select {
+    background: #1e2030; border: 1px solid #2d3048; color: #e5e7eb;
+    padding: 6px 10px; border-radius: 6px; font-size: 12px;
+}
+.table-box input { flex: 1; max-width: 300px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { background: #1e2030; color: #9ca3af; padding: 8px; text-align: left; font-weight: 600; cursor: pointer; user-select: none; }
+th:hover { color: #a5b4fc; }
+td { padding: 8px; border-bottom: 1px solid #1e2030; }
+tr:hover { background: #1a1c2e; }
+.badge {
+    padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
+}
+.badge-win { background: #4ade8022; color: #4ade80; }
+.badge-loss { background: #f8717122; color: #f87171; }
+.badge-reason { background: #818cf822; color: #818cf8; }
+
+/* KPI cards hover */
+.kpi-card { cursor: help; }
+
+/* Global tooltip overlay */
+#global-tooltip {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    width: 360px;
+    max-width: 90vw;
+    background: linear-gradient(135deg, #1a1f35 0%, #1e2340 100%);
+    border: 2px solid #818cf8;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 12px 40px rgba(99,102,241,0.3), 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 13px;
+    color: #e0e6ed;
+    line-height: 1.7;
+    pointer-events: none;
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+#global-tooltip .gt-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #2d3460;
+}
+#global-tooltip .gt-icon { font-size: 20px; }
+#global-tooltip .gt-title { font-size: 15px; font-weight: 700; color: #a5b4fc; }
+#global-tooltip .gt-body { color: #d1d5db; font-size: 13px; line-height: 1.7; }
+#global-tooltip .gt-body strong { color: #c7d2fe; }
+#global-tooltip .gt-example {
+    margin-top: 12px; padding: 10px 14px; background: #0d1321;
+    border: 1px solid #2a3a5c; border-radius: 8px; font-size: 12px;
+    color: #4ade80; line-height: 1.6;
+}
+#global-tooltip .gt-example-label {
+    font-size: 10px; color: #6b7280; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 4px; font-weight: 600;
+}
+#global-tooltip .gt-arrow {
+    position: absolute; width: 12px; height: 12px; background: #1a1f35;
+    border: 2px solid #818cf8; transform: rotate(45deg);
+    border-right: none; border-bottom: none;
+}
+#global-tooltip .gt-arrow.arrow-top { top: -7px; border-top: 2px solid #818cf8; border-left: 2px solid #818cf8; }
+#global-tooltip .gt-arrow.arrow-bottom { bottom: -7px; transform: rotate(225deg); }
+
+/* Table header cursor */
+th { cursor: help; }
+
+/* Footer */
+.footer { text-align: center; padding: 20px; color: #374151; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><span style="color:#8b5cf6;">ALPHA</span>PRED <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:8px;">v2.0.0 — __BUILD_VERSION__</span></h1>
+    <div class="header-right">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/report" class="nav-link active">Rapport</a>
+        <a href="/settings" class="nav-link">Parametres</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="charts-grid">
+        <div class="chart-box">
+            <h2>PnL Cumule</h2>
+            <canvas id="pnlChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h2>Distribution des Trades</h2>
+            <canvas id="distChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <h2>Historique Complet des Trades (<span id="trade-count">0</span>)</h2>
+        <div class="controls">
+            <input type="text" id="search" placeholder="Rechercher un marche...">
+            <select id="filter-side">
+                <option value="">Tous</option>
+                <option value="YES">YES</option>
+                <option value="NO">NO</option>
+            </select>
+            <select id="filter-result">
+                <option value="">Tous</option>
+                <option value="win">Gagnants</option>
+                <option value="loss">Perdants</option>
+            </select>
+        </div>
+        <div style="max-height:500px;overflow-y:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-sort="idx">#</th>
+                        <th data-sort="date" data-tip-title="Date" data-tip-icon="&#x1F4C5;" data-tip-body="<strong>Date d'ouverture</strong> du trade. Quand le bot a entre sur ce marche.">Date</th>
+                        <th data-sort="market" data-tip-title="Marche" data-tip-icon="&#x1F3E6;" data-tip-body="<strong>Question du marche Polymarket</strong>. Survolez le texte dans le tableau pour voir la question complete.">Marche</th>
+                        <th data-sort="side" data-tip-title="Side" data-tip-icon="&#x2194;&#xFE0F;" data-tip-body="<strong>Direction du pari</strong> :<br><span style='color:#4ade80;font-weight:700'>YES</span> = pari que l'evenement se produit<br><span style='color:#f87171;font-weight:700'>NO</span> = pari que l'evenement ne se produit PAS">Side</th>
+                        <th data-sort="entry" data-tip-title="Prix d'Entree" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix d'achat</strong> de la position (entre 0.00 et 1.00). Represente la probabilite estimee par le marche au moment de l'achat.">Entree</th>
+                        <th data-sort="exit" data-tip-title="Prix de Sortie" data-tip-icon="&#x1F3F7;&#xFE0F;" data-tip-body="<strong>Prix de vente</strong> au moment de la fermeture. La difference Sortie - Entree determine le profit ou la perte.">Sortie</th>
+                        <th data-sort="size" data-tip-title="Taille" data-tip-icon="&#x1F4B5;" data-tip-body="<strong>Montant investi en dollars</strong> dans ce trade. Dimensionne automatiquement par le bot selon le Kelly Criterion.">Taille</th>
+                        <th data-sort="fees" data-tip-title="Frais" data-tip-icon="&#x1F4B8;" data-tip-body="<strong>Frais Polymarket</strong> preleves sur ce trade (2% du montant engage). Ces frais sont deduits du PnL brut pour obtenir le PnL net.">Frais</th>
+                        <th data-sort="pnl" data-tip-title="PnL Net" data-tip-icon="&#x1F4B0;" data-tip-body="<strong>Profit ou perte NET</strong> apres deduction des frais.<br><br><span style='color:#4ade80'>Vert</span> = trade gagnant<br><span style='color:#f87171'>Rouge</span> = trade perdant">PnL Net</th>
+                        <th data-sort="pct" data-tip-title="Rendement %" data-tip-icon="&#x1F4CA;" data-tip-body="<strong>Rendement en pourcentage</strong> du trade par rapport au montant investi. Ex: +80% sur 100$ = +80$ de gain.">%</th>
+                        <th data-sort="reason" data-tip-title="Raison" data-tip-icon="&#x1F3F3;&#xFE0F;" data-tip-body="<strong>Motif de fermeture</strong> :<br><br><strong>take_profit</strong> = Objectif de gain atteint (+20% par defaut)<br><strong>stop_loss</strong> = Limite de perte declenchee (-10% par defaut)<br><strong>trailing_stop</strong> = Stop suiveur active<br><strong>expiration</strong> = Le marche a expire">Raison</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">Polymarket Hedge Fund Bot — Rapport genere automatiquement</div>
+</div>
+
+<!-- Global tooltip overlay -->
+<div id="global-tooltip">
+    <div class="gt-arrow" id="gt-arrow"></div>
+    <div class="gt-header">
+        <span class="gt-icon" id="gt-icon"></span>
+        <span class="gt-title" id="gt-title"></span>
+    </div>
+    <div class="gt-body" id="gt-body"></div>
+    <div class="gt-example" id="gt-example" style="display:none;">
+        <div class="gt-example-label">Exemple concret</div>
+        <div id="gt-example-text"></div>
+    </div>
+</div>
+
+<script>
+// ---- Global Tooltip System ----
+const GT = {
+    el: null, arrow: null, icon: null, title: null, body: null, example: null, exText: null,
+    hideTimeout: null,
+    init() {
+        this.el = document.getElementById('global-tooltip');
+        this.arrow = document.getElementById('gt-arrow');
+        this.icon = document.getElementById('gt-icon');
+        this.title = document.getElementById('gt-title');
+        this.body = document.getElementById('gt-body');
+        this.example = document.getElementById('gt-example');
+        this.exText = document.getElementById('gt-example-text');
+    },
+    show(target, opts) {
+        if (!this.el) this.init();
+        clearTimeout(this.hideTimeout);
+        this.icon.textContent = opts.icon || '';
+        this.title.textContent = opts.title || '';
+        this.body.innerHTML = opts.body || '';
+        if (opts.example) {
+            this.example.style.display = '';
+            this.exText.innerHTML = opts.example;
+        } else {
+            this.example.style.display = 'none';
+        }
+        this.el.style.display = 'block';
+        const rect = target.getBoundingClientRect();
+        const ttRect = this.el.getBoundingClientRect();
+        const pad = 12;
+        let top;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        if (spaceBelow >= ttRect.height + pad || spaceBelow >= spaceAbove) {
+            top = rect.bottom + pad;
+            this.arrow.className = 'gt-arrow arrow-top';
+        } else {
+            top = rect.top - ttRect.height - pad;
+            this.arrow.className = 'gt-arrow arrow-bottom';
+        }
+        let left = rect.left + rect.width / 2 - ttRect.width / 2;
+        left = Math.max(pad, Math.min(left, window.innerWidth - ttRect.width - pad));
+        top = Math.max(pad, Math.min(top, window.innerHeight - ttRect.height - pad));
+        this.el.style.left = left + 'px';
+        this.el.style.top = top + 'px';
+        const arrowLeft = Math.max(16, Math.min(rect.left + rect.width / 2 - left, ttRect.width - 16));
+        this.arrow.style.left = arrowLeft + 'px';
+    },
+    hide() {
+        this.hideTimeout = setTimeout(() => {
+            if (this.el) this.el.style.display = 'none';
+        }, 100);
+    }
+};
+function bindTooltip(el, opts) {
+    el.addEventListener('mouseenter', () => GT.show(el, opts));
+    el.addEventListener('mouseleave', () => GT.hide());
+}
+
+let allTrades = [];
+let sortKey = 'idx';
+let sortAsc = false;
+
+function fmt(n, d=2) { return n == null ? '-' : Number(n).toFixed(d); }
+function fmtUsd(n) {
+    if (n == null) return '-';
+    const s = n >= 0 ? '' : '-';
+    return s + '$' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function renderKPIs(data) {
+    const s = data.trade_stats || {};
+    const o = data.overview || {};
+    const trades = data.all_trades || [];
+
+    // Calculs supplementaires
+    let pnlCumul = 0;
+    let peak = 0;
+    let maxDD = 0;
+    const pnls = trades.map(t => t.pnl || 0);
+    pnls.forEach(p => {
+        pnlCumul += p;
+        if (pnlCumul > peak) peak = pnlCumul;
+        const dd = peak > 0 ? (peak - pnlCumul) / peak * 100 : 0;
+        if (dd > maxDD) maxDD = dd;
+    });
+
+    const avgTrade = pnls.length > 0 ? pnls.reduce((a,b) => a+b, 0) / pnls.length : 0;
+    const expectancy = (s.win_rate/100 || 0) * (s.avg_win || 0) + (1 - (s.win_rate/100 || 0)) * (s.avg_loss || 0);
+    const totalFees = trades.reduce((acc, t) => acc + (t.fees_total || 0), 0);
+    const totalPnlGross = trades.reduce((acc, t) => acc + (t.pnl_gross || t.pnl || 0), 0);
+
+    const cards = [
+        { label: 'PnL Brut', value: fmtUsd(totalPnlGross), cls: totalPnlGross >= 0 ? 'positive' : 'negative',
+          icon: '&#x1F4B0;', tip: '<strong>Gains totaux AVANT deduction des frais</strong>.<br><br>C\'est la somme de tous les profits et pertes de tes trades, sans compter les frais Polymarket.', tipEx: 'PnL Brut +2 286$ = le bot a genere 2 286$ de gains bruts avant frais' },
+        { label: 'Frais Totaux', value: fmtUsd(totalFees), cls: 'negative',
+          icon: '&#x1F4B8;', tip: '<strong>Total des frais Polymarket</strong> preleves sur tous tes trades.<br><br>Polymarket applique des frais de <strong>2%</strong> sur le montant engage de chaque trade. Ces frais sont deduits automatiquement.', tipEx: '119$ de frais sur 5 963$ engages au total = 2% de frais' },
+        { label: 'PnL Net', value: fmtUsd(o.total_pnl || pnlCumul), cls: (o.total_pnl || pnlCumul) >= 0 ? 'positive' : 'negative',
+          icon: '&#x1F4CA;', tip: '<strong>Profit REEL apres frais</strong> = PnL Brut - Frais.<br><br>C\'est le chiffre le plus important : c\'est ce que tu gagnes (ou perds) vraiment, apres toutes les deductions.', tipEx: 'PnL Brut 2 286$ - Frais 119$ = <strong>PnL Net 2 167$</strong>' },
+        { label: 'Total Trades', value: s.total_trades || trades.length, cls: 'neutral',
+          icon: '&#x1F4CA;', tip: '<strong>Nombre total de trades fermes</strong> (gagnants + perdants). Plus ce nombre est eleve, plus les statistiques sont fiables.' },
+        { label: 'Win Rate', value: fmt(s.win_rate, 1) + '%', cls: (s.win_rate || 0) >= 50 ? 'positive' : 'negative',
+          icon: '&#x1F3AF;', tip: '<strong>Pourcentage de trades gagnants</strong>.<br><br><strong>> 60%</strong> = Excellent<br><strong>50-60%</strong> = Correct<br><strong>< 50%</strong> = A surveiller' },
+        { label: 'Profit Factor', value: fmt(s.profit_factor), cls: (s.profit_factor || 0) >= 1 ? 'positive' : 'negative',
+          icon: '&#x2696;&#xFE0F;', tip: '<strong>Gains totaux / Pertes totales</strong>.<br><br><strong>> 2.0</strong> = Tres rentable<br><strong>1.5-2.0</strong> = Bon<br><strong>1.0-1.5</strong> = Correct<br><strong>< 1.0</strong> = Non rentable' },
+        { label: 'Gain Moyen', value: fmtUsd(s.avg_win), cls: 'positive',
+          icon: '&#x1F4B0;', tip: '<strong>Montant moyen gagne</strong> par trade gagnant. Idealement superieur a la perte moyenne.' },
+        { label: 'Perte Moyenne', value: fmtUsd(s.avg_loss), cls: 'negative',
+          icon: '&#x1F4B8;', tip: '<strong>Montant moyen perdu</strong> par trade perdant. Limite par le stop-loss configure.' },
+        { label: 'Esperance/Trade', value: fmtUsd(expectancy), cls: expectancy >= 0 ? 'positive' : 'negative',
+          icon: '&#x1F9E0;', tip: '<strong>Gain moyen attendu par trade</strong> en combinant le win rate et les gains/pertes moyens.<br><br>Positif = le bot est statistiquement rentable sur le long terme.', tipEx: '(Win% x Gain moyen) + (Loss% x Perte moy.) = esperance par trade' },
+        { label: 'Max Drawdown', value: fmt(maxDD, 1) + '%', cls: 'negative',
+          icon: '&#x1F4C9;', tip: '<strong>Plus grosse baisse</strong> depuis un sommet de PnL cumule.<br><br>Mesure le pire moment traverse. Plus c\'est bas, mieux c\'est. Au-dessus de 15%, le bot arrete tout.' },
+    ];
+
+    const kpiGrid = document.getElementById('kpi-grid');
+    kpiGrid.innerHTML = cards.map((c, i) => `
+        <div class="kpi-card" data-kpi-idx="${i}">
+            <div class="kpi-label">${c.label}</div>
+            <div class="kpi-value ${c.cls}">${c.value}</div>
+        </div>
+    `).join('');
+
+    // Bind tooltips to KPI cards
+    kpiGrid.querySelectorAll('.kpi-card').forEach((el, i) => {
+        const c = cards[i];
+        if (c.tip) bindTooltip(el, { icon: c.icon, title: c.label, body: c.tip, example: c.tipEx || '' });
+    });
+}
+
+function renderPnlChart(trades) {
+    const ctx = document.getElementById('pnlChart').getContext('2d');
+    let cumul = 0;
+    const data = trades.map((t, i) => { cumul += (t.pnl || 0); return cumul; });
+    const labels = trades.map((t, i) => '#' + (i + 1));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'PnL Cumule ($)',
+                data,
+                borderColor: '#818cf8',
+                backgroundColor: 'rgba(129,140,248,0.1)',
+                fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2,
+            }, {
+                label: 'Zero',
+                data: Array(data.length).fill(0),
+                borderColor: '#374151', borderDash: [4,4], pointRadius: 0, borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#9ca3af', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: '#4b5563', maxTicksLimit: 15, font: { size: 10 } }, grid: { color: '#1f2937' } },
+                y: { ticks: { color: '#4b5563', callback: v => '$' + v }, grid: { color: '#1f2937' } }
+            }
+        }
+    });
+}
+
+function renderDistChart(trades) {
+    const ctx = document.getElementById('distChart').getContext('2d');
+    const pnls = trades.map(t => t.pnl || 0);
+
+    // Creer des buckets
+    const min = Math.min(...pnls, -50);
+    const max = Math.max(...pnls, 50);
+    const step = Math.max(10, Math.round((max - min) / 15));
+    const buckets = {};
+    for (let b = Math.floor(min / step) * step; b <= max; b += step) {
+        buckets[b] = 0;
+    }
+    pnls.forEach(p => {
+        const b = Math.floor(p / step) * step;
+        buckets[b] = (buckets[b] || 0) + 1;
+    });
+
+    const labels = Object.keys(buckets).map(Number).sort((a,b) => a-b);
+    const values = labels.map(l => buckets[l]);
+    const colors = labels.map(l => l >= 0 ? '#4ade80' : '#f87171');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels.map(l => '$' + l),
+            datasets: [{ label: 'Trades', data: values, backgroundColor: colors }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#4b5563', font: { size: 10 } }, grid: { display: false } },
+                y: { ticks: { color: '#4b5563', stepSize: 1 }, grid: { color: '#1f2937' } }
+            }
+        }
+    });
+}
+
+function getFilteredTrades() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const side = document.getElementById('filter-side').value;
+    const result = document.getElementById('filter-result').value;
+
+    return allTrades.filter(t => {
+        if (search && !(t.question || t.market_id || '').toLowerCase().includes(search)) return false;
+        if (side && t.side !== side) return false;
+        if (result === 'win' && (t.pnl || 0) <= 0) return false;
+        if (result === 'loss' && (t.pnl || 0) >= 0) return false;
+        return true;
+    });
+}
+
+function renderTable() {
+    let trades = getFilteredTrades();
+    document.getElementById('trade-count').textContent = trades.length;
+
+    // Tri
+    trades.sort((a, b) => {
+        let va, vb;
+        switch(sortKey) {
+            case 'idx': va = a._idx; vb = b._idx; break;
+            case 'date': va = a.entry_time || a.exit_time || ''; vb = b.entry_time || b.exit_time || ''; break;
+            case 'market': va = (a.question || a.market_id || '').toLowerCase(); vb = (b.question || b.market_id || '').toLowerCase(); break;
+            case 'side': va = a.side; vb = b.side; break;
+            case 'entry': va = a.entry_price || 0; vb = b.entry_price || 0; break;
+            case 'exit': va = a.exit_price || 0; vb = b.exit_price || 0; break;
+            case 'size': va = a.size_usd || 0; vb = b.size_usd || 0; break;
+            case 'fees': va = a.fees_total || 0; vb = b.fees_total || 0; break;
+            case 'pnl': va = a.pnl || 0; vb = b.pnl || 0; break;
+            case 'pct': va = a.pnl_pct || 0; vb = b.pnl_pct || 0; break;
+            case 'reason': va = a.reason || ''; vb = b.reason || ''; break;
+            default: va = a._idx; vb = b._idx;
+        }
+        if (va < vb) return sortAsc ? -1 : 1;
+        if (va > vb) return sortAsc ? 1 : -1;
+        return 0;
+    });
+
+    const body = document.getElementById('trades-body');
+    if (trades.length === 0) {
+        body.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#4b5563;padding:30px;">Aucun trade</td></tr>';
+        return;
+    }
+
+    body.innerHTML = trades.map(t => {
+        const rawDate = t.entry_time || t.exit_time || '';
+        const dt = rawDate ? new Date(rawDate).toLocaleString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+        const pnlCls = (t.pnl || 0) >= 0 ? 'positive' : 'negative';
+        return `<tr>
+            <td>${t._idx}</td>
+            <td>${dt}</td>
+            <td title="${t.question || t.market_id || ''}">${(t.question || t.market_id || '').substring(0, 45)}</td>
+            <td><span style="color:${t.side==='YES'?'#4ade80':'#f87171'};font-weight:600">${t.side}</span></td>
+            <td>${fmt(t.entry_price, 4)}</td>
+            <td>${fmt(t.exit_price, 4)}</td>
+            <td>${fmtUsd(t.size_usd)}</td>
+            <td style="color:#f59e0b">${fmtUsd(t.fees_total || 0)}</td>
+            <td class="${pnlCls}" style="font-weight:600">${fmtUsd(t.pnl)}</td>
+            <td class="${pnlCls}">${fmt((t.pnl_pct || 0), 1)}%</td>
+            <td><span class="badge badge-reason">${t.reason || '-'}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+// Tri par colonnes
+document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        if (sortKey === key) { sortAsc = !sortAsc; }
+        else { sortKey = key; sortAsc = true; }
+        renderTable();
+    });
+});
+
+// Filtres
+document.getElementById('search').addEventListener('input', renderTable);
+document.getElementById('filter-side').addEventListener('change', renderTable);
+document.getElementById('filter-result').addEventListener('change', renderTable);
+
+async function loadReport() {
+    try {
+        const resp = await fetch('/api/data');
+        const data = await resp.json();
+
+        allTrades = (data.all_trades || []).map((t, i) => ({ ...t, _idx: i + 1 }));
+
+        renderKPIs(data);
+        renderPnlChart(allTrades);
+        renderDistChart(allTrades);
+        renderTable();
+    } catch (err) {
+        console.error('Erreur:', err);
+    }
+}
+
+loadReport();
+
+// Bind tooltips on table headers
+document.querySelectorAll('th[data-tip-title]').forEach(th => {
+    bindTooltip(th, {
+        icon: th.dataset.tipIcon || '',
+        title: th.dataset.tipTitle || '',
+        body: th.dataset.tipBody || '',
+        example: th.dataset.tipExample || ''
+    });
+});
+</script>
+</body>
+</html>
+"""
+
+
+# ================================================================
 #  MAIN (mode standalone)
 # ================================================================
 
@@ -1684,7 +3926,16 @@ def main():
     port = args.port or int(os.environ.get("PORT", 5050))
 
     app = create_dashboard_app(state_file=args.state_file)
-    print(f"Dashboard demarre sur http://localhost:{port}")
+    logging.getLogger("web_dashboard").info(f"Dashboard demarre sur http://localhost:{port}")
+
+    # Keep-alive pour les hebergeurs gratuits (Render, etc.)
+    render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("RENDER_SERVICE_ID") and f"https://polymarket-bot-d86.onrender.com"
+    if not render_url and os.environ.get("RENDER"):
+        render_url = "https://polymarket-bot-d86.onrender.com"
+    if render_url:
+        _start_keep_alive(render_url, interval=300)
+        logging.getLogger("web_dashboard").info(f"Keep-alive actif pour {render_url} (toutes les 5 min)")
+
     app.run(host=args.host, port=port, debug=True)
 
 

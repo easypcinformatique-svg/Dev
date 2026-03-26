@@ -16,12 +16,15 @@ import sys
 import time
 import json
 import copy
+import logging
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from dataclasses import dataclass, asdict
 
 sys.path.insert(0, str(Path(__file__).parent))
+
+logger = logging.getLogger("auto_trainer")
 
 from backtest.data_generator import generate_dataset
 from backtest.engine import BacktestEngine, BacktestConfig
@@ -219,21 +222,21 @@ def train(
     rng = np.random.default_rng(2024)
 
     # Générer les datasets (plusieurs pour robustesse)
-    print("=" * 70)
-    print("  AUTO-TRAINING LOOP — OPTIMISATION DES PARAMETRES")
-    print("=" * 70)
-    print(f"\n  Iterations : {n_iterations}")
-    print(f"  Marchés    : {n_markets} par seed")
-    print(f"  Seeds      : {seeds}")
-    print()
+    logger.info("=" * 70)
+    logger.info("  AUTO-TRAINING LOOP — OPTIMISATION DES PARAMETRES")
+    logger.info("=" * 70)
+    logger.info(f"  Iterations : {n_iterations}")
+    logger.info(f"  Marches    : {n_markets} par seed")
+    logger.info(f"  Seeds      : {seeds}")
+    logger.info("")
 
-    print("[1/3] Génération des datasets d'entraînement...")
+    logger.info("[1/3] Generation des datasets d'entrainement...")
     datasets = []
     for seed in seeds:
         ds, cfgs = generate_dataset(n_markets=n_markets, freq="1D", seed=seed)
         datasets.append((ds, cfgs))
-        print(f"  Seed {seed}: {len(ds):,} barres, {len(cfgs)} marchés")
-    print()
+        logger.info(f"  Seed {seed}: {len(ds):,} barres, {len(cfgs)} marches")
+    logger.info("")
 
     # Paramètres initiaux
     current_params = TrainableParams()
@@ -244,10 +247,10 @@ def train(
     # Historique
     history = []
 
-    print("[2/3] Lancement de la boucle d'optimisation...\n")
-    print(f"{'Iter':>4} | {'Fitness':>8} | {'Best':>8} | {'Sharpe':>7} | {'Return':>8} | "
-          f"{'WinRate':>7} | {'MaxDD':>7} | {'Trades':>6} | {'PF':>6} | Action")
-    print("-" * 105)
+    logger.info("[2/3] Lancement de la boucle d'optimisation...")
+    logger.info(f"{'Iter':>4} | {'Fitness':>8} | {'Best':>8} | {'Sharpe':>7} | {'Return':>8} | "
+                f"{'WinRate':>7} | {'MaxDD':>7} | {'Trades':>6} | {'PF':>6} | Action")
+    logger.info("-" * 105)
 
     start_time = time.time()
 
@@ -312,9 +315,9 @@ def train(
             action = "reject"
 
         # Log
-        print(f"{iteration:4d} | {robust_fitness:8.2f} | {best_fitness:8.2f} | "
-              f"{avg_sharpe:7.3f} | {avg_return:7.2%} | {avg_wr:6.1%} | "
-              f"{avg_dd:6.2%} | {avg_trades:6.0f} | {avg_pf:5.2f} | {action}")
+        logger.info(f"{iteration:4d} | {robust_fitness:8.2f} | {best_fitness:8.2f} | "
+                    f"{avg_sharpe:7.3f} | {avg_return:7.2%} | {avg_wr:6.1%} | "
+                    f"{avg_dd:6.2%} | {avg_trades:6.0f} | {avg_pf:5.2f} | {action}")
 
         # Sauvegarder l'historique
         history.append({
@@ -336,45 +339,45 @@ def train(
     # ================================================================
     #  RÉSULTATS FINAUX
     # ================================================================
-    print("\n" + "=" * 70)
-    print("  RÉSULTATS DE L'ENTRAÎNEMENT")
-    print("=" * 70)
-    print(f"\n  Durée totale : {elapsed:.0f}s ({elapsed/60:.1f} min)")
-    print(f"  Itérations   : {n_iterations}")
-    print(f"  Best fitness : {best_fitness:.4f}")
+    logger.info("=" * 70)
+    logger.info("  RESULTATS DE L'ENTRAINEMENT")
+    logger.info("=" * 70)
+    logger.info(f"  Duree totale : {elapsed:.0f}s ({elapsed/60:.1f} min)")
+    logger.info(f"  Iterations   : {n_iterations}")
+    logger.info(f"  Best fitness : {best_fitness:.4f}")
 
     # Compter les améliorations
     improvements = sum(1 for h in history if "BEST" in h["action"])
-    print(f"  Améliorations: {improvements}/{n_iterations}")
+    logger.info(f"  Ameliorations: {improvements}/{n_iterations}")
 
     # Meilleurs paramètres
-    print(f"\n  --- MEILLEURS PARAMETRES TROUVÉS ---")
-    print(f"  min_consensus           : {best_params.min_consensus:.4f}")
-    print(f"  min_agreeing_strategies : {best_params.min_agreeing_strategies}")
-    print(f"  spread_filter           : {best_params.spread_filter:.4f}")
-    print(f"  volume_percentile_filter: {best_params.volume_percentile_filter:.1f}")
-    print(f"  max_price_extreme       : {best_params.max_price_extreme:.4f}")
-    print(f"  min_price_extreme       : {best_params.min_price_extreme:.4f}")
-    print(f"  stop_loss               : {best_params.stop_loss:.4f}")
-    print(f"  take_profit             : {best_params.take_profit:.4f}")
-    print(f"  trailing_stop           : {best_params.trailing_stop:.4f}")
-    print(f"  max_position_pct        : {best_params.max_position_pct:.4f}")
-    print(f"  max_positions           : {best_params.max_positions}")
+    logger.info("  --- MEILLEURS PARAMETRES TROUVES ---")
+    logger.info(f"  min_consensus           : {best_params.min_consensus:.4f}")
+    logger.info(f"  min_agreeing_strategies : {best_params.min_agreeing_strategies}")
+    logger.info(f"  spread_filter           : {best_params.spread_filter:.4f}")
+    logger.info(f"  volume_percentile_filter: {best_params.volume_percentile_filter:.1f}")
+    logger.info(f"  max_price_extreme       : {best_params.max_price_extreme:.4f}")
+    logger.info(f"  min_price_extreme       : {best_params.min_price_extreme:.4f}")
+    logger.info(f"  stop_loss               : {best_params.stop_loss:.4f}")
+    logger.info(f"  take_profit             : {best_params.take_profit:.4f}")
+    logger.info(f"  trailing_stop           : {best_params.trailing_stop:.4f}")
+    logger.info(f"  max_position_pct        : {best_params.max_position_pct:.4f}")
+    logger.info(f"  max_positions           : {best_params.max_positions}")
 
     if best_metrics:
-        print(f"\n  --- MÉTRIQUES MOYENNES (sur {len(seeds)} seeds) ---")
+        logger.info(f"  --- METRIQUES MOYENNES (sur {len(seeds)} seeds) ---")
         avg_sharpe = np.mean([r["sharpe"] for r in best_metrics])
         avg_return = np.mean([r["return"] for r in best_metrics])
         avg_wr = np.mean([r["win_rate"] for r in best_metrics])
         avg_dd = np.mean([r["max_dd"] for r in best_metrics])
         avg_pf = np.mean([r["profit_factor"] for r in best_metrics])
         avg_pnl = np.mean([r["pnl"] for r in best_metrics])
-        print(f"  Sharpe Ratio    : {avg_sharpe:.3f}")
-        print(f"  Return total    : {avg_return:.2%}")
-        print(f"  Win Rate        : {avg_wr:.1%}")
-        print(f"  Max Drawdown    : {avg_dd:.2%}")
-        print(f"  Profit Factor   : {avg_pf:.3f}")
-        print(f"  PnL moyen       : ${avg_pnl:,.2f}")
+        logger.info(f"  Sharpe Ratio    : {avg_sharpe:.3f}")
+        logger.info(f"  Return total    : {avg_return:.2%}")
+        logger.info(f"  Win Rate        : {avg_wr:.1%}")
+        logger.info(f"  Max Drawdown    : {avg_dd:.2%}")
+        logger.info(f"  Profit Factor   : {avg_pf:.3f}")
+        logger.info(f"  PnL moyen       : ${avg_pnl:,.2f}")
 
     # Sauvegarder les résultats
     results = {
@@ -389,9 +392,9 @@ def train(
     output_path = Path("training_results.json")
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\n  Résultats sauvegardés dans {output_path}")
+    logger.info(f"  Resultats sauvegardes dans {output_path}")
 
-    print("\n" + "=" * 70)
+    logger.info("=" * 70)
 
     return best_params, history
 

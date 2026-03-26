@@ -31,6 +31,8 @@ import signal
 import logging
 import argparse
 import threading
+import collections
+import requests as _requests
 from pathlib import Path
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field, asdict
@@ -49,6 +51,146 @@ from trade_logger import TradeLogger, POLYMARKET_FEE_PCT
 from signal_detector import SignalDetector
 
 logger = logging.getLogger("hedge_fund_bot")
+
+
+# ================================================================
+#  ACTIVITY FEED — Flux d'activite temps reel
+# ================================================================
+
+class ActivityFeed:
+    """Collecte les evenements du bot pour affichage en temps reel (SSE)."""
+
+    def __init__(self, max_events: int = 200):
+        self._events: collections.deque = collections.deque(maxlen=max_events)
+        self._lock = threading.Lock()
+        self._listeners: list = []  # SSE listeners
+
+    def push(self, event_type: str, message: str, data: dict = None):
+        """Ajoute un evenement au flux."""
+        event = {
+            "id": int(time.time() * 1000),
+            "time": datetime.now().strftime("%H:%M:%S"),
+            "type": event_type,
+            "message": message,
+            "data": data or {},
+        }
+        with self._lock:
+            self._events.append(event)
+        # Notifier les listeners SSE
+        for q in self._listeners[:]:
+            try:
+                q.append(event)
+            except Exception:
+                pass
+
+    def get_recent(self, n: int = 50) -> list:
+        with self._lock:
+            return list(self._events)[-n:]
+
+    def subscribe(self) -> collections.deque:
+        """Retourne une queue pour recevoir les evenements en SSE."""
+        q = collections.deque(maxlen=50)
+        self._listeners.append(q)
+        return q
+
+    def unsubscribe(self, q):
+        try:
+            self._listeners.remove(q)
+        except ValueError:
+            pass
+
+
+# Singleton global
+activity_feed = ActivityFeed()
+
+
+# ================================================================
+#  TELEGRAM NOTIFIER
+# ================================================================
+
+class TelegramNotifier:
+    """Envoie des alertes Telegram a chaque trade (entree/sortie)."""
+
+    def __init__(self):
+        self.bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        self.chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+        self._enabled = bool(self.bot_token and self.chat_id)
+        if self._enabled:
+            logger.info("Telegram notifier actif")
+        else:
+            logger.info("Telegram notifier desactive (TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID manquants)")
+
+    def send(self, message: str):
+        if not self._enabled:
+            return
+        try:
+            _requests.post(
+                f"https://api.telegram.org/bot{self.bot_token}/sendMessage",
+                json={"chat_id": self.chat_id, "text": message, "parse_mode": "HTML"},
+                timeout=10,
+            )
+        except Exception as e:
+            logger.debug(f"Telegram send failed: {e}")
+
+    def notify_entry(self, side: str, question: str, size_usd: float,
+                     price: float, confidence: float):
+        self.send(
+            f"\U0001F7E2 <b>OPEN {side}</b>\n"
+            f"<b>${size_usd:.0f}</b> @ {price:.3f} (conf={confidence:.0%})\n"
+            f"{question[:80]}"
+        )
+
+    def notify_exit(self, side: str, question: str, pnl: float,
+                    pnl_pct: float, reason: str):
+        icon = "\u2705" if pnl >= 0 else "\u274C"
+        self.send(
+            f"{icon} <b>CLOSE [{reason}] {side}</b>\n"
+            f"PnL: <b>{'+' if pnl >= 0 else ''}${pnl:.2f}</b> ({pnl_pct:+.1%})\n"
+            f"{question[:80]}"
+        )
+
+    def notify_alert(self, title: str, message: str):
+        self.send(f"\u26A0\uFE0F <b>{title}</b>\n{message}")
+
+
+# ================================================================
+#  ORDER TRACKER — Timeout & Annulation
+# ================================================================
+
+class OrderTracker:
+    """Suit les ordres ouverts et annule ceux non remplis apres timeout."""
+
+    def __init__(self, trading_client, timeout_seconds: int = 300):
+        self.trading_client = trading_client
+        self.timeout = timeout_seconds
+        self._pending_orders: dict[str, dict] = {}  # order_id -> {placed_at, market_id, ...}
+
+    def track(self, order_id: str, market_id: str):
+        if order_id and not order_id.startswith("DRY-"):
+            self._pending_orders[order_id] = {
+                "placed_at": time.time(),
+                "market_id": market_id,
+            }
+
+    def check_timeouts(self) -> list[str]:
+        """Annule les ordres non remplis et retourne les market_ids annules."""
+        cancelled = []
+        now = time.time()
+        for oid in list(self._pending_orders.keys()):
+            info = self._pending_orders[oid]
+            if now - info["placed_at"] > self.timeout:
+                try:
+                    if self.trading_client:
+                        self.trading_client.cancel_order(oid)
+                    logger.info(f"Ordre {oid[:12]}... annule (timeout {self.timeout}s)")
+                    cancelled.append(info["market_id"])
+                except Exception as e:
+                    logger.warning(f"Echec annulation ordre {oid[:12]}: {e}")
+                del self._pending_orders[oid]
+        return cancelled
+
+    def confirm_fill(self, order_id: str):
+        self._pending_orders.pop(order_id, None)
 
 
 # ================================================================
@@ -198,6 +340,9 @@ class RiskManager:
         self._consecutive_losses = 0
         self._max_consecutive_losses = 0
         self._recent_pnls: list[float] = []  # 20 derniers PnL pour analyse
+        self._daily_notional: float = 0.0    # Volume notionnel trade aujourd'hui
+        self._daily_notional_date: str = ""  # Date du dernier reset
+        self._max_daily_notional_pct: float = 1.5  # Max 150% du capital par jour
 
     def record_trade_result(self, pnl: float):
         """Enregistre le resultat d'un trade pour adapter le risk."""
@@ -211,6 +356,50 @@ class RiskManager:
             )
         else:
             self._consecutive_losses = 0
+
+    def record_notional(self, size_usd: float):
+        """Enregistre le volume notionnel d'un trade."""
+        today = datetime.now().strftime("%Y-%m-%d")
+        if self._daily_notional_date != today:
+            self._daily_notional = 0.0
+            self._daily_notional_date = today
+        self._daily_notional += size_usd
+
+    def check_correlation(self, positions: dict, new_question: str,
+                          new_side: str) -> tuple[bool, str]:
+        """Detecte les correlations dangereuses entre positions."""
+        if len(positions) < 2:
+            return True, "ok"
+
+        # Extraire les mots-cles des questions existantes
+        import re
+        def extract_keywords(q: str) -> set:
+            stop = {"will", "the", "a", "an", "in", "on", "at", "to", "for",
+                    "of", "is", "be", "by", "or", "and", "before", "after",
+                    "this", "that", "it", "do", "does", "did", "has", "have"}
+            return set(w.lower() for w in re.findall(r'\b\w{4,}\b', q)) - stop
+
+        new_kw = extract_keywords(new_question)
+        if not new_kw:
+            return True, "ok"
+
+        same_theme_count = 0
+        same_theme_same_side = 0
+        for pos in positions.values():
+            q = pos.get("question", "") if isinstance(pos, dict) else pos.question
+            s = pos.get("side", "") if isinstance(pos, dict) else pos.side
+            pos_kw = extract_keywords(q)
+            overlap = len(new_kw & pos_kw) / max(len(new_kw | pos_kw), 1)
+            if overlap > 0.3:  # >30% de mots communs = meme theme
+                same_theme_count += 1
+                if s == new_side:
+                    same_theme_same_side += 1
+
+        if same_theme_same_side >= 3:
+            return False, f"correlation_block (3+ positions {new_side} sur le meme theme)"
+        if same_theme_count >= 2:
+            return True, "correlation_warning"
+        return True, "ok"
 
     def _get_risk_multiplier(self) -> float:
         """Multiplicateur de risque dynamique base sur la performance recente."""
@@ -271,6 +460,15 @@ class RiskManager:
             # Warning zone : reduire le sizing quand on approche du drawdown max
             if current_dd > self.config.max_drawdown_pct * 0.7:
                 return True, "warning_drawdown"  # Autorise mais avec warning
+
+        # Daily notional cap
+        today = datetime.now().strftime("%Y-%m-%d")
+        if self._daily_notional_date != today:
+            self._daily_notional = 0.0
+            self._daily_notional_date = today
+        max_daily = equity * self._max_daily_notional_pct
+        if self._daily_notional + size_usd > max_daily:
+            return False, f"daily_notional_cap (${self._daily_notional:.0f}/${max_daily:.0f})"
 
         # Anti-correlation check : eviter de concentrer le risque
         # sur un seul type de marche (toutes les positions du meme cote)
@@ -393,6 +591,14 @@ class HedgeFundBot:
             signal_log_path=str(Path(config.log_dir) / "signals.json")
         )
 
+        # Telegram notifier — alertes instantanees
+        self.telegram = TelegramNotifier()
+
+        # Order tracker — timeout & annulation auto (5 min)
+        self.order_tracker = OrderTracker(
+            self.trading_client, timeout_seconds=300
+        )
+
         # Cache des historiques
         self._histories: dict[str, pd.DataFrame] = {}
 
@@ -482,6 +688,7 @@ class HedgeFundBot:
         logger.info(f"\n{'='*50}")
         logger.info(f"  Iteration {self.state.iteration} | {now:%Y-%m-%d %H:%M:%S}")
         logger.info(f"{'='*50}")
+        activity_feed.push("iteration", f"Iteration #{self.state.iteration} demarree")
 
         # Reset daily PnL a minuit
         if now.hour == 0 and now.minute < 6:
@@ -504,16 +711,38 @@ class HedgeFundBot:
                     }
                 if twitter_signals:
                     logger.info(f"  Signaux Twitter: {len(twitter_signals)} detectes")
+                    for sig in twitter_signals:
+                        activity_feed.push("signal", f"Signal {sig.direction} (conf={sig.confidence:.0%}) via @{sig.author}", {
+                            "direction": sig.direction, "confidence": sig.confidence,
+                            "market": sig.market_question[:60], "author": sig.author,
+                        })
+                else:
+                    activity_feed.push("signal", "Aucun signal Twitter/News detecte")
             except Exception as e:
                 logger.debug(f"Scan Twitter echoue: {e}")
 
-            # 3. Mettre a jour les positions existantes
+            # 3. Verifier les ordres en timeout
+            cancelled_markets = self.order_tracker.check_timeouts()
+            for mid in cancelled_markets:
+                if mid in self.state.positions:
+                    # Rembourser le capital bloque
+                    pos = self.state.positions.pop(mid)
+                    size = pos.get("size_usd", 0) if isinstance(pos, dict) else pos.size_usd
+                    self.state.capital += size
+                    q = (pos.get('question','') if isinstance(pos,dict) else pos.question)[:60]
+                    self.telegram.notify_alert("Ordre annule (timeout)", f"Ordre sur {q} annule apres 5 min")
+                    activity_feed.push("timeout", f"Ordre annule (timeout 5min): {q}", {"market_id": mid})
+
+            # 4. Detecter les marches resolus et fermer les positions
+            self._check_resolved_markets()
+
+            # 5. Mettre a jour les positions existantes
             self._update_positions()
 
-            # 4. Evaluer les signaux et ouvrir des positions
+            # 6. Evaluer les signaux et ouvrir des positions
             self._evaluate_markets(markets)
 
-            # 4. Mettre a jour l'equity
+            # 7. Mettre a jour l'equity
             self._update_equity()
 
             # 5. Afficher le statut
@@ -528,6 +757,32 @@ class HedgeFundBot:
                 "error": str(e),
                 "type": "iteration",
             })
+
+    # ================================================================
+    #  RESOLUTION DES MARCHES
+    # ================================================================
+
+    def _check_resolved_markets(self):
+        """Detecte les marches resolus et ferme les positions automatiquement."""
+        for cid in list(self.state.positions.keys()):
+            try:
+                market = self.client.get_market_by_condition(cid)
+                if market and market.closed:
+                    # Marche resolu — prix final = 1.0 (gagne) ou 0.0 (perdu)
+                    final_price = market.yes_price
+                    pos = self.state.positions[cid]
+                    side = pos.get("side", "YES") if isinstance(pos, dict) else pos.side
+                    if side == "NO":
+                        final_price = market.no_price
+                    logger.info(
+                        f"Marche resolu: {market.question[:50]} -> prix final {final_price:.2f}"
+                    )
+                    activity_feed.push("resolved", f"Marche resolu: {market.question[:50]} -> {final_price:.2f}", {
+                        "market": market.question, "final_price": final_price,
+                    })
+                    self._close_position(cid, final_price, "market_resolved")
+            except Exception as e:
+                logger.debug(f"Check resolution {cid[:8]}: {e}")
 
     # ================================================================
     #  SCAN DES MARCHES
@@ -558,6 +813,9 @@ class HedgeFundBot:
 
         self.state.markets_scanned = len(eligible)
         logger.info(f"  Marches scannes: {len(markets)} total, {len(eligible)} eligibles")
+        activity_feed.push("scan", f"{len(eligible)} marches eligibles sur {len(markets)} scannes", {
+            "total": len(markets), "eligible": len(eligible),
+        })
         return eligible
 
     # ================================================================
@@ -641,16 +899,30 @@ class HedgeFundBot:
                 should_exit = True
                 exit_reason = "take_profit"
 
-            # Trailing stop — calcul base sur le prix
+            # Trailing stop adaptatif — ajuste selon la volatilite du marche
             elif self.strategy.trailing_stop > 0 and peak > entry_price:
-                trailing_stop_pct = self.strategy.trailing_stop
+                base_trail = self.strategy.trailing_stop
+                # Adapter le trailing stop a la volatilite du marche
+                history = self._histories.get(
+                    pos.get("market_id", cid) if isinstance(pos, dict) else cid
+                )
+                if history is not None and len(history) > 10:
+                    returns = history["mid_price"].pct_change().dropna()
+                    vol = returns.std()
+                    # Marche volatile (vol > 5%) -> trailing plus large (x1.5)
+                    # Marche stable (vol < 2%) -> trailing plus serre (x0.7)
+                    vol_factor = np.clip(vol / 0.03, 0.7, 1.5)
+                    trailing_stop_pct = base_trail * vol_factor
+                else:
+                    trailing_stop_pct = base_trail
+
                 trailing_stop_price = peak * (1 - trailing_stop_pct)
                 if current_price < trailing_stop_price:
                     should_exit = True
                     exit_reason = "trailing_stop"
                     logger.info(
-                        f"  Trailing stop declenche: prix {current_price:.4f} < "
-                        f"stop {trailing_stop_price:.4f} (peak {peak:.4f})"
+                        f"  Trailing stop adaptatif: prix {current_price:.4f} < "
+                        f"stop {trailing_stop_price:.4f} (peak {peak:.4f}, trail={trailing_stop_pct:.1%})"
                     )
 
             if should_exit:
@@ -739,6 +1011,15 @@ class HedgeFundBot:
             f"Frais: ${fees_total:.2f} | Net: {pnl_str} ({pnl_pct:+.1%}) | {question[:50]}"
         )
 
+        # Notification Telegram
+        self.telegram.notify_exit(side, question, pnl, pnl_pct, reason)
+
+        # Activity feed
+        activity_feed.push("close", f"CLOSE [{reason}] {side} | PnL: {pnl_str} ({pnl_pct:+.1%}) | {question[:50]}", {
+            "side": side, "pnl": pnl, "pnl_pct": pnl_pct, "reason": reason,
+            "question": question, "fees": fees_total,
+        })
+
     # ================================================================
     #  EVALUATION DES SIGNAUX
     # ================================================================
@@ -792,6 +1073,10 @@ class HedgeFundBot:
         self.state.signals_generated += signals_count
         if signals_count > 0:
             logger.info(f"  Signaux evalues: {signals_count}")
+            activity_feed.push("evaluate", f"{signals_count} signaux evalues sur {len(markets)} marches", {
+                "signals": signals_count, "markets": len(markets),
+                "positions": len(self.state.positions),
+            })
 
     def _get_history(self, market: PolymarketMarket) -> Optional[pd.DataFrame]:
         """Recupere ou met a jour l'historique d'un marche."""
@@ -837,6 +1122,18 @@ class HedgeFundBot:
         if not can_open:
             logger.debug(f"Position refusee: {reason}")
             return
+
+        # Verification correlation
+        corr_ok, corr_reason = self.risk.check_correlation(
+            self.state.positions, market.question, side
+        )
+        if not corr_ok:
+            logger.info(f"  Position refusee (correlation): {corr_reason}")
+            self.telegram.notify_alert("Correlation bloquee", corr_reason)
+            return
+        if "warning" in corr_reason:
+            logger.info(f"  Avertissement correlation: {corr_reason}")
+            size_usd *= 0.5  # Reduire la taille si correlation detectee
 
         if size_usd < 5:
             return
@@ -896,10 +1193,23 @@ class HedgeFundBot:
             order_id=order_id,
         )
 
+        # Enregistrer le volume notionnel et tracker l'ordre
+        self.risk.record_notional(size_usd)
+        self.order_tracker.track(order_id, market.condition_id)
+
         logger.info(
             f"  OPEN {side} | ${size_usd:.0f} @ {price:.3f} "
             f"(conf={confidence:.2f}) | {market.question[:50]}"
         )
+
+        # Notification Telegram
+        self.telegram.notify_entry(side, market.question, size_usd, price, confidence)
+
+        # Activity feed
+        activity_feed.push("open", f"OPEN {side} | ${size_usd:.0f} @ {price:.3f} (conf={confidence:.0%}) | {market.question[:50]}", {
+            "side": side, "size_usd": size_usd, "price": price,
+            "confidence": confidence, "question": market.question,
+        })
 
     # ================================================================
     #  EQUITY & REPORTING
@@ -986,11 +1296,28 @@ class HedgeFundBot:
         equity = self.state.capital + total_exposure + total_unrealized
         dd = (self.state.peak_equity - equity) / self.state.peak_equity if self.state.peak_equity > 0 else 0
 
-        # Stats des trades
-        trades = self.state.trades
-        pnls = [t.get("pnl", 0) if isinstance(t, dict) else t.pnl for t in trades]
+        # Filter trades to only those since bot started (exclude backtest)
+        all_trades = self.state.trades
+        start_date = (self.state.started_at or "")[:10]
+        if start_date:
+            live_trades = [t for t in all_trades
+                          if ((t.get("exit_time") or t.get("entry_time") or "") if isinstance(t, dict)
+                              else (getattr(t, "exit_time", "") or getattr(t, "entry_time", "") or ""))[:10] >= start_date]
+        else:
+            live_trades = all_trades
+
+        pnls = [t.get("pnl", 0) if isinstance(t, dict) else t.pnl for t in live_trades]
         wins = [p for p in pnls if p > 0]
         losses = [p for p in pnls if p < 0]
+        live_pnl = round(sum(pnls), 2)
+        live_fees = round(sum(
+            (t.get("fees_total", 0) if isinstance(t, dict) else getattr(t, "fees_total", 0))
+            for t in live_trades
+        ), 2)
+
+        initial = self.config.initial_capital
+        peak = max(equity, initial)
+        dd = (peak - equity) / peak if peak > 0 else 0
 
         return {
             "status": "running" if self._running else "stopped",
@@ -1002,24 +1329,26 @@ class HedgeFundBot:
             "overview": {
                 "capital": round(self.state.capital, 2),
                 "equity": round(equity, 2),
-                "total_pnl": round(self.state.total_pnl, 2),
+                "total_pnl": live_pnl,
+                "total_fees": live_fees,
+                "total_pnl_gross": round(live_pnl + live_fees, 2),
                 "daily_pnl": round(self.state.daily_pnl, 2),
                 "unrealized_pnl": round(total_unrealized, 2),
                 "exposure": round(total_exposure, 2),
                 "exposure_pct": round(total_exposure / max(equity, 1) * 100, 1),
                 "drawdown_pct": round(dd * 100, 2),
-                "peak_equity": round(self.state.peak_equity, 2),
-                "initial_capital": self.config.initial_capital,
-                "total_return_pct": round((equity / self.config.initial_capital - 1) * 100, 2),
+                "peak_equity": round(peak, 2),
+                "initial_capital": initial,
+                "total_return_pct": round((equity / initial - 1) * 100, 2),
             },
             "positions": list(self.state.positions.values()),
-            "recent_trades": trades[-20:],
-            "all_trades": trades,
+            "recent_trades": live_trades[-20:],
+            "all_trades": live_trades,
             "trade_stats": {
-                "total_trades": len(trades),
+                "total_trades": len(live_trades),
                 "winning_trades": len(wins),
                 "losing_trades": len(losses),
-                "win_rate": round(len(wins) / max(len(trades), 1) * 100, 1),
+                "win_rate": round(len(wins) / max(len(live_trades), 1) * 100, 1),
                 "avg_win": round(np.mean(wins), 2) if wins else 0,
                 "avg_loss": round(np.mean(losses), 2) if losses else 0,
                 "profit_factor": round(abs(sum(wins) / sum(losses)), 2) if losses else 0,
@@ -1030,6 +1359,9 @@ class HedgeFundBot:
             "markets_scanned": self.state.markets_scanned,
             "signals_generated": self.state.signals_generated,
             "errors": self.state.errors[-10:],
+            "strategy_attribution": getattr(self.strategy, '_last_signals', {}),
+            "strategy_performance": getattr(self.strategy, '_strategy_performance', {}),
+            "activity_feed": activity_feed.get_recent(50),
         }
 
 
@@ -1104,9 +1436,11 @@ def main():
 
             # Keep-alive pour les hebergeurs gratuits (Render, etc.)
             render_url = os.environ.get("RENDER_EXTERNAL_URL")
+            if not render_url and os.environ.get("RENDER"):
+                render_url = "https://polymarket-bot-d86.onrender.com"
             if render_url:
-                _start_keep_alive(render_url)
-                logger.info(f"  Keep-alive actif pour {render_url}")
+                _start_keep_alive(render_url, interval=300)
+                logger.info(f"  Keep-alive actif pour {render_url} (toutes les 5 min)")
         except ImportError as e:
             logger.warning(f"Dashboard non disponible: {e}")
 
