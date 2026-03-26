@@ -1,0 +1,43 @@
+name: Deploy blog guides to satellite repos
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'pizzeria/livraison-site/blog/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo:
+          - livraison-pizza-monteux
+          - livraison-pizza-serres
+          - livraison-pizza-pernes-les-fontaines
+          - livraison-pizza-aubignan
+          - livraison-pizza-loriol-du-comtat
+
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+
+      - name: Clone and update satellite repo
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/${{ matrix.repo }}.git satellite
+          cd satellite
+          mkdir -p blog
+          cp ../pizzeria/livraison-site/blog/blog.css blog/
+          cp ../pizzeria/livraison-site/blog/guide-*.html blog/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to deploy for ${{ matrix.repo }}"
+          else
+            git commit -m "Auto-deploy updated blog guides"
+            git push origin main
+            echo "Deployed to ${{ matrix.repo }}"
+          fi
