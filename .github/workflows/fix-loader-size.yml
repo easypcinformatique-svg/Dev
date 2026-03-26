@@ -1,4 +1,4 @@
-name: Fix loader text size
+name: Fix site text sizes
 
 on:
   workflow_dispatch:
@@ -20,30 +20,26 @@ jobs:
           with open('index.html', 'r', encoding='utf-8') as f:
               content = f.read()
 
-          # Pizza Napoli: 2rem -> 3.5rem
+          # Hero buttons: .75rem -> 1rem for all three buttons
           content = content.replace(
-              '.loader-pizza{font-family:\'Cinzel\',serif;font-size:2rem;',
-              '.loader-pizza{font-family:\'Cinzel\',serif;font-size:3.5rem;'
+              '.btn-primary{background:var(--rouge);color:white;padding:1rem 2.5rem;font-size:.75rem;',
+              '.btn-primary{background:var(--rouge);color:white;padding:1.2rem 3rem;font-size:1rem;'
           )
-
-          # Carpentras Vaucluse: .75rem -> 1.2rem
           content = content.replace(
-              '.loader-sub{font-family:\'Josefin Sans\',sans-serif;font-size:.75rem;',
-              '.loader-sub{font-family:\'Josefin Sans\',sans-serif;font-size:1.2rem;'
+              '.btn-outline{background:transparent;color:white;padding:1rem 2.5rem;font-size:.75rem;',
+              '.btn-outline{background:transparent;color:white;padding:1.2rem 3rem;font-size:1rem;'
           )
-
-          # Since 2008: .6rem -> .9rem
           content = content.replace(
-              'font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:#555;margin-top:.6rem;',
-              'font-size:.9rem;letter-spacing:.25em;text-transform:uppercase;color:#555;margin-top:.8rem;'
+              '.btn-phone{background:transparent;color:white;padding:1rem 2.5rem;font-size:.75rem;',
+              '.btn-phone{background:transparent;color:white;padding:1.2rem 3rem;font-size:1rem;'
           )
 
           with open('index.html', 'w', encoding='utf-8') as f:
               f.write(content)
-          print('Loader text sizes doubled')
+          print('Hero button sizes increased and harmonized')
           PYEOF
 
           git add index.html
-          git commit -m "Double loader splash screen text size"
+          git commit -m "Increase hero button font size and harmonize padding"
           git push origin main
           echo "Done!"
