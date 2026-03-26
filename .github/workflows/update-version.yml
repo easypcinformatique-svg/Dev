@@ -1,20 +1,10 @@
-name: Update site version date on every deploy
+name: Update site version date
 
 on:
-  # Se déclenche après chaque workflow qui modifie le site
-  workflow_run:
-    workflows: ["Backup pizzeria site", "Restore pizzeria site from backup", "Auto-deploy livraison site to all repos"]
-    types: [completed]
-
-  # Déclenchement manuel
   workflow_dispatch:
-
-  # À chaque push sur master qui touche les fichiers pizzeria
-  push:
-    branches: [master]
-    paths:
-      - 'pizzeria/**'
-      - '.github/workflows/update-version.yml'
+  workflow_run:
+    workflows: ["Restore pizzeria site from backup"]
+    types: [completed]
 
 jobs:
   update-version:
@@ -29,45 +19,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Générer la date et l'heure (Paris)
           VERSION_DATE=$(TZ='Europe/Paris' date '+%d/%m/%Y')
           VERSION_TIME=$(TZ='Europe/Paris' date '+%Hh%M')
-          VERSION_STRING="v. ${VERSION_DATE} &middot; ${VERSION_TIME}"
 
-          echo "New version: $VERSION_STRING"
+          echo "New version: v. ${VERSION_DATE} - ${VERSION_TIME}"
 
-          # Remplacer la version dans index.html
-          # Le pattern cible exactement la ligne du logo nav avec la version
-          python3 -c "
-import re
-with open('index.html', 'r', encoding='utf-8') as f:
-    content = f.read()
+          python3 << 'PYEOF'
+          import re
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+          import os
+          vdate = os.environ['VERSION_DATE']
+          vtime = os.environ['VERSION_TIME']
+          pattern = r'v\.\s*\d{2}/\d{2}/\d{4}\s*&middot;\s*\d{2}h\d{2}'
+          replacement = f'v. {vdate} &middot; {vtime}'
+          new_content, count = re.subn(pattern, replacement, content, count=1)
+          if count > 0:
+              with open('index.html', 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+              print(f'Version updated to: v. {vdate} - {vtime}')
+          else:
+              print('No version pattern found')
+          PYEOF
 
-# Pattern exact: v. DD/MM/YYYY &middot; HHhMM (dans le div du nav-logo)
-pattern = r'v\.\s*\d{2}/\d{2}/\d{4}\s*&middot;\s*\d{2}h\d{2}'
-replacement = 'v. ${VERSION_DATE} \&middot; ${VERSION_TIME}'
-
-import os
-vdate = os.environ['VERSION_DATE']
-vtime = os.environ['VERSION_TIME']
-replacement = f'v. {vdate} \&middot; {vtime}'
-
-new_content = re.sub(pattern, replacement, content, count=1)
-
-if new_content != content:
-    with open('index.html', 'w', encoding='utf-8') as f:
-        f.write(new_content)
-    print(f'Version updated to: {vdate} {vtime}')
-else:
-    print('No version pattern found or already up to date')
-"
-
-          # Vérifier si le fichier a changé
           if git diff --quiet; then
-            echo "Version already up to date"
+            echo "No changes"
           else
             git add index.html
             git commit -m "Update version: ${VERSION_DATE} ${VERSION_TIME}"
             git push origin main
-            echo "Version updated to: ${VERSION_DATE} ${VERSION_TIME}"
+            echo "Pushed!"
           fi
