@@ -301,7 +301,7 @@ class StateStore:
     def __init__(self, path: str):
         self.path = Path(path)
         self._save_count = 0
-        self._github_token = os.environ.get("GITHUB_TOKEN", "")
+        self._github_token = os.environ.get("GITHUB_TOKEN", "") or os.environ.get("GH_TOKEN", "")
         self._github_sha = None  # SHA du fichier sur GitHub (pour les updates)
 
     def save(self, state: BotState):
