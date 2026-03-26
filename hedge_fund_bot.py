@@ -286,16 +286,29 @@ class BotState:
 # ================================================================
 
 class StateStore:
-    """Sauvegarde et charge l'etat du bot en JSON."""
+    """Sauvegarde et charge l'etat du bot en JSON.
+
+    Supporte un backup GitHub pour survivre aux redeploys Render.
+    L'etat est sauvegarde localement ET sur GitHub (branche 'bot-state').
+    Au demarrage, si le fichier local n'existe pas, on le recupere depuis GitHub.
+    """
+
+    GITHUB_REPO = "easypcinformatique-svg/Dev"
+    GITHUB_BRANCH = "bot-state"
+    GITHUB_PATH = "bot_state.json"
+    BACKUP_INTERVAL = 5  # Backup GitHub toutes les N sauvegardes locales
 
     def __init__(self, path: str):
         self.path = Path(path)
+        self._save_count = 0
+        self._github_token = os.environ.get("GITHUB_TOKEN", "")
+        self._github_sha = None  # SHA du fichier sur GitHub (pour les updates)
 
     def save(self, state: BotState):
         data = {
             "capital": state.capital,
             "positions": state.positions,
-            "trades": state.trades[-500:],  # Garder les 500 derniers
+            "trades": state.trades[-500:],
             "equity_history": state.equity_history[-2000:],
             "daily_pnl": state.daily_pnl,
             "total_pnl": state.total_pnl,
@@ -307,25 +320,121 @@ class StateStore:
             "signals_generated": state.signals_generated,
             "errors": state.errors[-50:],
         }
+        # Sauvegarde locale (atomique)
         tmp = self.path.with_suffix(".tmp")
         with open(tmp, "w") as f:
             json.dump(data, f, indent=2, default=str)
         tmp.replace(self.path)
 
+        # Backup GitHub periodique
+        self._save_count += 1
+        if self._github_token and self._save_count % self.BACKUP_INTERVAL == 0:
+            try:
+                self._save_to_github(data)
+            except Exception as e:
+                logger.warning(f"GitHub backup echoue: {e}")
+
     def load(self) -> BotState:
-        if not self.path.exists():
-            return BotState()
-        try:
-            with open(self.path) as f:
-                data = json.load(f)
-            state = BotState()
-            for k, v in data.items():
-                if hasattr(state, k):
-                    setattr(state, k, v)
-            return state
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.warning(f"Etat corrompu, reset: {e}")
-            return BotState()
+        # 1. Essayer le fichier local
+        if self.path.exists():
+            try:
+                with open(self.path) as f:
+                    data = json.load(f)
+                logger.info(f"Etat charge depuis {self.path}")
+                return self._data_to_state(data)
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Etat local corrompu: {e}")
+
+        # 2. Pas de fichier local — tenter la restauration depuis GitHub
+        if self._github_token:
+            try:
+                data = self._load_from_github()
+                if data:
+                    logger.info("Etat restaure depuis GitHub backup!")
+                    # Sauvegarder localement pour les prochaines fois
+                    with open(self.path, "w") as f:
+                        json.dump(data, f, indent=2, default=str)
+                    return self._data_to_state(data)
+            except Exception as e:
+                logger.warning(f"GitHub restore echoue: {e}")
+
+        logger.info("Aucun etat trouve, demarrage a zero")
+        return BotState()
+
+    def _data_to_state(self, data: dict) -> BotState:
+        state = BotState()
+        for k, v in data.items():
+            if hasattr(state, k):
+                setattr(state, k, v)
+        return state
+
+    def _github_headers(self):
+        return {
+            "Authorization": f"token {self._github_token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+
+    def _ensure_branch(self):
+        """Cree la branche bot-state si elle n'existe pas."""
+        url = f"https://api.github.com/repos/{self.GITHUB_REPO}/git/refs/heads/{self.GITHUB_BRANCH}"
+        r = _requests.get(url, headers=self._github_headers(), timeout=10)
+        if r.status_code == 200:
+            return  # Branche existe
+        # Recuperer le SHA de master
+        r2 = _requests.get(
+            f"https://api.github.com/repos/{self.GITHUB_REPO}/git/refs/heads/master",
+            headers=self._github_headers(), timeout=10
+        )
+        if r2.status_code != 200:
+            return
+        sha = r2.json()["object"]["sha"]
+        _requests.post(
+            f"https://api.github.com/repos/{self.GITHUB_REPO}/git/refs",
+            headers=self._github_headers(),
+            json={"ref": f"refs/heads/{self.GITHUB_BRANCH}", "sha": sha},
+            timeout=10,
+        )
+        logger.info(f"Branche '{self.GITHUB_BRANCH}' creee sur GitHub")
+
+    def _save_to_github(self, data: dict):
+        """Sauvegarde l'etat sur GitHub (branche bot-state)."""
+        import base64
+        self._ensure_branch()
+
+        content = json.dumps(data, indent=2, default=str)
+        encoded = base64.b64encode(content.encode()).decode()
+
+        url = f"https://api.github.com/repos/{self.GITHUB_REPO}/contents/{self.GITHUB_PATH}"
+        params = {"ref": self.GITHUB_BRANCH}
+
+        # Recuperer le SHA existant si fichier existe deja
+        r = _requests.get(url, headers=self._github_headers(), params=params, timeout=10)
+        sha = r.json().get("sha") if r.status_code == 200 else None
+
+        payload = {
+            "message": f"Bot state backup - iter {data.get('iteration', '?')} - PnL ${data.get('total_pnl', 0):+.2f}",
+            "content": encoded,
+            "branch": self.GITHUB_BRANCH,
+        }
+        if sha:
+            payload["sha"] = sha
+
+        r = _requests.put(url, headers=self._github_headers(), json=payload, timeout=15)
+        if r.status_code in (200, 201):
+            logger.info(f"GitHub backup OK (iter {data.get('iteration', '?')})")
+        else:
+            logger.warning(f"GitHub backup HTTP {r.status_code}: {r.text[:200]}")
+
+    def _load_from_github(self):
+        """Charge l'etat depuis GitHub (branche bot-state)."""
+        import base64
+        url = f"https://api.github.com/repos/{self.GITHUB_REPO}/contents/{self.GITHUB_PATH}"
+        params = {"ref": self.GITHUB_BRANCH}
+        r = _requests.get(url, headers=self._github_headers(), params=params, timeout=10)
+        if r.status_code != 200:
+            return None
+        content = base64.b64decode(r.json()["content"]).decode()
+        return json.loads(content)
 
 
 # ================================================================

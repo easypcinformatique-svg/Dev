@@ -11,6 +11,8 @@ services:
         value: 5050
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: GITHUB_TOKEN
+        sync: false  # A configurer manuellement dans Render
 
   - type: web
     name: immo-sniper-dashboard
