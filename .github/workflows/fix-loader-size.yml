@@ -18,7 +18,11 @@ jobs:
 
           # Fix typo: Pizzerie -> Pizzeria
           sed -i 's/Pizzerie/Pizzeria/g' index.html
-          echo "Fixed Pizzerie -> Pizzeria"
+
+          # Fix typo: Commandes -> Commander
+          sed -i 's/Commandes dès/Commander dès/g' index.html
+
+          echo "Fixed typos"
 
           python3 << 'PYEOF'
           with open('index.html', 'r', encoding='utf-8') as f:
