@@ -2,6 +2,10 @@ name: Fix critical SEO and accessibility issues
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-seo-audit.yml'
 
 jobs:
   fix-issues:
