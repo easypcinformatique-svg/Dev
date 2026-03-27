@@ -1,0 +1,178 @@
+name: SEO batch fixes (sitemap images, FAQ schema, RSS, minify, noindex)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/seo-batch-fixes.yml'
+
+jobs:
+  apply-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create image sitemap
+        run: |
+          cat > site/sitemap-images.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+                  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+            <url>
+              <loc>https://pizzanapolicarpentras.fr/</loc>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/hero1.webp</image:loc><image:title>Pizza Napoli Carpentras - Pizzeria artisanale</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/hero2.webp</image:loc><image:title>Pizza artisanale Carpentras</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/hero3.webp</image:loc><image:title>Pizzeria Carpentras livraison</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/hero4.webp</image:loc><image:title>Pizza livraison domicile Carpentras</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/hero5.webp</image:loc><image:title>Pizza Napoli Vaucluse</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/Tartufo.webp</image:loc><image:title>Pizza Tartufo truffe Carpentras</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/saint-jacques-.webp</image:loc><image:title>Pizza Saint-Jacques fruits de mer</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/20250425_192921.webp</image:loc><image:title>Pizza Milano courgettes</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/20230926_202527.webp</image:loc><image:title>Pizza artisanale fait maison</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/20230926_203901.webp</image:loc><image:title>Pizza vegetarienne champignons</image:title></image:image>
+              <image:image><image:loc>https://pizzanapolicarpentras.fr/20240123_201507.webp</image:loc><image:title>Pizza Mozza di Bufala jambon</image:title></image:image>
+            </url>
+          </urlset>
+          XMLEOF
+          echo "Created sitemap-images.xml"
+
+      - name: Add image sitemap to robots.txt
+        run: |
+          cd site
+          if ! grep -q "sitemap-images" robots.txt; then
+            echo "Sitemap: https://pizzanapolicarpentras.fr/sitemap-images.xml" >> robots.txt
+            echo "Added image sitemap to robots.txt"
+          fi
+
+      - name: Create RSS feed
+        run: |
+          cat > site/feed.xml << 'RSSEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+            <channel>
+              <title>Pizza Napoli Carpentras - Blog</title>
+              <link>https://pizzanapolicarpentras.fr/blog/</link>
+              <description>Actualites et guides de Pizza Napoli Carpentras - Pizzeria artisanale depuis 2008</description>
+              <language>fr</language>
+              <lastBuildDate>Thu, 27 Mar 2026 00:00:00 +0100</lastBuildDate>
+              <atom:link href="https://pizzanapolicarpentras.fr/feed.xml" rel="self" type="application/rss+xml"/>
+              <item><title>Meilleures pizzas a Carpentras</title><link>https://pizzanapolicarpentras.fr/blog/meilleures-pizzas-carpentras/</link><description>Decouvrez les meilleures pizzas artisanales de Carpentras</description></item>
+              <item><title>Pizza artisanale a Carpentras</title><link>https://pizzanapolicarpentras.fr/blog/pizza-artisanale-carpentras/</link><description>Notre savoir-faire artisanal depuis 2008</description></item>
+              <item><title>Pate a pizza maison Carpentras</title><link>https://pizzanapolicarpentras.fr/blog/pate-pizza-maison-carpentras/</link><description>Le secret de notre pate fine et croustillante</description></item>
+              <item><title>FAQ Livraison pizza Carpentras</title><link>https://pizzanapolicarpentras.fr/blog/faq-livraison-pizza-carpentras/</link><description>Toutes les reponses sur notre service de livraison</description></item>
+              <item><title>Guide livraison pizza Carpentras</title><link>https://pizzanapolicarpentras.fr/blog/guide-livraison-pizza-carpentras/</link><description>Guide complet de la livraison de pizza a Carpentras</description></item>
+              <item><title>Commander pizza pour un groupe</title><link>https://pizzanapolicarpentras.fr/blog/commander-pizza-groupe-carpentras/</link><description>Commandez des pizzas pour vos evenements et groupes</description></item>
+              <item><title>Que faire a Carpentras ce soir</title><link>https://pizzanapolicarpentras.fr/blog/que-faire-carpentras-ce-soir/</link><description>Idees de sorties a Carpentras</description></item>
+              <item><title>Que faire a Monteux ce soir</title><link>https://pizzanapolicarpentras.fr/blog/que-faire-monteux-ce-soir/</link><description>Idees de sorties a Monteux</description></item>
+              <item><title>Que faire a Pernes-les-Fontaines ce soir</title><link>https://pizzanapolicarpentras.fr/blog/que-faire-pernes-les-fontaines-ce-soir/</link><description>Idees de sorties a Pernes-les-Fontaines</description></item>
+              <item><title>Que faire a Mazan ce soir</title><link>https://pizzanapolicarpentras.fr/blog/que-faire-mazan-ce-soir/</link><description>Idees de sorties a Mazan</description></item>
+            </channel>
+          </rss>
+          RSSEOF
+          echo "Created feed.xml"
+
+      - name: Add FAQ schema to delivery pages
+        run: |
+          cd site
+          for dir in livraison-pizza-carpentras livraison-pizza-monteux livraison-pizza-pernes-les-fontaines livraison-pizza-mazan livraison-pizza-aubignan livraison-pizza-caromb livraison-pizza-loriol-du-comtat livraison-pizza-saint-didier livraison-pizza-serres livraison-pizza-84200; do
+            if [ -f "$dir/index.html" ]; then
+              CITY=$(echo "$dir" | sed 's/livraison-pizza-//' | sed 's/-/ /g' | sed 's/\b\(.\)/\u\1/g')
+              if ! grep -q "FAQPage" "$dir/index.html"; then
+                sed -i "s|</head>|<script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@type\":\"FAQPage\",\"mainEntity\":[{\"@type\":\"Question\",\"name\":\"Pizza Napoli livre-t-il a $CITY ?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Oui, Pizza Napoli Carpentras livre gratuitement a $CITY tous les jours de 19h a 22h. Appelez le 07 61 08 36 08.\"}},{\"@type\":\"Question\",\"name\":\"Quel est le delai de livraison a $CITY ?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"La livraison a $CITY prend generalement 30 a 45 minutes selon la distance. Commandez des 17h30 au 07 61 08 36 08.\"}},{\"@type\":\"Question\",\"name\":\"La livraison est-elle gratuite a $CITY ?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Oui, la livraison est gratuite a $CITY et dans toutes les communes desservies par Pizza Napoli Carpentras.\"}}]}</script>\n</head>|" "$dir/index.html"
+                echo "Added FAQ schema to $dir"
+              fi
+            fi
+          done
+
+      - name: Add noindex to admin pages
+        run: |
+          cd site
+          for f in DEPLOYER.bat DEPLOYER.pyw serve.py pizza-server.js; do
+            if [ -f "$f" ]; then
+              echo "Admin file exists: $f (not HTML, no noindex needed)"
+            fi
+          done
+          # Add noindex via X-Robots-Tag in _headers file for Netlify
+          if [ -f "netlify.toml" ]; then
+            cat >> netlify.toml << 'TOMLEOF'
+
+[[headers]]
+  for = "/DEPLOYER.*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/*.py"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/*.pyw"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/pizza-server.js"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+TOMLEOF
+            echo "Added noindex headers to netlify.toml"
+          fi
+
+      - name: Add RSS link to index.html
+        run: |
+          cd site
+          if ! grep -q "feed.xml" index.html; then
+            sed -i 's|</head>|<link rel="alternate" type="application/rss+xml" title="Pizza Napoli Blog" href="/feed.xml">\n</head>|' index.html
+            echo "Added RSS link to index.html"
+          fi
+
+      - name: Minify HTML
+        run: |
+          cd site
+          python3 << 'MINIFY'
+          import re
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          original_size = len(content)
+
+          # Remove HTML comments (but keep conditional comments and JSON-LD)
+          content = re.sub(r'<!--(?!\[if)(?!.*ld\+json).*?-->', '', content, flags=re.DOTALL)
+
+          # Remove excess whitespace between tags
+          content = re.sub(r'>\s{2,}<', '> <', content)
+
+          # Remove leading whitespace on lines
+          lines = content.split('\n')
+          content = '\n'.join(line.strip() for line in lines if line.strip())
+
+          new_size = len(content)
+          saved = original_size - new_size
+          pct = round(saved * 100 / original_size)
+
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(content)
+
+          print(f'Minified: {original_size} -> {new_size} bytes (-{saved} bytes, -{pct}%)')
+          MINIFY
+
+      - name: Commit and push all
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          cd site
+          git add -A
+          git diff --cached --stat
+          git commit -m "SEO batch: image sitemap, FAQ schema, RSS feed, minify HTML, noindex admin files"
+          git push origin main
+          echo "All SEO fixes deployed!"
