@@ -1,0 +1,77 @@
+============================================================
+  LISTE DES NOMS DE FICHIERS PHOTOS - PIZZA NAPOLI
+  Format : pizza-[nom]-[ingredients].jpg
+============================================================
+
+--- NOS COMPOSEES ---
+pizza-canadienne-tomate-fromage-bacon-oeuf.jpg
+pizza-el-paso-tomate-fromage-chorizo-poivrons.jpg
+pizza-nordiste-tomate-fromage-jambon-champignons-maroilles.jpg
+pizza-forestiere-tomate-fromage-lardons-oignons-champignons.jpg
+pizza-paysanne-tomate-fromage-chevre-lardons-jambon-cru.jpg
+pizza-megaroyale-tomate-fromage-pommes-de-terre-jambon-champignons-oignons-oeuf.jpg
+pizza-cochonaille-tomate-fromage-jambon-bacon-lardons-jambon-cru-moutarde.jpg
+pizza-sweet-chorizo-tomate-fromage-chorizo-champignons-poivrons-oignons.jpg
+pizza-campagnarde-tomate-fromage-lardons-oignons-champignons-chevre-filet-de-creme.jpg
+pizza-tartufo-tomate-fromage-jambon-mozza-di-bufala-huile-de-truffe.jpg
+pizza-grandiosa-tomate-jambon-champignons-mozza-huile-de-truffe.jpg
+pizza-mozza-di-bufala-tomate-fromage-mozza-di-bufala-basilic.jpg
+
+--- NOS FROMAGES ---
+pizza-mozza-tomate-fromage-mozzarella.jpg
+pizza-chevre-tomate-fromage-chevre.jpg
+pizza-parmesane-tomate-parmesan-fromage-mozzarella-creme.jpg
+pizza-3-fro-tomate-fromage-mozzarella-chevre.jpg
+pizza-4-fro-tomate-fromage-mozzarella-roquefort-chevre.jpg
+pizza-megafro-tomate-fromage-mozzarella-roquefort-chevre-raclette.jpg
+pizza-chevre-miel-tomate-fromage-chevre-miel.jpg
+
+--- NOS ALPINES ---
+pizza-montagnarde-tomate-fromage-raclette-reblochon.jpg
+pizza-pyreneenne-tomate-fromage-jambon-jambon-cru-raclette.jpg
+pizza-savoyarde-tomate-fromage-jambon-cru-reblochon.jpg
+pizza-raclon-tomate-fromage-jambon-bacon-pomme-de-terre-raclette.jpg
+
+--- NOS LEGUMES ---
+pizza-milano-tomate-aubergines-fromage-chevre-persillade.jpg
+pizza-acropolis-tomate-fromage-aubergines-poivrons-mozzarella-basilic.jpg
+pizza-4-saisons-tomate-fromage-jambon-champignons-poivrons-artichaut.jpg
+pizza-vegetarienne-tomate-aubergines-fromage-champignons-poivrons-artichaut-basilic.jpg
+pizza-moussaka-tomate-aubergines-viande-hachee-fromage-mozzarella-basilic.jpg
+
+--- NOS CARNIVORES ---
+pizza-buffalo-tomate-fromage-viande-hachee-oignons.jpg
+pizza-armenienne-tomate-fromage-viande-hachee-oignons-poivrons.jpg
+pizza-bolognaise-tomate-fromage-viande-hachee-oignons-champignons.jpg
+pizza-manhattan-tomate-fromage-viande-hachee-oignons-chevre.jpg
+pizza-barako-tomate-fromage-viande-hachee-bacon-oignons.jpg
+pizza-circus-tomate-fromage-viande-hachee-chorizo-merguez-oignons.jpg
+pizza-wanabie-tomate-fromage-viande-hachee-oignons-champignons-sauce-bbq.jpg
+pizza-kebab-tomate-fromage-kebab-oignons-sauce-blanche.jpg
+pizza-indiana-tomate-fromage-pomme-de-terre-poulet-sauce-curry.jpg
+pizza-chilienne-tomate-fromage-poulet-poivrons-sauce-curry.jpg
+pizza-hawaienne-tomate-fromage-poulet-poivrons-ananas-curry.jpg
+pizza-far-west-tomate-fromage-poulet-oignons-poivrons-champignons-sauce-bbq.jpg
+pizza-orientale-tomate-fromage-merguez-oignons-poivrons.jpg
+pizza-kidechire-tomate-fromage-chorizo-merguez-tabasco.jpg
+pizza-burger-tomate-fromage-viande-hachee-oignons-cheddar-cornichons-sauce-burger.jpg
+pizza-mexicaine-tomate-fromage-chorizo-poulet-cheddar-tabasco.jpg
+pizza-aphrodite-tomate-fromage-viande-hachee-bacon-poulet-merguez-poivrons-sauce-bbq.jpg
+
+--- NOS PIZZAS BLANCHES ---
+pizza-flamkeuch-fromage-creme-lardons-oignons.jpg
+pizza-bergere-fromage-creme-chevre-champignons.jpg
+pizza-dame-blanche-fromage-creme-chevre-mozzarella.jpg
+pizza-napoli-fromage-creme-chevre-mozzarella-roquefort.jpg
+pizza-sweety-chevre-fromage-creme-chevre-lardons-oignons-miel.jpg
+pizza-saumon-fromage-creme-saumon.jpg
+pizza-camembert-fromage-creme-jambon-pomme-de-terre-oignons-camembert-persillade.jpg
+pizza-dauphinoise-fromage-creme-viande-hachee-pomme-de-terre-lardons-oignons-persillade.jpg
+pizza-tartiflette-fromage-creme-pomme-de-terre-lardons-oignons-reblochon.jpg
+pizza-xena-fromage-creme-viande-hachee-merguez-oignons-tabasco.jpg
+pizza-raviole-basilic-fromage-creme-ravioles-basilic.jpg
+pizza-raviole-saumon-fromage-creme-ravioles-saumon.jpg
+pizza-chti-fromage-creme-lardons-oignons-champignons-maroilles.jpg
+pizza-delicieuse-fromage-creme-jambon-champignons-mozzarella.jpg
+pizza-baraka-fromage-creme-jambon-cru-champignons-mozzarella-raclette.jpg
+pizza-mont-blanc-fromage-creme-jambon-bacon-pomme-de-terre-raclette.jpg
