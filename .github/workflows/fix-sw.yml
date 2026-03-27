@@ -1,0 +1,31 @@
+name: Create service worker file
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-sw.yml'
+
+jobs:
+  create-sw:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create sw.js
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          printf "const CACHE='pizza-napoli-v1';\nconst URLS=['/','/hero1.webp','/Tartufo.webp','/saint-jacques-.webp','/favicon.svg'];\nself.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)).then(()=>self.skipWaiting())));\nself.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));\nself.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{if(resp.ok&&e.request.method==='GET'){const c=resp.clone();caches.open(CACHE).then(cache=>cache.put(e.request,c));}return resp;}).catch(()=>caches.match('/'))));});\n" > sw.js
+
+          cat sw.js
+          echo "---"
+
+          git add sw.js
+          git commit -m "Add service worker for offline menu access"
+          git push origin main
+          echo "sw.js created!"
