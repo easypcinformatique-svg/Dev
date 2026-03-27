@@ -1,0 +1,91 @@
+{
+  "classiques": [
+    {"nom": "MARGHARITA", "ingredients": "Tomate, fromage", "prix_26": 7.00, "prix_33": 9.90},
+    {"nom": "ANCHOIS", "ingredients": "Tomate, fromage, anchois", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "ROMAINE", "ingredients": "Tomate, fromage, jambon", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "MERGUEZ", "ingredients": "Tomate, fromage, merguez", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "CHORIZO", "ingredients": "Tomate, fromage, chorizo", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "REINE", "ingredients": "Tomate, fromage, jambon, champignons", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "ROYALE", "ingredients": "Tomate, fromage, jambon, champignons, oeuf", "prix_26": 7.90, "prix_33": 13.00}
+  ],
+  "composees": [
+    {"nom": "CANADIENNE", "ingredients": "Tomate, fromage, bacon, oeuf", "prix_26": 7.90, "prix_33": 11.50},
+    {"nom": "EL PASO", "ingredients": "Tomate, fromage, chorizo, poivrons", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "NORDISTE", "ingredients": "Tomate, fromage, jambon, champignons, maroilles", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "FORESTIERE", "ingredients": "Tomate, fromage, lardons, oignons, champignons", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "PAYSANNE", "ingredients": "Tomate, fromage, chèvre, lardons, jambon cru", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "MEGAROYALE", "ingredients": "Tomate, fromage, pommes de terre, jambon, champignons, oignons, oeuf", "prix_26": 7.90, "prix_33": 13.90},
+    {"nom": "COCHONAILLE", "ingredients": "Tomate, fromage, jambon, bacon, lardons, jambon cru, moutarde", "prix_26": 7.90, "prix_33": 13.90},
+    {"nom": "SWEET CHORIZO", "ingredients": "Tomate, fromage, chorizo, champignons, poivrons, oignons", "prix_26": 8.50, "prix_33": 13.00},
+    {"nom": "CAMPAGNARDE", "ingredients": "Tomate, fromage, lardons, oignons, champignons, chèvre, filet de crème", "prix_26": 8.50, "prix_33": 13.90},
+    {"nom": "TARTUFO", "ingredients": "Tomate, fromage, jambon, mozza di bufala, huile de truffe", "prix_33": 13.50},
+    {"nom": "GRANDIOSA", "ingredients": "Tomate, jambon, champignons, mozza, huile de truffe", "prix_33": 13.50},
+    {"nom": "MOZZA DI BUFALA", "ingredients": "Tomate, fromage, mozza di bufala, basilic", "prix_33": 13.50}
+  ],
+  "fromages": [
+    {"nom": "MOZZA", "ingredients": "Tomate, fromage, mozzarella", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "CHEVRE", "ingredients": "Tomate, fromage, chèvre", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "PARMESANE", "ingredients": "Tomate, parmesan, fromage, mozzarella, crème", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "3 FRO", "ingredients": "Tomate, fromage, mozzarella, chèvre", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "4 FRO", "ingredients": "Tomate, fromage, mozzarella, roquefort, chèvre", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "MEGAFRO", "ingredients": "Tomate, fromage, mozzarella, roquefort, chèvre, raclette", "prix_26": 8.00, "prix_33": 13.90},
+    {"nom": "CHEVRE-MIEL", "ingredients": "Tomate, fromage, chèvre, miel", "prix_26": 7.90, "prix_33": 12.50}
+  ],
+  "maritimes": [
+    {"nom": "PISSALADIERE", "ingredients": "Tomate, fromage, anchois, oignons", "prix_26": 7.90, "prix_33": 11.50},
+    {"nom": "CATALANE", "ingredients": "Tomate, fromage, thon", "prix_26": 7.90, "prix_33": 11.50},
+    {"nom": "FRUIT DE MER", "ingredients": "Tomate, fromage, fruits de mer", "prix_26": 7.90, "prix_33": 11.50},
+    {"nom": "THONCAPRE", "ingredients": "Tomate, fromage, thon, câpres, persillade", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "SAINT JACQUES", "ingredients": "Tomate, fromage, fruits de mer, noix de St Jacques, persillade", "prix_26": 8.00, "prix_33": 13.90}
+  ],
+  "alpines": [
+    {"nom": "MONTAGNARDE", "ingredients": "Tomate, fromage, raclette, reblochon", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "PYRENEENNE", "ingredients": "Tomate, fromage, jambon, jambon cru, raclette", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "SAVOYARDE", "ingredients": "Tomate, fromage, jambon cru, reblochon", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "RACLON", "ingredients": "Tomate, fromage, jambon, bacon, pomme de terre, raclette", "prix_26": 7.90, "prix_33": 13.50}
+  ],
+  "legumes": [
+    {"nom": "MILANO", "ingredients": "Tomate, aubergines, fromage, chèvre, persillade", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "ACROPOLIS", "ingredients": "Tomate, fromage, aubergines, poivrons, mozzarella, basilic", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "4 SAISONS", "ingredients": "Tomate, fromage, jambon, champignons, poivrons, artichaut", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "VEGETARIENNE", "ingredients": "Tomate, aubergines, fromage, champignons, poivrons, artichaut, basilic", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "MOUSSAKA", "ingredients": "Tomate, aubergines, viande hachée, fromage, mozzarella, basilic", "prix_26": 7.90, "prix_33": 13.90}
+  ],
+  "carnivores": [
+    {"nom": "BUFFALO", "ingredients": "Tomate, fromage, viande hachée, oignons", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "ARMENIENNE", "ingredients": "Tomate, fromage, viande hachée, oignons, poivrons", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "BOLOGNAISE", "ingredients": "Tomate, fromage, viande hachée, oignons, champignons", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "MANHATTAN", "ingredients": "Tomate, fromage, viande hachée, oignons, chèvre", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "BARAKO", "ingredients": "Tomate, fromage, viande hachée, bacon, oignons", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "CIRCUS", "ingredients": "Tomate, fromage, viande hachée, chorizo, merguez, oignons", "prix_26": 7.90, "prix_33": 13.90},
+    {"nom": "WANABIE", "ingredients": "Tomate, fromage, viande hachée, oignons, champignons, sauce BBQ", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "KEBAB", "ingredients": "Tomate, fromage, kebab, oignons, sauce blanche", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "INDIANA", "ingredients": "Tomate, fromage, pomme de terre, poulet, sauce Curry", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "CHILIENNE", "ingredients": "Tomate, fromage, poulet, poivrons, sauce Curry", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "HAWAIENNE", "ingredients": "Tomate, fromage, poulet, poivrons, ananas, Curry", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "FAR WEST", "ingredients": "Tomate, fromage, poulet, oignons, poivrons, champignons, sauce BBQ", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "ORIENTALE", "ingredients": "Tomate, fromage, merguez, oignons, poivrons", "prix_26": 7.90, "prix_33": 12.90},
+    {"nom": "KIDECHIRE", "ingredients": "Tomate, fromage, chorizo, merguez, Tabasco", "prix_26": 7.90, "prix_33": 12.90},
+    {"nom": "BURGER", "ingredients": "Tomate, fromage, viande hachée, oignons, cheddar, cornichons, sauce Burger", "prix_26": 8.00, "prix_33": 13.50},
+    {"nom": "MEXICAINE", "ingredients": "Tomate, fromage, chorizo, poulet, cheddar, Tabasco", "prix_26": 7.90, "prix_33": 12.90},
+    {"nom": "APHRODITE", "ingredients": "Tomate, fromage, viande hachée, bacon, poulet, merguez, poivrons, sauce BBQ", "prix_26": 8.50, "prix_33": 14.90}
+  ],
+  "pizzas_blanches": [
+    {"nom": "FLAMKEUCH", "ingredients": "Fromage, crème, lardons, oignons", "prix_26": 7.90, "prix_33": 12.00},
+    {"nom": "BERGERE", "ingredients": "Fromage, crème, chèvre, champignons", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "DAME BLANCHE", "ingredients": "Fromage, crème, chèvre, mozzarella", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "NAPOLI", "ingredients": "Fromage, crème, chèvre, mozzarella, roquefort", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "SWEETY-CHEVRE", "ingredients": "Fromage, crème, chèvre, lardons, oignons, miel", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "SAUMON", "ingredients": "Fromage, crème, saumon", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "CAMEMBERT", "ingredients": "Fromage, crème, jambon, pomme de terre, oignons, camembert, persillade", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "DAUPHINOISE", "ingredients": "Fromage, crème, viande hachée, pomme de terre, lardons, oignons, persillade", "prix_26": 7.90, "prix_33": 13.00},
+    {"nom": "TARTIFLETTE", "ingredients": "Fromage, crème, pomme de terre, lardons, oignons, reblochon", "prix_26": 8.00, "prix_33": 13.90},
+    {"nom": "XENA", "ingredients": "Fromage, crème, viande hachée, merguez, oignons, tabasco", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "RAVIOLE BASILIC", "ingredients": "Fromage, crème, ravioles, basilic", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "RAVIOLE SAUMON", "ingredients": "Fromage, crème, ravioles, saumon", "prix_26": 7.90, "prix_33": 13.90},
+    {"nom": "CH'TI", "ingredients": "Fromage, crème, lardons, oignons, champignons, maroilles", "prix_26": 7.90, "prix_33": 13.50},
+    {"nom": "DELICIEUSE", "ingredients": "Fromage, crème, jambon, champignons, mozzarella", "prix_26": 7.90, "prix_33": 12.50},
+    {"nom": "BARAKA", "ingredients": "Fromage, crème, jambon cru, champignons, mozzarella, raclette", "prix_26": 7.90, "prix_33": 13.90},
+    {"nom": "MONT BLANC", "ingredients": "Fromage, crème, jambon, bacon, pomme de terre, raclette", "prix_26": 7.90, "prix_33": 13.50}
+  ]
+}
