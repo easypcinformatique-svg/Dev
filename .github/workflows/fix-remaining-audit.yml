@@ -1,0 +1,146 @@
+name: Fix meta descriptions + canonical + citations + accessibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-remaining-audit.yml'
+
+jobs:
+  apply-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fix all pages
+        run: |
+          cd site
+          python3 << 'ENDFIX'
+          import os, glob, re
+
+          # === DESCRIPTIONS + CANONICAL for each page type ===
+          descriptions = {
+              'livraison-pizza-carpentras': 'Livraison pizza gratuite a Carpentras 7j/7 des 19h. Pizza Napoli, pizzeria artisanale depuis 2008. 80+ pizzas des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-monteux': 'Livraison pizza gratuite a Monteux 7j/7 des 19h. Pizza Napoli Carpentras, 80+ pizzas artisanales des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-pernes-les-fontaines': 'Livraison pizza gratuite a Pernes-les-Fontaines 7j/7 des 19h. Pizza Napoli Carpentras, 80+ pizzas des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-mazan': 'Livraison pizza gratuite a Mazan 7j/7 des 19h. Pizza Napoli Carpentras, pizzeria artisanale. 80+ pizzas des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-aubignan': 'Livraison pizza gratuite a Aubignan 7j/7 des 19h. Pizza Napoli Carpentras. 80+ pizzas artisanales des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-caromb': 'Livraison pizza gratuite a Caromb 7j/7 des 19h. Pizza Napoli Carpentras. 80+ pizzas artisanales des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-loriol-du-comtat': 'Livraison pizza gratuite a Loriol-du-Comtat 7j/7 des 19h. Pizza Napoli Carpentras. 80+ pizzas des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-saint-didier': 'Livraison pizza gratuite a Saint-Didier 7j/7 des 19h. Pizza Napoli Carpentras. 80+ pizzas des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-serres': 'Livraison pizza gratuite a Serres 7j/7 des 19h. Pizza Napoli Carpentras. 80+ pizzas artisanales des 7,90 EUR. Tel 07 61 08 36 08.',
+              'livraison-pizza-84200': 'Livraison pizza gratuite dans le 84200 7j/7 des 19h. Pizza Napoli Carpentras, pizzeria artisanale. 80+ pizzas des 7,90 EUR.',
+              'pizzeria-carpentras': 'Pizza Napoli Carpentras, votre pizzeria artisanale depuis 2008. 80+ pizzas genereuses, pate maison. Livraison gratuite 7j/7. Tel 07 61 08 36 08.',
+              'pizza-carpentras': 'Commandez votre pizza a Carpentras chez Pizza Napoli. 80+ recettes artisanales des 7,90 EUR. Livraison gratuite 7j/7 des 19h.',
+              'nos-engagements': 'Les engagements qualite de Pizza Napoli Carpentras : ingredients frais, pate maison, livraison rapide et gratuite depuis 2008.',
+          }
+
+          count = 0
+          for dirpath in glob.glob('*/index.html'):
+              dirname = os.path.dirname(dirpath)
+              if dirname not in descriptions:
+                  continue
+
+              with open(dirpath, 'r', encoding='utf-8') as f:
+                  c = f.read()
+
+              changed = False
+              desc = descriptions[dirname]
+              canonical = f'https://pizzanapolicarpentras.fr/{dirname}/'
+
+              # Add meta description if missing
+              if '<meta name="description"' not in c:
+                  c = c.replace('</title>', f'</title>\n<meta name="description" content="{desc}">', 1)
+                  changed = True
+                  print(f'  Added meta desc to {dirname}')
+
+              # Add canonical if missing
+              if 'rel="canonical"' not in c:
+                  c = c.replace('</title>', f'</title>\n<link rel="canonical" href="{canonical}">', 1)
+                  changed = True
+                  print(f'  Added canonical to {dirname}')
+
+              # Add OG tags if missing
+              if 'og:title' not in c:
+                  title_match = re.search(r'<title>([^<]*)</title>', c)
+                  title = title_match.group(1) if title_match else dirname
+                  og = f'\n<meta property="og:type" content="website">'
+                  og += f'\n<meta property="og:title" content="{title}">'
+                  og += f'\n<meta property="og:description" content="{desc}">'
+                  og += f'\n<meta property="og:url" content="{canonical}">'
+                  og += f'\n<meta property="og:image" content="https://pizzanapolicarpentras.fr/hero1.webp">'
+                  c = c.replace('</title>', '</title>' + og, 1)
+                  changed = True
+                  print(f'  Added OG tags to {dirname}')
+
+              # Add geo meta tags if missing
+              if 'geo.region' not in c:
+                  geo = '\n<meta name="geo.region" content="FR-84">'
+                  geo += '\n<meta name="geo.placename" content="Carpentras">'
+                  geo += '\n<meta name="geo.position" content="44.0506;5.0497">'
+                  geo += '\n<meta name="ICBM" content="44.0506, 5.0497">'
+                  c = c.replace('</title>', '</title>' + geo, 1)
+                  changed = True
+                  print(f'  Added geo tags to {dirname}')
+
+              if changed:
+                  with open(dirpath, 'w', encoding='utf-8') as f:
+                      f.write(c)
+                  count += 1
+
+          print(f'\nTotal pages fixed: {count}')
+
+          # === Fix index.html: add citations to sameAs ===
+          with open('index.html', 'r', encoding='utf-8') as f:
+              c = f.read()
+
+          old_same = '"sameAs":["https://www.facebook.com/pizzanapolipizzeria","https://www.instagram.com/pizza_napoli_carpentras/","https://www.google.com/maps/place/Pizza+Napoli+Carpentras"]'
+          new_same = '"sameAs":["https://www.facebook.com/pizzanapolipizzeria","https://www.instagram.com/pizza_napoli_carpentras/","https://www.google.com/maps/place/Pizza+Napoli+Carpentras","https://www.pagesjaunes.fr/pros/51254455","https://www.tripadvisor.com/Restaurant_Review-g187213-d19513479-Reviews-Pizza_Napoli-Carpentras_Vaucluse_Provence_Alpes_Cote_d_Azur.html"]'
+
+          if 'pagesjaunes' not in c:
+              c = c.replace(old_same, new_same)
+              print('Added PagesJaunes + TripAdvisor to sameAs')
+
+          # === Accessibility fixes ===
+          # Add skip link
+          if 'skip-link' not in c and 'skip-to-content' not in c:
+              c = c.replace('<body', '<body', 1)
+              skip = '<a href="#menu" class="skip-link" style="position:absolute;top:-100px;left:0;background:#c0392b;color:white;padding:.5rem 1rem;z-index:9999;font-size:.9rem;transition:top .3s;" onfocus="this.style.top=\'0\'" onblur="this.style.top=\'-100px\'">Aller au menu</a>'
+              c = c.replace('<nav>', skip + '\n<nav>', 1)
+              print('Added skip link')
+
+          # Add focus styles
+          if ':focus-visible' not in c:
+              focus_css = '*:focus-visible{outline:3px solid #C89732;outline-offset:2px;}'
+              c = c.replace('</style>', focus_css + '</style>', 1)
+              print('Added :focus-visible styles')
+
+          # Add aria-label to hamburger
+          if 'class="hamburger"' in c and 'aria-label' not in c.split('class="hamburger"')[0][-100:]:
+              c = c.replace('class="hamburger"', 'class="hamburger" aria-label="Menu de navigation" aria-expanded="false"')
+              print('Added aria-label to hamburger')
+
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(c)
+
+          print('\nAll fixes applied!')
+          ENDFIX
+
+      - name: Commit and push
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          cd site
+          git add -A
+          git diff --cached --stat
+          git commit -m "Fix: meta descriptions, canonical, OG, geo tags on all pages + citations sameAs + accessibility" || echo "No changes"
+          git push origin main
+          echo "All deployed!"
