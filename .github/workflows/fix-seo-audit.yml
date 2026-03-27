@@ -11,7 +11,10 @@ jobs:
   fix-issues:
     runs-on: ubuntu-latest
     steps:
-      - name: Apply all fixes
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Clone production site
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
         run: |
@@ -20,10 +23,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          python3 << 'PYEOF'
+      - name: Create fix script
+        run: |
+          cat > /tmp/fix.py << 'ENDSCRIPT'
           import re
 
-          with open('index.html', 'r', encoding='utf-8') as f:
+          with open('site/index.html', 'r', encoding='utf-8') as f:
               content = f.read()
 
           changes = []
@@ -31,115 +36,99 @@ jobs:
           # 1. Add lang="fr" to <html>
           if 'lang="fr"' not in content:
               content = content.replace('<html', '<html lang="fr"', 1)
-              changes.append('Added lang="fr"')
+              changes.append('Added lang=fr')
 
-          # 2. Add meta description after <title>
+          # 2. Add meta description
           if '<meta name="description"' not in content:
-              desc_tag = '\n<meta name="description" content="Pizza Napoli Carpentras — Pizzeria artisanale depuis 2008. Plus de 80 pizzas genereuses, pate fine et croustillante. Livraison gratuite a domicile 7j/7 des 17h30. Tel 07 61 08 36 08.">'
-              content = content.replace('</title>', '</title>' + desc_tag, 1)
+              content = content.replace(
+                  '</title>',
+                  '</title>\n<meta name="description" content="Pizza Napoli Carpentras - Pizzeria artisanale depuis 2008. Plus de 80 pizzas genereuses des 7,90 EUR. Livraison gratuite a domicile 7j/7 des 17h30. Tel 07 61 08 36 08.">',
+                  1
+              )
               changes.append('Added meta description')
 
-          # 3. Add canonical URL after meta description or after title
+          # 3. Add canonical URL
           if 'rel="canonical"' not in content:
-              canonical = '\n<link rel="canonical" href="https://pizzanapolicarpentras.fr/">'
-              if '<meta name="description"' in content:
-                  content = re.sub(r'(<meta name="description"[^>]*>)', r'\1' + canonical, content, count=1)
-              else:
-                  content = content.replace('</title>', '</title>' + canonical, 1)
+              content = content.replace(
+                  '</title>',
+                  '</title>\n<link rel="canonical" href="https://pizzanapolicarpentras.fr/">',
+                  1
+              )
               changes.append('Added canonical URL')
 
           # 4. Add Open Graph tags
           if 'og:title' not in content:
-              og_tags = """
-<meta property="og:type" content="restaurant">
-<meta property="og:title" content="Pizza Napoli Carpentras | Pizzeria Livraison a Domicile">
-<meta property="og:description" content="Pizzeria artisanale depuis 2008. 80+ pizzas des 7EUR90. Livraison gratuite 7j/7. Tel 07 61 08 36 08.">
-<meta property="og:url" content="https://pizzanapolicarpentras.fr/">
-<meta property="og:image" content="https://pizzanapolicarpentras.fr/hero1.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:locale" content="fr_FR">
-<meta property="og:site_name" content="Pizza Napoli Carpentras">"""
-              content = re.sub(r'(<link rel="canonical"[^>]*>)', r'\1' + og_tags, content, count=1)
+              og = (
+                  '\n<meta property="og:type" content="restaurant">'
+                  '\n<meta property="og:title" content="Pizza Napoli Carpentras | Pizzeria Livraison a Domicile">'
+                  '\n<meta property="og:description" content="Pizzeria artisanale depuis 2008. 80+ pizzas. Livraison gratuite 7j/7. Tel 07 61 08 36 08.">'
+                  '\n<meta property="og:url" content="https://pizzanapolicarpentras.fr/">'
+                  '\n<meta property="og:image" content="https://pizzanapolicarpentras.fr/hero1.jpg">'
+                  '\n<meta property="og:locale" content="fr_FR">'
+                  '\n<meta property="og:site_name" content="Pizza Napoli Carpentras">'
+              )
+              content = content.replace('</title>', '</title>' + og, 1)
               changes.append('Added Open Graph tags')
 
           # 5. Add Twitter Cards
           if 'twitter:card' not in content:
-              twitter_tags = """
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Pizza Napoli Carpentras | Pizzeria Livraison a Domicile">
-<meta name="twitter:description" content="Pizzeria artisanale depuis 2008. 80+ pizzas des 7EUR90. Livraison gratuite 7j/7.">
-<meta name="twitter:image" content="https://pizzanapolicarpentras.fr/hero1.jpg">"""
-              if 'og:site_name' in content:
-                  content = re.sub(r'(<meta property="og:site_name"[^>]*>)', r'\1' + twitter_tags, content, count=1)
+              tw = (
+                  '\n<meta name="twitter:card" content="summary_large_image">'
+                  '\n<meta name="twitter:title" content="Pizza Napoli Carpentras | Pizzeria Livraison a Domicile">'
+                  '\n<meta name="twitter:description" content="Pizzeria artisanale depuis 2008. 80+ pizzas. Livraison gratuite 7j/7.">'
+                  '\n<meta name="twitter:image" content="https://pizzanapolicarpentras.fr/hero1.jpg">'
+              )
+              content = content.replace('</title>', '</title>' + tw, 1)
               changes.append('Added Twitter Cards')
 
-          # 6. Fix Schema.org www mismatch
-          www_count = content.count('www.pizzanapolicarpentras.fr')
-          if www_count > 0:
+          # 6. Fix www mismatch in Schema.org
+          count = content.count('www.pizzanapolicarpentras.fr')
+          if count > 0:
               content = content.replace('www.pizzanapolicarpentras.fr', 'pizzanapolicarpentras.fr')
-              changes.append(f'Fixed www mismatch ({www_count} occurrences)')
+              changes.append(f'Fixed www mismatch ({count}x)')
 
-          # 7. Fix external links - add target="_blank" rel="noopener"
-          # Facebook
-          content = content.replace(
-              'href="https://www.facebook.com/pizzanapolipizzeria"',
-              'href="https://www.facebook.com/pizzanapolipizzeria" target="_blank" rel="noopener"'
-          )
-          # Google Maps links
-          content = re.sub(
-              r'href="(https://www\.google\.com/maps/[^"]*)"(?!\s*target)',
-              r'href="\1" target="_blank" rel="noopener"',
-              content
-          )
-          changes.append('Added target="_blank" rel="noopener" to external links')
+          # 7. Fix external links
+          for url in [
+              'https://www.facebook.com/pizzanapolipizzeria',
+              'https://www.google.com/maps/place/Pizza+Napoli+Carpentras',
+          ]:
+              old = f'href="{url}"'
+              new = f'href="{url}" target="_blank" rel="noopener"'
+              if old in content and 'target="_blank"' not in content.split(url)[1][:50]:
+                  content = content.replace(old, new)
+          changes.append('Fixed external links')
 
-          # 8. Add lazy loading to images (except first hero image)
-          # Add loading="lazy" to img tags that don't have it
-          def add_lazy(match):
-              tag = match.group(0)
-              if 'loading=' in tag:
-                  return tag
-              return tag.replace('<img ', '<img loading="lazy" ', 1)
-
-          content = re.sub(r'<img [^>]+>', add_lazy, content)
-          # Remove lazy loading from first img (hero/above fold)
+          # 8. Add lazy loading to images
+          def add_lazy(m):
+              t = m.group(0)
+              if 'loading=' in t:
+                  return t
+              return t.replace('<img ', '<img loading="lazy" ')
+          content = re.sub(r'<img\s[^>]+>', add_lazy, content)
           content = content.replace('<img loading="lazy"', '<img', 1)
-          changes.append('Added lazy loading to images')
+          changes.append('Added lazy loading')
 
-          # 9. Add font-display:swap to @font-face declarations
+          # 9. Add font-display:swap
           if 'font-display' not in content:
-              content = re.sub(
-                  r'(@font-face\s*\{)',
-                  r'\1font-display:swap;',
-                  content
-              )
+              content = content.replace('@font-face{', '@font-face{font-display:swap;')
               changes.append('Added font-display:swap')
 
-          # 10. Fix Bergere/Dame Blanche duplicate description
-          # Dame Blanche should be different from Bergere
-          content = content.replace(
-              "Dame Blanche','Fromage, cr\u00e8me, ch\u00e8vre, mozzarella'",
-              "Dame Blanche','Fromage, cr\u00e8me fra\u00eeche, mozzarella, emmental'"
-          )
-          if "Dame Blanche" in content:
-              changes.append('Fixed Dame Blanche description')
-
-          # 11. Add aria-labels to key buttons
-          content = content.replace(
-              "class=\"hamburger\"",
-              "class=\"hamburger\" aria-label=\"Menu de navigation\""
-          )
-          changes.append('Added aria-label to hamburger menu')
-
-          print(f'Changes applied: {len(changes)}')
+          print(f'Total changes: {len(changes)}')
           for c in changes:
               print(f'  - {c}')
 
-          with open('index.html', 'w', encoding='utf-8') as f:
+          with open('site/index.html', 'w', encoding='utf-8') as f:
               f.write(content)
-          PYEOF
+          ENDSCRIPT
 
+      - name: Run fix script
+        run: python3 /tmp/fix.py
+
+      - name: Commit and push
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          cd site
           git add index.html
           git diff --cached --stat
           git commit -m "Fix critical SEO + accessibility issues (audit 27/03/2026)" || echo "No changes"
