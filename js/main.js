@@ -284,7 +284,18 @@ document.addEventListener('DOMContentLoaded', function () {
     animElements.forEach(function (el) { observer.observe(el); });
   }
 
-  /* 9. COMPTEUR ANIME — chiffres qui défilent */
+  /* 9. HERO CAROUSEL — défilement auto toutes les 5s */
+  var carouselSlides = document.querySelectorAll('.hero-carousel__slide');
+  if (carouselSlides.length > 1) {
+    var currentSlide = 0;
+    setInterval(function () {
+      carouselSlides[currentSlide].classList.remove('hero-carousel__slide--active');
+      currentSlide = (currentSlide + 1) % carouselSlides.length;
+      carouselSlides[currentSlide].classList.add('hero-carousel__slide--active');
+    }, 5000);
+  }
+
+  /* 10. COMPTEUR ANIME — chiffres qui défilent */
   var counterElements = document.querySelectorAll('.chiffre-item__number[data-target]');
   if (counterElements.length > 0 && 'IntersectionObserver' in window) {
     var counterObserver = new IntersectionObserver(function (entries) {
