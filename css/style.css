@@ -1871,13 +1871,105 @@ p {
   }
 }
 
-/* 20. Print styles */
+/* 20. Floating CTA buttons */
+.floating-cta {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.floating-cta.hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+.floating-cta__btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 50px;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.floating-cta__btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+}
+
+.floating-cta__btn--phone {
+  background: var(--color-accent);
+  animation: pulse-phone 2.5s infinite;
+}
+
+.floating-cta__btn--devis {
+  background: var(--color-primary);
+}
+
+.floating-cta__icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.floating-cta__label {
+  font-size: 14px;
+}
+
+@keyframes pulse-phone {
+  0%, 100% { box-shadow: 0 4px 20px rgba(232, 101, 10, 0.3); }
+  50% { box-shadow: 0 4px 28px rgba(232, 101, 10, 0.6); }
+}
+
+/* Mobile: bottom bar full width */
+@media (max-width: 767px) {
+  .floating-cta {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    gap: 0;
+    border-radius: 0;
+  }
+
+  .floating-cta__btn {
+    flex: 1;
+    justify-content: center;
+    border-radius: 0;
+    padding: 14px 12px;
+    font-size: 13px;
+  }
+
+  .floating-cta__btn--devis {
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .footer {
+    padding-bottom: 56px;
+  }
+}
+
+/* 21. Print styles */
 @media print {
   .header,
   .mobile-nav,
   .lightbox,
   .hero__scroll-down,
-  .gallery-filters {
+  .gallery-filters,
+  .floating-cta {
     display: none !important;
   }
 

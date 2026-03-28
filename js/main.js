@@ -5,19 +5,32 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* 1. HEADER SCROLL — class .scrolled quand scrollY > 50 */
+  /* 1. HEADER SCROLL — class .scrolled quand scrollY > 50 + floating CTA visibility */
   const header = document.querySelector('.header');
+  const floatingCta = document.getElementById('floating-cta');
+  var hero = document.querySelector('.hero');
   if (header) {
-    let lastScroll = 0;
     window.addEventListener('scroll', function () {
-      const scrollY = window.scrollY || window.pageYOffset;
+      var scrollY = window.scrollY || window.pageYOffset;
       if (scrollY > 50) {
         header.classList.add('scrolled');
       } else {
         header.classList.remove('scrolled');
       }
-      lastScroll = scrollY;
+      // Hide floating CTA when hero is visible
+      if (floatingCta && hero) {
+        if (scrollY < hero.offsetHeight - 100) {
+          floatingCta.classList.add('hidden');
+        } else {
+          floatingCta.classList.remove('hidden');
+        }
+      }
     }, { passive: true });
+
+    // Initial state: hide if hero visible
+    if (floatingCta && hero) {
+      floatingCta.classList.add('hidden');
+    }
   }
 
   /* 2. HAMBURGER — toggle overlay mobile */
