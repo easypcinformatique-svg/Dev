@@ -1881,6 +1881,249 @@ p {
   }
 }
 
+/* Before/After slider */
+.ba-slider {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  cursor: ew-resize;
+  box-shadow: var(--shadow);
+}
+
+.ba-slider img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ba-slider__after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  clip-path: inset(0 0 0 50%);
+}
+
+.ba-slider__after img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ba-slider__handle {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: 100%;
+  background: #fff;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.ba-slider__handle::after {
+  content: '◄ ►';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--color-primary);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  letter-spacing: 2px;
+}
+
+.ba-slider__label {
+  position: absolute;
+  bottom: 12px;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+  z-index: 1;
+}
+
+.ba-slider__label--before {
+  left: 12px;
+  background: var(--color-primary);
+}
+
+.ba-slider__label--after {
+  right: 12px;
+  background: var(--color-accent);
+}
+
+.ba-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.ba-item__title {
+  font-family: var(--font-title);
+  font-size: 18px;
+  margin-top: 12px;
+  color: var(--color-primary);
+}
+
+.ba-item__desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+@media (min-width: 768px) {
+  .ba-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* About page */
+.about-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.about-hero__img {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.about-hero__img img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 32px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-accent);
+}
+
+.timeline__item {
+  position: relative;
+  margin-bottom: 32px;
+  padding-left: 20px;
+}
+
+.timeline__item::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  border: 3px solid var(--color-bg);
+}
+
+.timeline__year {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--color-accent);
+  margin-bottom: 4px;
+}
+
+.timeline__text {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.value-card {
+  background: #fff;
+  padding: 28px 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+  border-top: 3px solid var(--color-accent);
+}
+
+.value-card__icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.value-card__title {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.value-card__text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* Blog article */
+.article-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.article-content h2 {
+  font-size: 22px;
+  margin: 32px 0 12px;
+  color: var(--color-primary);
+}
+
+.article-content p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #444;
+}
+
+.article-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+@media (min-width: 768px) {
+  .about-hero {
+    grid-template-columns: 1fr 1.2fr;
+  }
+
+  .values-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* 20. Floating CTA buttons */
 .floating-cta {
   position: fixed;

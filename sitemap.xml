@@ -3,9 +3,18 @@
   <url><loc>https://www.elcr-maconnerie.fr/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/devis.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/realisations.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/a-propos.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/services/construction-maison-neuve.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/services/extension-surelevation.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/services/renovation-gros-oeuvre.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/services/terrasse-dallage-cloture.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/blog/comment-choisir-macon.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/blog/prix-construction-maison-2025.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/blog/extension-maison-guide.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/zones/macon-vitrolles.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/zones/macon-marignane.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/zones/macon-cabries.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/zones/macon-septemes.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.elcr-maconnerie.fr/zones/macon-marseille-nord.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.elcr-maconnerie.fr/mentions-legales.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

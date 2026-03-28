@@ -284,6 +284,72 @@ document.addEventListener('DOMContentLoaded', function () {
     animElements.forEach(function (el) { observer.observe(el); });
   }
 
+  /* 9. COMPTEUR ANIME — chiffres qui défilent */
+  var counterElements = document.querySelectorAll('.chiffre-item__number[data-target]');
+  if (counterElements.length > 0 && 'IntersectionObserver' in window) {
+    var counterObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var target = parseInt(el.getAttribute('data-target'), 10);
+          var suffix = el.getAttribute('data-suffix') || '';
+          var duration = 2000;
+          var startTime = null;
+
+          function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var progress = Math.min((timestamp - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+            var current = Math.floor(eased * target);
+            el.textContent = current + suffix;
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              el.textContent = target + suffix;
+            }
+          }
+          requestAnimationFrame(animate);
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    counterElements.forEach(function (el) { counterObserver.observe(el); });
+  }
+
+  /* 10. AVANT/APRES — slider comparaison */
+  var baSliders = document.querySelectorAll('.ba-slider');
+  baSliders.forEach(function (slider) {
+    var handle = slider.querySelector('.ba-slider__handle');
+    var afterImg = slider.querySelector('.ba-slider__after');
+    var isDragging = false;
+
+    function updatePosition(x) {
+      var rect = slider.getBoundingClientRect();
+      var pos = Math.max(0, Math.min(x - rect.left, rect.width));
+      var percent = (pos / rect.width) * 100;
+      afterImg.style.clipPath = 'inset(0 0 0 ' + percent + '%)';
+      handle.style.left = percent + '%';
+    }
+
+    if (handle) {
+      handle.addEventListener('mousedown', function () { isDragging = true; });
+      handle.addEventListener('touchstart', function () { isDragging = true; }, { passive: true });
+
+      document.addEventListener('mousemove', function (e) {
+        if (isDragging) { e.preventDefault(); updatePosition(e.clientX); }
+      });
+      document.addEventListener('touchmove', function (e) {
+        if (isDragging) { updatePosition(e.touches[0].clientX); }
+      }, { passive: true });
+
+      document.addEventListener('mouseup', function () { isDragging = false; });
+      document.addEventListener('touchend', function () { isDragging = false; });
+
+      slider.addEventListener('click', function (e) { updatePosition(e.clientX); });
+    }
+  });
+
   /* FAQ accordion */
   var faqItems = document.querySelectorAll('.faq-item__question');
   faqItems.forEach(function (btn) {
