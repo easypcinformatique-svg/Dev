@@ -1500,6 +1500,377 @@ p {
   }
 }
 
+/* ============================================
+   PREMIUM COMPONENTS
+   ============================================ */
+
+/* Top Bar (above header) */
+.top-bar {
+  background: var(--color-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  display: none;
+}
+
+.top-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.top-bar__item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.top-bar__item--accent a {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* Section subtitle */
+.section-subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  max-width: 700px;
+  margin: -24px auto 40px;
+  line-height: 1.6;
+}
+
+/* Guarantee Cards */
+.guarantees-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.guarantee-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.guarantee-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 4px 0 0 4px;
+}
+
+.guarantee-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.guarantee-card__icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.guarantee-card__title {
+  font-size: 18px;
+  margin-bottom: 4px;
+  color: var(--color-primary);
+}
+
+.guarantee-card__duration {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-success);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.guarantee-card__text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.guarantee-card__legal {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-style: italic;
+}
+
+/* Engagements */
+.engagements-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.engagement-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 24px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  transition: all var(--transition);
+}
+
+.engagement-item:hover {
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateX(4px);
+}
+
+.engagement-item__number {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 28px;
+  color: var(--color-accent);
+  opacity: 0.3;
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 40px;
+}
+
+.engagement-item__title {
+  font-size: 17px;
+  margin-bottom: 6px;
+  color: var(--color-primary);
+}
+
+.engagement-item__text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Trust Bar (footer) */
+.footer__trust-bar {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 20px 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.trust-bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  text-align: center;
+}
+
+.trust-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.trust-bar__icon {
+  font-size: 24px;
+}
+
+.trust-bar__label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Legal Page */
+.legal-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.legal-page h1 {
+  font-size: 32px;
+  margin-bottom: 32px;
+}
+
+.legal-section {
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.legal-section:last-child {
+  border-bottom: none;
+}
+
+.legal-section h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+  color: var(--color-primary);
+}
+
+.legal-section h3 {
+  font-size: 17px;
+  margin: 20px 0 8px;
+  color: var(--color-primary);
+}
+
+.legal-section p,
+.legal-section li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.legal-section ul {
+  padding-left: 20px;
+  margin: 12px 0;
+}
+
+.legal-section ul li {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 8px;
+}
+
+.legal-section ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--color-accent);
+}
+
+.legal-highlight {
+  background: #fff;
+  border-left: 4px solid var(--color-success);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.legal-highlight p {
+  margin: 0;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* Enhanced card hover effect */
+.card-service {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-service::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.card-service:hover::before {
+  transform: scaleX(1);
+}
+
+/* Enhanced avis card */
+.avis-card {
+  position: relative;
+}
+
+.avis-card::before {
+  content: '\201C';
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-family: Georgia, serif;
+  font-size: 48px;
+  color: var(--color-accent);
+  opacity: 0.15;
+  line-height: 1;
+}
+
+/* Page hero for internal pages */
+.page-hero {
+  background: var(--color-primary);
+  padding: 40px 0;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-primary), var(--color-accent));
+}
+
+.page-hero h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.page-hero p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+}
+
+/* Media queries for new components */
+@media (min-width: 768px) {
+  .top-bar { display: block; }
+
+  .guarantees-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .engagements-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .trust-bar {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .page-hero h1 { font-size: 36px; }
+}
+
+@media (min-width: 1200px) {
+  .guarantees-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .engagements-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .top-bar__inner {
+    justify-content: flex-end;
+  }
+}
+
 /* 20. Print styles */
 @media print {
   .header,
