@@ -85,7 +85,7 @@
     <style>
       .splash{position:fixed;top:0;left:0;width:100%;height:100%;background:#1A2744;z-index:10000;display:flex;align-items:center;justify-content:center;transition:opacity .6s ease,transform .6s ease}
       .splash.done{opacity:0;transform:translateY(-100%);pointer-events:none}
-      .splash-logo{width:960px;max-width:90vw}
+      .splash-logo{width:100%;max-width:98vw;padding:0 10px}
       .splash-logo svg{width:100%;height:auto;overflow:visible}
       /* Building blocks animation */
       .bl{opacity:0;transform:translateY(20px);animation:blockIn .35s forwards}
@@ -99,25 +99,33 @@
       /* Door */
       .dr{opacity:0;transform:scaleY(0);transform-origin:bottom;animation:doorOpen .4s forwards}
       @keyframes doorOpen{to{opacity:1;transform:scaleY(1)}}
-      /* Text reveal */
-      .tl{opacity:0;transform:translateX(-20px);animation:textSlide .4s forwards}
+      /* Letter bold slide */
+      .tl{opacity:0;transform:translateX(-15px);animation:textSlide .4s forwards}
       @keyframes textSlide{to{opacity:1;transform:translateX(0)}}
+      /* Word reveal — slides in from right and fades */
+      .wr{opacity:0;transform:translateX(10px);animation:wordReveal .5s forwards}
+      @keyframes wordReveal{to{opacity:1;transform:translateX(0)}}
       /* Accent bar grow */
-      .ab{transform:scaleX(0);transform-origin:left;animation:barGrow .4s forwards}
+      .ab{transform:scaleX(0);transform-origin:left;animation:barGrow .5s forwards}
       @keyframes barGrow{to{transform:scaleX(1)}}
       /* Tagline fade */
-      .tg{opacity:0;animation:tagFade .5s forwards}
-      @keyframes tagFade{to{opacity:.7}}
+      .tg{opacity:0;animation:tagFade .6s forwards}
+      @keyframes tagFade{to{opacity:.6}}
+      /* Separator dot */
+      .dt{opacity:0;animation:dotPop .3s forwards}
+      @keyframes dotPop{to{opacity:.5}}
     </style>
     <div class="splash-logo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" width="360" height="80">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 200" width="520" height="200">
         <defs>
           <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#E8650A"/>
             <stop offset="100%" style="stop-color:#F5920A"/>
           </linearGradient>
         </defs>
-        <g transform="translate(0, 8)">
+
+        <!-- BUILDING ICON — centered top -->
+        <g transform="translate(195, 0) scale(1.3)">
           <!-- Building blocks — bottom to top -->
           <rect class="bl" style="animation-delay:.2s" x="8" y="40" width="24" height="20" rx="2" fill="#fff"/>
           <rect class="bl" style="animation-delay:.35s" x="8" y="20" width="24" height="20" rx="2" fill="#fff"/>
@@ -142,21 +150,40 @@
           <!-- Door -->
           <rect class="dr" style="animation-delay:2.1s" x="17" y="50" width="10" height="10" rx="1.5" fill="url(#sg)"/>
         </g>
-        <!-- ELCR letters one by one -->
-        <text class="tl" style="animation-delay:2.4s" x="78" y="46" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="44" letter-spacing="3" fill="#fff">E</text>
-        <text class="tl" style="animation-delay:2.55s" x="110" y="46" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="44" letter-spacing="3" fill="#fff">L</text>
-        <text class="tl" style="animation-delay:2.7s" x="137" y="46" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="44" letter-spacing="3" fill="#fff">C</text>
-        <text class="tl" style="animation-delay:2.85s" x="168" y="46" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="44" letter-spacing="3" fill="#fff">R</text>
-        <!-- Orange bar -->
-        <rect class="ab" style="animation-delay:3.1s" x="78" y="52" width="50" height="3" rx="1.5" fill="url(#sg)"/>
+
+        <!-- E.L.C.R — each letter with its full word meaning -->
+        <!-- E — Entreprise -->
+        <text class="tl" style="animation-delay:2.4s" x="28" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">E</text>
+        <text class="wr" style="animation-delay:2.6s" x="56" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">ntreprise</text>
+
+        <!-- Dot separator -->
+        <text class="dt" style="animation-delay:2.8s" x="210" y="130" font-family="'Oswald',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">·</text>
+
+        <!-- L — Luci -->
+        <text class="tl" style="animation-delay:2.9s" x="230" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">L</text>
+        <text class="wr" style="animation-delay:3.1s" x="254" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">uci</text>
+
+        <!-- C — Construction -->
+        <text class="tl" style="animation-delay:3.4s" x="28" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">C</text>
+        <text class="wr" style="animation-delay:3.6s" x="58" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">onstruction</text>
+
+        <!-- Dot separator -->
+        <text class="dt" style="animation-delay:3.8s" x="268" y="172" font-family="'Oswald',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">·</text>
+
+        <!-- R — Rénovation -->
+        <text class="tl" style="animation-delay:3.9s" x="288" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">R</text>
+        <text class="wr" style="animation-delay:4.1s" x="316" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">énovation</text>
+
+        <!-- Bottom accent bar — full width -->
+        <rect class="ab" style="animation-delay:4.5s" x="28" y="185" width="464" height="3" rx="1.5" fill="url(#sg)"/>
+
         <!-- Tagline -->
-        <text class="tg" style="animation-delay:3.4s" x="78" y="70" font-family="'Inter','Helvetica Neue',sans-serif" font-weight="400" font-size="11" letter-spacing=".5" fill="#fff">Construction · Maçonnerie · Rénovation</text>
+        <text class="tg" style="animation-delay:4.8s" x="260" y="197" font-family="'Inter','Helvetica Neue',sans-serif" font-weight="400" font-size="10" letter-spacing=".5" fill="#fff" text-anchor="middle">Votre artisan maçon en Provence depuis 2009</text>
       </svg>
     </div>
   </div>
   <script>
   (function(){
-    // Only show splash once per session
     if(sessionStorage.getItem('elcr_splash')){
       var s=document.getElementById('splash');
       if(s)s.style.display='none';
@@ -169,7 +196,7 @@
       if(s)s.classList.add('done');
       document.body.style.overflow='';
       setTimeout(function(){if(s)s.style.display='none';},700);
-    },4200);
+    },5800);
   })();
   </script>
 
