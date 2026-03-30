@@ -1052,6 +1052,9 @@ async function runUpdate(){
   document.getElementById('btn-cancel-upd').style.display='none';
   document.getElementById('btn-update').disabled=false;
   updateRunning=false;
+
+  // Téléchargement automatique du HTML mis à jour
+  setTimeout(()=>downloadUpdatedHTML(),500);
 }
 
 function cancelUpdate(){
