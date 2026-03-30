@@ -1,0 +1,172 @@
+{
+  "name": "Scan OCR + Renommage Auto (GED)",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-drive:TriggerNewFile",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": {
+          "data": { "scoped": "true", "connection": "REMPLACER_PAR_ID_CONNEXION_GDRIVE" },
+          "label": "Connexion Google Drive"
+        },
+        "driveId": "MyDrive",
+        "folderId": "REMPLACER_PAR_ID_DOSSIER_SCANS_ENTRANTS",
+        "includeTeamDrives": false
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "driveId": { "label": "My Drive" },
+            "folderId": { "path": ["GED Perso", "Scans entrants"] }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-drive:DownloadAFile",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": {
+          "data": { "scoped": "true", "connection": "REMPLACER_PAR_ID_CONNEXION_GDRIVE" },
+          "label": "Connexion Google Drive"
+        }
+      },
+      "mapper": {
+        "fileId": "{{1.id}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://api.edenai.run/v2/ocr/ocr",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer REMPLACER_PAR_CLE_EDENAI"
+          }
+        ],
+        "bodyType": "multipart_form_data",
+        "formDataFields": [
+          { "name": "providers", "value": "google" },
+          { "name": "language", "value": "fr" },
+          {
+            "name": "file",
+            "value": "{{2.data}}",
+            "filename": "{{1.name}}",
+            "type": "application/pdf"
+          }
+        ],
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": { "parameters": { "handleErrors": false } }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=REMPLACER_PAR_CLE_GEMINI",
+        "method": "POST",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"contents\":[{\"parts\":[{\"text\":\"Tu es un assistant de gestion documentaire.\\nAnalyse le texte OCR d'un document scanne et genere exactement un nom de fichier.\\n\\nREGLES STRICTES :\\n- Format : AAAA-MM-JJ_Type_Emetteur_Detail.pdf\\n- Max 80 caracteres total\\n- Pas d'espaces : remplace par des tirets\\n- Pas d'accents (e->e, e->e, c->c, etc.)\\n- Pas de caracteres speciaux sauf _ et - et EUR\\n- Tout en minuscules sauf la premiere lettre de chaque segment\\n\\nTYPES DE DOCUMENTS (utilise exactement ces valeurs) :\\nFacture / Devis / Contrat / Releve / Avis / Courrier / Bulletin / Attestation / Acte / Quittance / Rapport / Autre\\n\\nLOGIQUE DE NOMMAGE :\\n1. DATE : prends la date du document (pas la date d'aujourd'hui). Si absente, utilise 0000-00-00\\n2. TYPE : identifie parmi la liste ci-dessus\\n3. EMETTEUR : nom court de l'entreprise/organisme emetteur (max 20 caracteres, abrege si besoin)\\n4. DETAIL : montant TTC si facture/devis (ex: 1250EUR), ou mot-cle si autre type (ex: Resiliation, Avenant, Solde)\\n\\nExemples valides :\\n2026-03-28_Facture_EDF_312EUR.pdf\\n2026-01-15_Contrat_ELCR-Maconnerie_Travaux.pdf\\n2026-02-01_Releve_BNP_Fevrier2026.pdf\\n2025-12-10_Avis_Impots_Taxe-Fonciere.pdf\\n2026-03-05_Devis_Plombier-Martin_850EUR.pdf\\n0000-00-00_Courrier_Mairie_Urbanisme.pdf\\n\\nReponds UNIQUEMENT avec le nom du fichier.\\nAucune explication. Aucun guillemet. Aucun point avant .pdf.\\n\\nTexte OCR du document :\\n{{3.data.google.text}}\"}]}],\"generationConfig\":{\"maxOutputTokens\":80,\"temperature\":0.1}}",
+        "parseResponse": true,
+        "timeout": 15
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "google-drive:MoveAFile",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": {
+          "data": { "scoped": "true", "connection": "REMPLACER_PAR_ID_CONNEXION_GDRIVE" },
+          "label": "Connexion Google Drive"
+        }
+      },
+      "mapper": {
+        "fileId": "{{1.id}}",
+        "newName": "{{trim(4.data.candidates[].content.parts[].text)}}",
+        "targetFolderId": "REMPLACER_PAR_ID_DOSSIER_SCANS_TRAITES",
+        "newDriveId": "MyDrive"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "parameters": {
+            "newDriveId": { "label": "My Drive" },
+            "targetFolderId": { "path": ["GED Perso", "Scans traites"] }
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": {
+          "data": { "scoped": "true", "connection": "REMPLACER_PAR_ID_CONNEXION_GSHEETS" },
+          "label": "Connexion Google Sheets"
+        },
+        "spreadsheetId": "REMPLACER_PAR_ID_SPREADSHEET",
+        "sheetId": "Log_GED",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED"
+      },
+      "mapper": {
+        "values": {
+          "Date traitement": "{{formatDate(now; \"YYYY-MM-DD HH:mm\")}}",
+          "Nom original": "{{1.name}}",
+          "Nom final": "{{trim(4.data.candidates[].content.parts[].text)}}",
+          "Taille (Ko)": "{{round(1.size / 1024)}}",
+          "Texte OCR (extrait)": "{{substring(3.data.google.text; 0; 200)}}",
+          "Statut": "Traite"
+        }
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "eu1.make.com"
+  }
+}
