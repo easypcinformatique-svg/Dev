@@ -867,11 +867,26 @@ function startUpdate(){
   runUpdate();
 }
 
+/* Normalise un nom : "JEAN-LUC" → "Jean-Luc", "DE LA TOUR" → "de la Tour" */
+function titleCase(s){
+  const small=new Set(['de','du','des','le','la','les','l','d','en','sur','sous','lès','et']);
+  return s.split(/([- ])/).map((w,i)=>{
+    const lo=w.toLowerCase();
+    if(i>0&&small.has(lo))return lo;
+    return lo.charAt(0).toUpperCase()+lo.slice(1);
+  }).join('');
+}
+
+/* Normalise un nom de commune pour le matching */
+function normCommune(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s*\(.*\)$/,'').trim();
+}
+
 async function runUpdate(){
   updateRunning=true;
 
   try{
-    // 1. Récupérer l'URL du CSV des maires depuis data.gouv.fr
+    // 1. Récupérer l'URL du CSV des maires depuis data.gouv.fr (RNE)
     setProgress(5,'Connexion à data.gouv.fr…');
     logLine('📡 Récupération du Répertoire National des Élus (data.gouv.fr)…','log-cur');
 
@@ -885,88 +900,100 @@ async function runUpdate(){
     );
     if(!mairesResource)throw new Error('Fichier CSV des maires introuvable dans le dataset RNE');
 
+    const lastMod=mairesResource.last_modified||mairesResource.created||'';
+    logLine('📅 Dernière mise à jour RNE : '+new Date(lastMod).toLocaleDateString('fr-FR'),'log-cur');
+
     setProgress(15,'Téléchargement du fichier des maires…');
-    logLine('⬇ Téléchargement : '+mairesResource.title,'log-cur');
+    logLine('⬇ Téléchargement : '+mairesResource.title+' ('+Math.round((mairesResource.filesize||0)/1024)+' Ko)','log-cur');
 
     // 2. Télécharger le CSV
     const csvRes=await fetch(mairesResource.url);
     if(!csvRes.ok)throw new Error('Erreur téléchargement CSV (HTTP '+csvRes.status+')');
     const csvText=await csvRes.text();
 
-    setProgress(40,'Analyse du fichier…');
-    logLine('📊 Analyse de '+csvText.split('\\n').length+' lignes…','log-cur');
+    const lines=csvText.split('\n').filter(l=>l.trim());
+    setProgress(40,'Analyse de '+lines.length+' lignes…');
+    logLine('📊 Analyse de '+(lines.length-1)+' maires…','log-cur');
 
-    // 3. Parser le CSV (séparateur tabulation ou point-virgule)
-    const lines=csvText.split('\\n');
-    const sep=lines[0].includes('\\t')?'\\t':';';
-    const headers=lines[0].split(sep).map(h=>h.trim().replace(/"/g,'').toLowerCase());
+    // 3. Parser le CSV — colonnes connues du RNE :
+    // Code du département;Libellé du département;...;Code de la commune;Libellé de la commune;Nom de l'élu;Prénom de l'élu;...
+    const sep=';';
+    const headers=lines[0].split(sep).map(h=>h.trim().replace(/"/g,''));
+    const iCommune=headers.findIndex(h=>/libellé.*commune/i.test(h));
+    const iNom=headers.findIndex(h=>/nom.*élu/i.test(h)||/nom de l/i.test(h));
+    const iPrenom=headers.findIndex(h=>/prénom/i.test(h));
+    const iDept=headers.findIndex(h=>/^code.*département$/i.test(h));
 
-    // Trouver les indices des colonnes
-    const iNom=headers.findIndex(h=>h.includes('nom')&&h.includes('élu')||h==='nom de l\'élu'||h==='nom');
-    const iPrenom=headers.findIndex(h=>h.includes('prénom')||h==='prenom de l\'élu'||h==='prénom de l\'élu');
-    const iCommune=headers.findIndex(h=>h.includes('libellé')&&h.includes('commune')||h.includes('commune')&&!h.includes('code'));
-    const iCodeCommune=headers.findIndex(h=>h.includes('code')&&h.includes('commune'));
-
-    if(iCommune===-1&&iCodeCommune===-1){
-      logLine('⚠ Colonnes trouvées : '+headers.join(', '),'log-err');
-      throw new Error('Colonnes commune introuvables dans le CSV');
+    if(iCommune===-1||iNom===-1){
+      logLine('⚠ Colonnes détectées : '+headers.join(' | '),'log-err');
+      throw new Error('Format CSV inattendu — colonnes commune/nom introuvables');
     }
+    logLine('✓ Format CSV reconnu (colonnes : commune='+iCommune+', nom='+iNom+', prénom='+iPrenom+', dept='+iDept+')','log-ok');
 
-    // 4. Construire un dictionnaire commune → maire
+    // 4. Construire dictionnaire commune → maire (clé normalisée)
     const maireMap=new Map();
     for(let i=1;i<lines.length;i++){
-      if(cancelRequested){logLine('⛔ Annulé par l\'utilisateur.','log-err');break;}
       const cols=lines[i].split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
-      if(cols.length<3)continue;
+      if(cols.length<=Math.max(iCommune,iNom))continue;
 
-      let communeName=iCommune!==-1?cols[iCommune]:'';
-      const nom=iNom!==-1?cols[iNom]:'';
+      const communeName=cols[iCommune];
+      const nom=cols[iNom];
       const prenom=iPrenom!==-1?cols[iPrenom]:'';
+      const dept=iDept!==-1?cols[iDept]:'';
 
-      if(communeName&&nom){
-        // Normaliser le nom de la commune (title case)
-        communeName=communeName.replace(/^(.*?)$/,s=>
-          s.split(/[-\\s]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(m=>s.includes('-')?'-':' ')
-        );
-        // Construire le nom complet du maire (Prénom Nom en title case)
-        const maireName=prenom
-          ?prenom.charAt(0).toUpperCase()+prenom.slice(1).toLowerCase()+' '+nom.charAt(0).toUpperCase()+nom.slice(1).toLowerCase()
-          :nom;
-        maireMap.set(communeName.toUpperCase(),maireName);
-      }
+      if(!communeName||!nom)continue;
+
+      // Construire le nom complet du maire en title case
+      const maireName=(prenom?titleCase(prenom)+' ':'')+titleCase(nom);
+      const key=normCommune(communeName);
+
+      // Pour les doublons (ex: Saint-Denis), on ajoute aussi avec le dept
+      maireMap.set(key,maireName);
+      if(dept)maireMap.set(key+'_'+dept,maireName);
     }
 
-    logLine('📋 '+maireMap.size+' maires trouvés dans le répertoire','log-ok');
+    logLine('📋 '+maireMap.size+' entrées dans le répertoire','log-ok');
     setProgress(70,'Mise à jour des communes…');
 
     // 5. Matcher avec nos données
     let updated=0,notFound=[];
     DATA.forEach((commune,idx)=>{
-      const pct=70+Math.round((idx/DATA.length)*25);
-      if(idx%20===0)setProgress(pct,'Mise à jour : '+commune.ville+'…');
+      if(idx%20===0){
+        const pct=70+Math.round((idx/DATA.length)*25);
+        setProgress(pct,'Mise à jour : '+commune.ville+'…');
+      }
 
-      // Essayer plusieurs variantes du nom
-      const villeName=commune.ville.replace(/\\s*\\(.*\\)$/,''); // Retirer "(La Réunion)" etc.
+      // Essayer : nom exact, puis sans suffixe "(La Réunion)", puis avec dept
+      const baseName=commune.ville.replace(/\s*\(.*\)$/,'');
       const keys=[
-        villeName.toUpperCase(),
-        villeName.toUpperCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,''),
-        commune.ville.toUpperCase()
+        normCommune(baseName),
+        normCommune(baseName)+'_'+commune.dept,
+        normCommune(commune.ville)
       ];
 
       for(const key of keys){
         if(maireMap.has(key)){
           const newMaire=maireMap.get(key);
           if(newMaire&&newMaire!==commune.maire){
-            logLine('  ✏ '+commune.ville+' : '+( commune.maire||'(vide)')+' → '+newMaire,'log-cur');
+            logLine('  ✏ '+commune.ville+' : '+(commune.maire||'(vide)')+' → '+newMaire,'log-cur');
             DATA[idx].maire=newMaire;
             updated++;
           }
           break;
         }
       }
+      if(!keys.some(k=>maireMap.has(k))){
+        notFound.push(commune.ville);
+      }
     });
 
-    logLine(`✅ ${updated} maire(s) mis à jour`,'log-ok');
+    if(notFound.length>0){
+      logLine('⚠ '+notFound.length+' commune(s) non trouvée(s) dans le RNE : '+notFound.slice(0,10).join(', ')+(notFound.length>10?' …':''),'log-err');
+    }
+    logLine('✅ '+updated+' maire(s) mis à jour','log-ok');
+    if(updated===0){
+      logLine('ℹ Le RNE est peut-être pas encore mis à jour après les dernières élections.','log-cur');
+    }
     render();
 
   }catch(e){
