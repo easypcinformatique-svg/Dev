@@ -162,8 +162,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="header-inner">
     <div class="emblem">🏛️</div>
     <div class="header-text">
-      <div class="header-title">Annuaire des Maires de France <span id="version-tag" style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;opacity:.6;cursor:help" title="Numéro de version basé sur la date de dernière mise à jour (année.mois.jour)">v.2026.03.30</span></div>
-      <div class="header-sub" title="Données issues du Répertoire National des Élus (data.gouv.fr) et de sources publiques. Vérifiez avant tout usage officiel.">Communes de plus de 30 000 habitants &middot; Mandats 2026&ndash;2032 &middot; MAJ : 30/03/2026 15:00</div>
+      <div class="header-title">Annuaire des Maires de France <span id="version-tag" style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;opacity:.6;cursor:help" title="Numéro de version basé sur la date et l'heure de dernière mise à jour">v.2026.03.30-15h00</span></div>
+      <div class="header-sub" title="Données issues du Répertoire National des Élus (data.gouv.fr) et de sources publiques. Vérifiez avant tout usage officiel.">Communes de plus de 30 000 habitants &middot; Mandats 2026&ndash;2032</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -1043,13 +1043,10 @@ async function runUpdate(){
   logLine('✅ Mise à jour terminée — '+now,'log-ok');
   try{document.getElementById('last-update-date').textContent=now;}catch(e){}
   try{document.getElementById('last-update-stat').style.display='';}catch(e){}
-  // Mettre à jour le header avec la date/heure
+  // Mettre à jour la version dans le header avec date + heure
   const d=new Date();
-  const ver='v.'+d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
-  const maj=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const ver='v.'+d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+'h'+String(d.getMinutes()).padStart(2,'0');
   try{document.getElementById('version-tag').textContent=ver;}catch(e){}
-  const subEl=document.querySelector('.header-sub');
-  if(subEl)subEl.innerHTML='Communes de plus de 30\u00a0000 habitants &middot; Mandats 2026&ndash;2032 &middot; MAJ : '+maj;
   document.getElementById('btn-dl-upd').style.display='';
   document.getElementById('btn-close-upd').style.display='';
   document.getElementById('btn-cancel-upd').style.display='none';
@@ -1116,9 +1113,8 @@ function loadFromLocal(){
     const savedDate=localStorage.getItem(STORAGE_KEY+'_date');
     if(savedDate){
       const d=new Date(savedDate);
-      const maj=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-      const subEl=document.querySelector('.header-sub');
-      if(subEl)subEl.innerHTML=subEl.innerHTML.replace(/MAJ : [^<]+/,'MAJ : '+maj);
+      const ver='v.'+d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+'h'+String(d.getMinutes()).padStart(2,'0');
+      try{document.getElementById('version-tag').textContent=ver;}catch(e){}
     }
     return true;
   }catch(e){return false;}
