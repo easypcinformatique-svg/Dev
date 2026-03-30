@@ -147,26 +147,6 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 .footer{max-width:1440px;margin:0 auto;padding:0 28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--muted)}
 .footer-warn{color:var(--rouge);font-weight:600}
 
-/* ══ GITHUB SYNC MODAL ══ */
-.gh-modal{background:var(--surface);border-radius:12px;padding:28px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.gh-title{font-family:'Libre Baskerville',serif;font-size:17px;font-weight:700;color:#1A1F36;margin-bottom:4px;display:flex;align-items:center;gap:10px}
-.gh-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
-.gh-field{margin-bottom:12px}
-.gh-field label{display:block;font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
-.gh-field input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;color:var(--text);background:var(--bg)}
-.gh-field input:focus{outline:none;border-color:#333;box-shadow:0 0 0 3px rgba(0,0,0,.07)}
-.gh-field input[type=password]{letter-spacing:.1em}
-.gh-warn{background:#FEF3C7;border:1px solid #FCD34D;border-radius:6px;padding:8px 12px;font-size:11.5px;color:#92400E;margin-bottom:16px;display:flex;gap:7px;align-items:flex-start;line-height:1.5}
-.gh-status{min-height:32px;padding:8px 12px;border-radius:6px;font-size:12.5px;font-weight:500;margin-bottom:14px;display:none}
-.gh-status.ok{display:block;background:#D1FAE5;color:#065F46}
-.gh-status.err{display:block;background:#FEE2E2;color:#991B1B}
-.gh-status.loading{display:block;background:#DBEAFE;color:#1E40AF}
-.gh-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
-.btn-github{background:#24292F;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.btn-github:hover:not(:disabled){background:#3d4450}
-.btn-github:disabled{opacity:.5;cursor:not-allowed}
-.gh-link{font-size:11px;color:var(--bleu-l);text-decoration:none;align-self:center}
-.gh-link:hover{text-decoration:underline}
 @media print{
   .header{position:relative}.toolbar,.disclaimer,.footer,.overlay{display:none}
   table{font-size:10px}.table-wrap{box-shadow:none;overflow:visible}
@@ -202,53 +182,10 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   </div>
 </header>
 
-<!-- GITHUB SYNC OVERLAY -->
-<div class="overlay" id="gh-overlay">
-  <div class="gh-modal">
-    <div class="gh-title">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="#24292F"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-      GitHub Sync
-    </div>
-    <div class="gh-sub">Pousse le fichier <code>index.html</code> mis à jour directement dans votre repo GitHub via l'API. Les données IA actualisées sont intégrées dans le commit.</div>
-
-    <div class="gh-warn">
-      <span>🔒</span>
-      <span>Le token est stocké uniquement dans votre navigateur (localStorage). Il n'est jamais envoyé à nos serveurs. Utilisez un token Fine-grained avec uniquement <strong>Contents: Read &amp; Write</strong>.</span>
-    </div>
-
-    <div class="gh-field">
-      <label>Username GitHub</label>
-      <input type="text" id="gh-user" placeholder="ex: jean-dupont" autocomplete="username">
-    </div>
-    <div class="gh-field">
-      <label>Nom du repository</label>
-      <input type="text" id="gh-repo" placeholder="ex: annuaire-maires-france" value="annuaire-maires-france">
-    </div>
-    <div class="gh-field">
-      <label>Branche</label>
-      <input type="text" id="gh-branch" placeholder="main" value="main">
-    </div>
-    <div class="gh-field">
-      <label>Personal Access Token (Fine-grained)</label>
-      <input type="password" id="gh-token" placeholder="github_pat_…" autocomplete="current-password">
-    </div>
-
-    <div class="gh-status" id="gh-status"></div>
-
-    <div class="gh-actions">
-      <a class="gh-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank">🔑 Créer un token</a>
-      <button class="btn btn-ghost" onclick="closeGithubModal()">Fermer</button>
-      <button class="btn btn-github" id="btn-gh-push" onclick="pushToGitHub()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        Push vers GitHub
-      </button>
-    </div>
-  </div>
-</div>
 <div class="overlay" id="overlay">
   <div class="update-modal">
-    <div class="modal-title">🔄 Mise à jour IA en cours</div>
-    <div class="modal-sub">L'IA interroge ses sources par lots de 8 communes pour éviter les timeouts.<br>Maire, adresse, téléphone et email sont actualisés pour chaque commune.</div>
+    <div class="modal-title">🔄 Mise à jour en cours</div>
+    <div class="modal-sub">Les données sont mises à jour par lots de 8 communes.<br>Maire, adresse, téléphone et email sont actualisés pour chaque commune.</div>
     <div class="update-progress-bg"><div class="update-progress-fill" id="upd-fill" style="width:0%"></div></div>
     <div class="update-progress-labels">
       <span id="upd-label">Initialisation…</span>
@@ -284,7 +221,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     </select>
     <button class="btn btn-update" id="btn-update" onclick="startUpdate()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
-      Mise à jour IA
+      Mise à jour
     </button>
     <button class="btn btn-primary" onclick="exportCSV()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -301,10 +238,6 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <button class="btn btn-outline" onclick="window.print()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
-    </button>
-    <button class="btn btn-github" onclick="openGithubModal()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-      GitHub Sync
     </button>
     <span id="count-label"></span>
   </div>
@@ -331,7 +264,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 
 <footer>
   <div class="footer">
-    <span>Sources : INSEE (population) &bull; Mairies officielles &bull; Données IA à vérifier &bull; <span class="footer-warn">Non contractuel</span></span>
+    <span>Sources : INSEE (population) &bull; Mairies officielles &bull; <span class="footer-warn">Non contractuel</span></span>
     <span>République Française &bull; Mandats 2020-2026 &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
@@ -747,7 +680,7 @@ function exportSheets(){
       ['Annuaire des Maires de France'],
       ['Communes de plus de 30 000 habitants'],
       [''],
-      ['Source','Données IA + INSEE 2022-2023'],
+      ['Source','INSEE 2022-2023'],
       ['Date export', new Date().toLocaleDateString('fr-FR')],
       ['Communes', rows.length],
       ['Maires renseignés', rows.filter(d=>d.maire).length],
@@ -863,7 +796,7 @@ function showToast(msg,color='#0D7B52',duration=3500){
 
 
 /* ══════════════════════════════════════════
-   MISE À JOUR IA — BATCH UPDATE VIA CLAUDE API
+   MISE À JOUR — BATCH UPDATE
    Batches de 8, séquentiels, anti-timeout
    ══════════════════════════════════════════ */
 const BATCH=8;
@@ -894,7 +827,7 @@ function startUpdate(){
   document.getElementById('btn-cancel-upd').style.display='';
   document.getElementById('btn-update').disabled=true;
   setProgress(0,'Initialisation…');
-  logLine('🚀 Démarrage de la mise à jour IA — '+DATA.length+' communes en '+ Math.ceil(DATA.length/BATCH)+' lots','log-cur');
+  logLine('🚀 Démarrage de la mise à jour — '+DATA.length+' communes en '+ Math.ceil(DATA.length/BATCH)+' lots','log-cur');
   runUpdate();
 }
 
@@ -1008,129 +941,6 @@ function downloadUpdatedHTML(){
   URL.revokeObjectURL(url);
 }
 
-/* ══════════════════════════════════════════
-   GITHUB SYNC — GitHub Contents API v3
-   Push index.html avec données à jour
-   ══════════════════════════════════════════ */
-function openGithubModal(){
-  // Restore saved values
-  const saved = JSON.parse(localStorage.getItem('gh_config')||'{}');
-  if(saved.user)  document.getElementById('gh-user').value   = saved.user;
-  if(saved.repo)  document.getElementById('gh-repo').value   = saved.repo;
-  if(saved.branch)document.getElementById('gh-branch').value = saved.branch;
-  if(saved.token) document.getElementById('gh-token').value  = saved.token;
-  document.getElementById('gh-status').className='gh-status';
-  document.getElementById('gh-status').textContent='';
-  document.getElementById('gh-overlay').classList.add('active');
-}
-
-function closeGithubModal(){
-  document.getElementById('gh-overlay').classList.remove('active');
-}
-
-function ghStatus(msg, type){
-  const el = document.getElementById('gh-status');
-  el.textContent = msg;
-  el.className = 'gh-status ' + type;
-}
-
-async function pushToGitHub(){
-  const user   = document.getElementById('gh-user').value.trim();
-  const repo   = document.getElementById('gh-repo').value.trim();
-  const branch = document.getElementById('gh-branch').value.trim() || 'main';
-  const token  = document.getElementById('gh-token').value.trim();
-
-  if(!user || !repo || !token){
-    ghStatus('❌ Username, repo et token sont obligatoires.','err');
-    return;
-  }
-
-  // Persist config (token inclus — stocké localement uniquement)
-  localStorage.setItem('gh_config', JSON.stringify({user, repo, branch, token}));
-
-  const btn = document.getElementById('btn-gh-push');
-  btn.disabled = true;
-  ghStatus('⏳ Connexion à GitHub…','loading');
-
-  try {
-    const apiBase = `https://api.github.com/repos/${user}/${repo}`;
-    const headers = {
-      'Authorization': 'Bearer ' + token,
-      'Accept':        'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'Content-Type':  'application/json'
-    };
-
-    // 1. Vérifier que le repo existe
-    ghStatus('⏳ Vérification du repository…','loading');
-    const repoCheck = await fetch(apiBase, {headers});
-    if(!repoCheck.ok){
-      const err = await repoCheck.json();
-      throw new Error('Repo introuvable : ' + (err.message || repoCheck.status));
-    }
-
-    // 2. Récupérer le SHA actuel du fichier (nécessaire pour l'update)
-    ghStatus('⏳ Lecture du fichier actuel…','loading');
-    let currentSHA = null;
-    const fileCheck = await fetch(`${apiBase}/contents/index.html?ref=${branch}`, {headers});
-    if(fileCheck.ok){
-      const fileData = await fileCheck.json();
-      currentSHA = fileData.sha;
-    } else if(fileCheck.status !== 404){
-      throw new Error('Erreur lecture fichier : ' + fileCheck.status);
-    }
-
-    // 3. Générer le contenu HTML avec les données à jour intégrées
-    ghStatus('⏳ Sérialisation des données…','loading');
-    const dataStr = JSON.stringify(DATA, null, 2);
-    const updatedHTML = document.documentElement.outerHTML.replace(
-      /let DATA = \[[\s\S]*?\];/,
-      'let DATA = ' + dataStr + ';'
-    );
-
-    // 4. Encoder en base64
-    const b64 = btoa(unescape(encodeURIComponent(updatedHTML)));
-
-    // 5. Commit via API
-    ghStatus('⏳ Push en cours…','loading');
-    const now = new Date().toLocaleString('fr-FR');
-    const body = {
-      message: `🔄 Mise à jour annuaire maires — ${now} (${DATA.length} communes)`,
-      content: b64,
-      branch:  branch,
-      ...(currentSHA ? {sha: currentSHA} : {})
-    };
-
-    const pushRes = await fetch(`${apiBase}/contents/index.html`, {
-      method:  'PUT',
-      headers: headers,
-      body:    JSON.stringify(body)
-    });
-
-    if(!pushRes.ok){
-      const err = await pushRes.json();
-      throw new Error(err.message || 'Erreur push : ' + pushRes.status);
-    }
-
-    const result = await pushRes.json();
-    const commitUrl = result.commit?.html_url || `https://github.com/${user}/${repo}`;
-    const pagesUrl  = `https://${user}.github.io/${repo}`;
-
-    ghStatus(
-      `✅ Push réussi ! Commit : ${result.commit?.sha?.slice(0,7) || 'OK'} — ` +
-      `GitHub Pages sera mis à jour dans ~30 secondes.`,
-      'ok'
-    );
-
-    showToast(`✅ Pushé sur github.com/${user}/${repo} (branche ${branch})`, '#24292F', 6000);
-
-  } catch(e){
-    ghStatus('❌ ' + e.message, 'err');
-    showToast('❌ Erreur GitHub : ' + e.message, '#C8001E');
-  } finally {
-    btn.disabled = false;
-  }
-}
 
 /* ══ INIT ══ */
 render();
