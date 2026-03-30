@@ -202,7 +202,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 
 <div class="wrap">
 
-  <!-- TOOLBAR -->
+  <!-- TOOLBAR LIGNE 1 : Filtres -->
   <div class="toolbar">
     <div class="search-box">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -221,6 +221,11 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     </select>
     <input type="number" id="pop-min" placeholder="Pop. min" min="0" step="1000" oninput="render()" title="Population minimum : n'affiche que les communes ayant au moins ce nombre d'habitants (ex : 50000)" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
     <input type="number" id="pop-max" placeholder="Pop. max" min="0" step="1000" oninput="render()" title="Population maximum : n'affiche que les communes ayant au plus ce nombre d'habitants (ex : 100000)" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
+    <span id="count-label" title="Nombre de communes affichées par rapport au total après application des filtres"></span>
+  </div>
+
+  <!-- TOOLBAR LIGNE 2 : Actions -->
+  <div class="toolbar" style="margin-top:0;padding-top:0">
     <input type="password" id="gh-token" placeholder="Token GitHub (optionnel)" style="width:160px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)" title="Token GitHub (Fine-grained) pour publier automatiquement les mises à jour sur le site. Stocké uniquement dans votre navigateur. Nécessite le droit Contents: Read &amp; Write. Sans token, la mise à jour reste locale.">
     <button class="btn btn-update" id="btn-update" onclick="startUpdate()" title="Mise à jour des maires depuis le Répertoire National des Élus (RNE) publié par le Ministère de l'Intérieur sur data.gouv.fr. Si un token GitHub est configuré, le site est automatiquement mis à jour pour tout le monde.">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
@@ -242,7 +247,6 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
     </button>
-    <span id="count-label" title="Nombre de communes affichées par rapport au total après application des filtres"></span>
   </div>
 
   <!-- TABLE -->
