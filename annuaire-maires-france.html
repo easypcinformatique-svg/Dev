@@ -162,8 +162,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="header-inner">
     <div class="emblem">🏛️</div>
     <div class="header-text">
-      <div class="header-title">Annuaire des Maires de France</div>
-      <div class="header-sub">Communes de plus de 30 000 habitants &middot; Mandats 2020&ndash;2026</div>
+      <div class="header-title">Annuaire des Maires de France <span id="version-tag" style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;opacity:.6">v.2026.03.30</span></div>
+      <div class="header-sub">Communes de plus de 30 000 habitants &middot; Mandats 2026&ndash;2032 &middot; MAJ : 30/03/2026 15:00</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -1003,8 +1003,15 @@ async function runUpdate(){
   setProgress(100,'Mise à jour terminée');
   const now=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   logLine('✅ Mise à jour terminée — '+now,'log-ok');
-  document.getElementById('last-update-date').textContent=now;
-  document.getElementById('last-update-stat').style.display='';
+  try{document.getElementById('last-update-date').textContent=now;}catch(e){}
+  try{document.getElementById('last-update-stat').style.display='';}catch(e){}
+  // Mettre à jour le header avec la date/heure
+  const d=new Date();
+  const ver='v.'+d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+  const maj=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  try{document.getElementById('version-tag').textContent=ver;}catch(e){}
+  const subEl=document.querySelector('.header-sub');
+  if(subEl)subEl.innerHTML='Communes de plus de 30\u00a0000 habitants &middot; Mandats 2026&ndash;2032 &middot; MAJ : '+maj;
   document.getElementById('btn-dl-upd').style.display='';
   document.getElementById('btn-close-upd').style.display='';
   document.getElementById('btn-cancel-upd').style.display='none';
