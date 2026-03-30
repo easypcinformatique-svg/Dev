@@ -173,10 +173,10 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   </div>
   <div class="stats-bar">
     <div class="stats-inner">
-      <div class="stat"><span class="stat-n" id="s-total">—</span> communes</div>
-      <div class="stat"><span class="stat-n" id="s-maires">—</span> maires renseignés</div>
-      <div class="stat"><span class="stat-n" id="s-emails">—</span> emails disponibles</div>
-      <div class="stat"><span class="stat-n" id="s-shown">—</span> affichées</div>
+      <div class="stat" title="Nombre total de communes de +30 000 habitants dans l'annuaire"><span class="stat-n" id="s-total">—</span> communes</div>
+      <div class="stat" title="Nombre de communes dont le nom du maire est renseigné"><span class="stat-n" id="s-maires">—</span> maires renseignés</div>
+      <div class="stat" title="Nombre de communes dont l'adresse email officielle est disponible"><span class="stat-n" id="s-emails">—</span> emails disponibles</div>
+      <div class="stat" title="Nombre de communes actuellement affichées (après filtres)"><span class="stat-n" id="s-shown">—</span> affichées</div>
       <div class="stat" id="last-update-stat" style="display:none">Mis à jour le <span id="last-update-date"></span></div>
     </div>
   </div>
@@ -206,12 +206,12 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="toolbar">
     <div class="search-box">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Rechercher ville, maire, département, région…" oninput="render()">
+      <input type="text" id="search" placeholder="Rechercher ville, maire, département, région…" oninput="render()" title="Recherche libre : tapez un nom de ville, de maire, un numéro de département ou une région pour filtrer le tableau">
     </div>
-    <select id="region-filter" onchange="render()">
+    <select id="region-filter" onchange="render()" title="Filtrer par région administrative (18 régions dont outre-mer)">
       <option value="">Toutes les régions</option>
     </select>
-    <select id="sort-field" onchange="render()">
+    <select id="sort-field" onchange="render()" title="Choisir l'ordre de tri du tableau">
       <option value="pop-desc">Population ↓</option>
       <option value="pop-asc">Population ↑</option>
       <option value="ville-asc">Ville A→Z</option>
@@ -219,29 +219,29 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="maire-asc">Maire A→Z</option>
       <option value="region-asc">Région A→Z</option>
     </select>
-    <input type="number" id="pop-min" placeholder="Pop. min" min="0" step="1000" oninput="render()" title="Filtrer les communes ayant au moins ce nombre d'habitants" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
-    <input type="number" id="pop-max" placeholder="Pop. max" min="0" step="1000" oninput="render()" title="Filtrer les communes ayant au maximum ce nombre d'habitants" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
-    <button class="btn btn-update" id="btn-update" onclick="startUpdate()" title="Met à jour les noms des maires depuis le Répertoire National des Élus (data.gouv.fr). Source officielle du Ministère de l'Intérieur, aucune clé API nécessaire.">
+    <input type="number" id="pop-min" placeholder="Pop. min" min="0" step="1000" oninput="render()" title="Population minimum : n'affiche que les communes ayant au moins ce nombre d'habitants (ex : 50000)" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
+    <input type="number" id="pop-max" placeholder="Pop. max" min="0" step="1000" oninput="render()" title="Population maximum : n'affiche que les communes ayant au plus ce nombre d'habitants (ex : 100000)" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
+    <button class="btn btn-update" id="btn-update" onclick="startUpdate()" title="Mise à jour des maires depuis le Répertoire National des Élus (RNE) publié par le Ministère de l'Intérieur sur data.gouv.fr. Gratuit, sans clé API. Le RNE est mis à jour après chaque élection municipale.">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
       Mise à jour
     </button>
-    <button class="btn btn-primary" onclick="exportCSV()">
+    <button class="btn btn-primary" onclick="exportCSV()" title="Exporter les données affichées au format CSV (compatible Excel, LibreOffice, Google Sheets). Le fichier contient toutes les colonnes : ville, population, département, région, maire, adresse, téléphone, email.">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       CSV
     </button>
-    <button class="btn btn-sheets" onclick="exportSheets()">
+    <button class="btn btn-sheets" onclick="exportSheets()" title="Exporter au format Excel (.xlsx) avec mise en forme : onglet données + onglet métadonnées. Compatible Google Sheets, Microsoft Excel et LibreOffice Calc.">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
       Google Sheets
     </button>
-    <button class="btn btn-pdf" onclick="exportPDF()">
+    <button class="btn btn-pdf" onclick="exportPDF()" title="Générer un document PDF formaté avec le tableau complet des maires. Idéal pour l'impression ou l'archivage.">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       PDF
     </button>
-    <button class="btn btn-outline" onclick="window.print()">
+    <button class="btn btn-outline" onclick="window.print()" title="Imprimer le tableau directement depuis le navigateur. La mise en page est optimisée pour l'impression (en-tête masqué, tableau pleine largeur).">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
     </button>
-    <span id="count-label"></span>
+    <span id="count-label" title="Nombre de communes affichées par rapport au total après application des filtres"></span>
   </div>
 
   <!-- TABLE -->
@@ -928,14 +928,15 @@ async function runUpdate(){
     const iNom=headers.findIndex(h=>/nom.*élu/i.test(h)||/nom de l/i.test(h));
     const iPrenom=headers.findIndex(h=>/prénom/i.test(h));
     const iDept=headers.findIndex(h=>/^code.*département$/i.test(h));
+    const iDateMandat=headers.findIndex(h=>/date.*début.*mandat/i.test(h));
 
     if(iCommune===-1||iNom===-1){
       logLine('⚠ Colonnes détectées : '+headers.join(' | '),'log-err');
       throw new Error('Format CSV inattendu — colonnes commune/nom introuvables');
     }
-    logLine('✓ Format CSV reconnu (colonnes : commune='+iCommune+', nom='+iNom+', prénom='+iPrenom+', dept='+iDept+')','log-ok');
+    logLine('✓ Format CSV reconnu (colonnes : commune='+iCommune+', nom='+iNom+', prénom='+iPrenom+', dept='+iDept+', dateMandat='+iDateMandat+')','log-ok');
 
-    // 4. Construire dictionnaire commune → maire (clé normalisée)
+    // 4. Construire dictionnaire commune → {maire, dateMandat}
     const maireMap=new Map();
     for(let i=1;i<lines.length;i++){
       const cols=lines[i].split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
@@ -945,40 +946,69 @@ async function runUpdate(){
       const nom=cols[iNom];
       const prenom=iPrenom!==-1?cols[iPrenom]:'';
       const dept=iDept!==-1?cols[iDept]:'';
+      const dateMandat=iDateMandat!==-1?cols[iDateMandat]:'';
 
       if(!communeName||!nom)continue;
 
       // Construire le nom complet du maire en title case
       const maireName=(prenom?titleCase(prenom)+' ':'')+titleCase(nom);
       const key=normCommune(communeName);
+      const entry={maire:maireName,date:dateMandat};
 
       // Pour les doublons (ex: Saint-Denis), on ajoute aussi avec le dept
-      maireMap.set(key,maireName);
-      if(dept)maireMap.set(key+'_'+dept,maireName);
+      maireMap.set(key,entry);
+      if(dept)maireMap.set(key+'_'+dept,entry);
+    }
+
+    // Détecter si le RNE contient des mandats 2026+
+    let has2026=false;
+    maireMap.forEach(v=>{
+      if(v.date){
+        const parts=v.date.split('/');
+        const year=parseInt(parts[2]||parts[0]);
+        if(year>=2026)has2026=true;
+      }
+    });
+    if(!has2026){
+      logLine('⚠ Le RNE ne contient pas encore les maires élus en 2026.','log-err');
+      logLine('ℹ Protection activée : seuls les maires ABSENTS seront complétés, les maires existants ne seront pas écrasés.','log-cur');
+    } else {
+      logLine('✓ Le RNE contient les mandats 2026 — mise à jour complète.','log-ok');
     }
 
     logLine('📋 '+maireMap.size+' entrées dans le répertoire','log-ok');
     setProgress(70,'Mise à jour des communes…');
 
-    // 5. Matcher avec nos données
-    let updated=0,notFound=[];
+    // 5. Matcher avec nos données (avec protection anti-écrasement)
+    let updated=0,skipped=0,notFound=[];
     DATA.forEach((commune,idx)=>{
       if(idx%20===0){
         const pct=70+Math.round((idx/DATA.length)*25);
         setProgress(pct,'Mise à jour : '+commune.ville+'…');
       }
 
-      // Essayer : nom exact, puis sans suffixe "(La Réunion)", puis avec dept
+      // Essayer : nom exact, puis avec dept, puis sans suffixe "(La Réunion)"
       const baseName=commune.ville.replace(/\s*\(.*\)$/,'');
       const keys=[
-        normCommune(baseName),
         normCommune(baseName)+'_'+commune.dept,
+        normCommune(baseName),
         normCommune(commune.ville)
       ];
 
+      let matched=false;
       for(const key of keys){
         if(maireMap.has(key)){
-          const newMaire=maireMap.get(key);
+          matched=true;
+          const entry=maireMap.get(key);
+          const newMaire=entry.maire;
+
+          // PROTECTION : si le RNE n'a pas les mandats 2026,
+          // ne remplacer QUE les champs vides
+          if(!has2026&&commune.maire){
+            skipped++;
+            break;
+          }
+
           if(newMaire&&newMaire!==commune.maire){
             logLine('  ✏ '+commune.ville+' : '+(commune.maire||'(vide)')+' → '+newMaire,'log-cur');
             DATA[idx].maire=newMaire;
@@ -987,18 +1017,21 @@ async function runUpdate(){
           break;
         }
       }
-      if(!keys.some(k=>maireMap.has(k))){
-        notFound.push(commune.ville);
-      }
+      if(!matched)notFound.push(commune.ville);
     });
 
     if(notFound.length>0){
       logLine('⚠ '+notFound.length+' commune(s) non trouvée(s) dans le RNE : '+notFound.slice(0,10).join(', ')+(notFound.length>10?' …':''),'log-err');
     }
-    logLine('✅ '+updated+' maire(s) mis à jour','log-ok');
-    if(updated===0){
-      logLine('ℹ Le RNE est peut-être pas encore mis à jour après les dernières élections.','log-cur');
+    if(skipped>0){
+      logLine('🛡 '+skipped+' maire(s) protégé(s) — le RNE contient encore les anciens mandats (2020). Vos données 2026 sont préservées.','log-ok');
     }
+    logLine('✅ '+updated+' maire(s) mis à jour','log-ok');
+
+    // Sauvegarde automatique dans le navigateur
+    saveToLocal();
+    logLine('💾 Données sauvegardées automatiquement dans le navigateur','log-ok');
+
     render();
 
   }catch(e){
@@ -1052,8 +1085,49 @@ function downloadUpdatedHTML(){
 }
 
 
+/* ══ LOCALSTORAGE : sauvegarde et restauration automatique ══ */
+const STORAGE_KEY='annuaire_maires_data';
+
+function saveToLocal(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(DATA));
+    localStorage.setItem(STORAGE_KEY+'_date',new Date().toISOString());
+  }catch(e){}
+}
+
+function loadFromLocal(){
+  try{
+    const saved=localStorage.getItem(STORAGE_KEY);
+    if(!saved)return false;
+    const parsed=JSON.parse(saved);
+    if(!Array.isArray(parsed)||parsed.length===0)return false;
+    // Fusionner : pour chaque commune sauvegardée, mettre à jour DATA
+    let restored=0;
+    parsed.forEach(item=>{
+      const idx=DATA.findIndex(d=>d.ville===item.ville);
+      if(idx!==-1){
+        if(item.maire)DATA[idx].maire=item.maire;
+        if(item.adresse)DATA[idx].adresse=item.adresse;
+        if(item.tel)DATA[idx].tel=item.tel;
+        if(item.email)DATA[idx].email=item.email;
+        restored++;
+      }
+    });
+    const savedDate=localStorage.getItem(STORAGE_KEY+'_date');
+    if(savedDate){
+      const d=new Date(savedDate);
+      const maj=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+      const subEl=document.querySelector('.header-sub');
+      if(subEl)subEl.innerHTML=subEl.innerHTML.replace(/MAJ : [^<]+/,'MAJ : '+maj);
+    }
+    return true;
+  }catch(e){return false;}
+}
+
 /* ══ INIT ══ */
+const wasRestored=loadFromLocal();
 render();
+if(wasRestored)showToast('Données restaurées depuis la sauvegarde locale','var(--bleu)',3000);
 </script>
 </body>
 </html>
