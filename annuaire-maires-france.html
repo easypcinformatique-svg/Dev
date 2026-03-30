@@ -47,8 +47,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 /* ══ MAIN WRAPPER ══ */
 .wrap{max-width:1440px;margin:0 auto;padding:0 28px}
 
-/* ══ DISCLAIMER ══ */
-.disclaimer{margin:18px 0 0;background:var(--warn-bg);border:1px solid #FCD34D;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--warn);display:flex;gap:8px;align-items:flex-start;line-height:1.5}
 
 /* ══ TOOLBAR ══ */
 .toolbar{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -266,11 +264,6 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 </div>
 
 <div class="wrap">
-  <!-- DISCLAIMER -->
-  <div class="disclaimer">
-    <span>⚠️</span>
-    <span>Données issues de sources publiques et générées via IA (mandats 2020-2026, recensement INSEE 2022-2023). Certaines peuvent être inexactes ou obsolètes — notamment pour les communes ayant connu des élections partielles. <strong>Vérifiez impérativement sur les sites officiels avant tout envoi officiel.</strong></span>
-  </div>
 
   <!-- TOOLBAR -->
   <div class="toolbar">
@@ -759,8 +752,7 @@ function exportSheets(){
       ['Communes', rows.length],
       ['Maires renseignés', rows.filter(d=>d.maire).length],
       ['Emails disponibles', rows.filter(d=>d.email).length],
-      [''],
-      ['AVERTISSEMENT','Données à vérifier avant tout envoi officiel']
+      ['']
     ]);
     XLSX.utils.book_append_sheet(wb, meta, 'Métadonnées');
 
