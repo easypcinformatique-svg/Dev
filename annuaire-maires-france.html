@@ -185,7 +185,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <div class="overlay" id="overlay">
   <div class="update-modal">
     <div class="modal-title">🔄 Mise à jour en cours</div>
-    <div class="modal-sub">Les données sont mises à jour par lots de 8 communes.<br>Maire (mandat 2026-2032), adresse, téléphone et email sont actualisés.</div>
+    <div class="modal-sub">Les noms des maires sont mis à jour depuis le <strong>Répertoire National des Élus</strong> (data.gouv.fr).<br>Source officielle, aucune clé API nécessaire.</div>
     <div class="update-progress-bg"><div class="update-progress-fill" id="upd-fill" style="width:0%"></div></div>
     <div class="update-progress-labels">
       <span id="upd-label">Initialisation…</span>
@@ -219,7 +219,6 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="maire-asc">Maire A→Z</option>
       <option value="region-asc">Région A→Z</option>
     </select>
-    <input type="password" id="api-key" placeholder="Clé API Anthropic (sk-ant-…)" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;width:200px;background:var(--bg);color:var(--text)">
     <button class="btn btn-update" id="btn-update" onclick="startUpdate()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
       Mise à jour
@@ -856,8 +855,6 @@ function setProgress(pct,label){
 
 function startUpdate(){
   if(updateRunning)return;
-  const apiKey=document.getElementById('api-key').value.trim();
-  if(!apiKey){showToast('❌ Clé API Anthropic requise pour la mise à jour','#C8001E');return;}
   cancelRequested=false;
   document.getElementById('overlay').classList.add('active');
   document.getElementById('upd-log').innerHTML='';
@@ -872,79 +869,108 @@ function startUpdate(){
 
 async function runUpdate(){
   updateRunning=true;
-  const batches=[];
-  for(let i=0;i<DATA.length;i+=BATCH)batches.push(DATA.slice(i,i+BATCH));
 
-  for(let bi=0;bi<batches.length;bi++){
-    if(cancelRequested){logLine('⛔ Annulé par l\'utilisateur.','log-err');break;}
-    const batch=batches[bi];
-    const names=batch.map(c=>c.ville).join(', ');
-    const short=names.length>60?names.slice(0,57)+'…':names;
-    const pct=Math.round((bi/batches.length)*100);
-    setProgress(pct,`Lot ${bi+1}/${batches.length} — ${short}`);
-    logLine(`⏳ Lot ${bi+1}/${batches.length} : ${short}`,'log-cur');
+  try{
+    // 1. Récupérer l'URL du CSV des maires depuis data.gouv.fr
+    setProgress(5,'Connexion à data.gouv.fr…');
+    logLine('📡 Récupération du Répertoire National des Élus (data.gouv.fr)…','log-cur');
 
-    try{
-      const prompt=`Tu es une base de données officielle des collectivités françaises.
-Pour chacune des villes françaises suivantes, fournis les informations ACTUELLES (après les élections municipales de mars 2026).
-Réponds UNIQUEMENT en JSON valide, sans balises markdown, sans texte avant ou après.
-Format attendu : tableau JSON d'objets avec exactement ces clés :
-  "ville" (string, nom exact de la ville),
-  "maire" (string, prénom + nom complet du maire ACTUEL élu en mars 2026, mandat 2026-2032, ou "" si inconnu),
-  "adresse" (string, adresse postale complète de l'hôtel de ville avec code postal et ville, ou ""),
-  "email" (string, adresse email officielle de la mairie, ou "" si inconnue),
-  "telephone" (string, numéro de téléphone standard de la mairie au format 0X XX XX XX XX, ou "").
+    const datasetRes=await fetch('https://www.data.gouv.fr/api/1/datasets/repertoire-national-des-elus-1/');
+    if(!datasetRes.ok)throw new Error('Impossible de contacter data.gouv.fr (HTTP '+datasetRes.status+')');
+    const dataset=await datasetRes.json();
 
-Villes : ${names}
+    // Trouver la ressource CSV des maires
+    const mairesResource=dataset.resources.find(r=>
+      r.title&&r.title.toLowerCase().includes('maire')&&r.format==='csv'
+    );
+    if(!mairesResource)throw new Error('Fichier CSV des maires introuvable dans le dataset RNE');
 
-Contraintes absolues :
-- Aucun texte avant ou après le JSON
-- Aucune balise markdown, aucun bloc \`\`\`
-- IMPORTANT : donne le maire élu aux municipales de mars 2026, pas l'ancien maire
-- Si une information est incertaine, renvoie "" plutôt qu'une valeur approximative
-- Respecte l'ordre des villes tel qu'il t'est fourni`;
+    setProgress(15,'Téléchargement du fichier des maires…');
+    logLine('⬇ Téléchargement : '+mairesResource.title,'log-cur');
 
-      const res=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key':document.getElementById('api-key').value.trim(),
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access':'true'
-        },
-        body:JSON.stringify({
-          model:'claude-sonnet-4-6-20250929',
-          max_tokens:2048,
-          messages:[{role:'user',content:prompt}]
-        })
-      });
+    // 2. Télécharger le CSV
+    const csvRes=await fetch(mairesResource.url);
+    if(!csvRes.ok)throw new Error('Erreur téléchargement CSV (HTTP '+csvRes.status+')');
+    const csvText=await csvRes.text();
 
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const json=await res.json();
-      const raw=(json.content||[]).map(b=>b.text||'').join('').trim();
-      const clean=raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
-      const parsed=JSON.parse(clean);
+    setProgress(40,'Analyse du fichier…');
+    logLine('📊 Analyse de '+csvText.split('\\n').length+' lignes…','log-cur');
 
-      let updated=0;
-      parsed.forEach(item=>{
-        const idx=DATA.findIndex(d=>d.ville===item.ville);
-        if(idx!==-1){
-          if(item.maire)DATA[idx].maire=item.maire;
-          if(item.adresse)DATA[idx].adresse=item.adresse;
-          if(item.email)DATA[idx].email=item.email;
-          if(item.telephone)DATA[idx].tel=item.telephone;
-          updated++;
-        }
-      });
-      logLine(`  ✓ ${updated} commune(s) mise(s) à jour`,'log-ok');
-      render();
+    // 3. Parser le CSV (séparateur tabulation ou point-virgule)
+    const lines=csvText.split('\\n');
+    const sep=lines[0].includes('\\t')?'\\t':';';
+    const headers=lines[0].split(sep).map(h=>h.trim().replace(/"/g,'').toLowerCase());
 
-    }catch(e){
-      logLine(`  ✗ Erreur lot ${bi+1} : ${e.message}`,'log-err');
+    // Trouver les indices des colonnes
+    const iNom=headers.findIndex(h=>h.includes('nom')&&h.includes('élu')||h==='nom de l\'élu'||h==='nom');
+    const iPrenom=headers.findIndex(h=>h.includes('prénom')||h==='prenom de l\'élu'||h==='prénom de l\'élu');
+    const iCommune=headers.findIndex(h=>h.includes('libellé')&&h.includes('commune')||h.includes('commune')&&!h.includes('code'));
+    const iCodeCommune=headers.findIndex(h=>h.includes('code')&&h.includes('commune'));
+
+    if(iCommune===-1&&iCodeCommune===-1){
+      logLine('⚠ Colonnes trouvées : '+headers.join(', '),'log-err');
+      throw new Error('Colonnes commune introuvables dans le CSV');
     }
 
-    // tiny pause between batches
-    await new Promise(r=>setTimeout(r,300));
+    // 4. Construire un dictionnaire commune → maire
+    const maireMap=new Map();
+    for(let i=1;i<lines.length;i++){
+      if(cancelRequested){logLine('⛔ Annulé par l\'utilisateur.','log-err');break;}
+      const cols=lines[i].split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
+      if(cols.length<3)continue;
+
+      let communeName=iCommune!==-1?cols[iCommune]:'';
+      const nom=iNom!==-1?cols[iNom]:'';
+      const prenom=iPrenom!==-1?cols[iPrenom]:'';
+
+      if(communeName&&nom){
+        // Normaliser le nom de la commune (title case)
+        communeName=communeName.replace(/^(.*?)$/,s=>
+          s.split(/[-\\s]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(m=>s.includes('-')?'-':' ')
+        );
+        // Construire le nom complet du maire (Prénom Nom en title case)
+        const maireName=prenom
+          ?prenom.charAt(0).toUpperCase()+prenom.slice(1).toLowerCase()+' '+nom.charAt(0).toUpperCase()+nom.slice(1).toLowerCase()
+          :nom;
+        maireMap.set(communeName.toUpperCase(),maireName);
+      }
+    }
+
+    logLine('📋 '+maireMap.size+' maires trouvés dans le répertoire','log-ok');
+    setProgress(70,'Mise à jour des communes…');
+
+    // 5. Matcher avec nos données
+    let updated=0,notFound=[];
+    DATA.forEach((commune,idx)=>{
+      const pct=70+Math.round((idx/DATA.length)*25);
+      if(idx%20===0)setProgress(pct,'Mise à jour : '+commune.ville+'…');
+
+      // Essayer plusieurs variantes du nom
+      const villeName=commune.ville.replace(/\\s*\\(.*\\)$/,''); // Retirer "(La Réunion)" etc.
+      const keys=[
+        villeName.toUpperCase(),
+        villeName.toUpperCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,''),
+        commune.ville.toUpperCase()
+      ];
+
+      for(const key of keys){
+        if(maireMap.has(key)){
+          const newMaire=maireMap.get(key);
+          if(newMaire&&newMaire!==commune.maire){
+            logLine('  ✏ '+commune.ville+' : '+( commune.maire||'(vide)')+' → '+newMaire,'log-cur');
+            DATA[idx].maire=newMaire;
+            updated++;
+          }
+          break;
+        }
+      }
+    });
+
+    logLine(`✅ ${updated} maire(s) mis à jour`,'log-ok');
+    render();
+
+  }catch(e){
+    logLine('✗ Erreur : '+e.message,'log-err');
   }
 
   setProgress(100,'Mise à jour terminée');
