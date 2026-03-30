@@ -278,11 +278,11 @@ document.getElementById('yr').textContent = new Date().getFullYear();
    ══════════════════════════════════════════ */
 let DATA = [
   /* ── PLUS DE 300 000 HAB. ── */
-  {ville:"Paris",pop:2102650,dept:"75",region:"Île-de-France",maire:"Anne Hidalgo",adresse:"Hôtel de Ville, Place de l'Hôtel-de-Ville, 75004 Paris",tel:"01 42 76 40 40",email:"contact@paris.fr"},
+  {ville:"Paris",pop:2102650,dept:"75",region:"Île-de-France",maire:"Emmanuel Grégoire",adresse:"Hôtel de Ville, Place de l'Hôtel-de-Ville, 75004 Paris",tel:"01 42 76 40 40",email:"contact@paris.fr"},
   {ville:"Marseille",pop:873076,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Benoît Payan",adresse:"2 Quai du Port, 13233 Marseille Cedex 20",tel:"04 91 55 11 11",email:"mairie@marseille.fr"},
   {ville:"Lyon",pop:522228,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Grégory Doucet",adresse:"Place de la Comédie, 69205 Lyon Cedex 01",tel:"04 72 10 30 30",email:"mairie@mairie-lyon.fr"},
   {ville:"Toulouse",pop:511684,dept:"31",region:"Occitanie",maire:"Jean-Luc Moudenc",adresse:"Place du Capitole, 31040 Toulouse Cedex 9",tel:"05 61 22 29 22",email:"mairie@toulouse.fr"},
-  {ville:"Nice",pop:348085,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Christian Estrosi",adresse:"5 Rue de l'Hôtel de Ville, 06364 Nice Cedex 4",tel:"04 97 13 20 00",email:"contact@nicecotedazur.org"},
+  {ville:"Nice",pop:348085,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Éric Ciotti",adresse:"5 Rue de l'Hôtel de Ville, 06364 Nice Cedex 4",tel:"04 97 13 20 00",email:"contact@nicecotedazur.org"},
   {ville:"Nantes",pop:323204,dept:"44",region:"Pays de la Loire",maire:"Johanna Rolland",adresse:"2 Rue de l'Hôtel de Ville, 44041 Nantes Cedex 1",tel:"02 40 41 90 00",email:"mairie@mairie-nantes.fr"},
   {ville:"Montpellier",pop:304130,dept:"34",region:"Occitanie",maire:"Michaël Delafosse",adresse:"1 Place Georges Frêche, 34267 Montpellier Cedex 2",tel:"04 67 34 70 00",email:"mairie@montpellier.fr"},
   {ville:"Strasbourg",pop:291764,dept:"67",region:"Grand Est",maire:"Jeanne Barseghian",adresse:"Place de Broglie, 67000 Strasbourg",tel:"03 88 60 90 90",email:"info@strasbourg.eu"},
@@ -533,7 +533,43 @@ let DATA = [
   {ville:"Bayonne",pop:52000,dept:"64",region:"Nouvelle-Aquitaine",maire:"Jean-René Etchegaray",adresse:"Place de la Liberté, 64109 Bayonne Cedex",tel:"05 59 46 60 00",email:"mairie@bayonne.fr"},
   {ville:"Laval",pop:52000,dept:"53",region:"Pays de la Loire",maire:"Guillaume Garot",adresse:"Place du 11 Novembre, 53014 Laval Cedex",tel:"02 43 49 49 49",email:"mairie@laval.fr"},
   {ville:"Narbonne",pop:56000,dept:"11",region:"Occitanie",maire:"",adresse:"Place de l'Hôtel de Ville, 11783 Narbonne Cedex",tel:"04 68 90 30 00",email:"mairie@mairie-narbonne.fr"},
-  {ville:"La Possession (La Réunion)",pop:32000,dept:"974",region:"La Réunion",maire:"",adresse:"Place Willy Vergoz, 97419 La Possession",tel:"02 62 22 06 00",email:"mairie@mairie-lapossession.re"}
+  {ville:"La Possession (La Réunion)",pop:32000,dept:"974",region:"La Réunion",maire:"",adresse:"Place Willy Vergoz, 97419 La Possession",tel:"02 62 22 06 00",email:"mairie@mairie-lapossession.re"},
+  /* ── VILLES AJOUTÉES ── */
+  {ville:"Saint-Ouen-sur-Seine",pop:51700,dept:"93",region:"Île-de-France",maire:"Karim Bouamrane",adresse:"Place de la République, 93400 Saint-Ouen-sur-Seine",tel:"01 49 45 67 89",email:"mairie@mairie-saint-ouen.fr"},
+  {ville:"Arles",pop:50000,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Patrick de Carolis",adresse:"Place de la République, 13200 Arles",tel:"04 90 49 36 36",email:"mairie@ville-arles.fr"},
+  {ville:"Suresnes",pop:49400,dept:"92",region:"Île-de-France",maire:"Guillaume Boudy",adresse:"2 Rue Carnot, 92150 Suresnes",tel:"01 41 18 19 20",email:"mairie@ville-suresnes.fr"},
+  {ville:"Bastia",pop:48300,dept:"2B",region:"Corse",maire:"Gilles Simeoni",adresse:"Avenue Pierre Giudicelli, 20410 Bastia",tel:"04 95 55 96 00",email:"mairie@bastia.corsica"},
+  {ville:"Choisy-le-Roi",pop:47600,dept:"94",region:"Île-de-France",maire:"Tonino Panetta",adresse:"Place de l'Hôtel de Ville, 94600 Choisy-le-Roi",tel:"01 48 92 44 44",email:"mairie@choisyleroi.fr"},
+  {ville:"La Courneuve",pop:47100,dept:"93",region:"Île-de-France",maire:"Gilles Poux",adresse:"Place de la Mairie, 93120 La Courneuve",tel:"01 49 92 60 00",email:"mairie@lacourneuve.fr"},
+  {ville:"Alfortville",pop:46300,dept:"94",region:"Île-de-France",maire:"Luc Carvounas",adresse:"Place François Rabelais, 94140 Alfortville",tel:"01 58 73 28 00",email:"mairie@mairie-alfortville.fr"},
+  {ville:"Talence",pop:45400,dept:"33",region:"Nouvelle-Aquitaine",maire:"Emmanuel Sallaberry",adresse:"Rue du Professeur Arnozan, 33400 Talence",tel:"05 56 84 78 00",email:"mairie@ville-talence.fr"},
+  {ville:"Puteaux",pop:44300,dept:"92",region:"Île-de-France",maire:"Joëlle Ceccaldi-Raynaud",adresse:"131 Rue de la République, 92800 Puteaux",tel:"01 46 92 92 92",email:"mairie@mairie-puteaux.fr"},
+  {ville:"Saint-Brieuc",pop:44300,dept:"22",region:"Bretagne",maire:"Victor Bonnot",adresse:"Place du Général de Gaulle, 22000 Saint-Brieuc",tel:"02 96 62 12 22",email:"mairie@saint-brieuc.fr"},
+  {ville:"Anglet",pop:43300,dept:"64",region:"Nouvelle-Aquitaine",maire:"Claude Olive",adresse:"Rue Amédée Dufourg, 64600 Anglet",tel:"05 59 58 35 35",email:"mairie@anglet.fr"},
+  {ville:"Bourg-en-Bresse",pop:42350,dept:"01",region:"Auvergne-Rhône-Alpes",maire:"Jean-François Debat",adresse:"Place de l'Hôtel de Ville, 01012 Bourg-en-Bresse Cedex",tel:"04 74 45 71 99",email:"mairie@bourgenbresse.fr"},
+  {ville:"Le Cannet",pop:41800,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Michèle Tabarot",adresse:"Place de l'Hôtel de Ville, 06110 Le Cannet",tel:"04 92 59 44 44",email:"mairie@lecannet.fr"},
+  {ville:"Wattrelos",pop:41200,dept:"59",region:"Hauts-de-France",maire:"Dominique Baert",adresse:"Place Jean Delvainquière, 59150 Wattrelos",tel:"03 20 81 68 68",email:"mairie@ville-wattrelos.fr"},
+  {ville:"Marcq-en-Barœul",pop:40200,dept:"59",region:"Hauts-de-France",maire:"Bernard Gérard",adresse:"103 Avenue Foch, 59700 Marcq-en-Barœul",tel:"03 20 72 82 82",email:"mairie@marcq-en-baroeul.fr"},
+  {ville:"Villenave-d'Ornon",pop:38700,dept:"33",region:"Nouvelle-Aquitaine",maire:"Michel Poignonec",adresse:"Rue du Professeur Bergonié, 33140 Villenave-d'Ornon",tel:"05 57 99 45 00",email:"mairie@villenave-ornon.fr"},
+  {ville:"Joué-lès-Tours",pop:38400,dept:"37",region:"Centre-Val de Loire",maire:"Frédéric Augis",adresse:"Place François Mitterrand, 37300 Joué-lès-Tours",tel:"02 47 73 42 00",email:"mairie@ville-jouelestours.fr"},
+  {ville:"Tremblay-en-France",pop:38400,dept:"93",region:"Île-de-France",maire:"",adresse:"18 Boulevard de l'Hôtel de Ville, 93290 Tremblay-en-France",tel:"01 49 63 70 00",email:"mairie@tremblayenfrance.fr"},
+  {ville:"Six-Fours-les-Plages",pop:37300,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Jean-Sébastien Vialatte",adresse:"Place de la Mairie, 83140 Six-Fours-les-Plages",tel:"04 94 34 93 00",email:"mairie@six-fours.fr"},
+  {ville:"Haguenau",pop:36400,dept:"67",region:"Grand Est",maire:"Claude Sturni",adresse:"Place Joseph Thierry, 67504 Haguenau Cedex",tel:"03 88 90 68 68",email:"mairie@agglo-haguenau.fr"},
+  {ville:"La Ciotat",pop:35900,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Alexandre Doriol",adresse:"Place Évariste Gras, 13600 La Ciotat",tel:"04 42 08 88 00",email:"mairie@mairie-laciotat.fr"},
+  {ville:"Saint-Chamond",pop:35600,dept:"42",region:"Auvergne-Rhône-Alpes",maire:"Axel Dugua",adresse:"Place de la Liberté, 42400 Saint-Chamond",tel:"04 77 31 04 41",email:"mairie@saint-chamond.fr"},
+  {ville:"Roanne",pop:35400,dept:"42",region:"Auvergne-Rhône-Alpes",maire:"Yves Nicolin",adresse:"Place de l'Hôtel de Ville, 42300 Roanne",tel:"04 77 23 20 00",email:"mairie@roanne.fr"},
+  {ville:"Sainte-Geneviève-des-Bois",pop:35400,dept:"91",region:"Île-de-France",maire:"Frédéric Pétitta",adresse:"Place du 1er Juillet, 91700 Sainte-Geneviève-des-Bois",tel:"01 69 46 80 00",email:"mairie@sgdb91.com"},
+  {ville:"Schiltigheim",pop:34200,dept:"67",region:"Grand Est",maire:"Nathalie Jampoc-Bertrand",adresse:"Place de l'Hôtel de Ville, 67300 Schiltigheim",tel:"03 88 83 90 00",email:"mairie@ville-schiltigheim.fr"},
+  {ville:"Marignane",pop:33200,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Éric Le Dissès",adresse:"Boulevard Frédéric Mistral, 13700 Marignane",tel:"04 42 31 12 00",email:"mairie@ville-marignane.fr"},
+  {ville:"Saint-Laurent-du-Var",pop:32700,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Joseph Segura",adresse:"Place du Général de Gaulle, 06700 Saint-Laurent-du-Var",tel:"04 92 12 40 00",email:"mairie@saintlaurentduvar.fr"},
+  {ville:"Montigny-le-Bretonneux",pop:32400,dept:"78",region:"Île-de-France",maire:"Lorrain Merckaert",adresse:"Place Étienne Marcel, 78180 Montigny-le-Bretonneux",tel:"01 39 30 51 30",email:"mairie@montigny78.fr"},
+  {ville:"Vienne",pop:32000,dept:"38",region:"Auvergne-Rhône-Alpes",maire:"Thierry Kovacs",adresse:"Place de l'Hôtel de Ville, 38200 Vienne",tel:"04 74 78 78 78",email:"mairie@mairie-vienne.fr"},
+  {ville:"Plaisir",pop:31800,dept:"78",region:"Île-de-France",maire:"Sandrine Carneiro",adresse:"Place de la Mairie, 78370 Plaisir",tel:"01 30 79 61 00",email:"mairie@ville-plaisir.fr"},
+  {ville:"Montluçon",pop:31600,dept:"03",region:"Auvergne-Rhône-Alpes",maire:"Philippe Perche",adresse:"Place Jean Dormoy, 03100 Montluçon",tel:"04 70 02 55 00",email:"mairie@ville-montlucon.fr"},
+  {ville:"Châtellerault",pop:30800,dept:"86",region:"Nouvelle-Aquitaine",maire:"Anne-Florence Bourat",adresse:"78 Boulevard Blossac, 86100 Châtellerault",tel:"05 49 20 38 00",email:"mairie@ville-chatellerault.fr"},
+  {ville:"Agde",pop:30600,dept:"34",region:"Occitanie",maire:"Gilles d'Ettore",adresse:"Place de la Belle Agathoise, 34300 Agde",tel:"04 67 94 60 00",email:"mairie@ville-agde.fr"},
+  {ville:"Cambrai",pop:30500,dept:"59",region:"Hauts-de-France",maire:"",adresse:"Place Aristide Briand, 59400 Cambrai",tel:"03 27 73 21 00",email:"mairie@mairie-cambrai.fr"},
+  {ville:"Bourgoin-Jallieu",pop:30150,dept:"38",region:"Auvergne-Rhône-Alpes",maire:"Vincent Chriqui",adresse:"Place de l'Hôtel de Ville, 38300 Bourgoin-Jallieu",tel:"04 74 93 02 50",email:"mairie@bourgoinjallieu.fr"}
 ];
 
 /* ══ SORT STATE ══ */
