@@ -185,7 +185,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <div class="overlay" id="overlay">
   <div class="update-modal">
     <div class="modal-title">🔄 Mise à jour en cours</div>
-    <div class="modal-sub">Les données sont mises à jour par lots de 8 communes.<br>Maire, adresse, téléphone et email sont actualisés pour chaque commune.</div>
+    <div class="modal-sub">Les données sont mises à jour par lots de 8 communes.<br>Maire (mandat 2026-2032), adresse, téléphone et email sont actualisés.</div>
     <div class="update-progress-bg"><div class="update-progress-fill" id="upd-fill" style="width:0%"></div></div>
     <div class="update-progress-labels">
       <span id="upd-label">Initialisation…</span>
@@ -219,6 +219,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="maire-asc">Maire A→Z</option>
       <option value="region-asc">Région A→Z</option>
     </select>
+    <input type="password" id="api-key" placeholder="Clé API Anthropic (sk-ant-…)" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;width:200px;background:var(--bg);color:var(--text)">
     <button class="btn btn-update" id="btn-update" onclick="startUpdate()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
       Mise à jour
@@ -855,6 +856,8 @@ function setProgress(pct,label){
 
 function startUpdate(){
   if(updateRunning)return;
+  const apiKey=document.getElementById('api-key').value.trim();
+  if(!apiKey){showToast('❌ Clé API Anthropic requise pour la mise à jour','#C8001E');return;}
   cancelRequested=false;
   document.getElementById('overlay').classList.add('active');
   document.getElementById('upd-log').innerHTML='';
@@ -883,11 +886,11 @@ async function runUpdate(){
 
     try{
       const prompt=`Tu es une base de données officielle des collectivités françaises.
-Pour chacune des villes françaises suivantes, fournis les informations ci-dessous.
+Pour chacune des villes françaises suivantes, fournis les informations ACTUELLES (après les élections municipales de mars 2026).
 Réponds UNIQUEMENT en JSON valide, sans balises markdown, sans texte avant ou après.
 Format attendu : tableau JSON d'objets avec exactement ces clés :
   "ville" (string, nom exact de la ville),
-  "maire" (string, prénom + nom complet du maire en exercice 2024-2025, ou "" si inconnu),
+  "maire" (string, prénom + nom complet du maire ACTUEL élu en mars 2026, mandat 2026-2032, ou "" si inconnu),
   "adresse" (string, adresse postale complète de l'hôtel de ville avec code postal et ville, ou ""),
   "email" (string, adresse email officielle de la mairie, ou "" si inconnue),
   "telephone" (string, numéro de téléphone standard de la mairie au format 0X XX XX XX XX, ou "").
@@ -897,15 +900,21 @@ Villes : ${names}
 Contraintes absolues :
 - Aucun texte avant ou après le JSON
 - Aucune balise markdown, aucun bloc \`\`\`
+- IMPORTANT : donne le maire élu aux municipales de mars 2026, pas l'ancien maire
 - Si une information est incertaine, renvoie "" plutôt qu'une valeur approximative
 - Respecte l'ordre des villes tel qu'il t'est fourni`;
 
       const res=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':document.getElementById('api-key').value.trim(),
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
         body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:1000,
+          model:'claude-sonnet-4-6-20250929',
+          max_tokens:2048,
           messages:[{role:'user',content:prompt}]
         })
       });
