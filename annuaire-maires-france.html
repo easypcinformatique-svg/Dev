@@ -162,8 +162,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="header-inner">
     <div class="emblem">🏛️</div>
     <div class="header-text">
-      <div class="header-title">Annuaire des Maires de France <span id="version-tag" style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;opacity:.6">v.2026.03.30</span></div>
-      <div class="header-sub">Communes de plus de 30 000 habitants &middot; Mandats 2026&ndash;2032 &middot; MAJ : 30/03/2026 15:00</div>
+      <div class="header-title">Annuaire des Maires de France <span id="version-tag" style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;opacity:.6;cursor:help" title="Numéro de version basé sur la date de dernière mise à jour (année.mois.jour)">v.2026.03.30</span></div>
+      <div class="header-sub" title="Données issues du Répertoire National des Élus (data.gouv.fr) et de sources publiques. Vérifiez avant tout usage officiel.">Communes de plus de 30 000 habitants &middot; Mandats 2026&ndash;2032 &middot; MAJ : 30/03/2026 15:00</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -219,7 +219,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="maire-asc">Maire A→Z</option>
       <option value="region-asc">Région A→Z</option>
     </select>
-    <button class="btn btn-update" id="btn-update" onclick="startUpdate()">
+    <input type="number" id="pop-min" placeholder="Pop. min" min="0" step="1000" oninput="render()" title="Filtrer les communes ayant au moins ce nombre d'habitants" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
+    <input type="number" id="pop-max" placeholder="Pop. max" min="0" step="1000" oninput="render()" title="Filtrer les communes ayant au maximum ce nombre d'habitants" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
+    <button class="btn btn-update" id="btn-update" onclick="startUpdate()" title="Met à jour les noms des maires depuis le Répertoire National des Élus (data.gouv.fr). Source officielle du Ministère de l'Intérieur, aucune clé API nécessaire.">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
       Mise à jour
     </button>
@@ -247,14 +249,14 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <table>
       <thead>
         <tr>
-          <th style="width:38px">#</th>
-          <th onclick="setSort('ville')">Commune <span class="arr" id="arr-ville"></span></th>
-          <th onclick="setSort('pop')">Population <span class="arr" id="arr-pop">↓</span></th>
-          <th onclick="setSort('region')">Région <span class="arr" id="arr-region"></span></th>
-          <th onclick="setSort('maire')">Maire <span class="arr" id="arr-maire"></span></th>
-          <th>Adresse Hôtel de Ville</th>
-          <th>Téléphone</th>
-          <th>Email officiel</th>
+          <th style="width:38px" title="Rang dans le classement actuel">#</th>
+          <th onclick="setSort('ville')" title="Nom officiel de la commune — cliquez pour trier par ordre alphabétique">Commune <span class="arr" id="arr-ville"></span></th>
+          <th onclick="setSort('pop')" title="Population municipale (source : INSEE, recensement 2022-2023) — cliquez pour trier">Population <span class="arr" id="arr-pop">↓</span></th>
+          <th onclick="setSort('region')" title="Région administrative — cliquez pour trier">Région <span class="arr" id="arr-region"></span></th>
+          <th onclick="setSort('maire')" title="Maire en exercice — mandat 2026-2032, élu(e) aux municipales de mars 2026 — cliquez pour trier">Maire <span class="arr" id="arr-maire"></span></th>
+          <th title="Adresse postale de l'hôtel de ville ou de la mairie">Adresse Hôtel de Ville</th>
+          <th title="Numéro de téléphone du standard de la mairie">Téléphone</th>
+          <th title="Adresse email officielle de contact de la mairie">Email officiel</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -605,8 +607,11 @@ function setSort(field){
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase().trim();
   const reg=document.getElementById('region-filter').value;
+  const popMin=parseInt(document.getElementById('pop-min').value)||0;
+  const popMax=parseInt(document.getElementById('pop-max').value)||Infinity;
   let rows=DATA.filter(d=>{
     if(reg&&d.region!==reg)return false;
+    if(d.pop<popMin||d.pop>popMax)return false;
     if(!q)return true;
     return d.ville.toLowerCase().includes(q)||d.maire.toLowerCase().includes(q)||
            d.dept.toLowerCase().includes(q)||d.region.toLowerCase().includes(q)||
