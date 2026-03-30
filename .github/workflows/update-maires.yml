@@ -1,0 +1,242 @@
+name: Mise à jour automatique des maires
+
+on:
+  schedule:
+    # Tous les lundis à 6h du matin (UTC)
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Permet de lancer manuellement depuis GitHub
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Télécharger le RNE et mettre à jour les maires
+        run: |
+          python3 << 'PYEOF'
+          import csv
+          import io
+          import json
+          import re
+          import urllib.request
+          import unicodedata
+
+          # 1. Télécharger le dataset RNE pour trouver l'URL du CSV maires
+          print("📡 Récupération du dataset RNE depuis data.gouv.fr…")
+          req = urllib.request.Request(
+              "https://www.data.gouv.fr/api/1/datasets/repertoire-national-des-elus-1/",
+              headers={"User-Agent": "annuaire-maires-bot/1.0"}
+          )
+          with urllib.request.urlopen(req) as resp:
+              dataset = json.load(resp)
+
+          csv_url = None
+          csv_date = ""
+          for r in dataset["resources"]:
+              if "maire" in r.get("title", "").lower() and r.get("format") == "csv":
+                  csv_url = r["url"]
+                  csv_date = r.get("last_modified", r.get("created", ""))
+                  break
+
+          if not csv_url:
+              print("❌ Fichier CSV des maires introuvable")
+              exit(1)
+
+          print(f"📅 Dernière mise à jour RNE : {csv_date[:10]}")
+          print(f"⬇ Téléchargement : {csv_url}")
+
+          # 2. Télécharger le CSV
+          req2 = urllib.request.Request(csv_url, headers={"User-Agent": "annuaire-maires-bot/1.0"})
+          with urllib.request.urlopen(req2) as resp2:
+              csv_text = resp2.read().decode("utf-8", errors="replace")
+
+          # 3. Parser le CSV
+          reader = csv.DictReader(io.StringIO(csv_text), delimiter=";")
+          maire_map = {}
+
+          for row in reader:
+              commune = row.get("Libellé de la commune", "").strip()
+              nom = row.get("Nom de l'élu", "").strip()
+              prenom = row.get("Prénom de l'élu", "").strip()
+              dept = row.get("Code du département", "").strip()
+              date_mandat = row.get("Date de début du mandat", "").strip()
+
+              if not commune or not nom:
+                  continue
+
+              # Title case pour le nom complet
+              def title_case(s):
+                  small = {"de", "du", "des", "le", "la", "les", "l", "d", "en", "sur", "sous"}
+                  parts = re.split(r"([-\s])", s)
+                  result = []
+                  for i, w in enumerate(parts):
+                      lo = w.lower()
+                      if i > 0 and lo in small:
+                          result.append(lo)
+                      else:
+                          result.append(lo.capitalize())
+                  return "".join(result)
+
+              maire_name = f"{title_case(prenom)} {title_case(nom)}" if prenom else title_case(nom)
+
+              # Normaliser le nom de commune pour le matching
+              def norm(s):
+                  s = unicodedata.normalize("NFD", s)
+                  s = re.sub(r"[\u0300-\u036f]", "", s)
+                  s = re.sub(r"\s*\(.*\)$", "", s)
+                  return s.upper().strip()
+
+              key = norm(commune)
+              # Vérifier si c'est un mandat 2026+
+              year = 0
+              if date_mandat:
+                  parts = date_mandat.split("/")
+                  if len(parts) == 3:
+                      year = int(parts[2])
+
+              maire_map[key] = {"maire": maire_name, "year": year}
+              if dept:
+                  maire_map[f"{key}_{dept}"] = {"maire": maire_name, "year": year}
+
+          print(f"📋 {len(maire_map)} entrées dans le RNE")
+
+          # Détecter si le RNE contient des mandats 2026
+          has_2026 = any(v["year"] >= 2026 for v in maire_map.values())
+          print(f"{'✅' if has_2026 else '⚠'} Mandats 2026 : {'OUI' if has_2026 else 'NON (protection activée)'}")
+
+          # 4. Lire le HTML
+          print("📄 Lecture de annuaire-maires-france.html…")
+          with open("annuaire-maires-france.html", "r", encoding="utf-8") as f:
+              html = f.read()
+
+          # 5. Extraire et modifier le tableau DATA
+          data_match = re.search(r"let DATA = (\[[\s\S]*?\]);", html)
+          if not data_match:
+              print("❌ Tableau DATA introuvable dans le HTML")
+              exit(1)
+
+          # Parser le JS DATA (c'est du JSON-like avec des clés sans quotes)
+          data_str = data_match.group(1)
+          # Convertir les clés JS en clés JSON
+          json_str = re.sub(r'(\{|,)\s*(\w+)\s*:', r'\1"\2":', data_str)
+          # Convertir les single quotes en double quotes pour les valeurs
+          # Pas nécessaire si déjà en double quotes
+
+          try:
+              data = json.loads(json_str)
+          except json.JSONDecodeError as e:
+              print(f"⚠ Erreur parsing JSON, tentative alternative… ({e})")
+              # Fallback: extraire ville par ville avec regex
+              data = None
+
+          if data is None:
+              print("❌ Impossible de parser le tableau DATA")
+              exit(1)
+
+          # 6. Mettre à jour les maires
+          updated = 0
+          protected = 0
+          not_found = []
+
+          for commune in data:
+              ville = commune.get("ville", "")
+              base_name = re.sub(r"\s*\(.*\)$", "", ville)
+              dept = commune.get("dept", "")
+
+              def norm_key(s):
+                  s = unicodedata.normalize("NFD", s)
+                  s = re.sub(r"[\u0300-\u036f]", "", s)
+                  return s.upper().strip()
+
+              keys = [
+                  f"{norm_key(base_name)}_{dept}",
+                  norm_key(base_name),
+                  norm_key(ville),
+              ]
+
+              matched = False
+              for key in keys:
+                  if key in maire_map:
+                      matched = True
+                      entry = maire_map[key]
+                      new_maire = entry["maire"]
+
+                      # PROTECTION : si pas de mandats 2026, ne pas écraser
+                      if not has_2026 and commune.get("maire"):
+                          protected += 1
+                          break
+
+                      if new_maire and new_maire != commune.get("maire"):
+                          print(f"  ✏ {ville} : {commune.get('maire', '(vide)')} → {new_maire}")
+                          commune["maire"] = new_maire
+                          updated += 1
+                      break
+
+              if not matched:
+                  not_found.append(ville)
+
+          print(f"\n{'🛡' if protected else '✅'} {updated} maire(s) mis à jour, {protected} protégé(s)")
+          if not_found:
+              print(f"⚠ {len(not_found)} non trouvée(s) : {', '.join(not_found[:10])}")
+
+          # 7. Si des changements, réécrire le HTML
+          if updated > 0:
+              # Reconstruire le JS DATA
+              new_data_lines = []
+              for c in data:
+                  parts = []
+                  for k in ["ville", "pop", "dept", "region", "maire", "adresse", "tel", "email"]:
+                      v = c.get(k, "")
+                      if k == "pop":
+                          parts.append(f'{k}:{v}')
+                      else:
+                          escaped = str(v).replace("'", "\\'")
+                          parts.append(f'{k}:"{escaped}"')
+                  new_data_lines.append("  {" + ",".join(parts) + "}")
+
+              new_data_str = "let DATA = [\n" + ",\n".join(new_data_lines) + "\n];"
+              html = re.sub(r"let DATA = \[[\s\S]*?\];", new_data_str, html)
+
+              # Mettre à jour la version dans le header
+              from datetime import datetime
+              now = datetime.now()
+              ver = f"v.{now.year}.{now.month:02d}.{now.day:02d}-{now.hour:02d}h{now.minute:02d}"
+              html = re.sub(r'v\.\d{4}\.\d{2}\.\d{2}-\d{2}h\d{2}', ver, html)
+
+              with open("annuaire-maires-france.html", "w", encoding="utf-8") as f:
+                  f.write(html)
+
+              print(f"\n✅ Fichier mis à jour — version {ver}")
+          else:
+              print("\nℹ Aucun changement détecté — pas de mise à jour du fichier")
+
+          PYEOF
+
+      - name: Vérifier s'il y a des changements
+        id: check
+        run: |
+          if git diff --quiet annuaire-maires-france.html 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Aucun changement"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changements détectés"
+          fi
+
+      - name: Commit et push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add annuaire-maires-france.html
+          git commit -m "🔄 MAJ auto maires depuis RNE — $(date +'%d/%m/%Y %H:%M')"
+          git push
