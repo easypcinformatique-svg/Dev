@@ -29,8 +29,8 @@ const checkoutClose = $('checkout-close');
 const menuBurger = $('menu-burger');
 const navLinks = $('nav-links');
 const mobileOverlay = $('mobile-overlay');
-const loader = $('loader');
 const toast = $('toast');
+const intro = $('intro');
 
 // ── Format price ──
 function fmtPrice(n) { return n.toFixed(2).replace('.',',') + ' €'; }
@@ -43,8 +43,72 @@ function init() {
     initScrollAnimations();
     setMinDate();
     lucide.createIcons();
-    // Hide loader
-    setTimeout(() => { loader.classList.add('hidden'); }, 600);
+    // Launch intro cinematic
+    startIntro();
+}
+
+// ═══════════════════════════════════════
+// CINÉMATIQUE INTRO
+// ═══════════════════════════════════════
+function startIntro() {
+    const steps = [
+        $('intro-step-1'),
+        $('intro-step-2'),
+        $('intro-step-3'),
+    ];
+    const slides = document.querySelectorAll('.intro-slide');
+    let currentStep = 0;
+    let slideIndex = 0;
+    let introTimer = null;
+    let slideTimer = null;
+
+    // Slideshow rotation
+    function nextSlide() {
+        slides[slideIndex].classList.remove('active');
+        slideIndex = (slideIndex + 1) % slides.length;
+        slides[slideIndex].classList.add('active');
+    }
+    slideTimer = setInterval(nextSlide, 4000);
+
+    // Step transitions
+    function nextStep() {
+        if (currentStep < steps.length - 1) {
+            steps[currentStep].classList.remove('active');
+            steps[currentStep].classList.add('exit');
+            currentStep++;
+            // Reset animations by re-adding the step
+            steps[currentStep].classList.add('active');
+        }
+    }
+
+    // Timeline: step1 (3.5s) → step2 (3.5s) → step3 (3s) → close
+    introTimer = setTimeout(() => {
+        nextStep(); // → step 2
+        introTimer = setTimeout(() => {
+            nextStep(); // → step 3 (logo)
+            introTimer = setTimeout(() => {
+                closeIntro();
+            }, 3500);
+        }, 3500);
+    }, 3500);
+
+    // Skip button
+    $('intro-skip').addEventListener('click', () => {
+        clearTimeout(introTimer);
+        clearInterval(slideTimer);
+        closeIntro();
+    });
+
+    function closeIntro() {
+        clearInterval(slideTimer);
+        intro.classList.add('hidden');
+        document.body.style.overflow = '';
+        // Remove from DOM after animation
+        setTimeout(() => { if (intro.parentNode) intro.parentNode.removeChild(intro); }, 1000);
+    }
+
+    // Block scroll during intro
+    document.body.style.overflow = 'hidden';
 }
 
 // ── Render Products ──
