@@ -41,6 +41,7 @@ function init() {
     renderProducts('all');
     bindEvents();
     initScrollAnimations();
+    initHeroCarousel();
     setMinDate();
     lucide.createIcons();
     // Launch intro cinematic
@@ -126,7 +127,7 @@ function renderProducts(cat) {
                 <p class="product-card-desc">${p.desc}</p>
                 <div class="product-card-footer">
                     <span class="product-card-price">${fmtPrice(p.price)}</span>
-                    <button class="btn-add" onclick="SLP.addToCart(${p.id})" aria-label="Ajouter ${p.name} au panier">
+                    <button class="btn-add" onclick="SLP.openCustom(${p.id})" aria-label="Ajouter ${p.name} au panier">
                         <i data-lucide="plus" class="icon-sm"></i> Ajouter
                     </button>
                 </div>
@@ -190,21 +191,32 @@ function updateCartUI() {
     // Render items
     const existingItems = cartDrawerBody.querySelectorAll('.cart-item');
     existingItems.forEach(el => el.remove());
-    cart.forEach(item => {
+    cart.forEach((item, idx) => {
         const div = document.createElement('div');
         div.className = 'cart-item';
+        let customInfo = '';
+        if (item.removed && item.removed.length > 0) {
+            customInfo += `<div class="cart-item-custom cart-item-sans">Sans : ${item.removed.join(', ')}</div>`;
+        }
+        if (item.added && item.added.length > 0) {
+            customInfo += `<div class="cart-item-custom cart-item-avec">+ ${item.added.join(', ')}</div>`;
+        }
+        if (item.notes) {
+            customInfo += `<div class="cart-item-custom cart-item-note">"${item.notes}"</div>`;
+        }
         div.innerHTML = `
             <div class="cart-item-img"><img src="${item.img}" alt="${item.name}" loading="lazy"></div>
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
+                ${customInfo}
                 <div class="cart-item-price">${fmtPrice(item.price)}</div>
             </div>
             <div class="cart-item-qty">
-                <button class="qty-btn" onclick="SLP.updateQty(${item.id},-1)" aria-label="Diminuer quantité">−</button>
+                <button class="qty-btn" onclick="SLP.updateQtyIdx(${idx},-1)" aria-label="Diminuer quantité">−</button>
                 <span>${item.qty}</span>
-                <button class="qty-btn" onclick="SLP.updateQty(${item.id},1)" aria-label="Augmenter quantité">+</button>
+                <button class="qty-btn" onclick="SLP.updateQtyIdx(${idx},1)" aria-label="Augmenter quantité">+</button>
             </div>
-            <button class="cart-item-remove" onclick="SLP.removeFromCart(${item.id})" aria-label="Supprimer ${item.name}">
+            <button class="cart-item-remove" onclick="SLP.removeIdx(${idx})" aria-label="Supprimer ${item.name}">
                 <i data-lucide="trash-2" class="icon-sm"></i>
             </button>
         `;
@@ -272,8 +284,187 @@ function setMinDate() {
     if (devisDate) devisDate.min = minStr;
 }
 
+// ═══════════════════════════════════════
+// PRODUCT CUSTOMIZATION MODAL
+// ═══════════════════════════════════════
+let customProduct = null;
+let customQty = 1;
+let customRemoved = [];
+let customAdded = [];
+
+function openCustomModal(id) {
+    const product = PRODUCTS.find(p => p.id === id);
+    if (!product) return;
+    customProduct = product;
+    customQty = 1;
+    customRemoved = [];
+    customAdded = [];
+
+    // Fill header
+    $('custom-img').innerHTML = `<img src="${product.img}" alt="${product.name}" loading="lazy">`;
+    $('custom-name').textContent = product.name;
+    $('custom-desc').textContent = product.desc;
+    $('custom-price').textContent = fmtPrice(product.price);
+    $('custom-notes').value = '';
+    $('custom-qty-val').textContent = '1';
+
+    // Fill removable ingredients
+    const ingredients = INGREDIENTS[product.cat] || [];
+    const removeList = $('custom-remove-list');
+    if (ingredients.length > 0) {
+        removeList.parentElement.style.display = '';
+        removeList.innerHTML = ingredients.map(ing => `
+            <label class="custom-chip custom-chip-remove" data-ing="${ing}">
+                <input type="checkbox" checked> ${ing}
+            </label>
+        `).join('');
+        removeList.querySelectorAll('.custom-chip-remove').forEach(chip => {
+            chip.addEventListener('click', function(e) {
+                e.preventDefault();
+                const cb = this.querySelector('input');
+                cb.checked = !cb.checked;
+                this.classList.toggle('unchecked', !cb.checked);
+            });
+        });
+    } else {
+        removeList.parentElement.style.display = 'none';
+    }
+
+    // Fill supplements (skip for desserts/boissons)
+    const addList = $('custom-add-list');
+    if (['dessert','boisson','accompagnement'].includes(product.cat)) {
+        addList.parentElement.style.display = 'none';
+    } else {
+        addList.parentElement.style.display = '';
+        addList.innerHTML = SUPPLEMENTS.map(sup => `
+            <label class="custom-chip custom-chip-add" data-sup="${sup.name}" data-price="${sup.price}">
+                <input type="checkbox"> ${sup.name}${sup.price > 0 ? ` <span class="custom-chip-price">+${fmtPrice(sup.price)}</span>` : ''}
+            </label>
+        `).join('');
+        addList.querySelectorAll('.custom-chip-add').forEach(chip => {
+            chip.addEventListener('click', function(e) {
+                e.preventDefault();
+                const cb = this.querySelector('input');
+                cb.checked = !cb.checked;
+                this.classList.toggle('checked', cb.checked);
+                updateCustomTotal();
+            });
+        });
+    }
+
+    updateCustomTotal();
+
+    // Qty buttons
+    $('custom-qty-minus').onclick = () => { if (customQty > 1) { customQty--; $('custom-qty-val').textContent = customQty; updateCustomTotal(); } };
+    $('custom-qty-plus').onclick = () => { customQty++; $('custom-qty-val').textContent = customQty; updateCustomTotal(); };
+
+    // Add to cart button
+    $('custom-add-btn').onclick = addCustomToCart;
+
+    // Close
+    $('custom-close').onclick = closeCustomModal;
+
+    // Open
+    $('custom-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    lucide.createIcons();
+}
+
+function closeCustomModal() {
+    $('custom-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function updateCustomTotal() {
+    let supTotal = 0;
+    $('custom-add-list').querySelectorAll('.custom-chip-add').forEach(chip => {
+        if (chip.querySelector('input').checked) {
+            supTotal += parseFloat(chip.dataset.price) || 0;
+        }
+    });
+    const lineTotal = (customProduct.price + supTotal) * customQty;
+    $('custom-total').textContent = fmtPrice(lineTotal);
+}
+
+function addCustomToCart() {
+    // Gather removed ingredients
+    const removed = [];
+    $('custom-remove-list').querySelectorAll('.custom-chip-remove').forEach(chip => {
+        if (!chip.querySelector('input').checked) {
+            removed.push(chip.dataset.ing);
+        }
+    });
+    // Gather added supplements
+    const added = [];
+    let supTotal = 0;
+    $('custom-add-list').querySelectorAll('.custom-chip-add').forEach(chip => {
+        if (chip.querySelector('input').checked) {
+            added.push(chip.dataset.sup);
+            supTotal += parseFloat(chip.dataset.price) || 0;
+        }
+    });
+    const notes = $('custom-notes').value.trim();
+
+    // Build unique key for this customization
+    const customKey = `${customProduct.id}-${removed.sort().join(',')}-${added.sort().join(',')}-${notes}`;
+
+    // Check if identical customization exists
+    const existing = cart.find(c => c.customKey === customKey);
+    if (existing) {
+        existing.qty += customQty;
+    } else {
+        cart.push({
+            ...customProduct,
+            price: customProduct.price + supTotal,
+            qty: customQty,
+            customKey,
+            removed: removed.length > 0 ? removed : null,
+            added: added.length > 0 ? added : null,
+            notes: notes || null,
+        });
+    }
+
+    saveCart();
+    updateCartUI();
+    closeCustomModal();
+    showToast(`${customProduct.name} ajouté au panier`);
+    cartBadge.style.transform = 'scale(1.4)';
+    setTimeout(() => { cartBadge.style.transform = 'scale(1)'; }, 300);
+}
+
+// ── Hero Carousel ──
+function initHeroCarousel() {
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+    if (slides.length <= 1) return;
+    let idx = 0;
+    function goSlide(n) {
+        slides[idx].classList.remove('active');
+        dots[idx].classList.remove('active');
+        idx = n % slides.length;
+        slides[idx].classList.add('active');
+        dots[idx].classList.add('active');
+    }
+    setInterval(() => goSlide(idx + 1), 5000);
+    dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => goSlide(i));
+    });
+}
+
+// Cart by index (for customized items)
+function updateQtyIdx(idx, delta) {
+    if (!cart[idx]) return;
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    saveCart(); updateCartUI();
+}
+function removeIdx(idx) {
+    cart.splice(idx, 1);
+    saveCart(); updateCartUI();
+}
+
 // ── Expose globals ──
-window.SLP = { addToCart, removeFromCart, updateQty };
+window.SLP = { addToCart, removeFromCart, updateQty, openCustom: openCustomModal, updateQtyIdx, removeIdx };
 
 // ── Bind events ──
 function bindEvents() {
