@@ -44,8 +44,6 @@ function init() {
     initHeroCarousel();
     setMinDate();
     lucide.createIcons();
-    // Launch intro cinematic
-    startIntro();
 }
 
 // ═══════════════════════════════════════
