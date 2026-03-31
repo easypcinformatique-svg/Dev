@@ -653,6 +653,9 @@ input[type="range"]::-webkit-slider-thumb {
 .contact-item p { font-size:.9rem; color:var(--color-text-light); }
 .contact-item a { color:var(--color-text); }
 .contact-item a:hover { color:var(--color-primary); }
+.contact-item-link { text-decoration:none; display:flex; gap:14px; cursor:pointer; }
+.contact-item-link:hover { color:var(--color-primary); }
+.contact-item-link:hover i { color:var(--color-gold); }
 .contact-hours { margin-top:24px; margin-bottom:24px; }
 .contact-hours h4 { display:flex; align-items:center; gap:8px; font-family:var(--font-heading); font-size:.92rem; margin-bottom:12px; }
 .contact-hours table { width:100%; font-size:.88rem; }
