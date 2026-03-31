@@ -81,74 +81,91 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); color: var(--color-dark); lin
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.intro-content { position:relative; z-index:3; text-align:center; padding:0 24px; }
+.intro-content {
+    position:absolute; inset:0; z-index:3;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:0 24px;
+}
 
 .intro-step {
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    opacity:0; visibility:hidden;
+    opacity:0; visibility:hidden; pointer-events:none;
     transition:opacity .8s ease, transform .8s ease, visibility .8s ease;
     width:90vw; max-width:600px;
 }
-.intro-step.active { opacity:1; visibility:visible; transform:translate(-50%,-50%) scale(1); }
-.intro-step.exit { opacity:0; transform:translate(-50%,-50%) scale(.95); }
+.intro-step.active { opacity:1; visibility:visible; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+.intro-step.exit { opacity:0; visibility:hidden; transform:translate(-50%,-50%) scale(.95); }
+
+/* Step children: only animate when parent step is active */
+.intro-step .intro-armenian-symbol,
+.intro-step .intro-origin-text,
+.intro-step .intro-origin-sub,
+.intro-step .intro-heritage-text,
+.intro-step .intro-line,
+.intro-step .intro-heritage-sub,
+.intro-step .intro-logo-name,
+.intro-step .intro-logo-line,
+.intro-step .intro-logo-tagline,
+.intro-step .intro-logo-city { opacity:0; transform:translateY(20px); }
+
+.intro-step.active .intro-armenian-symbol { animation:introFadeUp 1s ease .3s forwards; }
+.intro-step.active .intro-origin-text { animation:introFadeUp .8s ease .8s forwards; }
+.intro-step.active .intro-origin-sub { animation:introFadeUp .8s ease 1.2s forwards; }
+.intro-step.active .intro-heritage-text { animation:introFadeUp .8s ease .2s forwards; }
+.intro-step.active .intro-line { animation:introFadeUp .6s ease .6s forwards; }
+.intro-step.active .intro-heritage-sub { animation:introFadeUp .8s ease .9s forwards; }
+.intro-step.active .intro-logo-name { animation:introFadeUp 1s ease .2s forwards; }
+.intro-step.active .intro-logo-line { animation:introFadeUp .6s ease .7s forwards; }
+.intro-step.active .intro-logo-tagline { animation:introFadeUp .8s ease 1s forwards; }
+.intro-step.active .intro-logo-city { animation:introFadeUp .8s ease 1.3s forwards; }
 
 /* Step 1 — Armenian origins */
 .intro-armenian-symbol {
     font-size:6rem; color:var(--color-gold); margin-bottom:20px;
-    opacity:0; animation:introFadeUp 1s ease .3s forwards;
     font-family:serif; line-height:1;
 }
 .intro-origin-text {
     font-family:var(--font-display); font-size:1.8rem; color:#fff;
-    opacity:0; animation:introFadeUp .8s ease .8s forwards;
     letter-spacing:1px;
 }
 .intro-origin-sub {
     font-family:var(--font-heading); font-size:1rem;
     color:var(--color-gold); margin-top:12px;
-    opacity:0; animation:introFadeUp .8s ease 1.2s forwards;
     letter-spacing:3px; text-transform:uppercase; font-weight:500;
 }
 
 /* Step 2 — Heritage */
 .intro-heritage-text {
     font-family:var(--font-display); font-size:2.2rem; color:#fff;
-    opacity:0; animation:introFadeUp .8s ease .2s forwards;
     font-weight:700;
 }
 .intro-line {
     width:60px; height:2px; background:var(--color-gold);
-    margin:20px auto; opacity:0;
-    animation:introFadeUp .6s ease .6s forwards;
+    margin:20px auto;
 }
 .intro-heritage-sub {
     font-family:var(--font-body); font-size:1.1rem;
     color:rgba(255,255,255,.8); line-height:1.8;
-    opacity:0; animation:introFadeUp .8s ease .9s forwards;
 }
 
 /* Step 3 — Logo reveal */
 .intro-logo-reveal { display:flex; flex-direction:column; align-items:center; gap:8px; }
 .intro-logo-name {
     font-family:var(--font-display); font-size:3.5rem; font-weight:700;
-    color:#fff; opacity:0; animation:introFadeUp 1s ease .2s forwards;
-    letter-spacing:-1px;
+    color:#fff; letter-spacing:-1px;
 }
 .intro-logo-dot { color:var(--color-gold); }
 .intro-logo-line {
     width:80px; height:3px; background:var(--color-gold);
-    opacity:0; animation:introFadeUp .6s ease .7s forwards;
 }
 .intro-logo-tagline {
     font-family:var(--font-heading); font-size:.9rem;
     color:var(--color-gold); text-transform:uppercase;
     letter-spacing:4px; font-weight:600;
-    opacity:0; animation:introFadeUp .8s ease 1s forwards;
 }
 .intro-logo-city {
     font-family:var(--font-body); font-size:.85rem;
     color:rgba(255,255,255,.6); margin-top:4px;
-    opacity:0; animation:introFadeUp .8s ease 1.3s forwards;
 }
 
 @keyframes introFadeUp {
