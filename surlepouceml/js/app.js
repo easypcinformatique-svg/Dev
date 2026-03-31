@@ -43,7 +43,50 @@ function init() {
     initScrollAnimations();
     initHeroCarousel();
     setMinDate();
+    updateOpenStatus();
+    setInterval(updateOpenStatus, 60000); // refresh every minute
     lucide.createIcons();
+}
+
+// ── Open/Closed Status ──
+function updateOpenStatus() {
+    const badge = $('status-badge');
+    if (!badge) return;
+    const now = new Date();
+    const day = now.getDay(); // 0=dim
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const time = h * 60 + m; // minutes since midnight
+
+    // Fermé dimanche (0)
+    if (day === 0) {
+        badge.className = 'status-badge status-closed';
+        badge.textContent = 'Fermé aujourd\'hui';
+        return;
+    }
+
+    // Horaires : Boutique 8h30-15h00, Commandes tel 8h30-11h30, Livraison 11h30-13h30
+    const open = 8 * 60 + 30;    // 8h30
+    const orderEnd = 11 * 60 + 30; // 11h30
+    const delivEnd = 13 * 60 + 30; // 13h30
+    const close = 15 * 60;         // 15h00
+
+    if (time < open) {
+        badge.className = 'status-badge status-closed';
+        badge.textContent = 'Fermé · Ouvre à 8h30';
+    } else if (time < orderEnd) {
+        badge.className = 'status-badge status-orders';
+        badge.textContent = 'Ouvert · Commandes en cours';
+    } else if (time < delivEnd) {
+        badge.className = 'status-badge status-delivery';
+        badge.textContent = 'Ouvert · Livraisons en cours';
+    } else if (time < close) {
+        badge.className = 'status-badge status-open';
+        badge.textContent = 'Ouvert';
+    } else {
+        badge.className = 'status-badge status-closed';
+        badge.textContent = 'Fermé · Ouvre demain 8h30';
+    }
 }
 
 // ═══════════════════════════════════════
