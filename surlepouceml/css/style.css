@@ -56,65 +56,44 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); color: var(--color-dark); lin
 /* ── Cinématique Intro ── */
 .intro {
     position:fixed; inset:0; z-index:9999;
-    display:flex; align-items:center; justify-content:center;
-    overflow:hidden; transition:opacity .8s ease, visibility .8s ease;
+    background:#111; overflow:hidden;
+    transition:opacity 1s ease, visibility 1s ease;
 }
 .intro.hidden { opacity:0; visibility:hidden; pointer-events:none; }
 
-.intro-slideshow { position:absolute; inset:0; }
+.intro-slideshow { position:absolute; inset:0; width:100%; height:100%; }
 .intro-slide {
-    position:absolute; inset:0;
+    position:absolute; inset:0; width:100%; height:100%;
     background-size:cover; background-position:center;
-    opacity:0; transition:opacity 1.5s ease;
+    opacity:0; transition:opacity 1.8s ease;
 }
 .intro-slide.active { opacity:1; }
 
 .intro-overlay {
     position:absolute; inset:0; z-index:1;
-    background:rgba(26,26,26,.4);
+    background:rgba(0,0,0,.35);
 }
-.intro-grain {
-    position:absolute; inset:0; z-index:2; opacity:.04;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+.intro-grain { display:none; }
 
 .intro-content {
     position:absolute; inset:0; z-index:3;
-    display:flex; align-items:center; justify-content:center;
-    text-align:center; padding:0 24px;
 }
 
 .intro-step {
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    opacity:0; visibility:hidden; pointer-events:none;
-    transition:opacity .8s ease, transform .8s ease, visibility .8s ease;
-    width:90vw; max-width:600px;
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 1s ease;
+    padding:0 24px;
 }
-.intro-step.active { opacity:1; visibility:visible; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
-.intro-step.exit { opacity:0; visibility:hidden; transform:translate(-50%,-50%) scale(.95); }
+.intro-step.active { opacity:1; pointer-events:auto; }
 
-/* Step children: only animate when parent step is active */
-.intro-step .intro-armenian-symbol,
-.intro-step .intro-origin-text,
-.intro-step .intro-origin-sub,
-.intro-step .intro-heritage-text,
-.intro-step .intro-line,
-.intro-step .intro-heritage-sub,
-.intro-step .intro-logo-name,
-.intro-step .intro-logo-line,
-.intro-step .intro-logo-tagline,
-.intro-step .intro-logo-city { opacity:0; transform:translateY(20px); }
-
-.intro-step.active .intro-armenian-symbol { animation:introFadeUp 1s ease .3s forwards; }
-.intro-step.active .intro-origin-text { animation:introFadeUp .8s ease .8s forwards; }
-.intro-step.active .intro-origin-sub { animation:introFadeUp .8s ease 1.2s forwards; }
-.intro-step.active .intro-heritage-text { animation:introFadeUp .8s ease .2s forwards; }
-.intro-step.active .intro-line { animation:introFadeUp .6s ease .6s forwards; }
-.intro-step.active .intro-heritage-sub { animation:introFadeUp .8s ease .9s forwards; }
-.intro-step.active .intro-logo-name { animation:introFadeUp 1s ease .2s forwards; }
-.intro-step.active .intro-logo-line { animation:introFadeUp .6s ease .7s forwards; }
-.intro-step.active .intro-logo-tagline { animation:introFadeUp .8s ease 1s forwards; }
-.intro-step.active .intro-logo-city { animation:introFadeUp .8s ease 1.3s forwards; }
+/* All step children hidden by default, shown via JS class */
+.intro-step > * { opacity:0; transform:translateY(25px); transition:opacity .8s ease, transform .8s ease; }
+.intro-step.active > *:nth-child(1) { opacity:1; transform:translateY(0); transition-delay:.3s; }
+.intro-step.active > *:nth-child(2) { opacity:1; transform:translateY(0); transition-delay:.8s; }
+.intro-step.active > *:nth-child(3) { opacity:1; transform:translateY(0); transition-delay:1.2s; }
+.intro-step.active > *:nth-child(4) { opacity:1; transform:translateY(0); transition-delay:1.5s; }
 
 /* Step 1 — Armenian origins */
 .intro-armenian-symbol {
