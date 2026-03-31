@@ -55,7 +55,7 @@ const PRODUCTS = [
     { id:40, name:"Frites Maison", desc:"Frites dorées faites maison", price:3.00, cat:"accompagnement",
       img:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600" },
     { id:41, name:"Pain Pita (2 pcs)", desc:"Pain pita chaud maison", price:2.00, cat:"accompagnement",
-      img:"https://images.unsplash.com/photo-1586444248879-bc604bc77f34?w=600" },
+      img:"https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600" },
     { id:42, name:"Riz Pilaf", desc:"Riz au beurre et vermicelles", price:3.50, cat:"accompagnement",
       img:"https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600" },
     { id:43, name:"Salade Verte", desc:"Salade verte assaisonnée", price:2.50, cat:"accompagnement",
