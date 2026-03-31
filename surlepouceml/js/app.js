@@ -1,435 +1,505 @@
-// ========================================
-// Sur Le Pouce ML - E-commerce Application
-// Cart, Ordering & Checkout
-// ========================================
+/* ═══════════════════════════════════════
+   Sur Le Pouce ML — Application
+   Part 1: Init, Products, Cart
+   ═══════════════════════════════════════ */
+(function(){
+'use strict';
 
-(function() {
-    'use strict';
+let cart = [];
+let currentCat = 'all';
 
-    // ---- State ----
-    let cart = [];
-    let currentCategory = 'all';
+// ── DOM refs ──
+const $ = id => document.getElementById(id);
+const productsGrid = $('products-grid');
+const filterBar = $('filter-bar');
+const cartBadge = $('cart-badge');
+const cartToggle = $('cart-toggle');
+const cartOverlay = $('cart-overlay');
+const cartDrawer = $('cart-drawer');
+const cartDrawerClose = $('cart-drawer-close');
+const cartDrawerBody = $('cart-drawer-body');
+const cartDrawerFooter = $('cart-drawer-footer');
+const cartEmpty = $('cart-empty');
+const cartSubtotalVal = $('cart-subtotal-val');
+const btnCheckout = $('btn-checkout');
+const btnContinue = $('btn-continue');
+const cartEmptyBrowse = $('cart-empty-browse');
+const checkoutOverlay = $('checkout-overlay');
+const checkoutClose = $('checkout-close');
+const menuBurger = $('menu-burger');
+const navLinks = $('nav-links');
+const mobileOverlay = $('mobile-overlay');
+const loader = $('loader');
+const toast = $('toast');
 
-    // ---- DOM Elements ----
-    const productsGrid = document.getElementById('products-grid');
-    const cartIcon = document.getElementById('cart-icon');
-    const cartSidebar = document.getElementById('cart-sidebar');
-    const cartOverlay = document.getElementById('cart-overlay');
-    const cartClose = document.getElementById('cart-close');
-    const cartItems = document.getElementById('cart-items');
-    const cartFooter = document.getElementById('cart-footer');
-    const cartCount = document.getElementById('cart-count');
-    const cartTotalPrice = document.getElementById('cart-total-price');
-    const btnCheckout = document.getElementById('btn-checkout');
-    const checkoutModal = document.getElementById('checkout-modal');
-    const modalClose = document.getElementById('modal-close');
-    const checkoutForm = document.getElementById('checkout-form');
-    const orderSummary = document.getElementById('order-summary');
-    const confirmationModal = document.getElementById('confirmation-modal');
-    const confirmationDetails = document.getElementById('confirmation-details');
-    const contactForm = document.getElementById('contact-form');
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navLinks = document.querySelector('.nav-links');
-    const categoryTabs = document.querySelectorAll('.cat-tab');
+// ── Format price ──
+function fmtPrice(n) { return n.toFixed(2).replace('.',',') + ' €'; }
 
-    // ---- Init ----
-    function init() {
-        renderProducts('all');
-        bindEvents();
-        setMinDate();
-        loadCartFromStorage();
-    }
+// ── Init ──
+function init() {
+    loadCart();
+    renderProducts('all');
+    bindEvents();
+    initScrollAnimations();
+    setMinDate();
+    lucide.createIcons();
+    // Hide loader
+    setTimeout(() => { loader.classList.add('hidden'); }, 600);
+}
 
-    // ---- Render Products ----
-    function renderProducts(category) {
-        currentCategory = category;
-        const filtered = category === 'all'
-            ? PRODUCTS
-            : PRODUCTS.filter(p => p.category === category);
-
-        productsGrid.innerHTML = filtered.map(product => `
-            <div class="product-card" data-category="${product.category}">
-                <div class="product-image">
-                    <span>${product.emoji}</span>
-                    ${product.badge ? `<span class="product-badge">${product.badge}</span>` : ''}
-                </div>
-                <div class="product-info">
-                    <span class="product-category">${CATEGORY_LABELS[product.category] || product.category}</span>
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-desc">${product.desc}</p>
-                    <div class="product-footer">
-                        <span class="product-price">${formatPrice(product.price)}</span>
-                        <button class="btn-add-cart" onclick="addToCart(${product.id})">+ Ajouter</button>
-                    </div>
+// ── Render Products ──
+function renderProducts(cat) {
+    currentCat = cat;
+    const items = cat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === cat);
+    productsGrid.innerHTML = items.map((p, i) => `
+        <div class="product-card animate-on-scroll" style="transition-delay:${(i % 6) * 80}ms" data-cat="${p.cat}">
+            <div class="product-card-img">
+                <img src="${p.img}" alt="${p.name}" loading="lazy">
+                ${p.badge ? `<span class="product-badge badge-${p.badgeType}">${p.badge}</span>` : ''}
+            </div>
+            <div class="product-card-body">
+                <h3 class="product-card-name">${p.name}</h3>
+                <p class="product-card-desc">${p.desc}</p>
+                <div class="product-card-footer">
+                    <span class="product-card-price">${fmtPrice(p.price)}</span>
+                    <button class="btn-add" onclick="SLP.addToCart(${p.id})" aria-label="Ajouter ${p.name} au panier">
+                        <i data-lucide="plus" class="icon-sm"></i> Ajouter
+                    </button>
                 </div>
             </div>
-        `).join('');
-    }
-
-    // ---- Category Tabs ----
-    function bindCategoryTabs() {
-        categoryTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                categoryTabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderProducts(tab.dataset.category);
-            });
+        </div>
+    `).join('');
+    lucide.createIcons();
+    // Re-observe new cards
+    requestAnimationFrame(() => {
+        document.querySelectorAll('.product-card.animate-on-scroll').forEach(el => {
+            scrollObserver.observe(el);
         });
+    });
+}
+
+// ── Cart Logic ──
+function addToCart(id) {
+    const product = PRODUCTS.find(p => p.id === id);
+    if (!product) return;
+    const existing = cart.find(c => c.id === id);
+    if (existing) { existing.qty++; }
+    else { cart.push({ ...product, qty: 1 }); }
+    saveCart();
+    updateCartUI();
+    showToast(product.name + ' ajouté au panier');
+    // Animate badge
+    cartBadge.style.transform = 'scale(1.4)';
+    setTimeout(() => { cartBadge.style.transform = 'scale(1)'; }, 300);
+}
+
+function removeFromCart(id) {
+    cart = cart.filter(c => c.id !== id);
+    saveCart();
+    updateCartUI();
+}
+
+function updateQty(id, delta) {
+    const item = cart.find(c => c.id === id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) { removeFromCart(id); return; }
+    saveCart();
+    updateCartUI();
+}
+
+function getTotal() { return cart.reduce((s, c) => s + c.price * c.qty, 0); }
+function getCount() { return cart.reduce((s, c) => s + c.qty, 0); }
+
+function updateCartUI() {
+    const count = getCount();
+    cartBadge.textContent = count;
+    if (cart.length === 0) {
+        cartEmpty.hidden = false;
+        cartDrawerFooter.hidden = true;
+        cartDrawerBody.querySelectorAll('.cart-item').forEach(el => el.remove());
+        return;
     }
-
-    // ---- Cart Functions ----
-    window.addToCart = function(productId) {
-        const product = PRODUCTS.find(p => p.id === productId);
-        if (!product) return;
-
-        const existing = cart.find(item => item.id === productId);
-        if (existing) {
-            existing.qty++;
-        } else {
-            cart.push({ ...product, qty: 1 });
-        }
-
-        updateCartUI();
-        saveCartToStorage();
-        showToast(`${product.name} ajouté au panier`);
-    };
-
-    window.addFormulaToCart = function(name, pricePerPerson, minPersons) {
-        const formulaId = 'formula-' + name.replace(/\s+/g, '-').toLowerCase();
-        const existing = cart.find(item => item.formulaId === formulaId);
-
-        if (existing) {
-            existing.qty += minPersons;
-        } else {
-            cart.push({
-                id: Date.now(),
-                formulaId: formulaId,
-                name: name,
-                desc: `${minPersons} personnes minimum`,
-                price: pricePerPerson,
-                qty: minPersons,
-                emoji: '🎉',
-                isFormula: true
-            });
-        }
-
-        updateCartUI();
-        saveCartToStorage();
-        showToast(`${name} ajouté (${minPersons} pers.)`);
-        openCart();
-    };
-
-    function removeFromCart(index) {
-        cart.splice(index, 1);
-        updateCartUI();
-        saveCartToStorage();
-    }
-
-    function updateQty(index, delta) {
-        cart[index].qty += delta;
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1);
-        }
-        updateCartUI();
-        saveCartToStorage();
-    }
-
-    function getCartTotal() {
-        return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    }
-
-    function getCartCount() {
-        return cart.reduce((sum, item) => sum + item.qty, 0);
-    }
-
-    // ---- Update Cart UI ----
-    function updateCartUI() {
-        const count = getCartCount();
-        cartCount.textContent = count;
-
-        if (cart.length === 0) {
-            cartItems.innerHTML = '<p class="cart-empty">Votre panier est vide</p>';
-            cartFooter.style.display = 'none';
-            return;
-        }
-
-        cartFooter.style.display = 'block';
-        cartTotalPrice.textContent = formatPrice(getCartTotal());
-
-        cartItems.innerHTML = cart.map((item, index) => `
-            <div class="cart-item">
-                <div class="cart-item-icon">${item.emoji}</div>
-                <div class="cart-item-details">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-price">${formatPrice(item.price)}${item.isFormula ? '/pers.' : ''}</div>
-                </div>
-                <div class="cart-item-qty">
-                    <button class="qty-btn" onclick="updateCartQty(${index}, -1)">-</button>
-                    <span>${item.qty}</span>
-                    <button class="qty-btn" onclick="updateCartQty(${index}, 1)">+</button>
-                </div>
+    cartEmpty.hidden = true;
+    cartDrawerFooter.hidden = false;
+    cartSubtotalVal.textContent = fmtPrice(getTotal());
+    // Render items
+    const existingItems = cartDrawerBody.querySelectorAll('.cart-item');
+    existingItems.forEach(el => el.remove());
+    cart.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div class="cart-item-img"><img src="${item.img}" alt="${item.name}" loading="lazy"></div>
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">${fmtPrice(item.price)}</div>
             </div>
-        `).join('');
-    }
-
-    window.updateCartQty = function(index, delta) {
-        updateQty(index, delta);
-    };
-
-    // ---- Cart Open/Close ----
-    function openCart() {
-        cartSidebar.classList.add('active');
-        cartOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeCart() {
-        cartSidebar.classList.remove('active');
-        cartOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    // ---- Checkout ----
-    function openCheckout() {
-        closeCart();
-        renderOrderSummary();
-        checkoutModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeCheckout() {
-        checkoutModal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    function renderOrderSummary() {
-        let html = '<h4>Recapitulatif de commande</h4>';
-        cart.forEach(item => {
-            html += `<div class="order-summary-item">
-                <span>${item.qty}x ${item.name}</span>
-                <span>${formatPrice(item.price * item.qty)}</span>
-            </div>`;
-        });
-        html += `<div class="order-summary-total">
-            <span>Total</span>
-            <span>${formatPrice(getCartTotal())}</span>
-        </div>`;
-        orderSummary.innerHTML = html;
-    }
-
-    function handleCheckout(e) {
-        e.preventDefault();
-
-        const formData = new FormData(checkoutForm);
-        const orderData = {
-            client: {
-                nom: formData.get('nom'),
-                prenom: formData.get('prenom'),
-                email: formData.get('email'),
-                tel: formData.get('tel'),
-                adresse: formData.get('adresse'),
-                cp: formData.get('cp'),
-                ville: formData.get('ville')
-            },
-            livraison: {
-                date: formData.get('date'),
-                heure: formData.get('heure'),
-                mode: formData.get('mode')
-            },
-            notes: formData.get('notes'),
-            items: cart.map(item => ({
-                name: item.name,
-                qty: item.qty,
-                price: item.price,
-                subtotal: item.price * item.qty
-            })),
-            total: getCartTotal(),
-            orderNumber: generateOrderNumber(),
-            orderDate: new Date().toLocaleString('fr-FR')
-        };
-
-        // Show confirmation
-        closeCheckout();
-        showConfirmation(orderData);
-
-        // Send order via email (mailto fallback)
-        sendOrder(orderData);
-
-        // Clear cart
-        cart = [];
-        updateCartUI();
-        saveCartToStorage();
-    }
-
-    function showConfirmation(order) {
-        confirmationDetails.innerHTML = `
-            <p><strong>N° de commande :</strong> ${order.orderNumber}</p>
-            <p><strong>Client :</strong> ${order.client.prenom} ${order.client.nom}</p>
-            <p><strong>Telephone :</strong> ${order.client.tel}</p>
-            <p><strong>Mode :</strong> ${order.livraison.mode === 'livraison' ? 'Livraison' : 'Retrait sur place'}</p>
-            ${order.livraison.mode === 'livraison' ? `<p><strong>Adresse :</strong> ${order.client.adresse}, ${order.client.cp} ${order.client.ville}</p>` : ''}
-            <p><strong>Date :</strong> ${formatDateFR(order.livraison.date)} a ${order.livraison.heure}</p>
-            <hr style="margin:10px 0;border-color:#ddd;">
-            ${order.items.map(i => `<p>${i.qty}x ${i.name} - ${formatPrice(i.subtotal)}</p>`).join('')}
-            <hr style="margin:10px 0;border-color:#ddd;">
-            <p><strong>Total : ${formatPrice(order.total)}</strong></p>
+            <div class="cart-item-qty">
+                <button class="qty-btn" onclick="SLP.updateQty(${item.id},-1)" aria-label="Diminuer quantité">−</button>
+                <span>${item.qty}</span>
+                <button class="qty-btn" onclick="SLP.updateQty(${item.id},1)" aria-label="Augmenter quantité">+</button>
+            </div>
+            <button class="cart-item-remove" onclick="SLP.removeFromCart(${item.id})" aria-label="Supprimer ${item.name}">
+                <i data-lucide="trash-2" class="icon-sm"></i>
+            </button>
         `;
-        confirmationModal.classList.add('active');
-    }
+        cartDrawerBody.appendChild(div);
+    });
+    lucide.createIcons();
+}
 
-    function sendOrder(order) {
-        const subject = encodeURIComponent(`Nouvelle commande #${order.orderNumber} - Sur Le Pouce`);
-        const itemsList = order.items.map(i => `  ${i.qty}x ${i.name} - ${formatPrice(i.subtotal)}`).join('\n');
-        const body = encodeURIComponent(
-            `NOUVELLE COMMANDE #${order.orderNumber}\n` +
-            `Date: ${order.orderDate}\n\n` +
-            `CLIENT:\n` +
-            `Nom: ${order.client.prenom} ${order.client.nom}\n` +
-            `Email: ${order.client.email}\n` +
-            `Tel: ${order.client.tel}\n` +
-            `Adresse: ${order.client.adresse}, ${order.client.cp} ${order.client.ville}\n\n` +
-            `LIVRAISON:\n` +
-            `Mode: ${order.livraison.mode}\n` +
-            `Date: ${formatDateFR(order.livraison.date)} a ${order.livraison.heure}\n\n` +
-            `COMMANDE:\n${itemsList}\n\n` +
-            `TOTAL: ${formatPrice(order.total)}\n\n` +
-            `Notes: ${order.notes || 'Aucune'}`
-        );
+// ── Cart drawer ──
+function openCart() {
+    cartDrawer.classList.add('active');
+    cartOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+    cartDrawer.classList.remove('active');
+    cartOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
 
-        // Open mailto as fallback - in production, use a backend API
-        window.open(`mailto:contact@surlepouceml.fr?subject=${subject}&body=${body}`, '_blank');
-    }
+// ── Storage ──
+function saveCart() {
+    try { localStorage.setItem('slp_cart', JSON.stringify(cart)); } catch(e) {}
+}
+function loadCart() {
+    try {
+        const d = localStorage.getItem('slp_cart');
+        if (d) { cart = JSON.parse(d); updateCartUI(); }
+    } catch(e) {}
+}
 
-    // ---- Contact Form ----
-    function handleContact(e) {
-        e.preventDefault();
-        const nom = document.getElementById('devis-nom').value;
-        const email = document.getElementById('devis-email').value;
-        const tel = document.getElementById('devis-tel').value;
-        const event = document.getElementById('devis-event').value;
-        const personnes = document.getElementById('devis-personnes').value;
-        const message = document.getElementById('devis-message').value;
+// ── Toast ──
+function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
 
-        const subject = encodeURIComponent(`Demande de devis - ${event} - Sur Le Pouce`);
-        const body = encodeURIComponent(
-            `DEMANDE DE DEVIS\n\n` +
-            `Nom: ${nom}\nEmail: ${email}\nTel: ${tel}\n` +
-            `Evenement: ${event}\nNombre de personnes: ${personnes}\n\n` +
-            `Message:\n${message}`
-        );
-
-        window.open(`mailto:contact@surlepouceml.fr?subject=${subject}&body=${body}`, '_blank');
-        showToast('Demande de devis envoyee !');
-        contactForm.reset();
-    }
-
-    // ---- Utilities ----
-    function formatPrice(price) {
-        return price.toFixed(2).replace('.', ',') + ' \u20AC';
-    }
-
-    function formatDateFR(dateStr) {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }
-
-    function generateOrderNumber() {
-        const now = new Date();
-        return 'SLP' + now.getFullYear().toString().slice(2) +
-            String(now.getMonth() + 1).padStart(2, '0') +
-            String(now.getDate()).padStart(2, '0') +
-            String(now.getHours()).padStart(2, '0') +
-            String(now.getMinutes()).padStart(2, '0') +
-            String(Math.floor(Math.random() * 100)).padStart(2, '0');
-    }
-
-    function setMinDate() {
-        const dateInput = document.getElementById('delivery-date');
-        if (dateInput) {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            dateInput.min = tomorrow.toISOString().split('T')[0];
-        }
-    }
-
-    function showToast(message) {
-        let toast = document.querySelector('.toast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.className = 'toast';
-            document.body.appendChild(toast);
-        }
-        toast.textContent = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-
-    function saveCartToStorage() {
-        try {
-            localStorage.setItem('slp_cart', JSON.stringify(cart));
-        } catch (e) { /* ignore */ }
-    }
-
-    function loadCartFromStorage() {
-        try {
-            const saved = localStorage.getItem('slp_cart');
-            if (saved) {
-                cart = JSON.parse(saved);
-                updateCartUI();
-            }
-        } catch (e) { /* ignore */ }
-    }
-
-    // ---- Event Bindings ----
-    function bindEvents() {
-        // Cart
-        cartIcon.addEventListener('click', openCart);
-        cartOverlay.addEventListener('click', closeCart);
-        cartClose.addEventListener('click', closeCart);
-        btnCheckout.addEventListener('click', openCheckout);
-
-        // Checkout modal
-        modalClose.addEventListener('click', closeCheckout);
-        checkoutForm.addEventListener('submit', handleCheckout);
-
-        // Contact form
-        contactForm.addEventListener('submit', handleContact);
-
-        // Mobile menu
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
-
-        // Close mobile menu on link click
-        navLinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => navLinks.classList.remove('active'));
-        });
-
-        // Category tabs
-        bindCategoryTabs();
-
-        // Close modals on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeCart();
-                closeCheckout();
+// ── Scroll animations ──
+let scrollObserver;
+function initScrollAnimations() {
+    scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                scrollObserver.unobserve(entry.target);
             }
         });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.animate-on-scroll').forEach(el => scrollObserver.observe(el));
+}
 
-        // Smooth scroll offset for fixed header
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    e.preventDefault();
-                    const offset = 100;
-                    const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
-                    window.scrollTo({ top, behavior: 'smooth' });
-                }
-            });
-        });
+// ── Min date ──
+function setMinDate() {
+    const dateInput = $('c-date');
+    const devisDate = $('devis-date');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Skip to Monday if weekend
+    while (tomorrow.getDay() === 0 || tomorrow.getDay() === 6) {
+        tomorrow.setDate(tomorrow.getDate() + 1);
     }
+    const minStr = tomorrow.toISOString().split('T')[0];
+    if (dateInput) dateInput.min = minStr;
+    if (devisDate) devisDate.min = minStr;
+}
 
-    // ---- Start ----
-    document.addEventListener('DOMContentLoaded', init);
+// ── Expose globals ──
+window.SLP = { addToCart, removeFromCart, updateQty };
+
+// ── Bind events ──
+function bindEvents() {
+    // Cart
+    cartToggle.addEventListener('click', openCart);
+    cartOverlay.addEventListener('click', closeCart);
+    cartDrawerClose.addEventListener('click', closeCart);
+    btnContinue.addEventListener('click', closeCart);
+    cartEmptyBrowse.addEventListener('click', () => {
+        closeCart();
+        document.getElementById('carte').scrollIntoView({behavior:'smooth'});
+    });
+
+    // Mobile menu
+    menuBurger.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        mobileOverlay.classList.toggle('active');
+    });
+    mobileOverlay.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        mobileOverlay.classList.remove('active');
+    });
+    navLinks.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+            mobileOverlay.classList.remove('active');
+        });
+    });
+
+    // Filters
+    filterBar.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBar.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProducts(btn.dataset.cat);
+        });
+    });
+
+    // Smooth scroll with offset
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            const target = document.querySelector(a.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                const top = target.getBoundingClientRect().top + window.pageYOffset - 100;
+                window.scrollTo({ top, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // Escape key
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeCart(); closeCheckout(); }
+    });
+
+    // Checkout
+    btnCheckout.addEventListener('click', openCheckout);
+    checkoutClose.addEventListener('click', closeCheckout);
+    $('btn-to-step2').addEventListener('click', goToStep2);
+    $('btn-to-step3').addEventListener('click', goToStep3);
+    $('btn-back-1').addEventListener('click', () => goToStep(1));
+    $('btn-back-2').addEventListener('click', () => goToStep(2));
+    $('btn-confirm').addEventListener('click', confirmOrder);
+    $('btn-back-carte').addEventListener('click', () => {
+        closeCheckout();
+        document.getElementById('carte').scrollIntoView({behavior:'smooth'});
+    });
+
+    // Delivery mode toggle
+    $('c-mode').addEventListener('change', function() {
+        const fields = $('delivery-fields');
+        const heureGroup = $('c-heure-group');
+        if (this.value === 'retrait') {
+            fields.style.display = 'none';
+            heureGroup.style.display = 'none';
+        } else {
+            fields.style.display = '';
+            heureGroup.style.display = '';
+        }
+    });
+
+    // Devis form
+    $('devis-form-el').addEventListener('submit', handleDevis);
+    $('devis-personnes').addEventListener('input', function() {
+        $('devis-personnes-val').textContent = this.value;
+    });
+}
+
+// ═══════════════════════════════════════
+// CHECKOUT LOGIC — 4 Steps
+// ═══════════════════════════════════════
+
+function openCheckout() {
+    closeCart();
+    renderCheckoutStep1();
+    goToStep(1);
+    checkoutOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCheckout() {
+    checkoutOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function goToStep(n) {
+    document.querySelectorAll('.checkout-page').forEach(p => p.classList.remove('active'));
+    $('checkout-page-' + n).classList.add('active');
+    // Update step indicators
+    document.querySelectorAll('.checkout-step').forEach(s => {
+        const sn = parseInt(s.dataset.step);
+        s.classList.remove('active','done');
+        if (sn === n) s.classList.add('active');
+        else if (sn < n) s.classList.add('done');
+    });
+    $('checkout-steps').style.display = n === 4 ? 'none' : '';
+}
+
+function renderCheckoutStep1() {
+    const container = $('checkout-items');
+    container.innerHTML = cart.map(item => `
+        <div class="checkout-item">
+            <div class="checkout-item-img"><img src="${item.img}" alt="${item.name}" loading="lazy"></div>
+            <div class="checkout-item-info">
+                <div class="checkout-item-name">${item.name}</div>
+                <div class="checkout-item-meta">${fmtPrice(item.price)} × ${item.qty}</div>
+            </div>
+            <div class="checkout-item-qty">
+                <button class="qty-btn" onclick="SLP.checkoutQty(${item.id},-1)" aria-label="Diminuer">−</button>
+                <span>${item.qty}</span>
+                <button class="qty-btn" onclick="SLP.checkoutQty(${item.id},1)" aria-label="Augmenter">+</button>
+            </div>
+            <span class="checkout-item-sub">${fmtPrice(item.price * item.qty)}</span>
+        </div>
+    `).join('');
+    $('checkout-total-1').innerHTML = `Total : <strong>${fmtPrice(getTotal())}</strong>`;
+    $('checkout-min-warn').hidden = getTotal() >= 10;
+    lucide.createIcons();
+}
+
+window.SLP.checkoutQty = function(id, delta) {
+    updateQty(id, delta);
+    if (cart.length === 0) { closeCheckout(); return; }
+    renderCheckoutStep1();
+};
+
+function goToStep2() {
+    if (getTotal() < 10) {
+        $('checkout-min-warn').hidden = false;
+        return;
+    }
+    goToStep(2);
+}
+
+function goToStep3() {
+    if (!validateStep2()) return;
+    renderStep3();
+    goToStep(3);
+}
+
+function validateStep2() {
+    let valid = true;
+    const mode = $('c-mode').value;
+    const fields = [
+        { id:'c-nom', err:'err-nom', msg:'Nom requis' },
+        { id:'c-prenom', err:'err-prenom', msg:'Prénom requis' },
+        { id:'c-email', err:'err-email', msg:'Email requis', type:'email' },
+        { id:'c-tel', err:'err-tel', msg:'Téléphone requis' },
+        { id:'c-date', err:'err-date', msg:'Date requise' },
+    ];
+    if (mode === 'livraison') {
+        fields.push(
+            { id:'c-adresse', err:'err-adresse', msg:'Adresse requise' },
+            { id:'c-cp', err:'err-cp', msg:'Code postal requis' },
+            { id:'c-ville', err:'err-ville', msg:'Ville requise' },
+            { id:'c-heure', err:'err-heure', msg:'Créneau requis' },
+        );
+    }
+    fields.forEach(f => {
+        const el = $(f.id);
+        const errEl = $(f.err);
+        if (!el || !errEl) return;
+        el.classList.remove('error');
+        errEl.textContent = '';
+        if (!el.value.trim()) {
+            el.classList.add('error');
+            errEl.textContent = f.msg;
+            valid = false;
+        } else if (f.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value)) {
+            el.classList.add('error');
+            errEl.textContent = 'Email invalide';
+            valid = false;
+        }
+    });
+    return valid;
+}
+
+function renderStep3() {
+    const mode = $('c-mode').value;
+    let html = `
+        <p><strong>Client :</strong> ${$('c-prenom').value} ${$('c-nom').value}</p>
+        <p><strong>Email :</strong> ${$('c-email').value}</p>
+        <p><strong>Téléphone :</strong> ${$('c-tel').value}</p>
+        <p><strong>Mode :</strong> ${mode === 'livraison' ? 'Livraison' : 'Retrait sur place'}</p>
+    `;
+    if (mode === 'livraison') {
+        html += `<p><strong>Adresse :</strong> ${$('c-adresse').value}, ${$('c-cp').value} ${$('c-ville').value}</p>`;
+        html += `<p><strong>Créneau :</strong> ${$('c-heure').value}</p>`;
+    }
+    html += `<p><strong>Date :</strong> ${formatDateFR($('c-date').value)}</p>`;
+    if ($('c-instructions').value.trim()) {
+        html += `<p><strong>Instructions :</strong> ${$('c-instructions').value}</p>`;
+    }
+    html += '<hr>';
+    cart.forEach(item => {
+        html += `<p>${item.qty}× ${item.name} — ${fmtPrice(item.price * item.qty)}</p>`;
+    });
+    html += `<hr><p style="font-size:1.1rem"><strong>Total : ${fmtPrice(getTotal())}</strong></p>`;
+    $('confirm-recap').innerHTML = html;
+}
+
+function confirmOrder() {
+    const cgv = $('c-cgv');
+    const errCgv = $('err-cgv');
+    cgv.classList.remove('error');
+    errCgv.textContent = '';
+    if (!cgv.checked) {
+        errCgv.textContent = 'Vous devez accepter les CGV';
+        return;
+    }
+    const mode = $('c-mode').value;
+    const order = {
+        id: '#SLP' + Date.now(),
+        timestamp: new Date().toISOString(),
+        client: {
+            nom: $('c-nom').value,
+            prenom: $('c-prenom').value,
+            email: $('c-email').value,
+            telephone: $('c-tel').value,
+        },
+        items: cart.map(c => ({ nom: c.name, prix: c.price, quantite: c.qty })),
+        total: getTotal(),
+        mode: mode,
+        adresse: mode === 'livraison' ? `${$('c-adresse').value}, ${$('c-cp').value} ${$('c-ville').value}` : null,
+        heure: mode === 'livraison' ? $('c-heure').value : null,
+        instructions: $('c-instructions').value || '',
+    };
+    // Save to localStorage
+    try {
+        const orders = JSON.parse(localStorage.getItem('slp_orders') || '[]');
+        orders.push(order);
+        localStorage.setItem('slp_orders', JSON.stringify(orders));
+    } catch(e) {}
+    console.log('Commande confirmée:', order);
+    // Show success
+    $('success-order-id').textContent = order.id;
+    goToStep(4);
+    // Clear cart
+    cart = [];
+    saveCart();
+    updateCartUI();
+}
+
+function formatDateFR(str) {
+    const d = new Date(str);
+    return d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+// ── Devis form ──
+function handleDevis(e) {
+    e.preventDefault();
+    const form = $('devis-form-el');
+    const success = $('devis-success');
+    // Log devis data
+    console.log('Demande de devis:', {
+        nom: $('devis-nom').value,
+        email: $('devis-email').value,
+        tel: $('devis-tel').value,
+        event: $('devis-event').value,
+        personnes: $('devis-personnes').value,
+        date: $('devis-date').value,
+        budget: $('devis-budget').value,
+        message: $('devis-message').value,
+    });
+    form.style.display = 'none';
+    success.hidden = false;
+    showToast('Demande de devis envoyée !');
+}
+
+// ── Start ──
+document.addEventListener('DOMContentLoaded', init);
+
 })();
