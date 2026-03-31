@@ -66,18 +66,15 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); color: var(--color-dark); lin
     position:absolute; inset:0;
     background-size:cover; background-position:center;
     opacity:0; transition:opacity 1.5s ease;
-    transform:scale(1.05);
-    animation:introZoom 8s ease-in-out infinite alternate;
 }
 .intro-slide.active { opacity:1; }
-@keyframes introZoom { from{transform:scale(1)} to{transform:scale(1.08)} }
 
 .intro-overlay {
     position:absolute; inset:0; z-index:1;
-    background:linear-gradient(135deg,rgba(26,26,26,.75) 0%,rgba(44,74,46,.6) 50%,rgba(26,26,26,.8) 100%);
+    background:rgba(26,26,26,.4);
 }
 .intro-grain {
-    position:absolute; inset:0; z-index:2; opacity:.06;
+    position:absolute; inset:0; z-index:2; opacity:.04;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
