@@ -53,23 +53,127 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); color: var(--color-dark); lin
 .icon-sm { width:18px; height:18px; vertical-align:middle; }
 .icon-md { width:22px; height:22px; }
 
-/* ── Loader ── */
-.loader {
+/* ── Cinématique Intro ── */
+.intro {
     position:fixed; inset:0; z-index:9999;
-    background:var(--color-bg);
     display:flex; align-items:center; justify-content:center;
-    transition: opacity .5s ease;
+    overflow:hidden; transition:opacity .8s ease, visibility .8s ease;
 }
-.loader.hidden { opacity:0; pointer-events:none; }
-.loader-inner { display:flex; gap:8px; }
-.loader-dot {
-    width:10px; height:10px; border-radius:50%;
-    background:var(--color-primary);
-    animation: loaderBounce .6s infinite alternate;
+.intro.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+
+.intro-slideshow { position:absolute; inset:0; }
+.intro-slide {
+    position:absolute; inset:0;
+    background-size:cover; background-position:center;
+    opacity:0; transition:opacity 1.5s ease;
+    transform:scale(1.05);
+    animation:introZoom 8s ease-in-out infinite alternate;
 }
-.loader-dot:nth-child(2) { animation-delay:.2s; }
-.loader-dot:nth-child(3) { animation-delay:.4s; }
-@keyframes loaderBounce { to { opacity:.2; transform:translateY(-10px); } }
+.intro-slide.active { opacity:1; }
+@keyframes introZoom { from{transform:scale(1)} to{transform:scale(1.08)} }
+
+.intro-overlay {
+    position:absolute; inset:0; z-index:1;
+    background:linear-gradient(135deg,rgba(26,26,26,.75) 0%,rgba(44,74,46,.6) 50%,rgba(26,26,26,.8) 100%);
+}
+.intro-grain {
+    position:absolute; inset:0; z-index:2; opacity:.06;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.intro-content { position:relative; z-index:3; text-align:center; padding:0 24px; }
+
+.intro-step {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    opacity:0; visibility:hidden;
+    transition:opacity .8s ease, transform .8s ease, visibility .8s ease;
+    width:90vw; max-width:600px;
+}
+.intro-step.active { opacity:1; visibility:visible; transform:translate(-50%,-50%) scale(1); }
+.intro-step.exit { opacity:0; transform:translate(-50%,-50%) scale(.95); }
+
+/* Step 1 — Armenian origins */
+.intro-armenian-symbol {
+    font-size:6rem; color:var(--color-gold); margin-bottom:20px;
+    opacity:0; animation:introFadeUp 1s ease .3s forwards;
+    font-family:serif; line-height:1;
+}
+.intro-origin-text {
+    font-family:var(--font-display); font-size:1.8rem; color:#fff;
+    opacity:0; animation:introFadeUp .8s ease .8s forwards;
+    letter-spacing:1px;
+}
+.intro-origin-sub {
+    font-family:var(--font-heading); font-size:1rem;
+    color:var(--color-gold); margin-top:12px;
+    opacity:0; animation:introFadeUp .8s ease 1.2s forwards;
+    letter-spacing:3px; text-transform:uppercase; font-weight:500;
+}
+
+/* Step 2 — Heritage */
+.intro-heritage-text {
+    font-family:var(--font-display); font-size:2.2rem; color:#fff;
+    opacity:0; animation:introFadeUp .8s ease .2s forwards;
+    font-weight:700;
+}
+.intro-line {
+    width:60px; height:2px; background:var(--color-gold);
+    margin:20px auto; opacity:0;
+    animation:introFadeUp .6s ease .6s forwards;
+}
+.intro-heritage-sub {
+    font-family:var(--font-body); font-size:1.1rem;
+    color:rgba(255,255,255,.8); line-height:1.8;
+    opacity:0; animation:introFadeUp .8s ease .9s forwards;
+}
+
+/* Step 3 — Logo reveal */
+.intro-logo-reveal { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.intro-logo-name {
+    font-family:var(--font-display); font-size:3.5rem; font-weight:700;
+    color:#fff; opacity:0; animation:introFadeUp 1s ease .2s forwards;
+    letter-spacing:-1px;
+}
+.intro-logo-dot { color:var(--color-gold); }
+.intro-logo-line {
+    width:80px; height:3px; background:var(--color-gold);
+    opacity:0; animation:introFadeUp .6s ease .7s forwards;
+}
+.intro-logo-tagline {
+    font-family:var(--font-heading); font-size:.9rem;
+    color:var(--color-gold); text-transform:uppercase;
+    letter-spacing:4px; font-weight:600;
+    opacity:0; animation:introFadeUp .8s ease 1s forwards;
+}
+.intro-logo-city {
+    font-family:var(--font-body); font-size:.85rem;
+    color:rgba(255,255,255,.6); margin-top:4px;
+    opacity:0; animation:introFadeUp .8s ease 1.3s forwards;
+}
+
+@keyframes introFadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+}
+
+.intro-skip {
+    position:absolute; bottom:40px; right:40px; z-index:4;
+    display:flex; align-items:center; gap:4px;
+    background:rgba(255,255,255,.1); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.7);
+    padding:10px 20px; border-radius:50px; cursor:pointer;
+    font-family:var(--font-heading); font-size:.8rem; font-weight:500;
+    transition:var(--transition);
+}
+.intro-skip:hover { background:rgba(255,255,255,.2); color:#fff; }
+
+@media (max-width:768px) {
+    .intro-armenian-symbol { font-size:4rem; }
+    .intro-origin-text { font-size:1.3rem; }
+    .intro-heritage-text { font-size:1.6rem; }
+    .intro-logo-name { font-size:2.4rem; }
+    .intro-skip { bottom:24px; right:24px; }
+}
 
 /* ── Buttons ── */
 .btn {
