@@ -5,7 +5,7 @@ services:
     repo: https://github.com/easypcinformatique-svg/Dev
     branch: claude/build-ecommerce-store-2jwsj
     plan: free
-    dockerfilePath: ./surlepouceml/Dockerfile
+    dockerfilePath: ./Dockerfile
     rootDir: surlepouceml
     envVars:
       - key: PORT
