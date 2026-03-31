@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sur Le Pouce ML - Traiteur d'Armenie et d'Ailleurs | Commande en ligne</title>
+    <meta name="description" content="Traiteur armenien a Marseille - Commandez en ligne nos specialites armeniennes et libanaises. Livraison plateaux repas, buffets, evenements.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-top">
+            <div class="container">
+                <span class="header-phone">&#9742; 07 81 99 59 20</span>
+                <span class="header-address">Marseille 13013 - Chateau-Gombert</span>
+            </div>
+        </div>
+        <nav class="navbar">
+            <div class="container nav-container">
+                <a href="#" class="logo">
+                    <span class="logo-main">Sur Le Pouce</span>
+                    <span class="logo-sub">Traiteur d'Armenie et d'Ailleurs</span>
+                </a>
+                <button class="menu-toggle" aria-label="Menu">&#9776;</button>
+                <ul class="nav-links">
+                    <li><a href="#accueil">Accueil</a></li>
+                    <li><a href="#carte">Notre Carte</a></li>
+                    <li><a href="#traiteur">Traiteur</a></li>
+                    <li><a href="#evenements">Evenements</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="cart-icon" id="cart-icon">
+                    <span class="cart-emoji">&#128722;</span>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Saveurs d'Armenie<br>& de Mediterranee</h1>
+            <p>Plats entierement Fait Maison a Marseille Chateau-Gombert.<br>Commandez en ligne - Sur place, a emporter ou livre.</p>
+            <a href="#carte" class="btn btn-primary">Decouvrir la Carte</a>
+            <a href="#traiteur" class="btn btn-secondary">Traiteur & Evenements</a>
+        </div>
+    </section>
+
+    <!-- Categories Navigation -->
+    <section class="categories-nav" id="carte">
+        <div class="container">
+            <h2 class="section-title">Notre Carte</h2>
+            <p class="section-subtitle">Selectionnez vos plats et passez commande directement en ligne</p>
+            <div class="category-tabs">
+                <button class="cat-tab active" data-category="all">Tous</button>
+                <button class="cat-tab" data-category="formule">Formules</button>
+                <button class="cat-tab" data-category="sandwich">Sandwichs & Burgers</button>
+                <button class="cat-tab" data-category="plat">Salades & Pates</button>
+                <button class="cat-tab" data-category="mezze">Specialites Armeniennes</button>
+                <button class="cat-tab" data-category="accompagnement">Accompagnements</button>
+                <button class="cat-tab" data-category="dessert">Desserts</button>
+                <button class="cat-tab" data-category="boisson">Boissons</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Grid -->
+    <section class="products-section">
+        <div class="container">
+            <div class="products-grid" id="products-grid">
+                <!-- Products injected by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Traiteur / Events Section -->
+    <section id="traiteur" class="traiteur-section">
+        <div class="container">
+            <h2 class="section-title">Traiteur & Evenements</h2>
+            <p class="section-subtitle">Pour vos mariages, anniversaires, evenements d'entreprise</p>
+            <div class="formulas-grid">
+                <div class="formula-card">
+                    <div class="formula-icon">&#127860;</div>
+                    <h3>Aperitif Dinatoire</h3>
+                    <p class="formula-desc">Formule 1 - Selection de mezzes froids et chauds, mini-brochettes, feuilletees</p>
+                    <div class="formula-price">14&#8364; <span>/personne</span></div>
+                    <p class="formula-min">Minimum 30 personnes</p>
+                    <button class="btn btn-primary" onclick="addFormulaToCart('Aperitif Dinatoire F1', 14, 30)">Commander</button>
+                </div>
+                <div class="formula-card featured">
+                    <div class="formula-badge">Populaire</div>
+                    <div class="formula-icon">&#127869;</div>
+                    <h3>Aperitif Dinatoire Premium</h3>
+                    <p class="formula-desc">Formule 2 - Assortiment complet de mezzes, brochettes, dolmas, plats chauds</p>
+                    <div class="formula-price">17&#8364; <span>/personne</span></div>
+                    <p class="formula-min">Minimum 30 personnes</p>
+                    <button class="btn btn-primary" onclick="addFormulaToCart('Aperitif Dinatoire F2 Premium', 17, 30)">Commander</button>
+                </div>
+                <div class="formula-card">
+                    <div class="formula-icon">&#127874;</div>
+                    <h3>Buffet Entreprise</h3>
+                    <p class="formula-desc">Buffet complet adapte a votre budget, plateaux repas armeniens et libanais</p>
+                    <div class="formula-price">Sur devis</div>
+                    <p class="formula-min">Minimum 50 personnes</p>
+                    <a href="#contact" class="btn btn-secondary">Demander un Devis</a>
+                </div>
+                <div class="formula-card">
+                    <div class="formula-icon">&#128141;</div>
+                    <h3>Mariage Armenien</h3>
+                    <p class="formula-desc">Menu personnalise pour votre mariage avec les meilleures specialites armeniennes</p>
+                    <div class="formula-price">Sur devis</div>
+                    <p class="formula-min">Devis personnalise</p>
+                    <a href="#contact" class="btn btn-secondary">Demander un Devis</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section id="evenements" class="events-section">
+        <div class="container">
+            <h2 class="section-title">Nos Services</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">&#128666;</div>
+                    <h3>Livraison</h3>
+                    <p>Livraison de 11h30 a 13h30 - Marseille, Chateau-Gombert, Plan-de-Cuques, Allauch. Minimum 10&#8364;.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">&#127858;</div>
+                    <h3>Plateaux Repas</h3>
+                    <p>Plateaux repas armeniens et libanais pour vos repas d'entreprise</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">&#127874;</div>
+                    <h3>Gateaux Personnalises</h3>
+                    <p>Gateaux d'anniversaire personnalises avec livraison a Marseille</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">&#127881;</div>
+                    <h3>Evenements Prives</h3>
+                    <p>Anniversaires, baptemes, communions - a partir de 50 personnes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <aside class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Votre Commande</h3>
+            <button class="cart-close" id="cart-close">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <p class="cart-empty">Votre panier est vide</p>
+        </div>
+        <div class="cart-footer" id="cart-footer" style="display:none;">
+            <div class="cart-total">
+                <span>Total :</span>
+                <strong id="cart-total-price">0,00 &#8364;</strong>
+            </div>
+            <button class="btn btn-primary btn-block" id="btn-checkout">Passer Commande</button>
+        </div>
+    </aside>
+
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <h2>Finaliser votre Commande</h2>
+            <form id="checkout-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="client-nom">Nom *</label>
+                        <input type="text" id="client-nom" name="nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client-prenom">Prenom *</label>
+                        <input type="text" id="client-prenom" name="prenom" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="client-email">Email *</label>
+                        <input type="email" id="client-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client-tel">Telephone *</label>
+                        <input type="tel" id="client-tel" name="tel" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="client-adresse">Adresse de livraison *</label>
+                    <input type="text" id="client-adresse" name="adresse" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="client-cp">Code postal *</label>
+                        <input type="text" id="client-cp" name="cp" required pattern="[0-9]{5}">
+                    </div>
+                    <div class="form-group">
+                        <label for="client-ville">Ville *</label>
+                        <input type="text" id="client-ville" name="ville" value="Marseille" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="delivery-date">Date souhaitee *</label>
+                        <input type="date" id="delivery-date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="delivery-time">Heure souhaitee *</label>
+                        <select id="delivery-time" name="heure" required>
+                            <option value="">Choisir...</option>
+                            <option value="11:30">11:30</option>
+                            <option value="11:45">11:45</option>
+                            <option value="12:00">12:00</option>
+                            <option value="12:15">12:15</option>
+                            <option value="12:30">12:30</option>
+                            <option value="12:45">12:45</option>
+                            <option value="13:00">13:00</option>
+                            <option value="13:15">13:15</option>
+                            <option value="13:30">13:30</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="delivery-type">Mode de retrait *</label>
+                    <select id="delivery-type" name="mode" required>
+                        <option value="livraison">Livraison (frais en supplement)</option>
+                        <option value="retrait">Retrait sur place - Chateau-Gombert</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="client-notes">Instructions speciales</label>
+                    <textarea id="client-notes" name="notes" rows="3" placeholder="Allergies, instructions de livraison..."></textarea>
+                </div>
+
+                <div class="order-summary" id="order-summary">
+                    <!-- filled by JS -->
+                </div>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" id="accept-cgv" required>
+                    <label for="accept-cgv">J'accepte les conditions generales de vente et je confirme ma commande *</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Confirmer la Commande</button>
+                <p class="payment-note">Paiement a la livraison ou au retrait : Carte Bleue, Especes, Ticket Restaurant.<br>Livraison a partir de 10&#8364; de commande.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div class="modal-overlay" id="confirmation-modal">
+        <div class="modal modal-confirmation">
+            <div class="confirmation-icon">&#10004;</div>
+            <h2>Commande Confirmee !</h2>
+            <p>Merci pour votre commande.</p>
+            <div id="confirmation-details"></div>
+            <p class="confirmation-note">Un recapitulatif vous sera envoye par email.<br>Nous vous contacterons pour confirmer votre commande.</p>
+            <button class="btn btn-primary" onclick="location.reload()">Retour a la Carte</button>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Contact & Devis</h2>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h3>Sur Le Pouce ML</h3>
+                    <p>Traiteur d'Armenie et d'Ailleurs</p>
+                    <div class="contact-detail">
+                        <strong>&#128205; Adresse</strong>
+                        <p>1 rue Louis Neel (angle Louis Neel et Henri Becquerel)<br>13013 Marseille - Chateau-Gombert</p>
+                    </div>
+                    <div class="contact-detail">
+                        <strong>&#9742; Telephone / Commandes</strong>
+                        <p><a href="tel:0781995920">07 81 99 59 20</a></p>
+                    </div>
+                    <div class="contact-detail">
+                        <strong>&#128340; Horaires</strong>
+                        <p>Ouverture : 8h30 a 15h00<br>Commandes par telephone : 8h30 a 11h30<br>Livraison : 11h30 a 13h30</p>
+                    </div>
+                    <div class="contact-detail">
+                        <strong>&#128179; Paiement</strong>
+                        <p>Carte Bleue, Especes, Ticket Restaurant</p>
+                    </div>
+                    <div class="contact-detail">
+                        <strong>&#128666; Livraison</strong>
+                        <p>Marseille, Chateau-Gombert, Plan-de-Cuques, Allauch et environs<br><em>Livraison a partir de 10&#8364; de commande (hors zone)</em></p>
+                    </div>
+                </div>
+                <form class="contact-form" id="contact-form">
+                    <h3>Demande de Devis</h3>
+                    <div class="form-group">
+                        <label for="devis-nom">Nom complet *</label>
+                        <input type="text" id="devis-nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="devis-email">Email *</label>
+                        <input type="email" id="devis-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="devis-tel">Telephone *</label>
+                        <input type="tel" id="devis-tel" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="devis-event">Type d'evenement *</label>
+                        <select id="devis-event" required>
+                            <option value="">Choisir...</option>
+                            <option value="mariage">Mariage</option>
+                            <option value="anniversaire">Anniversaire</option>
+                            <option value="entreprise">Evenement d'entreprise</option>
+                            <option value="bapteme">Bapteme / Communion</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="devis-personnes">Nombre de personnes</label>
+                        <input type="number" id="devis-personnes" min="10" placeholder="Ex: 50">
+                    </div>
+                    <div class="form-group">
+                        <label for="devis-message">Votre message *</label>
+                        <textarea id="devis-message" rows="4" required placeholder="Decrivez votre evenement..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Envoyer la Demande</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Sur Le Pouce ML</h4>
+                    <p>Traiteur d'Armenie et d'Ailleurs. Saveurs authentiques depuis des generations a Marseille.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="#carte">Notre Carte</a></li>
+                        <li><a href="#traiteur">Traiteur</a></li>
+                        <li><a href="#evenements">Nos Services</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <p>&#9742; <a href="tel:0781995920">07 81 99 59 20</a></p>
+                    <p>&#128205; 1 rue Louis Neel, 13013 Marseille</p>
+                    <p>Ouvert : 8h30 - 15h00</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Sur Le Pouce ML - Tous droits reserves</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/products.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
