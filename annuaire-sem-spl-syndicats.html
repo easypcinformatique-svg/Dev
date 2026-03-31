@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Annuaire des SEM, SPL & Syndicats Mixtes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bleu:#00267A;--bleu-l:#0038B8;--bleu-pale:#EEF2FF;
+  --rouge:#C8001E;--rouge-pale:#FEF2F2;
+  --or:#C5A045;--blanc:#fff;
+  --bg:#F0F2F8;--surface:#fff;
+  --border:#D8DCE8;--border-l:#E8EBF4;
+  --text:#1A1F36;--muted:#6B7280;--muted-l:#9CA3AF;
+  --success:#0D7B52;--success-bg:#D1FAE5;
+  --warn:#92400E;--warn-bg:#FEF3C7;
+  --radius:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+.header{background:var(--bleu);border-bottom:4px solid var(--rouge);position:sticky;top:0;z-index:200}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:16px 28px}
+.emblem{width:54px;height:54px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.header-text{flex:1}
+.header-title{font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
+.header-sub{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.tricolor{display:flex;gap:3px;align-items:center}
+.tricolor span{width:4px;height:34px;border-radius:2px}
+.stats-bar{background:var(--bleu-l);border-bottom:1px solid rgba(255,255,255,.1)}
+.stats-inner{max-width:1440px;margin:0 auto;display:flex;padding:0 28px;flex-wrap:wrap}
+.stat{padding:9px 24px 9px 0;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.85);font-size:12.5px}
+.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.15);margin-right:24px}
+.stat-n{font-size:17px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px}
+.toolbar{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-box{position:relative;flex:1;min-width:200px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-box input{width:100%;padding:9px 10px 9px 34px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13.5px;color:var(--text);background:var(--surface);transition:border .15s}
+.search-box input:focus{outline:none;border-color:var(--bleu-l);box-shadow:0 0 0 3px rgba(0,56,184,.1)}
+select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13px;color:var(--text);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M6 8 0 0h12z'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer}
+.btn{padding:9px 16px;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--bleu);color:#fff;box-shadow:0 2px 6px rgba(0,38,122,.2)}
+.btn-primary:hover{background:var(--bleu-l)}
+.btn-sheets{background:#1A7340;color:#fff}
+.btn-sheets:hover{background:#15623A}
+.btn-pdf{background:#C8001E;color:#fff}
+.btn-pdf:hover{background:#A50019}
+.btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--bleu-l);color:var(--bleu-l)}
+#count-label{font-size:12.5px;color:var(--muted);white-space:nowrap;margin-left:auto}
+.table-wrap{overflow-x:auto;border-radius:10px;box-shadow:var(--shadow);margin-bottom:32px}
+table{width:100%;border-collapse:collapse;background:var(--surface);min-width:900px}
+thead tr{background:var(--bleu)}
+th{padding:12px 13px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.8);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:#fff}
+th .arr{margin-left:4px;opacity:.6;font-size:11px}
+tbody tr{border-bottom:1px solid var(--border-l);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F5F7FE}
+tbody tr:nth-child(even){background:#FAFBFD}
+tbody tr:nth-child(even):hover{background:#F3F5FC}
+td{padding:11px 13px;vertical-align:top;font-size:13px}
+.td-rank{color:var(--muted-l);font-size:11.5px;font-weight:700;width:38px}
+.nom-struct{font-weight:600;color:var(--text);font-size:13.5px}
+.dept-tag{display:inline-block;margin-top:3px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;color:var(--muted);font-weight:700}
+.type-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.type-sem{background:#DBEAFE;color:#1E40AF}
+.type-spl{background:#D1FAE5;color:#065F46}
+.type-sm{background:#FEF3C7;color:#92400E}
+.secteur{color:var(--muted);font-size:12px;line-height:1.5}
+.empty{padding:56px;text-align:center;color:var(--muted)}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.6}
+.footer{max-width:1440px;margin:0 auto;padding:0 28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--muted)}
+.footer-warn{color:var(--rouge);font-weight:600}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;color:#fff;font-size:13px;font-weight:500;z-index:999;animation:fadein .3s}
+@media print{.header{position:relative}.toolbar,.footer{display:none}table{font-size:10px}.table-wrap{box-shadow:none;overflow:visible}body{background:#fff}}
+@keyframes fadein{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) none}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="emblem">🏛</div>
+    <div class="header-text">
+      <div class="header-title">Annuaire des SEM, SPL & Syndicats Mixtes <span id="version-tag" style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;opacity:.6;cursor:help" title="Version basée sur la date de dernière mise à jour">v.2026.03.31</span></div>
+      <div class="header-sub">18 départements &middot; PACA &middot; Auvergne-Rhône-Alpes &middot; Occitanie &middot; Grand Est</div>
+    </div>
+    <div class="tricolor">
+      <span style="background:#002395"></span>
+      <span style="background:#fff"></span>
+      <span style="background:#ED2939"></span>
+    </div>
+  </div>
+</div>
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat" title="Nombre total de structures"><span class="stat-n" id="s-total">—</span> structures</div>
+    <div class="stat" title="Sociétés d'Économie Mixte"><span class="stat-n" id="s-sem">—</span> SEM</div>
+    <div class="stat" title="Sociétés Publiques Locales"><span class="stat-n" id="s-spl">—</span> SPL</div>
+    <div class="stat" title="Syndicats Mixtes"><span class="stat-n" id="s-sm">—</span> Syndicats Mixtes</div>
+    <div class="stat" title="Structures affichées après filtres"><span class="stat-n" id="s-shown">—</span> affichées</div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Rechercher nom, ville, secteur, département…" oninput="render()" title="Recherche libre dans tous les champs">
+    </div>
+    <select id="type-filter" onchange="render()" title="Filtrer par type de structure">
+      <option value="">Tous les types</option>
+      <option value="SEM">SEM</option>
+      <option value="SPL">SPL</option>
+      <option value="SM">Syndicat Mixte</option>
+    </select>
+    <select id="dept-filter" onchange="render()" title="Filtrer par département">
+      <option value="">Tous les départements</option>
+      <option value="01">01 - Ain</option>
+      <option value="04">04 - Alpes-de-Haute-Provence</option>
+      <option value="05">05 - Hautes-Alpes</option>
+      <option value="06">06 - Alpes-Maritimes</option>
+      <option value="07">07 - Ardèche</option>
+      <option value="13">13 - Bouches-du-Rhône</option>
+      <option value="26">26 - Drôme</option>
+      <option value="30">30 - Gard</option>
+      <option value="34">34 - Hérault</option>
+      <option value="38">38 - Isère</option>
+      <option value="48">48 - Lozère</option>
+      <option value="69">69 - Rhône</option>
+      <option value="73">73 - Savoie</option>
+      <option value="74">74 - Haute-Savoie</option>
+      <option value="83">83 - Var</option>
+      <option value="84">84 - Vaucluse</option>
+      <option value="88">88 - Vosges</option>
+    </select>
+    <select id="sort-field" onchange="render()" title="Ordre de tri">
+      <option value="nom-asc">Nom A→Z</option>
+      <option value="nom-desc">Nom Z→A</option>
+      <option value="type-asc">Type</option>
+      <option value="dept-asc">Département</option>
+      <option value="secteur-asc">Secteur</option>
+    </select>
+    <span id="count-label"></span>
+  </div>
+  <div class="toolbar" style="margin-top:0;padding-top:0">
+    <button class="btn btn-primary" onclick="exportCSV()" title="Exporter en CSV">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
+    <button class="btn btn-sheets" onclick="exportExcel()" title="Exporter en Excel (.xlsx)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Excel
+    </button>
+    <button class="btn btn-pdf" onclick="exportPDF()" title="Exporter en PDF">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      PDF
+    </button>
+    <button class="btn btn-outline" onclick="window.print()" title="Imprimer">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimer
+    </button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:38px" title="Rang">#</th>
+        <th onclick="setSort('nom')" title="Nom de la structure — cliquez pour trier">Nom <span class="arr" id="arr-nom">↓</span></th>
+        <th onclick="setSort('type')" title="SEM, SPL ou Syndicat Mixte">Type <span class="arr" id="arr-type"></span></th>
+        <th onclick="setSort('dept')" title="Département du siège">Département <span class="arr" id="arr-dept"></span></th>
+        <th title="Ville du siège social">Ville siège</th>
+        <th onclick="setSort('secteur')" title="Domaine d'activité principal">Secteur <span class="arr" id="arr-secteur"></span></th>
+        <th title="Président ou Directeur Général">Président / DG</th>
+        <th title="Coordonnées de contact">Contact</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+<div class="footer">
+  <span>Sources : annuaire-entreprises.data.gouv.fr &bull; comersis.fr &bull; lesepl.fr &bull; <span class="footer-warn">Non contractuel</span></span>
+  <span>&copy; <span id="yr"></span></span>
+</div>
+<script>
+document.getElementById('yr').textContent=new Date().getFullYear();
+
+let DATA=[
+/* ══ BOUCHES-DU-RHÔNE (13) ══ */
+{nom:"Marseille Habitat",type:"SEM",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Habitat / Logement social",president:"",tel:"",email:"",siren:""},
+{nom:"Société du Canal de Provence",type:"SEM",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Aix-en-Provence",secteur:"Eau / Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"Treize Développement",type:"SEM",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Développement économique",president:"",tel:"",email:"",siren:""},
+{nom:"SOGIMA",type:"SEM",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Immobilier / Habitat",president:"",tel:"",email:"",siren:""},
+{nom:"SOLEAM",type:"SPL",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Aménagement métropolitain",president:"",tel:"",email:"",siren:""},
+{nom:"Pays d'Aix Territoires",type:"SPL",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Aix-en-Provence",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"Aix-Marseille-Provence (SPLA-IN)",type:"SPL",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Aménagement / Euroméditerranée",president:"",tel:"",email:"",siren:""},
+{nom:"Société Publique des Écoles Marseillaises",type:"SPL",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Éducation / Construction",president:"",tel:"",email:"",siren:""},
+{nom:"One Provence Pro (ex-Faconeo)",type:"SPL",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Aubagne",secteur:"Aménagement / Construction",president:"",tel:"",email:"",siren:""},
+{nom:"SM PACA Très Haut Débit",type:"SM",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Aix-en-Provence",secteur:"Numérique / THD",president:"",tel:"",email:"",siren:""},
+{nom:"SM Bassin Versant de l'Huveaune",type:"SM",dept:"13",deptNom:"Bouches-du-Rhône",ville:"Marseille",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+/* ══ ALPES-MARITIMES (06) ══ */
+{nom:"SEMIACS",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Nice",secteur:"Stationnement / Circulation",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Les Portes du Mercantour",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Nice",secteur:"Tourisme / Montagne",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Développement Cagnes-sur-Mer",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Cagnes-sur-Mer",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"Société Cannoise de Construction",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Cannes",secteur:"Construction / Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Événements Cannois",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Cannes",secteur:"Événementiel / Tourisme",president:"",tel:"",email:"",siren:""},
+{nom:"SEM de Vence",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Vence",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Immobilière de Menton",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Menton",secteur:"Immobilier",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Port Vauban",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Antibes",secteur:"Port / Maritime",president:"",tel:"",email:"",siren:""},
+{nom:"SACEM Antibes Juan-les-Pins",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Antibes",secteur:"Construction",president:"",tel:"",email:"",siren:""},
+{nom:"Grasse Développement",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Grasse",secteur:"Développement économique",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Vallaurienne",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Vallauris",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SEM Saint-Étienne-de-Tinée-Auron",type:"SEM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Auron",secteur:"Tourisme / Ski",president:"",tel:"",email:"",siren:""},
+{nom:"SPL Antipolis Avenir",type:"SPL",dept:"06",deptNom:"Alpes-Maritimes",ville:"Sophia Antipolis",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SPL Côte d'Azur Aménagement",type:"SPL",dept:"06",deptNom:"Alpes-Maritimes",ville:"Nice",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SPL Villefranchoise",type:"SPL",dept:"06",deptNom:"Alpes-Maritimes",ville:"Villefranche-sur-Mer",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SMIAGE",type:"SM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Nice",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SICTIAM",type:"SM",dept:"06",deptNom:"Alpes-Maritimes",ville:"Nice",secteur:"Numérique / Ingénierie",president:"",tel:"",email:"",siren:""},
+/* ══ VAR (83) ══ */
+{nom:"ID83 Ingénierie Départementale",type:"SPL",dept:"83",deptNom:"Var",ville:"Toulon",secteur:"Ingénierie / Conseil",president:"",tel:"",email:"",siren:""},
+{nom:"SPL Port de Fréjus",type:"SPL",dept:"83",deptNom:"Var",ville:"Fréjus",secteur:"Port / Tourisme",president:"",tel:"",email:"",siren:""},
+{nom:"SM Bassin Versant du Gapeau",type:"SM",dept:"83",deptNom:"Var",ville:"Toulon",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM de l'Argens",type:"SM",dept:"83",deptNom:"Var",ville:"Draguignan",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+/* ══ VAUCLUSE (84) ══ */
+{nom:"SM de l'Ouvèze Provençale (SMOP)",type:"SM",dept:"84",deptNom:"Vaucluse",ville:"Vaison-la-Romaine",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM du Parc Naturel Régional du Luberon",type:"SM",dept:"84",deptNom:"Vaucluse",ville:"Apt",secteur:"Environnement / Tourisme",president:"",tel:"",email:"",siren:""},
+{nom:"SM du Parc Naturel Régional du Mont-Ventoux",type:"SM",dept:"84",deptNom:"Vaucluse",ville:"Bédoin",secteur:"Environnement / Tourisme",president:"",tel:"",email:"",siren:""},
+{nom:"SM des Eaux Région Rhône-Ventoux",type:"SM",dept:"84",deptNom:"Vaucluse",ville:"Carpentras",secteur:"Eau",president:"",tel:"",email:"",siren:""},
+/* ══ ALPES-DE-HAUTE-PROVENCE (04) ══ */
+{nom:"SM Parc Naturel Régional du Verdon",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Moustiers-Sainte-Marie",secteur:"Environnement / Tourisme",president:"",tel:"",email:"",siren:""},
+{nom:"SYDEVOM 04",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Digne-les-Bains",secteur:"Déchets / Valorisation",president:"",tel:"",email:"",siren:""},
+{nom:"SM Asse-Bléone (SMAB)",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Digne-les-Bains",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM Conservatoire Olivier Messiaen",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Digne-les-Bains",secteur:"Culture",president:"",tel:"",email:"",siren:""},
+{nom:"SM Villages et Cités de Caractère",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Digne-les-Bains",secteur:"Tourisme / Patrimoine",president:"",tel:"",email:"",siren:""},
+{nom:"SM Seignus d'Allos",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Allos",secteur:"Tourisme / Ski",president:"",tel:"",email:"",siren:""},
+{nom:"SM Espace Lumière",type:"SM",dept:"04",deptNom:"Alpes-de-Haute-Provence",ville:"Pra-Loup",secteur:"Tourisme / Ski",president:"",tel:"",email:"",siren:""},
+/* ══ HAUTES-ALPES (05) ══ */
+{nom:"SM Parc Naturel Régional du Queyras",type:"SM",dept:"05",deptNom:"Hautes-Alpes",ville:"Arvieux",secteur:"Environnement / Tourisme",president:"",tel:"",email:"",siren:""},
+{nom:"SM Conservatoire Botanique Alpin",type:"SM",dept:"05",deptNom:"Hautes-Alpes",ville:"Gap",secteur:"Environnement / Botanique",president:"",tel:"",email:"",siren:""},
+{nom:"SM Stations de Montagne du Queyras",type:"SM",dept:"05",deptNom:"Hautes-Alpes",ville:"Arvieux",secteur:"Tourisme / Ski",president:"",tel:"",email:"",siren:""},
+{nom:"SM Serre-Ponçon",type:"SM",dept:"05",deptNom:"Hautes-Alpes",ville:"Embrun",secteur:"Tourisme / Aménagement",president:"",tel:"",email:"",siren:""},
+/* ══ RHÔNE (69) ══ */
+{nom:"SERL (Équipement du Rhône et de Lyon)",type:"SEM",dept:"69",deptNom:"Rhône",ville:"Lyon",secteur:"Aménagement / Construction",president:"",tel:"",email:"",siren:""},
+{nom:"Lyon Parc Auto (LPA)",type:"SEM",dept:"69",deptNom:"Rhône",ville:"Lyon",secteur:"Stationnement",president:"",tel:"",email:"",siren:""},
+{nom:"SYTRAL Mobilités",type:"SM",dept:"69",deptNom:"Rhône",ville:"Lyon",secteur:"Transports / Mobilité",president:"",tel:"",email:"",siren:""},
+{nom:"SEPAL (SCoT agglo lyonnaise)",type:"SM",dept:"69",deptNom:"Rhône",ville:"Lyon",secteur:"Urbanisme / Planification",president:"",tel:"",email:"",siren:""},
+{nom:"SDE Rhône (Énergies du Rhône)",type:"SM",dept:"69",deptNom:"Rhône",ville:"Lyon",secteur:"Énergie",president:"",tel:"",email:"",siren:""},
+/* ══ ISÈRE (38) ══ */
+{nom:"Isère Aménagement",type:"SPL",dept:"38",deptNom:"Isère",ville:"Grenoble",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SMMAG (Mobilités aire grenobloise)",type:"SM",dept:"38",deptNom:"Isère",ville:"Grenoble",secteur:"Transports / Mobilité",president:"",tel:"",email:"",siren:""},
+{nom:"SYMBHI (Bassins hydrauliques de l'Isère)",type:"SM",dept:"38",deptNom:"Isère",ville:"Grenoble",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM Nord Dauphiné",type:"SM",dept:"38",deptNom:"Isère",ville:"Bourgoin-Jallieu",secteur:"Déchets",president:"",tel:"",email:"",siren:""},
+/* ══ ARDÈCHE (07) ══ */
+{nom:"SM Ardèche Drôme Numérique (ADN)",type:"SM",dept:"07",deptNom:"Ardèche",ville:"Privas",secteur:"Numérique",president:"",tel:"",email:"",siren:""},
+{nom:"SM Centre-Ardèche",type:"SM",dept:"07",deptNom:"Ardèche",ville:"Saint-Julien-en-Saint-Alban",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SYMPAM (Pays Ardèche méridionale)",type:"SM",dept:"07",deptNom:"Ardèche",ville:"Vinezac",secteur:"Aménagement / SCoT",president:"",tel:"",email:"",siren:""},
+{nom:"SM Inforoutes de l'Ardèche",type:"SM",dept:"07",deptNom:"Ardèche",ville:"Privas",secteur:"Numérique / TIC",president:"",tel:"",email:"",siren:""},
+/* ══ DRÔME (26) ══ */
+{nom:"SYTRAD (Déchets Ardèche-Drôme)",type:"SM",dept:"26",deptNom:"Drôme",ville:"Portes-lès-Valence",secteur:"Déchets / Valorisation",president:"",tel:"",email:"",siren:""},
+/* ══ AIN (01) ══ */
+{nom:"SM Milieux Aquatiques Haut-Rhône (SYMASOL)",type:"SM",dept:"01",deptNom:"Ain",ville:"Belley",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+/* ══ SAVOIE (73) ══ */
+{nom:"Savoie Technolac",type:"SPL",dept:"73",deptNom:"Savoie",ville:"Le Bourget-du-Lac",secteur:"Développement économique",president:"",tel:"",email:"",siren:""},
+{nom:"SM Métropole Savoie",type:"SM",dept:"73",deptNom:"Savoie",ville:"Chambéry",secteur:"Déchets / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM du Lac du Bourget (CISALB)",type:"SM",dept:"73",deptNom:"Savoie",ville:"Le Bourget-du-Lac",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM du SCoT Métropole Savoie",type:"SM",dept:"73",deptNom:"Savoie",ville:"Chambéry",secteur:"Urbanisme / Planification",president:"",tel:"",email:"",siren:""},
+/* ══ HAUTE-SAVOIE (74) ══ */
+{nom:"SM du Mont-Blanc",type:"SM",dept:"74",deptNom:"Haute-Savoie",ville:"Chamonix",secteur:"Tourisme / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM du Lac d'Annecy (SILA)",type:"SM",dept:"74",deptNom:"Haute-Savoie",ville:"Annecy",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM Pays du Mont-Blanc",type:"SM",dept:"74",deptNom:"Haute-Savoie",ville:"Sallanches",secteur:"Aménagement / SCoT",president:"",tel:"",email:"",siren:""},
+{nom:"SM de l'Arve (SM3A)",type:"SM",dept:"74",deptNom:"Haute-Savoie",ville:"Cluses",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+/* ══ HÉRAULT (34) ══ */
+{nom:"SERM Montpellier",type:"SEM",dept:"34",deptNom:"Hérault",ville:"Montpellier",secteur:"Aménagement",president:"",tel:"",email:"",siren:""},
+{nom:"SM Eaux Vallée de l'Hérault (SMEVH)",type:"SM",dept:"34",deptNom:"Hérault",ville:"Gignac",secteur:"Eau",president:"",tel:"",email:"",siren:""},
+{nom:"SM du SCoT du Biterrois",type:"SM",dept:"34",deptNom:"Hérault",ville:"Béziers",secteur:"Urbanisme / Planification",president:"",tel:"",email:"",siren:""},
+{nom:"SM du Pic Saint-Loup",type:"SM",dept:"34",deptNom:"Hérault",ville:"Saint-Mathieu-de-Tréviers",secteur:"Eau / Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM Parc Naturel Régional du Haut-Languedoc",type:"SM",dept:"34",deptNom:"Hérault",ville:"Saint-Pons-de-Thomières",secteur:"Environnement",president:"",tel:"",email:"",siren:""},
+/* ══ GARD (30) ══ */
+{nom:"SM des Gorges du Gardon",type:"SM",dept:"30",deptNom:"Gard",ville:"Sanilhac-Sagriès",secteur:"Environnement",president:"",tel:"",email:"",siren:""},
+{nom:"SM Bassin Versant du Vidourle (EPTB)",type:"SM",dept:"30",deptNom:"Gard",ville:"Sommières",secteur:"Eau / Inondations",president:"",tel:"",email:"",siren:""},
+/* ══ LOZÈRE (48) ══ */
+{nom:"SM des Causses et des Cévennes",type:"SM",dept:"48",deptNom:"Lozère",ville:"Mende",secteur:"Patrimoine / UNESCO",president:"",tel:"",email:"",siren:""},
+/* ══ VOSGES (88) ══ */
+{nom:"SM du Pays des Vosges Saônoises",type:"SM",dept:"88",deptNom:"Vosges",ville:"Le Val-d'Ajol",secteur:"Aménagement / SCoT",president:"",tel:"",email:"",siren:""},
+{nom:"SM du SCoT des Vosges centrales",type:"SM",dept:"88",deptNom:"Vosges",ville:"Épinal",secteur:"Urbanisme / Planification",president:"",tel:"",email:"",siren:""}
+];
+
+/* ══ SORT ══ */
+let sortField='nom',sortDir='asc';
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function setSort(field){
+  if(sortField===field){sortDir=sortDir==='asc'?'desc':'asc';}
+  else{sortField=field;sortDir='asc';}
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  const el=document.getElementById('arr-'+field);
+  if(el)el.textContent=sortDir==='asc'?'↑':'↓';
+  render();
+}
+
+function getFiltered(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const typeF=document.getElementById('type-filter').value;
+  const deptF=document.getElementById('dept-filter').value;
+  let rows=DATA.filter(d=>{
+    if(typeF&&d.type!==typeF)return false;
+    if(deptF&&d.dept!==deptF)return false;
+    if(!q)return true;
+    return d.nom.toLowerCase().includes(q)||d.ville.toLowerCase().includes(q)||
+           d.secteur.toLowerCase().includes(q)||d.dept.includes(q)||
+           d.deptNom.toLowerCase().includes(q)||d.type.toLowerCase().includes(q)||
+           d.president.toLowerCase().includes(q);
+  });
+  const sf=document.getElementById('sort-field').value;
+  const[sf2,sd2]=sf.split('-');
+  const sField=sf2||sortField;
+  const sDir=sd2||sortDir;
+  rows.sort((a,b)=>{
+    let va=(a[sField]||'').toLowerCase();
+    let vb=(b[sField]||'').toLowerCase();
+    return sDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  return rows;
+}
+
+function render(){
+  const rows=getFiltered();
+  const tbody=document.getElementById('tbody');
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun résultat.</p></div></td></tr>';
+  } else {
+    tbody.innerHTML=rows.map((d,i)=>{
+      const typeCls=d.type==='SEM'?'type-sem':d.type==='SPL'?'type-spl':'type-sm';
+      const typeLabel=d.type==='SM'?'Syndicat Mixte':d.type;
+      return `<tr>
+        <td class="td-rank">${i+1}</td>
+        <td><div class="nom-struct">${esc(d.nom)}</div></td>
+        <td><span class="type-badge ${typeCls}">${typeLabel}</span></td>
+        <td><span class="dept-tag">${esc(d.dept)}</span> ${esc(d.deptNom)}</td>
+        <td>${esc(d.ville)}</td>
+        <td><span class="secteur">${esc(d.secteur)}</span></td>
+        <td>${d.president?esc(d.president):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}</td>
+        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('s-total').textContent=DATA.length;
+  document.getElementById('s-sem').textContent=DATA.filter(d=>d.type==='SEM').length;
+  document.getElementById('s-spl').textContent=DATA.filter(d=>d.type==='SPL').length;
+  document.getElementById('s-sm').textContent=DATA.filter(d=>d.type==='SM').length;
+  document.getElementById('s-shown').textContent=rows.length;
+  document.getElementById('count-label').textContent=rows.length===DATA.length?DATA.length+' structures':rows.length+' / '+DATA.length+' structures';
+}
+
+/* ══ EXPORTS ══ */
+function triggerDownload(blob,filename){
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},2000);
+}
+
+function exportCSV(){
+  const rows=getFiltered();
+  let csv='Nom;Type;Département;Ville;Secteur;Président;Téléphone;Email;SIREN\n';
+  rows.forEach(d=>{csv+=`"${d.nom}";"${d.type}";"${d.dept} ${d.deptNom}";"${d.ville}";"${d.secteur}";"${d.president}";"${d.tel}";"${d.email}";"${d.siren}"\n`;});
+  triggerDownload(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}),'annuaire-sem-spl-sm.csv');
+}
+
+function exportExcel(){
+  const rows=getFiltered();
+  const ws_data=[['Nom','Type','Département','Ville','Secteur','Président/DG','Téléphone','Email','SIREN']];
+  rows.forEach(d=>ws_data.push([d.nom,d.type,d.dept+' '+d.deptNom,d.ville,d.secteur,d.president,d.tel,d.email,d.siren]));
+  const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb,ws,'Annuaire');
+  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  triggerDownload(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'annuaire-sem-spl-sm.xlsx');
+}
+
+function exportPDF(){
+  const{jsPDF}=window.jspdf;const doc=new jsPDF('l','mm','a4');
+  doc.setFontSize(16);doc.text('Annuaire SEM, SPL & Syndicats Mixtes',14,15);
+  doc.setFontSize(9);doc.text('18 départements — '+new Date().toLocaleDateString('fr-FR'),14,21);
+  const rows=getFiltered();
+  doc.autoTable({startY:26,head:[['#','Nom','Type','Dept','Ville','Secteur','Président']],
+    body:rows.map((d,i)=>[i+1,d.nom,d.type,d.dept,d.ville,d.secteur,d.president||'—']),
+    styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[0,38,122]},alternateRowStyles:{fillColor:[245,247,254]}
+  });
+  triggerDownload(doc.output('blob'),'annuaire-sem-spl-sm.pdf');
+}
+
+function showToast(msg,bg,ms){
+  const t=document.createElement('div');t.className='toast';t.style.background=bg||'#333';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),ms||3000);
+}
+
+/* ══ INIT ══ */
+render();
+</script>
+</body>
+</html>
