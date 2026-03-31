@@ -85,3 +85,26 @@ const PRODUCTS = [
     { id:65, name:"Café Turc", desc:"Café traditionnel à la turque", price:2.00, cat:"boisson",
       img:"https://images.unsplash.com/photo-1514432324607-a09d9b4aefda?w=600" },
 ];
+
+// Ingrédients par catégorie (ceux qu'on peut retirer)
+const INGREDIENTS = {
+    sandwich: ["Salade", "Tomates", "Oignons", "Sauce", "Cornichons", "Fromage"],
+    formule:  ["Salade", "Tomates", "Oignons", "Sauce"],
+    salade:   ["Oignons", "Olives", "Croûtons", "Fromage", "Sauce"],
+    armenien: ["Oignons", "Persil", "Sauce yaourt", "Piment"],
+    accompagnement: [],
+    dessert:  [],
+    boisson:  [],
+};
+
+// Suppléments disponibles (avec prix)
+const SUPPLEMENTS = [
+    { name:"Fromage", price:1.00 },
+    { name:"Sauce supplémentaire", price:0.50 },
+    { name:"Viande double", price:2.50 },
+    { name:"Avocat", price:1.50 },
+    { name:"Œuf", price:1.00 },
+    { name:"Frites", price:1.50 },
+    { name:"Piment", price:0.00 },
+    { name:"Herbes fraîches", price:0.00 },
+];
