@@ -3,369 +3,616 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sur Le Pouce ML - Traiteur d'Armenie et d'Ailleurs | Commande en ligne</title>
-    <meta name="description" content="Traiteur armenien a Marseille - Commandez en ligne nos specialites armeniennes et libanaises. Livraison plateaux repas, buffets, evenements.">
-    <link rel="stylesheet" href="css/style.css">
+    <title>Sur Le Pouce ML — Traiteur d'Arménie & de Méditerranée | Marseille Château-Gombert</title>
+    <meta name="description" content="Traiteur arménien fait maison à Marseille Château-Gombert. Spécialités arméniennes et méditerranéennes, commande en ligne, livraison. Chawarma, mezze, baklava, lahmajoun.">
+    <meta property="og:title" content="Sur Le Pouce ML — Saveurs d'Arménie & de Méditerranée">
+    <meta property="og:description" content="Traiteur fait maison à Marseille. Commandez en ligne nos spécialités arméniennes et méditerranéennes. Livraison 11h30-13h30.">
+    <meta property="og:type" content="restaurant">
+    <meta property="og:locale" content="fr_FR">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": ["Restaurant", "FoodEstablishment"],
+        "name": "Sur Le Pouce ML",
+        "description": "Traiteur d'Arménie et de Méditerranée — Fait Maison à Marseille Château-Gombert",
+        "servesCuisine": ["Arménienne", "Méditerranéenne", "Libanaise"],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "1 rue Louis Neel",
+            "addressLocality": "Marseille",
+            "postalCode": "13013",
+            "addressRegion": "Provence-Alpes-Côte d'Azur",
+            "addressCountry": "FR"
+        },
+        "telephone": "+33781995920",
+        "openingHours": "Mo-Sa 08:30-15:00",
+        "paymentAccepted": "Cash, Credit Card, Ticket Restaurant",
+        "priceRange": "€€",
+        "currenciesAccepted": "EUR"
+    }
+    </script>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-top">
-            <div class="container">
-                <span class="header-phone">&#9742; 07 81 99 59 20</span>
-                <span class="header-address">Marseille 13013 - Chateau-Gombert</span>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-inner">
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+        </div>
+    </div>
+
+    <!-- ════════════ HEADER ════════════ -->
+    <header class="header" id="header">
+        <div class="header-bar">
+            <div class="container header-bar-inner">
+                <span><i data-lucide="phone" class="icon-xs"></i> 07 81 99 59 20</span>
+                <span><i data-lucide="map-pin" class="icon-xs"></i> Château-Gombert, Marseille 13013</span>
+                <span><i data-lucide="clock" class="icon-xs"></i> 8h30 – 15h00</span>
             </div>
         </div>
         <nav class="navbar">
-            <div class="container nav-container">
-                <a href="#" class="logo">
-                    <span class="logo-main">Sur Le Pouce</span>
-                    <span class="logo-sub">Traiteur d'Armenie et d'Ailleurs</span>
+            <div class="container nav-inner">
+                <a href="#" class="logo" aria-label="Sur Le Pouce ML - Accueil">
+                    <span class="logo-name">Sur Le Pouce<span class="logo-dot">·</span>ML</span>
+                    <span class="logo-tagline">Fait Maison · Marseille</span>
                 </a>
-                <button class="menu-toggle" aria-label="Menu">&#9776;</button>
-                <ul class="nav-links">
+                <ul class="nav-links" id="nav-links">
                     <li><a href="#accueil">Accueil</a></li>
-                    <li><a href="#carte">Notre Carte</a></li>
-                    <li><a href="#traiteur">Traiteur</a></li>
-                    <li><a href="#evenements">Evenements</a></li>
+                    <li><a href="#carte">La Carte</a></li>
+                    <li><a href="#traiteur">Traiteur & Événements</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
-                <div class="cart-icon" id="cart-icon">
-                    <span class="cart-emoji">&#128722;</span>
-                    <span class="cart-count" id="cart-count">0</span>
+                <div class="nav-actions">
+                    <button class="btn btn-cta nav-cta" aria-label="Commander maintenant" onclick="document.getElementById('carte').scrollIntoView({behavior:'smooth',block:'start'})">
+                        <i data-lucide="shopping-bag" class="icon-sm"></i> Commander
+                    </button>
+                    <button class="cart-toggle" id="cart-toggle" aria-label="Ouvrir le panier">
+                        <i data-lucide="shopping-cart" class="icon-md"></i>
+                        <span class="cart-badge" id="cart-badge">0</span>
+                    </button>
+                    <button class="menu-burger" id="menu-burger" aria-label="Ouvrir le menu">
+                        <i data-lucide="menu" class="icon-md"></i>
+                    </button>
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+
+    <!-- ════════════ HERO ════════════ -->
     <section id="accueil" class="hero">
-        <div class="hero-overlay"></div>
+        <div class="hero-bg">
+            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1920" alt="Restaurant méditerranéen" loading="eager">
+            <div class="hero-overlay"></div>
+            <div class="hero-grain"></div>
+        </div>
         <div class="hero-content">
-            <h1>Saveurs d'Armenie<br>& de Mediterranee</h1>
-            <p>Plats entierement Fait Maison a Marseille Chateau-Gombert.<br>Commandez en ligne - Sur place, a emporter ou livre.</p>
-            <a href="#carte" class="btn btn-primary">Decouvrir la Carte</a>
-            <a href="#traiteur" class="btn btn-secondary">Traiteur & Evenements</a>
+            <h1 class="hero-title animate-on-scroll">Saveurs d'Arménie<br>& de Méditerranée</h1>
+            <p class="hero-subtitle animate-on-scroll">Tout fait maison à Château-Gombert depuis des générations</p>
+            <div class="hero-ctas animate-on-scroll">
+                <a href="#carte" class="btn btn-primary btn-lg ripple">
+                    <i data-lucide="utensils" class="icon-sm"></i> Commander maintenant
+                </a>
+                <a href="#traiteur" class="btn btn-outline-light btn-lg">
+                    <i data-lucide="sparkles" class="icon-sm"></i> Découvrir le traiteur
+                </a>
+            </div>
         </div>
-    </section>
-
-    <!-- Categories Navigation -->
-    <section class="categories-nav" id="carte">
-        <div class="container">
-            <h2 class="section-title">Notre Carte</h2>
-            <p class="section-subtitle">Selectionnez vos plats et passez commande directement en ligne</p>
-            <div class="category-tabs">
-                <button class="cat-tab active" data-category="all">Tous</button>
-                <button class="cat-tab" data-category="formule">Formules</button>
-                <button class="cat-tab" data-category="sandwich">Sandwichs & Burgers</button>
-                <button class="cat-tab" data-category="plat">Salades & Pates</button>
-                <button class="cat-tab" data-category="mezze">Specialites Armeniennes</button>
-                <button class="cat-tab" data-category="accompagnement">Accompagnements</button>
-                <button class="cat-tab" data-category="dessert">Desserts</button>
-                <button class="cat-tab" data-category="boisson">Boissons</button>
+        <div class="hero-ticker">
+            <div class="ticker-track">
+                <span>Livraison 11h30 – 13h30</span>
+                <span class="ticker-dot"></span>
+                <span>Marseille & environs</span>
+                <span class="ticker-dot"></span>
+                <span>Commandes avant 11h30 au 07 81 99 59 20</span>
+                <span class="ticker-dot"></span>
+                <span>Paiement CB, Espèces, TR</span>
+                <span class="ticker-dot"></span>
+                <span>Livraison 11h30 – 13h30</span>
+                <span class="ticker-dot"></span>
+                <span>Marseille & environs</span>
+                <span class="ticker-dot"></span>
+                <span>Commandes avant 11h30 au 07 81 99 59 20</span>
+                <span class="ticker-dot"></span>
+                <span>Paiement CB, Espèces, TR</span>
+                <span class="ticker-dot"></span>
             </div>
         </div>
     </section>
 
-    <!-- Products Grid -->
-    <section class="products-section">
+    <!-- ════════════ LA CARTE ════════════ -->
+    <section id="carte" class="section section-carte">
         <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="section-eyebrow">Notre Carte</span>
+                <h2 class="section-title">Des saveurs authentiques,<br>préparées avec passion</h2>
+                <p class="section-desc">Sélectionnez vos plats préférés et passez commande en quelques clics</p>
+            </div>
+            <div class="filter-bar animate-on-scroll" id="filter-bar">
+                <button class="filter-pill active" data-cat="all" aria-label="Afficher tous les produits">Tout</button>
+                <button class="filter-pill" data-cat="formule" aria-label="Afficher les formules">Formules</button>
+                <button class="filter-pill" data-cat="sandwich" aria-label="Afficher sandwichs et burgers">Sandwichs & Burgers</button>
+                <button class="filter-pill" data-cat="salade" aria-label="Afficher salades et pâtes">Salades & Pâtes</button>
+                <button class="filter-pill" data-cat="armenien" aria-label="Afficher spécialités arméniennes">Spécialités Arméniennes</button>
+                <button class="filter-pill" data-cat="accompagnement" aria-label="Afficher accompagnements">Accompagnements</button>
+                <button class="filter-pill" data-cat="dessert" aria-label="Afficher desserts">Desserts</button>
+                <button class="filter-pill" data-cat="boisson" aria-label="Afficher boissons">Boissons</button>
+            </div>
             <div class="products-grid" id="products-grid">
-                <!-- Products injected by JS -->
+                <!-- Rendered by JS -->
             </div>
         </div>
     </section>
 
-    <!-- Traiteur / Events Section -->
-    <section id="traiteur" class="traiteur-section">
-        <div class="container">
-            <h2 class="section-title">Traiteur & Evenements</h2>
-            <p class="section-subtitle">Pour vos mariages, anniversaires, evenements d'entreprise</p>
+    <!-- ════════════ TRAITEUR & ÉVÉNEMENTS ════════════ -->
+    <section id="traiteur" class="section section-traiteur">
+        <div class="traiteur-bg">
+            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200" alt="Service traiteur" loading="lazy">
+            <div class="traiteur-overlay"></div>
+        </div>
+        <div class="container traiteur-content">
+            <div class="section-header animate-on-scroll">
+                <span class="section-eyebrow section-eyebrow-light">Traiteur & Événements</span>
+                <h2 class="section-title section-title-light">Pour vos moments d'exception</h2>
+                <p class="section-desc section-desc-light">Mariages, anniversaires, événements d'entreprise — nous sublimerons votre table</p>
+            </div>
             <div class="formulas-grid">
-                <div class="formula-card">
-                    <div class="formula-icon">&#127860;</div>
-                    <h3>Aperitif Dinatoire</h3>
-                    <p class="formula-desc">Formule 1 - Selection de mezzes froids et chauds, mini-brochettes, feuilletees</p>
-                    <div class="formula-price">14&#8364; <span>/personne</span></div>
-                    <p class="formula-min">Minimum 30 personnes</p>
-                    <button class="btn btn-primary" onclick="addFormulaToCart('Aperitif Dinatoire F1', 14, 30)">Commander</button>
+                <div class="formula-card animate-on-scroll">
+                    <div class="formula-card-inner">
+                        <h3>Apéritif Dinatoire Classique</h3>
+                        <p class="formula-tier">Formule 1</p>
+                        <p class="formula-desc">Mezzés froids et chauds, mini-brochettes, feuilletés</p>
+                        <div class="formula-price">14 <span>€/personne</span></div>
+                        <p class="formula-min"><i data-lucide="users" class="icon-xs"></i> Minimum 30 personnes</p>
+                        <a href="#devis-form" class="btn btn-primary ripple">Demander un devis</a>
+                    </div>
                 </div>
-                <div class="formula-card featured">
-                    <div class="formula-badge">Populaire</div>
-                    <div class="formula-icon">&#127869;</div>
-                    <h3>Aperitif Dinatoire Premium</h3>
-                    <p class="formula-desc">Formule 2 - Assortiment complet de mezzes, brochettes, dolmas, plats chauds</p>
-                    <div class="formula-price">17&#8364; <span>/personne</span></div>
-                    <p class="formula-min">Minimum 30 personnes</p>
-                    <button class="btn btn-primary" onclick="addFormulaToCart('Aperitif Dinatoire F2 Premium', 17, 30)">Commander</button>
+                <div class="formula-card formula-card-featured animate-on-scroll">
+                    <span class="formula-badge">Populaire</span>
+                    <div class="formula-card-inner">
+                        <h3>Apéritif Dinatoire Premium</h3>
+                        <p class="formula-tier">Formule 2</p>
+                        <p class="formula-desc">Assortiment complet mezzés, brochettes, dolmas, plats chauds</p>
+                        <div class="formula-price">17 <span>€/personne</span></div>
+                        <p class="formula-min"><i data-lucide="users" class="icon-xs"></i> Minimum 30 personnes</p>
+                        <a href="#devis-form" class="btn btn-primary ripple">Demander un devis</a>
+                    </div>
                 </div>
-                <div class="formula-card">
-                    <div class="formula-icon">&#127874;</div>
-                    <h3>Buffet Entreprise</h3>
-                    <p class="formula-desc">Buffet complet adapte a votre budget, plateaux repas armeniens et libanais</p>
-                    <div class="formula-price">Sur devis</div>
-                    <p class="formula-min">Minimum 50 personnes</p>
-                    <a href="#contact" class="btn btn-secondary">Demander un Devis</a>
+                <div class="formula-card animate-on-scroll">
+                    <div class="formula-card-inner">
+                        <h3>Buffet Entreprise</h3>
+                        <p class="formula-tier">Sur mesure</p>
+                        <p class="formula-desc">Buffet adapté à votre budget, plateaux arméniens et libanais</p>
+                        <div class="formula-price">Sur devis</div>
+                        <p class="formula-min"><i data-lucide="users" class="icon-xs"></i> Minimum 50 personnes</p>
+                        <a href="#devis-form" class="btn btn-primary ripple">Demander un devis</a>
+                    </div>
                 </div>
-                <div class="formula-card">
-                    <div class="formula-icon">&#128141;</div>
-                    <h3>Mariage Armenien</h3>
-                    <p class="formula-desc">Menu personnalise pour votre mariage avec les meilleures specialites armeniennes</p>
-                    <div class="formula-price">Sur devis</div>
-                    <p class="formula-min">Devis personnalise</p>
-                    <a href="#contact" class="btn btn-secondary">Demander un Devis</a>
+                <div class="formula-card animate-on-scroll">
+                    <span class="formula-badge formula-badge-premium">Premium</span>
+                    <div class="formula-card-inner">
+                        <h3>Mariage Arménien</h3>
+                        <p class="formula-tier">Événement complet</p>
+                        <p class="formula-desc">Menu personnalisé, meilleures spécialités arméniennes, service complet</p>
+                        <div class="formula-price">Sur devis</div>
+                        <p class="formula-min"><i data-lucide="heart" class="icon-xs"></i> Devis personnalisé</p>
+                        <a href="#devis-form" class="btn btn-primary ripple">Demander un devis</a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Events Section -->
-    <section id="evenements" class="events-section">
+    <!-- ════════════ SERVICES ════════════ -->
+    <section class="section section-services">
         <div class="container">
-            <h2 class="section-title">Nos Services</h2>
+            <div class="section-header animate-on-scroll">
+                <span class="section-eyebrow">Nos Services</span>
+                <h2 class="section-title">À votre service, chaque jour</h2>
+            </div>
             <div class="services-grid">
-                <div class="service-card">
-                    <div class="service-icon">&#128666;</div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon-wrap"><i data-lucide="truck"></i></div>
                     <h3>Livraison</h3>
-                    <p>Livraison de 11h30 a 13h30 - Marseille, Chateau-Gombert, Plan-de-Cuques, Allauch. Minimum 10&#8364;.</p>
+                    <p>11h30 – 13h30 sur Marseille, Château-Gombert, Plan-de-Cuques, Allauch. Minimum 10 €.</p>
                 </div>
-                <div class="service-card">
-                    <div class="service-icon">&#127858;</div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon-wrap"><i data-lucide="briefcase"></i></div>
                     <h3>Plateaux Repas</h3>
-                    <p>Plateaux repas armeniens et libanais pour vos repas d'entreprise</p>
+                    <p>Formules midi personnalisées pour entreprises, livrées à vos bureaux.</p>
                 </div>
-                <div class="service-card">
-                    <div class="service-icon">&#127874;</div>
-                    <h3>Gateaux Personnalises</h3>
-                    <p>Gateaux d'anniversaire personnalises avec livraison a Marseille</p>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon-wrap"><i data-lucide="cake"></i></div>
+                    <h3>Gâteaux Personnalisés</h3>
+                    <p>Gâteaux d'anniversaire et pâtisseries sur commande, livraison Marseille.</p>
                 </div>
-                <div class="service-card">
-                    <div class="service-icon">&#127881;</div>
-                    <h3>Evenements Prives</h3>
-                    <p>Anniversaires, baptemes, communions - a partir de 50 personnes</p>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon-wrap"><i data-lucide="party-popper"></i></div>
+                    <h3>Événements Privés</h3>
+                    <p>Anniversaires, baptêmes, communions — à partir de 50 personnes.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Cart Sidebar -->
-    <div class="cart-overlay" id="cart-overlay"></div>
-    <aside class="cart-sidebar" id="cart-sidebar">
-        <div class="cart-header">
-            <h3>Votre Commande</h3>
-            <button class="cart-close" id="cart-close">&times;</button>
-        </div>
-        <div class="cart-items" id="cart-items">
-            <p class="cart-empty">Votre panier est vide</p>
-        </div>
-        <div class="cart-footer" id="cart-footer" style="display:none;">
-            <div class="cart-total">
-                <span>Total :</span>
-                <strong id="cart-total-price">0,00 &#8364;</strong>
-            </div>
-            <button class="btn btn-primary btn-block" id="btn-checkout">Passer Commande</button>
-        </div>
-    </aside>
-
-    <!-- Checkout Modal -->
-    <div class="modal-overlay" id="checkout-modal">
-        <div class="modal">
-            <button class="modal-close" id="modal-close">&times;</button>
-            <h2>Finaliser votre Commande</h2>
-            <form id="checkout-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="client-nom">Nom *</label>
-                        <input type="text" id="client-nom" name="nom" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="client-prenom">Prenom *</label>
-                        <input type="text" id="client-prenom" name="prenom" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="client-email">Email *</label>
-                        <input type="email" id="client-email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="client-tel">Telephone *</label>
-                        <input type="tel" id="client-tel" name="tel" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="client-adresse">Adresse de livraison *</label>
-                    <input type="text" id="client-adresse" name="adresse" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="client-cp">Code postal *</label>
-                        <input type="text" id="client-cp" name="cp" required pattern="[0-9]{5}">
-                    </div>
-                    <div class="form-group">
-                        <label for="client-ville">Ville *</label>
-                        <input type="text" id="client-ville" name="ville" value="Marseille" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="delivery-date">Date souhaitee *</label>
-                        <input type="date" id="delivery-date" name="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="delivery-time">Heure souhaitee *</label>
-                        <select id="delivery-time" name="heure" required>
-                            <option value="">Choisir...</option>
-                            <option value="11:30">11:30</option>
-                            <option value="11:45">11:45</option>
-                            <option value="12:00">12:00</option>
-                            <option value="12:15">12:15</option>
-                            <option value="12:30">12:30</option>
-                            <option value="12:45">12:45</option>
-                            <option value="13:00">13:00</option>
-                            <option value="13:15">13:15</option>
-                            <option value="13:30">13:30</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="delivery-type">Mode de retrait *</label>
-                    <select id="delivery-type" name="mode" required>
-                        <option value="livraison">Livraison (frais en supplement)</option>
-                        <option value="retrait">Retrait sur place - Chateau-Gombert</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="client-notes">Instructions speciales</label>
-                    <textarea id="client-notes" name="notes" rows="3" placeholder="Allergies, instructions de livraison..."></textarea>
-                </div>
-
-                <div class="order-summary" id="order-summary">
-                    <!-- filled by JS -->
-                </div>
-
-                <div class="form-group form-check">
-                    <input type="checkbox" id="accept-cgv" required>
-                    <label for="accept-cgv">J'accepte les conditions generales de vente et je confirme ma commande *</label>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block btn-lg">Confirmer la Commande</button>
-                <p class="payment-note">Paiement a la livraison ou au retrait : Carte Bleue, Especes, Ticket Restaurant.<br>Livraison a partir de 10&#8364; de commande.</p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Order Confirmation Modal -->
-    <div class="modal-overlay" id="confirmation-modal">
-        <div class="modal modal-confirmation">
-            <div class="confirmation-icon">&#10004;</div>
-            <h2>Commande Confirmee !</h2>
-            <p>Merci pour votre commande.</p>
-            <div id="confirmation-details"></div>
-            <p class="confirmation-note">Un recapitulatif vous sera envoye par email.<br>Nous vous contacterons pour confirmer votre commande.</p>
-            <button class="btn btn-primary" onclick="location.reload()">Retour a la Carte</button>
-        </div>
-    </div>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
+    <!-- ════════════ DEVIS FORM ════════════ -->
+    <section id="devis-form" class="section section-devis">
         <div class="container">
-            <h2 class="section-title">Contact & Devis</h2>
-            <div class="contact-grid">
-                <div class="contact-info">
-                    <h3>Sur Le Pouce ML</h3>
-                    <p>Traiteur d'Armenie et d'Ailleurs</p>
-                    <div class="contact-detail">
-                        <strong>&#128205; Adresse</strong>
-                        <p>1 rue Louis Neel (angle Louis Neel et Henri Becquerel)<br>13013 Marseille - Chateau-Gombert</p>
-                    </div>
-                    <div class="contact-detail">
-                        <strong>&#9742; Telephone / Commandes</strong>
-                        <p><a href="tel:0781995920">07 81 99 59 20</a></p>
-                    </div>
-                    <div class="contact-detail">
-                        <strong>&#128340; Horaires</strong>
-                        <p>Ouverture : 8h30 a 15h00<br>Commandes par telephone : 8h30 a 11h30<br>Livraison : 11h30 a 13h30</p>
-                    </div>
-                    <div class="contact-detail">
-                        <strong>&#128179; Paiement</strong>
-                        <p>Carte Bleue, Especes, Ticket Restaurant</p>
-                    </div>
-                    <div class="contact-detail">
-                        <strong>&#128666; Livraison</strong>
-                        <p>Marseille, Chateau-Gombert, Plan-de-Cuques, Allauch et environs<br><em>Livraison a partir de 10&#8364; de commande (hors zone)</em></p>
-                    </div>
+            <div class="devis-grid">
+                <div class="devis-info animate-on-scroll">
+                    <span class="section-eyebrow">Demande de Devis</span>
+                    <h2 class="section-title">Un événement à préparer ?</h2>
+                    <p>Décrivez-nous votre projet et nous vous répondrons sous 24h avec une proposition personnalisée.</p>
+                    <ul class="devis-checklist">
+                        <li><i data-lucide="check-circle" class="icon-sm"></i> Réponse sous 24h</li>
+                        <li><i data-lucide="check-circle" class="icon-sm"></i> Devis gratuit et sans engagement</li>
+                        <li><i data-lucide="check-circle" class="icon-sm"></i> Menu personnalisable</li>
+                        <li><i data-lucide="check-circle" class="icon-sm"></i> Service complet inclus</li>
+                    </ul>
                 </div>
-                <form class="contact-form" id="contact-form">
-                    <h3>Demande de Devis</h3>
+                <form class="devis-form-card animate-on-scroll" id="devis-form-el">
                     <div class="form-group">
-                        <label for="devis-nom">Nom complet *</label>
-                        <input type="text" id="devis-nom" required>
+                        <label for="devis-nom">Nom complet</label>
+                        <input type="text" id="devis-nom" required placeholder="Votre nom">
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="devis-email">Email</label>
+                            <input type="email" id="devis-email" required placeholder="email@exemple.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="devis-tel">Téléphone</label>
+                            <input type="tel" id="devis-tel" required placeholder="06 00 00 00 00">
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="devis-event">Type d'événement</label>
+                            <select id="devis-event" required>
+                                <option value="">Choisir...</option>
+                                <option value="mariage">Mariage</option>
+                                <option value="anniversaire">Anniversaire</option>
+                                <option value="entreprise">Événement d'entreprise</option>
+                                <option value="bapteme">Baptême / Communion</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="devis-date">Date approximative</label>
+                            <input type="date" id="devis-date">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="devis-email">Email *</label>
-                        <input type="email" id="devis-email" required>
+                        <label for="devis-personnes">Nombre de personnes : <strong id="devis-personnes-val">50</strong></label>
+                        <input type="range" id="devis-personnes" min="10" max="500" value="50" step="10">
+                        <div class="range-labels"><span>10</span><span>250</span><span>500</span></div>
                     </div>
                     <div class="form-group">
-                        <label for="devis-tel">Telephone *</label>
-                        <input type="tel" id="devis-tel" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="devis-event">Type d'evenement *</label>
-                        <select id="devis-event" required>
+                        <label for="devis-budget">Budget approximatif</label>
+                        <select id="devis-budget">
                             <option value="">Choisir...</option>
-                            <option value="mariage">Mariage</option>
-                            <option value="anniversaire">Anniversaire</option>
-                            <option value="entreprise">Evenement d'entreprise</option>
-                            <option value="bapteme">Bapteme / Communion</option>
-                            <option value="autre">Autre</option>
+                            <option value="<500">Moins de 500 €</option>
+                            <option value="500-1000">500 – 1 000 €</option>
+                            <option value="1000-3000">1 000 – 3 000 €</option>
+                            <option value=">3000">Plus de 3 000 €</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="devis-personnes">Nombre de personnes</label>
-                        <input type="number" id="devis-personnes" min="10" placeholder="Ex: 50">
+                        <label for="devis-message">Votre message</label>
+                        <textarea id="devis-message" rows="4" required placeholder="Décrivez votre événement, vos souhaits..."></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="devis-message">Votre message *</label>
-                        <textarea id="devis-message" rows="4" required placeholder="Decrivez votre evenement..."></textarea>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg ripple" aria-label="Envoyer la demande de devis">
+                        <i data-lucide="send" class="icon-sm"></i> Envoyer la demande
+                    </button>
+                    <div class="devis-success" id="devis-success" hidden>
+                        <i data-lucide="check-circle-2"></i>
+                        <p>Votre demande a bien été envoyée ! Nous vous recontacterons sous 24h.</p>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Envoyer la Demande</button>
                 </form>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ════════════ CONTACT ════════════ -->
+    <section id="contact" class="section section-contact">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="section-eyebrow">Contact</span>
+                <h2 class="section-title">Nous trouver</h2>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info animate-on-scroll">
+                    <h3>Sur Le Pouce ML</h3>
+                    <p class="contact-tagline">Traiteur d'Arménie & de Méditerranée</p>
+
+                    <div class="contact-item">
+                        <i data-lucide="map-pin"></i>
+                        <div>
+                            <strong>Adresse</strong>
+                            <p>1 rue Louis Neel (angle Henri Becquerel)<br>13013 Marseille — Château-Gombert</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i data-lucide="phone"></i>
+                        <div>
+                            <strong>Téléphone / Commandes</strong>
+                            <p><a href="tel:+33781995920">07 81 99 59 20</a></p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i data-lucide="mail"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <p><a href="mailto:mariame3011@yahoo.fr">mariame3011@yahoo.fr</a></p>
+                        </div>
+                    </div>
+
+                    <div class="contact-hours">
+                        <h4><i data-lucide="clock" class="icon-sm"></i> Horaires</h4>
+                        <table>
+                            <tr><td>Boutique</td><td>8h30 – 15h00</td></tr>
+                            <tr><td>Commandes téléphone</td><td>8h30 – 11h30</td></tr>
+                            <tr><td>Livraison</td><td>11h30 – 13h30</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="contact-payment">
+                        <h4>Modes de paiement</h4>
+                        <div class="payment-icons">
+                            <span class="payment-icon"><i data-lucide="credit-card"></i> CB</span>
+                            <span class="payment-icon"><i data-lucide="banknote"></i> Espèces</span>
+                            <span class="payment-icon"><i data-lucide="ticket"></i> Ticket Restaurant</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-map animate-on-scroll">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2903.0!2d5.4392473!3d43.3436954!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x7c69fa55b2af9111!2sSur%20Le%20Pouce!5e0!3m2!1sfr!2sfr!4v1234567890"
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Localisation Sur Le Pouce ML">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════ FOOTER ════════════ -->
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h4>Sur Le Pouce ML</h4>
-                    <p>Traiteur d'Armenie et d'Ailleurs. Saveurs authentiques depuis des generations a Marseille.</p>
+                    <span class="footer-logo">Sur Le Pouce<span class="logo-dot">·</span>ML</span>
+                    <p class="footer-tagline">Saveurs d'Arménie & de Méditerranée</p>
+                    <p class="footer-desc">Cuisine fait maison à Marseille Château-Gombert depuis des générations.</p>
                 </div>
                 <div class="footer-col">
-                    <h4>Liens Rapides</h4>
+                    <h4>Liens rapides</h4>
                     <ul>
-                        <li><a href="#carte">Notre Carte</a></li>
+                        <li><a href="#carte">La Carte</a></li>
                         <li><a href="#traiteur">Traiteur</a></li>
-                        <li><a href="#evenements">Nos Services</a></li>
+                        <li><a href="#devis-form">Demander un devis</a></li>
                         <li><a href="#contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>Contact</h4>
-                    <p>&#9742; <a href="tel:0781995920">07 81 99 59 20</a></p>
-                    <p>&#128205; 1 rue Louis Neel, 13013 Marseille</p>
-                    <p>Ouvert : 8h30 - 15h00</p>
+                    <p><i data-lucide="phone" class="icon-xs"></i> <a href="tel:+33781995920">07 81 99 59 20</a></p>
+                    <p><i data-lucide="mail" class="icon-xs"></i> <a href="mailto:mariame3011@yahoo.fr">mariame3011@yahoo.fr</a></p>
+                    <p><i data-lucide="map-pin" class="icon-xs"></i> 1 rue Louis Neel, 13013 Marseille</p>
+                    <p><i data-lucide="clock" class="icon-xs"></i> 8h30 – 15h00</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 Sur Le Pouce ML - Tous droits reserves</p>
+                <p>ML SNACK · SIRET 82348675800019 · &copy; 2026 Tous droits réservés</p>
+                <a href="#" class="footer-legal">Politique de confidentialité</a>
             </div>
         </div>
     </footer>
+
+    <!-- ════════════ CART DRAWER ════════════ -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <aside class="cart-drawer" id="cart-drawer" aria-label="Panier">
+        <div class="cart-drawer-header">
+            <h3><i data-lucide="shopping-cart" class="icon-sm"></i> Votre commande</h3>
+            <button class="cart-drawer-close" id="cart-drawer-close" aria-label="Fermer le panier">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="cart-drawer-body" id="cart-drawer-body">
+            <div class="cart-empty" id="cart-empty">
+                <i data-lucide="shopping-bag"></i>
+                <p>Votre panier est vide</p>
+                <button class="btn btn-outline" id="cart-empty-browse" aria-label="Parcourir la carte">Parcourir la carte</button>
+            </div>
+        </div>
+        <div class="cart-drawer-footer" id="cart-drawer-footer" hidden>
+            <div class="cart-subtotal">
+                <span>Sous-total</span>
+                <strong id="cart-subtotal-val">0,00 €</strong>
+            </div>
+            <p class="cart-delivery-note"><i data-lucide="info" class="icon-xs"></i> Livraison calculée à la commande</p>
+            <button class="btn btn-primary btn-block btn-lg ripple" id="btn-checkout" aria-label="Passer ma commande">
+                <i data-lucide="arrow-right" class="icon-sm"></i> Passer ma commande
+            </button>
+            <button class="btn btn-ghost btn-block" id="btn-continue" aria-label="Continuer mes achats">Continuer mes achats</button>
+        </div>
+    </aside>
+
+    <!-- ════════════ CHECKOUT MODAL ════════════ -->
+    <div class="modal-overlay" id="checkout-overlay">
+        <div class="modal" id="checkout-modal" role="dialog" aria-label="Finaliser la commande">
+            <button class="modal-close" id="checkout-close" aria-label="Fermer"><i data-lucide="x"></i></button>
+
+            <!-- Steps indicator -->
+            <div class="checkout-steps" id="checkout-steps">
+                <div class="checkout-step active" data-step="1"><span>1</span> Récapitulatif</div>
+                <div class="checkout-step" data-step="2"><span>2</span> Informations</div>
+                <div class="checkout-step" data-step="3"><span>3</span> Confirmation</div>
+            </div>
+
+            <!-- Step 1: Cart recap -->
+            <div class="checkout-page active" id="checkout-page-1">
+                <h2>Récapitulatif de commande</h2>
+                <div id="checkout-items"></div>
+                <div class="checkout-total" id="checkout-total-1"></div>
+                <div class="checkout-min-warning" id="checkout-min-warn" hidden>
+                    <i data-lucide="alert-circle" class="icon-sm"></i>
+                    Minimum de commande : 10,00 €. Ajoutez quelques articles pour continuer.
+                </div>
+                <button class="btn btn-primary btn-block btn-lg ripple" id="btn-to-step2" aria-label="Continuer vers les informations">
+                    Continuer <i data-lucide="arrow-right" class="icon-sm"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: Client info -->
+            <div class="checkout-page" id="checkout-page-2">
+                <h2>Vos informations</h2>
+                <form id="checkout-form" novalidate>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="c-nom">Nom *</label>
+                            <input type="text" id="c-nom" required>
+                            <span class="form-error" id="err-nom"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="c-prenom">Prénom *</label>
+                            <input type="text" id="c-prenom" required>
+                            <span class="form-error" id="err-prenom"></span>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="c-email">Email *</label>
+                            <input type="email" id="c-email" required>
+                            <span class="form-error" id="err-email"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="c-tel">Téléphone *</label>
+                            <input type="tel" id="c-tel" required>
+                            <span class="form-error" id="err-tel"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="c-mode">Mode de retrait *</label>
+                        <select id="c-mode" required>
+                            <option value="livraison">Livraison</option>
+                            <option value="retrait">Retrait sur place — Château-Gombert</option>
+                        </select>
+                    </div>
+                    <div id="delivery-fields">
+                        <div class="form-group">
+                            <label for="c-adresse">Adresse de livraison *</label>
+                            <input type="text" id="c-adresse">
+                            <span class="form-error" id="err-adresse"></span>
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="c-cp">Code postal *</label>
+                                <input type="text" id="c-cp" pattern="[0-9]{5}">
+                                <span class="form-error" id="err-cp"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="c-ville">Ville *</label>
+                                <input type="text" id="c-ville" value="Marseille">
+                                <span class="form-error" id="err-ville"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="c-date">Date souhaitée *</label>
+                            <input type="date" id="c-date" required>
+                            <span class="form-error" id="err-date"></span>
+                        </div>
+                        <div class="form-group" id="c-heure-group">
+                            <label for="c-heure">Créneau de livraison *</label>
+                            <select id="c-heure" required>
+                                <option value="">Choisir...</option>
+                                <option value="11:30">11:30</option>
+                                <option value="11:45">11:45</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:15">12:15</option>
+                                <option value="12:30">12:30</option>
+                                <option value="12:45">12:45</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:15">13:15</option>
+                                <option value="13:30">13:30</option>
+                            </select>
+                            <span class="form-error" id="err-heure"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="c-instructions">Instructions spéciales</label>
+                        <textarea id="c-instructions" rows="3" placeholder="Allergies, étage, digicode..."></textarea>
+                    </div>
+                </form>
+                <div class="checkout-nav">
+                    <button class="btn btn-ghost" id="btn-back-1" aria-label="Retour au récapitulatif">
+                        <i data-lucide="arrow-left" class="icon-sm"></i> Retour
+                    </button>
+                    <button class="btn btn-primary btn-lg ripple" id="btn-to-step3" aria-label="Continuer vers la confirmation">
+                        Continuer <i data-lucide="arrow-right" class="icon-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Confirmation -->
+            <div class="checkout-page" id="checkout-page-3">
+                <h2>Confirmer votre commande</h2>
+                <div class="confirm-recap" id="confirm-recap"></div>
+                <div class="form-group form-check">
+                    <input type="checkbox" id="c-cgv" required>
+                    <label for="c-cgv">J'accepte les conditions générales de vente et je confirme ma commande *</label>
+                    <span class="form-error" id="err-cgv"></span>
+                </div>
+                <p class="payment-reminder"><i data-lucide="credit-card" class="icon-xs"></i> Paiement à la livraison ou au retrait : CB, Espèces, Ticket Restaurant</p>
+                <div class="checkout-nav">
+                    <button class="btn btn-ghost" id="btn-back-2" aria-label="Retour aux informations">
+                        <i data-lucide="arrow-left" class="icon-sm"></i> Retour
+                    </button>
+                    <button class="btn btn-primary btn-lg ripple" id="btn-confirm" aria-label="Confirmer la commande">
+                        <i data-lucide="check" class="icon-sm"></i> Confirmer ma commande
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Success -->
+            <div class="checkout-page" id="checkout-page-4">
+                <div class="success-content">
+                    <svg class="checkmark-svg" viewBox="0 0 52 52" aria-hidden="true">
+                        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                        <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                    <h2>Commande enregistrée !</h2>
+                    <p class="success-order-id" id="success-order-id"></p>
+                    <p>Nous vous appelons au <strong>07 81 99 59 20</strong> pour confirmer votre commande.</p>
+                    <button class="btn btn-primary btn-lg ripple" id="btn-back-carte" aria-label="Retour à la carte">
+                        <i data-lucide="utensils" class="icon-sm"></i> Retour à la carte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" aria-live="polite"></div>
 
     <script src="js/products.js"></script>
     <script src="js/app.js"></script>
