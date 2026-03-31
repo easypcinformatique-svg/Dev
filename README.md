@@ -1,121 +1,72 @@
-# Gestion de Factures - Pizzeria
+# PizzaCaisse - Logiciel de Caisse Pizzeria
 
-Application web de gestion et d'archivage de factures pour une pizzeria (vente a emporter), avec synchronisation Gmail, Google Drive et extraction OCR pour la declaration de TVA.
+Logiciel de caisse (POS) complet pour pizzeria, optimise pour la **vente a emporter** et la **livraison**.
 
-## Fonctionnalites
+## Stack Technique
 
-- **Import automatique Gmail** : Recupere les factures en pieces jointes de vos emails
-- **Synchronisation Google Drive** : Importe les factures scannees depuis votre dossier Drive
-- **Upload manuel** : Importez des factures directement depuis votre navigateur
-- **OCR** : Extraction automatique des donnees (numero, date, montants, TVA) via Tesseract
-- **Calcul TVA** : Synthese mensuelle et annuelle pour la declaration de TVA
-- **Export CSV** : Exportez les donnees par periode pour votre comptable
-- **Gestion fournisseurs** : Metro, Promocash, EDF, Orange, SFR, etc.
+| Composant | Technologie |
+|-----------|------------|
+| Backend | Python / FastAPI |
+| Frontend | React.js + TailwindCSS |
+| Base de donnees | PostgreSQL |
+| Temps reel | WebSockets |
+| Impression | ESC/POS (thermique 80mm) |
+| Deploiement | Docker |
 
-## Prerequis
+## Structure du Projet
 
-- Python 3.10+
-- Tesseract OCR (`sudo apt install tesseract-ocr tesseract-ocr-fra`)
-- Poppler pour la conversion PDF (`sudo apt install poppler-utils`)
-- Un projet Google Cloud avec les APIs Gmail et Drive activees
+```
+backend/
+  api/routes/       # Routes FastAPI (commandes, menu, clients, stats, auth)
+  models/           # Modeles SQLAlchemy + schemas Pydantic
+  services/         # Logique metier (prix, stocks, zones livraison)
+  websocket/        # Notifications temps reel (cuisine, suivi commande)
+  printing/         # Generation tickets ESC/POS
+  db/migrations/    # Migrations Alembic
 
-## Installation
+frontend/
+  pos/              # Interface caisse (prise de commande, encaissement)
+  kitchen/          # Ecran cuisine (KDS - Kitchen Display System)
+  delivery/         # Gestion des livraisons
+  admin/            # Dashboard, stats, gestion menu/stocks/users
+  online/           # Module commande en ligne (client)
+  shared/           # Composants, hooks et utils partages
+
+tests/
+  backend/          # Tests API et services
+  frontend/         # Tests composants React
+
+docker/             # Fichiers Docker
+docs/               # Documentation
+```
+
+## Modules
+
+1. **Gestion du Menu** - Pizzas (multi-tailles), supplements, formules, TVA
+2. **Prise de Commande** - Interface tactile, mode emporter/livraison, historique client
+3. **Ecran Cuisine (KDS)** - File d'attente temps reel, timer, statuts couleur
+4. **Livraisons** - Gestion livreurs, zones, suivi statut, frais par zone
+5. **Encaissement** - Especes, CB, ticket resto, paiement mixte, ticket Z
+6. **Commande en Ligne** - Menu web, panier, paiement Stripe, suivi temps reel
+7. **Statistiques** - CA, top pizzas, panier moyen, performance livreurs
+8. **Stocks** - Ingredients, decompte auto, alertes, fiches techniques
+9. **Utilisateurs** - Roles (admin/caissier/pizzaiolo/livreur), PIN, journal
+10. **Configuration** - Infos pizzeria, horaires, imprimantes, promos
+
+## Demarrage Rapide
 
 ```bash
-# Cloner le projet
-git clone <url-du-repo>
-cd Dev
+# Cloner et lancer
+docker-compose up -d
 
-# Creer un environnement virtuel
-python -m venv venv
-source venv/bin/activate
+# Backend seul (dev)
+cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 
-# Installer les dependances
-pip install -r requirements.txt
-
-# Configurer les variables d'environnement
-cp .env.example .env
-# Editez .env avec vos identifiants Google OAuth
+# Frontend seul (dev)
+cd frontend && npm install && npm run dev
 ```
 
-## Configuration Google OAuth
+## Conformite
 
-1. Allez sur [Google Cloud Console](https://console.cloud.google.com)
-2. Creez un nouveau projet
-3. Activez les APIs : **Gmail API** et **Google Drive API**
-4. Allez dans "Identifiants" > "Creer des identifiants" > "ID client OAuth"
-5. Type : **Application Web**
-6. URI de redirection autorisee : `http://localhost:5000/auth/callback`
-7. Copiez le Client ID et Client Secret dans votre fichier `.env`
-
-## Lancement
-
-```bash
-# Mode developpement
-python run.py
-
-# Mode production
-gunicorn run:app -b 0.0.0.0:5000
-```
-
-L'application est accessible sur `http://localhost:5000`
-
-## Utilisation
-
-### Premier lancement
-1. Ouvrez l'application dans votre navigateur
-2. Cliquez sur "Connecter Google" pour lier votre compte Gmail/Drive
-3. Les fournisseurs par defaut (Metro, EDF, Orange...) sont deja configures
-
-### Workflow quotidien
-1. **Le soir** : Scannez vos factures et deposez-les dans votre dossier Google Drive
-2. **Depuis l'app** : Cliquez "Synchroniser Drive" pour importer les scans
-3. **Emails** : Cliquez "Synchroniser Gmail" pour recuperer les factures en PJ
-4. **OCR** : Sur chaque facture, lancez l'OCR pour extraire les donnees
-5. **Verification** : Validez les donnees extraites et corrigez si necessaire
-6. **TVA** : Consultez la synthese TVA pour votre declaration
-
-### Declaration TVA
-1. Allez dans l'onglet "TVA"
-2. Verifiez que toutes les factures du mois sont "validees"
-3. Consultez le resume par taux de TVA
-4. Exportez en CSV pour votre comptable
-
-## Structure du projet
-
-```
-Dev/
-├── run.py                    # Point d'entree
-├── requirements.txt          # Dependances Python
-├── .env.example              # Modele de configuration
-├── app/
-│   ├── create_app.py         # Factory Flask
-│   ├── models.py             # Modeles de base de donnees
-│   ├── routes.py             # Routes et API
-│   ├── templates/            # Templates HTML
-│   │   ├── base.html
-│   │   ├── dashboard.html
-│   │   ├── factures.html
-│   │   ├── facture_detail.html
-│   │   ├── tva.html
-│   │   ├── upload.html
-│   │   └── fournisseurs.html
-│   ├── static/css/style.css  # Styles CSS
-│   └── modules/
-│       ├── auth_google.py    # Authentification Google OAuth2
-│       ├── gmail_service.py  # Recuperation PJ Gmail
-│       ├── drive_service.py  # Synchronisation Google Drive
-│       ├── ocr_service.py    # Extraction OCR
-│       └── tva_service.py    # Calcul et reporting TVA
-└── uploads/                  # Factures telechargees (gitignore)
-```
-
-## Taux de TVA configures
-
-| Categorie | Taux | Usage |
-|-----------|------|-------|
-| Produits alimentaires (emporter) | 5,5% | Vente a emporter |
-| Restauration (sur place) | 10% | Consommation immediate |
-| Boissons alcoolisees | 20% | Bieres, vins, etc. |
-| Fournitures et services | 20% | Emballages, nettoyage, etc. |
-| Energie | 20% | Electricite, gaz |
+- **NF525** : Signature et inalterabilite des tickets
+- **RGPD** : Protection des donnees clients
