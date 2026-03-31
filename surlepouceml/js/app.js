@@ -546,6 +546,13 @@ function bindEvents() {
         }
     });
 
+    // Avis carousel nav
+    const avisTrack = $('avis-track');
+    if (avisTrack) {
+        $('avis-prev').addEventListener('click', () => { avisTrack.scrollBy({ left:-350, behavior:'smooth' }); });
+        $('avis-next').addEventListener('click', () => { avisTrack.scrollBy({ left:350, behavior:'smooth' }); });
+    }
+
     // Devis form
     $('devis-form-el').addEventListener('submit', handleDevis);
     $('devis-personnes').addEventListener('input', function() {

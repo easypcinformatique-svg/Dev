@@ -770,6 +770,59 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .footer-legal { font-size:.78rem; }
 
+/* ── Avis Clients ── */
+.section-avis { background:var(--color-bg); overflow:hidden; }
+.avis-rating-summary {
+    display:flex; align-items:center; justify-content:center; gap:12px; margin-top:16px;
+}
+.avis-stars { display:flex; gap:2px; }
+.star-filled { width:18px; height:18px; color:var(--color-gold); fill:var(--color-gold); }
+.avis-note { font-family:var(--font-heading); font-weight:700; font-size:1.2rem; color:var(--color-dark); }
+.avis-count { font-size:.85rem; color:var(--color-text-light); }
+.avis-carousel { position:relative; margin-top:40px; }
+.avis-track {
+    display:flex; gap:24px; overflow-x:auto; scroll-behavior:smooth;
+    padding:10px 0 20px; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+}
+.avis-track::-webkit-scrollbar { display:none; }
+.avis-card {
+    min-width:320px; max-width:360px; flex-shrink:0;
+    background:var(--color-card); border-radius:var(--radius);
+    padding:28px; border:1px solid var(--color-border);
+    transition:var(--transition); position:relative;
+}
+.avis-card:hover { box-shadow:var(--shadow-md); border-color:var(--color-gold); }
+.avis-card-stars { display:flex; gap:2px; margin-bottom:16px; }
+.avis-card-stars .star-filled { width:16px; height:16px; }
+.avis-text {
+    font-size:.92rem; color:var(--color-text); line-height:1.7;
+    font-style:italic; margin-bottom:20px; min-height:60px;
+}
+.avis-author { display:flex; align-items:center; gap:12px; }
+.avis-avatar {
+    width:40px; height:40px; border-radius:50%;
+    background:var(--color-primary); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-heading); font-weight:700; font-size:.9rem;
+}
+.avis-author strong { display:block; font-size:.85rem; font-family:var(--font-heading); }
+.avis-author span { font-size:.75rem; color:var(--color-text-light); }
+.avis-nav {
+    display:flex; justify-content:center; gap:12px; margin-top:24px;
+}
+.avis-nav-btn {
+    width:44px; height:44px; border-radius:50%;
+    border:1px solid var(--color-border); background:var(--color-card);
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:var(--transition);
+}
+.avis-nav-btn:hover { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+.avis-nav-btn i { width:20px; height:20px; }
+@media (max-width:480px) {
+    .avis-card { min-width:280px; }
+}
+
 /* ── Product Customization Modal ── */
 .modal-custom { max-width:520px; padding:0; overflow:hidden; }
 .custom-header { display:flex; gap:16px; padding:24px 24px 16px; border-bottom:1px solid var(--color-border); }
