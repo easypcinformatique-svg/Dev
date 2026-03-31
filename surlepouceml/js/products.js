@@ -15,15 +15,15 @@ const PRODUCTS = [
 
     // ── SANDWICHS & BURGERS ──
     { id:10, name:"Chawarma Poulet", desc:"Poulet mariné, légumes frais, sauce yaourt", price:7.50, cat:"sandwich",
-      img:"https://images.pexels.com/photos/5779787/pexels-photo-5779787.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Populaire", badgeType:"populaire" },
+      img:"https://images.pexels.com/photos/29285458/pexels-photo-29285458.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Populaire", badgeType:"populaire" },
     { id:11, name:"Chawarma Veau", desc:"Veau aux épices, légumes, sauce ail", price:8.00, cat:"sandwich",
-      img:"https://images.pexels.com/photos/5779787/pexels-photo-5779787.jpeg?auto=compress&cs=tinysrgb&w=600" },
+      img:"https://images.pexels.com/photos/28897047/pexels-photo-28897047.jpeg?auto=compress&cs=tinysrgb&w=600" },
     { id:12, name:"Burger Arménien", desc:"Steak haché épicé, fromage, oignons caramélisés", price:8.50, cat:"sandwich",
       img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600", badge:"Nouveau", badgeType:"nouveau" },
     { id:13, name:"Kefta Sandwich", desc:"Brochette kefta, tomates, poivrons grillés", price:7.50, cat:"sandwich",
       img:"https://images.unsplash.com/photo-1694004602524-33c11ad120f2?w=600" },
     { id:14, name:"Végétarien Falafel", desc:"Falafel maison, hummus, salade fraîche", price:7.00, cat:"sandwich",
-      img:"https://images.pexels.com/photos/6419753/pexels-photo-6419753.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
+      img:"https://images.pexels.com/photos/4722529/pexels-photo-4722529.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
 
     // ── SALADES & PÂTES ──
     { id:20, name:"Taboulé Maison", desc:"Taboulé arménien persillé, citron", price:5.50, cat:"salade",
@@ -37,25 +37,25 @@ const PRODUCTS = [
 
     // ── SPÉCIALITÉS ARMÉNIENNES ──
     { id:30, name:"Dolmas (4 pcs)", desc:"Feuilles de vigne farcies riz et viande", price:6.50, cat:"armenien",
-      img:"https://images.pexels.com/photos/6419747/pexels-photo-6419747.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Populaire", badgeType:"populaire" },
+      img:"https://images.pexels.com/photos/15793852/pexels-photo-15793852.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Populaire", badgeType:"populaire" },
     { id:31, name:"Lahmajoun (2 pcs)", desc:"Pizza arménienne fine à la viande épicée", price:7.00, cat:"armenien",
-      img:"https://images.pexels.com/photos/9609838/pexels-photo-9609838.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Populaire", badgeType:"populaire" },
+      img:"https://images.pexels.com/photos/7545572/pexels-photo-7545572.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Populaire", badgeType:"populaire" },
     { id:32, name:"Börek Fromage", desc:"Feuilleté croustillant au fromage", price:5.50, cat:"armenien",
-      img:"https://images.pexels.com/photos/8697541/pexels-photo-8697541.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Fait Maison", badgeType:"fait-maison" },
+      img:"https://images.pexels.com/photos/8290037/pexels-photo-8290037.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Fait Maison", badgeType:"fait-maison" },
     { id:33, name:"Börek Épinards", desc:"Feuilleté croustillant aux épinards", price:5.50, cat:"armenien",
-      img:"https://images.pexels.com/photos/8697541/pexels-photo-8697541.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
+      img:"https://images.pexels.com/photos/8290037/pexels-photo-8290037.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
     { id:34, name:"Manti", desc:"Raviolis arméniens bœuf, sauce yaourt-ail", price:9.00, cat:"armenien",
       img:"https://images.unsplash.com/photo-1616895427217-5318221a3e79?w=600" },
     { id:35, name:"Hummus Maison", desc:"Hummus crémeux, huile d'olive, paprika", price:4.50, cat:"armenien",
       img:"https://images.pexels.com/photos/1618898/pexels-photo-1618898.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
     { id:36, name:"Mutabbal", desc:"Caviar d'aubergines grillées au tahini", price:4.50, cat:"armenien",
-      img:"https://images.pexels.com/photos/5779787/pexels-photo-5779787.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
+      img:"https://images.pexels.com/photos/1618898/pexels-photo-1618898.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Végétarien", badgeType:"vegetarien" },
 
     // ── ACCOMPAGNEMENTS ──
     { id:40, name:"Frites Maison", desc:"Frites dorées faites maison", price:3.00, cat:"accompagnement",
       img:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600" },
     { id:41, name:"Pain Pita (2 pcs)", desc:"Pain pita chaud maison", price:2.00, cat:"accompagnement",
-      img:"https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600" },
+      img:"https://images.pexels.com/photos/1117862/pexels-photo-1117862.jpeg?auto=compress&cs=tinysrgb&w=600" },
     { id:42, name:"Riz Pilaf", desc:"Riz au beurre et vermicelles", price:3.50, cat:"accompagnement",
       img:"https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600" },
     { id:43, name:"Salade Verte", desc:"Salade verte assaisonnée", price:2.50, cat:"accompagnement",
@@ -63,7 +63,7 @@ const PRODUCTS = [
 
     // ── DESSERTS ──
     { id:50, name:"Baklava (2 pcs)", desc:"Baklava au miel et aux noix", price:4.00, cat:"dessert",
-      img:"https://images.pexels.com/photos/7250436/pexels-photo-7250436.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Fait Maison", badgeType:"fait-maison" },
+      img:"https://images.pexels.com/photos/20183046/pexels-photo-20183046.jpeg?auto=compress&cs=tinysrgb&w=600", badge:"Fait Maison", badgeType:"fait-maison" },
     { id:51, name:"Gâteau Arménien", desc:"Part de gâteau tradition arménienne", price:3.50, cat:"dessert",
       img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600", badge:"Fait Maison", badgeType:"fait-maison" },
     { id:52, name:"Yaourt au Miel", desc:"Yaourt grec, miel de fleurs", price:3.00, cat:"dessert",
@@ -77,7 +77,7 @@ const PRODUCTS = [
     { id:61, name:"Jus d'Orange", desc:"Jus d'orange frais", price:2.50, cat:"boisson",
       img:"https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=600" },
     { id:62, name:"Ayran", desc:"Boisson au yaourt salé traditionnelle", price:2.00, cat:"boisson",
-      img:"https://images.pexels.com/photos/3622479/pexels-photo-3622479.jpeg?auto=compress&cs=tinysrgb&w=600" },
+      img:"https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=600" },
     { id:63, name:"Citronnade Menthe", desc:"Citronnade fraîche à la menthe", price:2.50, cat:"boisson",
       img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600" },
     { id:64, name:"Limonade Artisanale", desc:"Limonade faite maison", price:2.50, cat:"boisson",
