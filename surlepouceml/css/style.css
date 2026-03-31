@@ -196,6 +196,27 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); color: var(--color-dark); lin
 }
 .ripple:active::after { transform:scale(4); opacity:1; transition:0s; }
 
+/* ── Status Badge ── */
+.status-badge {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:3px 12px; border-radius:50px;
+    font-size:.72rem; font-weight:700; letter-spacing:.5px;
+    text-transform:uppercase;
+}
+.status-badge::before {
+    content:''; width:7px; height:7px; border-radius:50%;
+    display:inline-block;
+}
+.status-open { background:rgba(30,122,66,.2); color:#2ECC71; }
+.status-open::before { background:#2ECC71; animation:statusPulse 2s ease infinite; }
+.status-orders { background:rgba(241,196,15,.2); color:#F1C40F; }
+.status-orders::before { background:#F1C40F; animation:statusPulse 2s ease infinite; }
+.status-delivery { background:rgba(52,152,219,.2); color:#5DADE2; }
+.status-delivery::before { background:#5DADE2; animation:statusPulse 2s ease infinite; }
+.status-closed { background:rgba(192,57,43,.15); color:#E74C3C; }
+.status-closed::before { background:#E74C3C; }
+@keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
 /* ── Header ── */
 .header {
     position:fixed; top:0; left:0; right:0; z-index:1000;
