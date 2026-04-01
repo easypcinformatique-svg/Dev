@@ -1,17 +1,22 @@
 """Point d'entree de l'application PizzaCaisse."""
 
+import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 # Ajouter le parent au path pour les imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from backend.db.database import engine
 from backend.models.base import Base
+
+# Import de tous les modeles pour que SQLAlchemy les enregistre
+import backend.models  # noqa: F401
 
 
 @asynccontextmanager
@@ -31,7 +36,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,3 +76,9 @@ app.add_api_websocket_route("/ws/kitchen", websocket_endpoint)
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "pizzacaisse-api"}
+
+
+# ── Servir le frontend en production ──────────────────────────
+static_dir = Path(__file__).resolve().parent.parent / "static"
+if static_dir.exists():
+    app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="frontend")

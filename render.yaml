@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: pizzacaisse
+    runtime: docker
+    repo: https://github.com/easypcinformatique-svg/Dev
+    branch: master
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pizzacaisse-db
+          property: connectionURI
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PIZZERIA_NOM
+        value: "Ma Pizzeria"
+      - key: PIZZERIA_TEL
+        value: ""
+      - key: PIZZERIA_ADRESSE
+        value: ""
+      - key: PIZZERIA_SIRET
+        value: ""
+
+databases:
+  - name: pizzacaisse-db
+    plan: free
+    databaseName: pizzacaisse
+    user: pizzacaisse
