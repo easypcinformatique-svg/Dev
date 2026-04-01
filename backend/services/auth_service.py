@@ -1,10 +1,11 @@
 """Service d'authentification par code PIN."""
 
+import hashlib
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,15 +15,18 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 12
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_pin(pin: str) -> str:
-    return pwd_context.hash(pin)
+    salt = secrets.token_hex(16)
+    hashed = hashlib.sha256((salt + pin).encode()).hexdigest()
+    return f"{salt}${hashed}"
 
 
 def verify_pin(plain_pin: str, hashed_pin: str) -> bool:
-    return pwd_context.verify(plain_pin, hashed_pin)
+    if "$" not in hashed_pin:
+        return False
+    salt, expected = hashed_pin.split("$", 1)
+    return hashlib.sha256((salt + plain_pin).encode()).hexdigest() == expected
 
 
 def create_access_token(utilisateur_id: int, role: str) -> str:
