@@ -195,6 +195,10 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       PDF
     </button>
+    <button class="btn" onclick="exportPublipostage()" style="background:#7C3AED;color:#fff" title="Export optimisé pour le publipostage — champs séparés (civilité, nom, adresse, CP, ville) compatibles fusion Word et emailing">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Publipostage
+    </button>
     <button class="btn btn-outline" onclick="window.print()" title="Imprimer">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
@@ -2074,6 +2078,75 @@ function exportPDF(){
     styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[0,38,122]},alternateRowStyles:{fillColor:[245,247,254]}
   });
   triggerDownload(doc.output('blob'),'annuaire-sem-spl-sm.pdf');
+}
+
+function exportPublipostage(){
+  const rows=getFiltered();
+  const esc=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
+
+  // Parse address into components
+  function parseAddr(addr){
+    if(!addr)return {rue:'',cp:'',ville:''};
+    addr=addr.trim();
+    // Try to extract CP (5 digits) and ville
+    const m=addr.match(/^(.*?)\s*(\d{5})\s+(.+)$/);
+    if(m)return {rue:m[1].trim(),cp:m[2],ville:m[3].trim()};
+    // Try CP at start
+    const m2=addr.match(/^(\d{5})\s+(.+)$/);
+    if(m2)return {rue:'',cp:m2[1],ville:m2[2].trim()};
+    return {rue:addr,cp:'',ville:''};
+  }
+
+  // Parse president name
+  function parseName(name){
+    if(!name)return {civilite:'',prenom:'',nom:''};
+    const parts=name.trim().split(/\s+/);
+    if(parts.length===1)return {civilite:'',prenom:'',nom:parts[0]};
+    // First part = prenom, rest = nom
+    return {civilite:'',prenom:parts[0],nom:parts.slice(1).join(' ')};
+  }
+
+  // Build Excel with 2 sheets: Publipostage Courrier + Publipostage Email
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Courrier postal
+  const courrier=[['Structure','Type','SIREN','Civilité','Prénom destinataire','Nom destinataire','Fonction','Adresse ligne 1','Adresse ligne 2','Code postal','Ville','Département','Région','Téléphone']];
+  rows.forEach(d=>{
+    const a=parseAddr(d.adresse);
+    const n=parseName(d.president);
+    const region=({'01':'Auvergne-Rhône-Alpes','04':'PACA','05':'PACA','06':'PACA','07':'Auvergne-Rhône-Alpes','13':'PACA','26':'Auvergne-Rhône-Alpes','30':'Occitanie','34':'Occitanie','38':'Auvergne-Rhône-Alpes','48':'Occitanie','69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes','83':'PACA','84':'PACA','88':'Grand Est'})[d.dept]||'';
+    courrier.push([d.nom,d.type,d.siren,n.civilite,n.prenom,n.nom,'Président(e)',a.rue,'',a.cp,a.ville,d.dept+' - '+d.deptNom,region,d.tel]);
+  });
+  const ws1=XLSX.utils.aoa_to_sheet(courrier);
+  // Set column widths
+  ws1['!cols']=[{wch:35},{wch:8},{wch:12},{wch:5},{wch:15},{wch:20},{wch:12},{wch:40},{wch:20},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Publipostage Courrier');
+
+  // Sheet 2: Emailing
+  const emailing=[['Email','Prénom','Nom','Structure','Type','Fonction','Téléphone','Ville','Département','Région','SIREN']];
+  rows.forEach(d=>{
+    const n=parseName(d.president);
+    const region=({'01':'Auvergne-Rhône-Alpes','04':'PACA','05':'PACA','06':'PACA','07':'Auvergne-Rhône-Alpes','13':'PACA','26':'Auvergne-Rhône-Alpes','30':'Occitanie','34':'Occitanie','38':'Auvergne-Rhône-Alpes','48':'Occitanie','69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes','83':'PACA','84':'PACA','88':'Grand Est'})[d.dept]||'';
+    emailing.push([d.email,n.prenom,n.nom,d.nom,d.type,'Président(e)',d.tel,d.ville,d.dept+' - '+d.deptNom,region,d.siren]);
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(emailing);
+  ws2['!cols']=[{wch:30},{wch:15},{wch:20},{wch:35},{wch:8},{wch:12},{wch:16},{wch:20},{wch:25},{wch:25},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Publipostage Email');
+
+  // Sheet 3: Données complètes
+  const complet=[['Structure','Sigle/Type','SIREN','Président/DG','Adresse complète','Code postal','Ville','Département','Région','Téléphone','Email','Site web','Secteur']];
+  rows.forEach(d=>{
+    const a=parseAddr(d.adresse);
+    const region=({'01':'Auvergne-Rhône-Alpes','04':'PACA','05':'PACA','06':'PACA','07':'Auvergne-Rhône-Alpes','13':'PACA','26':'Auvergne-Rhône-Alpes','30':'Occitanie','34':'Occitanie','38':'Auvergne-Rhône-Alpes','48':'Occitanie','69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes','83':'PACA','84':'PACA','88':'Grand Est'})[d.dept]||'';
+    complet.push([d.nom,d.type,d.siren,d.president,d.adresse,a.cp,a.ville,d.dept+' - '+d.deptNom,region,d.tel,d.email,'',d.secteur]);
+  });
+  const ws3=XLSX.utils.aoa_to_sheet(complet);
+  ws3['!cols']=[{wch:35},{wch:8},{wch:12},{wch:25},{wch:45},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16},{wch:30},{wch:25},{wch:25}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Données complètes');
+
+  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  triggerDownload(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'publipostage-annuaire.xlsx');
+  showToast('Export publipostage : 3 onglets (Courrier + Email + Données complètes)','#7C3AED',5000);
 }
 
 function exportGoogleSheets(){
