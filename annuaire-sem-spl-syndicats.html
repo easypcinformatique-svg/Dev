@@ -120,6 +120,13 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="SPL">SPL</option>
       <option value="SM">Syndicat Mixte</option>
     </select>
+    <select id="region-filter" onchange="render()" title="Filtrer par région (regroupe les départements)">
+      <option value="">Toutes les régions</option>
+      <option value="paca">PACA (04, 05, 06, 13, 83, 84)</option>
+      <option value="ara">Auvergne-Rhône-Alpes (01, 07, 26, 38, 69, 73, 74)</option>
+      <option value="occ">Occitanie (30, 34, 48)</option>
+      <option value="ge">Grand Est (88)</option>
+    </select>
     <select id="dept-filter" onchange="render()" title="Filtrer par département">
       <option value="">Tous les départements</option>
       <option value="01">01 - Ain</option>
@@ -411,12 +418,21 @@ function setSort(field){
   render();
 }
 
+const REGIONS={
+  paca:["04","05","06","13","83","84"],
+  ara:["01","07","26","38","69","73","74"],
+  occ:["30","34","48"],
+  ge:["88"]
+};
+
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase().trim();
   const typeF=document.getElementById('type-filter').value;
+  const regionF=document.getElementById('region-filter').value;
   const deptF=document.getElementById('dept-filter').value;
   let rows=DATA.filter(d=>{
     if(typeF&&d.type!==typeF)return false;
+    if(regionF&&!REGIONS[regionF].includes(d.dept))return false;
     if(deptF&&d.dept!==deptF)return false;
     if(!q)return true;
     return d.nom.toLowerCase().includes(q)||d.ville.toLowerCase().includes(q)||
