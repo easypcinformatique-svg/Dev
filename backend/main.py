@@ -125,7 +125,17 @@ async def run_seed(force: bool = False):
         return {"status": "error", "detail": str(e)}
 
 
-# ── Servir le frontend en production ──────────────────────────
+# ── Servir le frontend en production (SPA) ────────────────────
 static_dir = Path(__file__).resolve().parent.parent / "static"
 if static_dir.exists():
-    app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="frontend")
+    from fastapi.responses import FileResponse
+
+    app.mount("/assets", StaticFiles(directory=str(static_dir / "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Fallback: sert index.html pour toutes les routes du SPA."""
+        file_path = static_dir / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(static_dir / "index.html")
