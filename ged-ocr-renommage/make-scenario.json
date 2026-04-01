@@ -98,7 +98,7 @@
           "data": { "scoped": "true", "connection": "REMPLACER_PAR_ID_CONNEXION_GSHEETS" },
           "label": "Connexion Google Sheets"
         },
-        "spreadsheetId": "REMPLACER_PAR_ID_SPREADSHEET",
+        "spreadsheetId": "1sGofzRvhgRKPrH__2fUVIHSI6U3W6X_Sc4jTFPe1iHk",
         "sheetId": "Log_GED",
         "includesHeaders": true,
         "insertDataOption": "INSERT_ROWS",
