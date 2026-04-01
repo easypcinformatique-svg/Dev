@@ -69,7 +69,7 @@ function setup() {
 
   // Creer le trigger toutes les 10 minutes
   var builder = ScriptApp.newTrigger("processNewScans");
-  var timeBuilder = builder.timeDriven();
+  var timeBuilder = builder.timeBased();
   timeBuilder.everyMinutes(10);
   timeBuilder.create();
 
