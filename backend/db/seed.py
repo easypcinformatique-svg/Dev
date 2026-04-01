@@ -1,4 +1,4 @@
-"""Donnees de demonstration pour initialiser la pizzeria."""
+"""Import de la carte Pizza Napoli Carpentras depuis l'export L'Addition."""
 
 import asyncio
 import sys
@@ -16,8 +16,159 @@ from backend.models import (
 )
 from backend.services.auth_service import hash_pin
 
+# ── Carte Pizza Napoli Carpentras (export L'Addition) ─────────
+# Format: (nom, prix_normal, prix_petite, categorie_l_addition)
+# prix_petite = None si pas de version petite
+
+PIZZAS_CLASSIQUES = [
+    ("MARGHARITA", 9.90, 7.00),
+    ("REINE", 12.50, 7.90),
+    ("ROMAINE", 12.00, 7.90),
+    ("ROYALE", 13.00, 7.90),
+    ("CHORIZO", 12.00, 7.90),
+    ("ANCHOIS", 12.00, 7.90),
+    ("MERGUEZ", 12.50, 7.90),
+]
+
+PIZZAS_FROMAGES = [
+    ("3 FRO", 13.00, 7.90),
+    ("4 FRO", 13.50, 7.90),
+    ("CHEVRE", 12.00, 7.90),
+    ("CHEVRE-MIEL", 12.50, 7.90),
+    ("MOZZA", 12.00, 7.90),
+    ("MEGAFROMAGE", 13.90, 8.00),
+    ("PARMESANE", 12.50, 7.90),
+    ("ROQUEFORT", 11.50, None),
+]
+
+PIZZAS_CARNIVORES = [
+    ("ARMÉNIENNE", 13.50, 7.90),
+    ("BARAKOBAMA", 13.00, 7.90),
+    ("BOLOGNAISE", 13.50, 7.90),
+    ("BUFFALO", 12.50, 7.90),
+    ("BURGER", 13.50, 8.00),
+    ("CHILIENNE", 13.00, 7.90),
+    ("CIRCUS", 13.90, 7.90),
+    ("FARWEST", 13.50, 7.90),
+    ("HAWAÏENNE", 13.50, 7.90),
+    ("INDIANA", 13.00, 7.90),
+    ("KEBAB", 13.50, 7.90),
+    ("KIDECHIRE", 12.90, 7.90),
+    ("MANHATTAN", 13.00, 7.90),
+    ("MEXICAINE", 12.50, 7.90),
+    ("ORIENTALE", 12.90, 7.90),
+    ("WANABIE", 13.50, 7.90),
+    ("APHRODITE", 14.90, 8.50),
+]
+
+PIZZAS_BLANCHES = [
+    ("BARAKA", 13.90, 7.90),
+    ("BERGÈRE", 12.50, 7.90),
+    ("BRETONNE", 11.00, None),
+    ("CAMEMBERT", 13.50, 7.90),
+    ("CHTI PIZZ", 13.50, 7.90),
+    ("DAME BLANCHE", 13.00, 7.90),
+    ("DAUPHINOISE", 13.00, 7.90),
+    ("DÉLICIEUSE", 12.90, 7.90),
+    ("FLAMKEUCH", 12.00, 7.90),
+    ("JAKASS", 12.50, 7.90),
+    ("LORRAINE", 12.00, None),
+    ("MONT BLANC", 13.50, 7.90),
+    ("NAPOLI", 13.50, 7.50),
+    ("SAUMON", 12.50, 7.90),
+    ("SWEETY CHÈVRE", 13.50, 7.90),
+    ("TARTIFLETTE", 13.90, 8.00),
+    ("XENA", 12.90, 7.90),
+    ("RAVIOLE BASILIC", 12.50, 7.90),
+    ("RAVIOLE SAUMON", 13.90, 8.50),
+]
+
+PIZZAS_COMPOSEES = [
+    ("CAMPAGNARDE", 13.90, 8.50),
+    ("CANADIENNE", 11.50, 7.50),
+    ("COCHONAILLE", 13.90, 7.90),
+    ("EL PASO", 12.00, 7.90),
+    ("FORESTIÈRE", 12.50, 7.90),
+    ("MEGAROYALE", 13.90, 7.90),
+    ("NORDISTE", 13.00, 7.90),
+    ("PAYSANNE", 13.00, 7.90),
+    ("SWEET CHORIZO", 13.00, 8.50),
+]
+
+PIZZAS_LEGUMES = [
+    ("4 SAISONS", 13.50, 7.90),
+    ("ACROPOLIS", 13.00, 7.90),
+    ("AUBERGINES", 12.50, None),
+    ("MILANO", 13.00, 7.90),
+    ("MOUSSAKA", 13.90, 7.90),
+    ("POIVRONS", 11.00, None),
+    ("VÉGÉTARIENNE", 13.50, 7.90),
+]
+
+PIZZAS_MARITIMES = [
+    ("CATALANE", 11.50, None),
+    ("FRUIT DE MER", 11.50, 7.90),
+    ("PISSALADIÈRE", 11.50, 7.90),
+    ("THONCAPRE", 12.00, 7.90),
+    ("SAINT JACQUES", 13.90, 8.00),
+]
+
+PIZZAS_ALPINES = [
+    ("MONTAGNARDE", 13.00, 7.90),
+    ("PYRÉNÉENNE", 13.00, 7.90),
+    ("RACLON", 13.50, 7.90),
+    ("SAVOYARDE", 13.00, 7.90),
+]
+
+PIZZAS_NOUVEAUTES = [
+    ("GRANDIOSA", 13.50, None),
+    ("MOZZA DI BUFALA", 13.50, None),
+    ("TARTUFO", 13.50, None),
+]
+
+PLAQUES = [
+    ("MARGHA plaque", 25.00),
+    ("REINE plaque", 30.00),
+    ("ROMAINE plaque", 30.00),
+    ("CHORIZO plaque", 30.00),
+    ("CHEVRE plaque", 30.00),
+    ("FLAMKEUCH plaque", 35.00),
+    ("PISSALADIÈRE plaque", 35.00),
+]
+
+DESSERTS = [
+    ("CHOCOBANANE", 9.50),
+    ("CHOCOANANAS", 9.50),
+    ("CHOCOPOIRE", 9.50),
+    ("SPECULOOS", 9.00),
+    ("DONNUTS", 1.50),
+    ("SUNDAE", 2.00),
+]
+
+BOISSONS = [
+    ("Canette Coca 33cl", 1.60),
+    ("Canette Coca Cherry 33cl", 1.60),
+    ("Canette Oasis 33cl", 1.60),
+    ("Canette Oasis Pomme Cassis 33cl", 1.60),
+    ("Schweppes Pomme", 1.60),
+    ("Coca-Cola 1.25L", 3.00),
+    ("Fanta 1.5L", 3.00),
+    ("Ice Tea 1.5L", 3.00),
+]
+
+BIERES = [
+    ("Heineken 33cl", 1.60),
+    ("Corona", 2.50),
+    ("Desperado", 2.50),
+]
+
+VINS = [
+    ("Petite Balade Rosé", 6.00),
+]
+
 
 async def seed():
+    """Importe la vraie carte Pizza Napoli Carpentras."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -30,163 +181,158 @@ async def seed():
             Utilisateur(nom="Livreur", pin_hash=hash_pin("1111"), role=Role.LIVREUR),
         ])
 
-        # ── Categories ──
-        cat_pizzas = Categorie(nom="Pizzas", ordre=1, tva_taux=10.0)
-        cat_boissons = Categorie(nom="Boissons", ordre=2, tva_taux=5.5)
-        cat_desserts = Categorie(nom="Desserts", ordre=3, tva_taux=5.5)
-        cat_entrees = Categorie(nom="Entrees", ordre=0, tva_taux=10.0)
-        db.add_all([cat_entrees, cat_pizzas, cat_boissons, cat_desserts])
+        # ── Categories Pizzas ──
+        cats = {}
+        pizza_categories = [
+            ("Les Classiques", 1),
+            ("Les Fromages", 2),
+            ("Les Carnivores", 3),
+            ("Les Blanches", 4),
+            ("Les Composées", 5),
+            ("Les Légumes", 6),
+            ("Les Maritimes", 7),
+            ("Les Alpines", 8),
+            ("Nouveautés", 9),
+            ("Plaques Pizza", 10),
+            ("Desserts", 11),
+            ("Boissons", 12),
+            ("Bières", 13),
+            ("Vins", 14),
+        ]
+        for nom, ordre in pizza_categories:
+            tva = 10.0  # Pizzas et desserts
+            if nom in ("Boissons", "Bières"):
+                tva = 5.5
+            elif nom == "Vins":
+                tva = 20.0
+            cat = Categorie(nom=nom, ordre=ordre, tva_taux=tva)
+            db.add(cat)
+            cats[nom] = cat
         await db.flush()
 
-        # ── Entrees ──
-        entrees = [
-            ("Bruschetta", "Tomate, basilic, huile d'olive", 4.50),
-            ("Salade Cesar", "Salade, poulet, parmesan, croutons", 6.50),
-            ("Ail au fromage", "Pain a l'ail gratine", 3.50),
-            ("Mozzarella sticks", "Batonnets de mozzarella panes", 5.00),
-        ]
-        for nom, desc, prix in entrees:
-            p = Produit(categorie_id=cat_entrees.id, nom=nom, description=desc, actif=True, est_pizza=False, temps_preparation=5)
+        # ── Helper pour ajouter des pizzas ──
+        async def add_pizzas(pizza_list, cat_name):
+            cat = cats[cat_name]
+            for i, pizza in enumerate(pizza_list):
+                nom, prix_normal, prix_petite = pizza[0], pizza[1], pizza[2] if len(pizza) > 2 else None
+                produit = Produit(
+                    categorie_id=cat.id, nom=nom, actif=True, est_pizza=True,
+                    ordre=i, temps_preparation=12, allergenes="gluten,lactose",
+                )
+                db.add(produit)
+                await db.flush()
+                # Taille normale (LARGE)
+                db.add(ProduitTaille(produit_id=produit.id, taille=TaillePizza.LARGE, prix=prix_normal))
+                # Petite taille (JUNIOR) si disponible
+                if prix_petite:
+                    db.add(ProduitTaille(produit_id=produit.id, taille=TaillePizza.JUNIOR, prix=prix_petite))
+
+        await add_pizzas(PIZZAS_CLASSIQUES, "Les Classiques")
+        await add_pizzas(PIZZAS_FROMAGES, "Les Fromages")
+        await add_pizzas(PIZZAS_CARNIVORES, "Les Carnivores")
+        await add_pizzas(PIZZAS_BLANCHES, "Les Blanches")
+        await add_pizzas(PIZZAS_COMPOSEES, "Les Composées")
+        await add_pizzas(PIZZAS_LEGUMES, "Les Légumes")
+        await add_pizzas(PIZZAS_MARITIMES, "Les Maritimes")
+        await add_pizzas(PIZZAS_ALPINES, "Les Alpines")
+        await add_pizzas(PIZZAS_NOUVEAUTES, "Nouveautés")
+
+        # ── Plaques ──
+        cat_plaques = cats["Plaques Pizza"]
+        for i, (nom, prix) in enumerate(PLAQUES):
+            p = Produit(categorie_id=cat_plaques.id, nom=nom, actif=True, est_pizza=True, ordre=i, temps_preparation=20)
             db.add(p)
             await db.flush()
-            db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.MEDIUM, prix=prix))
-
-        # ── Pizzas ──
-        pizzas = [
-            ("Margherita", "Tomate, mozzarella, basilic frais", "tomate", "gluten,lactose", [8.0, 10.0, 13.0, 16.0]),
-            ("Reine", "Tomate, mozzarella, jambon, champignons", "tomate", "gluten,lactose", [9.0, 11.0, 14.0, 17.0]),
-            ("4 Fromages", "Creme, mozzarella, gorgonzola, chevre, parmesan", "creme", "gluten,lactose", [9.5, 12.0, 15.0, 18.0]),
-            ("Calzone", "Tomate, mozzarella, jambon, oeuf, champignons", "tomate", "gluten,lactose,oeuf", [9.0, 11.5, 14.5, 17.5]),
-            ("Pepperoni", "Tomate, mozzarella, pepperoni piquant", "tomate", "gluten,lactose", [9.0, 11.0, 14.0, 17.0]),
-            ("Vegetarienne", "Tomate, mozzarella, poivrons, oignons, olives, champignons", "tomate", "gluten,lactose", [8.5, 10.5, 13.5, 16.5]),
-            ("BBQ Chicken", "Sauce BBQ, mozzarella, poulet marine, oignons rouges", "bbq", "gluten,lactose", [10.0, 12.5, 15.5, 19.0]),
-            ("Napolitaine", "Tomate, mozzarella, anchois, olives, capres", "tomate", "gluten,lactose,poisson", [9.0, 11.0, 14.0, 17.0]),
-            ("Savoyarde", "Creme, mozzarella, raclette, pommes de terre, lardons", "creme", "gluten,lactose", [10.0, 12.5, 15.5, 19.0]),
-            ("Orientale", "Tomate, mozzarella, merguez, poivrons, oignons, epices", "tomate", "gluten,lactose", [9.5, 12.0, 15.0, 18.0]),
-            ("Saumon", "Creme, mozzarella, saumon fume, aneth, citron", "creme", "gluten,lactose,poisson", [11.0, 13.5, 16.5, 20.0]),
-            ("Chevre Miel", "Creme, mozzarella, chevre, miel, noix", "creme", "gluten,lactose,fruits_a_coque", [10.0, 12.5, 15.5, 19.0]),
-        ]
-        tailles = [TaillePizza.JUNIOR, TaillePizza.MEDIUM, TaillePizza.LARGE, TaillePizza.XXL]
-
-        for i, (nom, desc, base, allergenes, prix_list) in enumerate(pizzas):
-            produit = Produit(
-                categorie_id=cat_pizzas.id, nom=nom, description=desc,
-                base_sauce=base, actif=True, ordre=i, est_pizza=True,
-                allergenes=allergenes, temps_preparation=12,
-            )
-            db.add(produit)
-            await db.flush()
-            for taille, prix in zip(tailles, prix_list):
-                db.add(ProduitTaille(produit_id=produit.id, taille=taille, prix=prix))
-
-        # ── Boissons ──
-        boissons = [
-            ("Coca-Cola 33cl", 2.50), ("Coca-Cola Zero 33cl", 2.50),
-            ("Orangina 33cl", 2.50), ("Eau minerale 50cl", 1.50),
-            ("Perrier 33cl", 2.00), ("Ice Tea Peche 33cl", 2.50),
-            ("Limonade maison 50cl", 3.00), ("Biere artisanale 33cl", 4.00),
-        ]
-        for nom, prix in boissons:
-            p = Produit(categorie_id=cat_boissons.id, nom=nom, actif=True, temps_preparation=0)
-            db.add(p)
-            await db.flush()
-            db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.MEDIUM, prix=prix))
+            db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.XXL, prix=prix))
 
         # ── Desserts ──
-        desserts = [
-            ("Tiramisu maison", 4.50, "gluten,lactose,oeuf"),
-            ("Panna Cotta fruits rouges", 4.00, "lactose"),
-            ("Fondant au chocolat", 5.00, "gluten,lactose,oeuf"),
-            ("Glace artisanale 2 boules", 3.50, "lactose"),
-            ("Tarte Nutella banane", 5.50, "gluten,lactose,fruits_a_coque"),
-        ]
-        for nom, prix, allergenes in desserts:
-            p = Produit(categorie_id=cat_desserts.id, nom=nom, actif=True, allergenes=allergenes, temps_preparation=0)
+        cat_desserts = cats["Desserts"]
+        for i, (nom, prix) in enumerate(DESSERTS):
+            est_pizza = nom.startswith("CHOCO") or nom == "SPECULOOS"
+            p = Produit(categorie_id=cat_desserts.id, nom=nom, actif=True, est_pizza=est_pizza, ordre=i, temps_preparation=8 if est_pizza else 0)
+            db.add(p)
+            await db.flush()
+            db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.MEDIUM, prix=prix))
+
+        # ── Boissons ──
+        cat_boissons = cats["Boissons"]
+        for i, (nom, prix) in enumerate(BOISSONS):
+            p = Produit(categorie_id=cat_boissons.id, nom=nom, actif=True, temps_preparation=0, ordre=i)
+            db.add(p)
+            await db.flush()
+            db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.MEDIUM, prix=prix))
+
+        # ── Bières ──
+        cat_bieres = cats["Bières"]
+        for i, (nom, prix) in enumerate(BIERES):
+            p = Produit(categorie_id=cat_bieres.id, nom=nom, actif=True, temps_preparation=0, ordre=i)
+            db.add(p)
+            await db.flush()
+            db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.MEDIUM, prix=prix))
+
+        # ── Vins ──
+        cat_vins = cats["Vins"]
+        for i, (nom, prix) in enumerate(VINS):
+            p = Produit(categorie_id=cat_vins.id, nom=nom, actif=True, temps_preparation=0, ordre=i)
             db.add(p)
             await db.flush()
             db.add(ProduitTaille(produit_id=p.id, taille=TaillePizza.MEDIUM, prix=prix))
 
         # ── Supplements ──
         supplements = [
-            ("Double fromage", 2.00, "fromage", "lactose"),
-            ("Mozzarella supp.", 1.50, "fromage", "lactose"),
-            ("Jambon", 1.50, "viande", None),
-            ("Pepperoni", 1.50, "viande", None),
-            ("Poulet", 2.00, "viande", None),
-            ("Champignons frais", 1.00, "legume", None),
-            ("Poivrons", 1.00, "legume", None),
-            ("Olives noires", 1.00, "legume", None),
-            ("Oignons caramelises", 1.00, "legume", None),
-            ("Oeuf", 1.00, "autre", "oeuf"),
-            ("Anchois", 1.50, "poisson", "poisson"),
-            ("Roquette", 0.80, "legume", None),
-            ("Truffe (huile)", 3.00, "premium", None),
+            ("Double fromage", 2.00, "fromage"),
+            ("Mozzarella supp.", 1.50, "fromage"),
+            ("Jambon", 1.50, "viande"),
+            ("Chorizo", 1.50, "viande"),
+            ("Merguez", 1.50, "viande"),
+            ("Poulet", 2.00, "viande"),
+            ("Champignons", 1.00, "legume"),
+            ("Poivrons", 1.00, "legume"),
+            ("Olives", 1.00, "legume"),
+            ("Oignons", 0.80, "legume"),
+            ("Oeuf", 1.00, "autre"),
+            ("Anchois", 1.50, "poisson"),
         ]
-        for nom, prix, cat, allergenes in supplements:
-            db.add(Supplement(nom=nom, prix=prix, categorie=cat, allergenes=allergenes))
+        for nom, prix, cat in supplements:
+            db.add(Supplement(nom=nom, prix=prix, categorie=cat))
 
         # ── Formules ──
-        f1 = Formule(nom="Menu Midi (Pizza + Boisson)", prix=12.90, description="Disponible le midi uniquement")
+        f1 = Formule(nom="Menu Pizza + Boisson", prix=13.90, description="Pizza au choix + boisson 33cl")
         db.add(f1)
         await db.flush()
-        db.add(FormuleElement(formule_id=f1.id, categorie_id=cat_pizzas.id, nb_choix=1))
-        db.add(FormuleElement(formule_id=f1.id, categorie_id=cat_boissons.id, nb_choix=1))
-
-        f2 = Formule(nom="Menu Complet (Pizza + Boisson + Dessert)", prix=16.90)
-        db.add(f2)
-        await db.flush()
-        db.add(FormuleElement(formule_id=f2.id, categorie_id=cat_pizzas.id, nb_choix=1))
-        db.add(FormuleElement(formule_id=f2.id, categorie_id=cat_boissons.id, nb_choix=1))
-        db.add(FormuleElement(formule_id=f2.id, categorie_id=cat_desserts.id, nb_choix=1))
+        db.add(FormuleElement(formule_id=f1.id, categorie_id=cats["Les Classiques"].id, nb_choix=1))
+        db.add(FormuleElement(formule_id=f1.id, categorie_id=cats["Boissons"].id, nb_choix=1))
 
         # ── Promotions ──
         db.add(Promotion(code="BIENVENUE", nom="Bienvenue -10%", type_promo="pourcentage", valeur=10, montant_min=15))
-        db.add(Promotion(code="LIVGRATUITE", nom="Livraison gratuite", type_promo="livraison_gratuite", valeur=0, montant_min=25))
-        db.add(Promotion(code="5EUROS", nom="5 euros offerts", type_promo="montant_fixe", valeur=5, montant_min=20))
+        db.add(Promotion(code="LIVGRATUITE", nom="Livraison offerte", type_promo="livraison_gratuite", valeur=0, montant_min=25))
 
         # ── Creneaux Config ──
         for jour in range(7):
             db.add(CreneauConfig(jour_semaine=jour, heure_debut=time(11, 0), heure_fin=time(14, 0), intervalle_minutes=15, capacite_max=8))
-            db.add(CreneauConfig(jour_semaine=jour, heure_debut=time(18, 0), heure_fin=time(22, 30), intervalle_minutes=15, capacite_max=10))
+            db.add(CreneauConfig(jour_semaine=jour, heure_debut=time(18, 0), heure_fin=time(22, 30), intervalle_minutes=15, capacite_max=12))
 
-        # ── Zones de livraison ──
-        db.add(ZoneLivraison(nom="Zone 1 - Gratuit (<2km)", codes_postaux=["75001", "75002", "75003", "75004"], frais_livraison=0.0))
-        db.add(ZoneLivraison(nom="Zone 2 - 2.50 EUR (2-5km)", codes_postaux=["75005", "75006", "75007", "75008"], frais_livraison=2.50))
-        db.add(ZoneLivraison(nom="Zone 3 - 4.00 EUR (5-8km)", codes_postaux=["75009", "75010", "75011", "75012"], frais_livraison=4.00))
+        # ── Zones de livraison (Carpentras) ──
+        db.add(ZoneLivraison(nom="Carpentras centre", codes_postaux=["84200"], frais_livraison=0.0))
+        db.add(ZoneLivraison(nom="Proche Carpentras", codes_postaux=["84210", "84170", "84380"], frais_livraison=2.50))
+        db.add(ZoneLivraison(nom="Eloigné", codes_postaux=["84330", "84340", "84570"], frais_livraison=4.00))
 
         # ── Livreurs ──
-        db.add(Livreur(nom="Karim", telephone="0612345678"))
-        db.add(Livreur(nom="Lucas", telephone="0698765432"))
-        db.add(Livreur(nom="Yassine", telephone="0654321098"))
-
-        # ── Ingredients (stock) ──
-        ingredients = [
-            ("Pate a pizza", "boule", 100, 20),
-            ("Sauce tomate", "litre", 30, 5),
-            ("Mozzarella", "kg", 20, 3),
-            ("Jambon", "kg", 10, 2),
-            ("Champignons", "kg", 8, 2),
-            ("Pepperoni", "kg", 6, 1),
-            ("Poulet", "kg", 8, 2),
-            ("Olives", "kg", 5, 1),
-            ("Poivrons", "kg", 6, 1),
-            ("Oignons", "kg", 6, 1),
-            ("Creme fraiche", "litre", 10, 2),
-            ("Sauce BBQ", "litre", 5, 1),
-            ("Saumon fume", "kg", 3, 1),
-            ("Chevre", "kg", 4, 1),
-            ("Merguez", "kg", 5, 1),
-        ]
-        for nom, unite, stock, seuil in ingredients:
-            db.add(Ingredient(nom=nom, unite=unite, quantite_stock=stock, seuil_alerte=seuil))
+        db.add(Livreur(nom="Livreur 1", telephone="0600000001"))
+        db.add(Livreur(nom="Livreur 2", telephone="0600000002"))
 
         await db.commit()
-        print("Seed data cree avec succes !")
-        print("Utilisateurs :")
-        print("  Admin     -> PIN: 1234")
-        print("  Caissier  -> PIN: 5678")
-        print("  Pizzaiolo -> PIN: 9999")
-        print("  Livreur   -> PIN: 1111")
+        print("Import Pizza Napoli Carpentras termine !")
+        print(f"Categories: {len(pizza_categories)}")
+        total_pizzas = sum(len(lst) for lst in [
+            PIZZAS_CLASSIQUES, PIZZAS_FROMAGES, PIZZAS_CARNIVORES, PIZZAS_BLANCHES,
+            PIZZAS_COMPOSEES, PIZZAS_LEGUMES, PIZZAS_MARITIMES, PIZZAS_ALPINES,
+            PIZZAS_NOUVEAUTES, PLAQUES,
+        ])
+        print(f"Pizzas: {total_pizzas}")
+        print(f"Boissons/Bieres/Vins: {len(BOISSONS) + len(BIERES) + len(VINS)}")
+        print(f"Desserts: {len(DESSERTS)}")
+        print("Utilisateurs: Admin:1234, Caissier:5678, Pizzaiolo:9999, Livreur:1111")
 
 
 if __name__ == "__main__":
