@@ -99,6 +99,26 @@ async def health_check():
     return {"status": "ok", "service": "pizzacaisse-api"}
 
 
+@app.post("/api/seed")
+async def run_seed():
+    """Endpoint pour initialiser la DB avec les donnees demo."""
+    try:
+        from backend.db.database import async_session
+        from backend.models import Utilisateur
+        from sqlalchemy import select
+
+        async with async_session() as db:
+            result = await db.execute(select(Utilisateur).limit(1))
+            if result.scalar_one_or_none() is not None:
+                return {"status": "already_seeded"}
+
+        from backend.db.seed import seed
+        await seed()
+        return {"status": "seeded", "message": "Admin PIN:1234, Caissier PIN:5678, Pizzaiolo PIN:9999"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
 # ── Servir le frontend en production ──────────────────────────
 static_dir = Path(__file__).resolve().parent.parent / "static"
 if static_dir.exists():
