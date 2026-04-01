@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from .enums import (
     Comptoir, ModeCommande, ModePaiement, Role, StatutCommande,
-    StatutLivreur, StatutPaiement, TaillePizza,
+    StatutLivreur, StatutPaiement, TaillePizza, TypePate,
 )
 
 
@@ -17,12 +17,6 @@ from .enums import (
 
 class LoginRequest(BaseModel):
     pin: str = Field(..., min_length=4, max_length=6)
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    utilisateur: UtilisateurResponse
 
 
 class UtilisateurCreate(BaseModel):
@@ -36,54 +30,61 @@ class UtilisateurResponse(BaseModel):
     nom: str
     role: Role
     actif: bool
-
     model_config = {"from_attributes": True}
 
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    utilisateur: UtilisateurResponse
+
+
 # ── Menu ──────────────────────────────────────────────────────
+
+class ProduitTailleResponse(BaseModel):
+    id: int
+    taille: TaillePizza
+    prix: float
+    model_config = {"from_attributes": True}
+
+
+class ProduitResponse(BaseModel):
+    id: int
+    categorie_id: int
+    nom: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    actif: bool
+    base_sauce: Optional[str] = None
+    allergenes: Optional[str] = None
+    est_pizza: bool = False
+    temps_preparation: int = 10
+    tailles: list[ProduitTailleResponse] = []
+    model_config = {"from_attributes": True}
+
+
+class CategorieResponse(BaseModel):
+    id: int
+    nom: str
+    description: Optional[str] = None
+    ordre: int
+    actif: bool
+    tva_taux: float
+    image_url: Optional[str] = None
+    produits: list[ProduitResponse] = []
+    model_config = {"from_attributes": True}
+
 
 class CategorieCreate(BaseModel):
     nom: str
     description: Optional[str] = None
     ordre: int = 0
     tva_taux: float = 10.0
-    image_url: Optional[str] = None
-
-
-class CategorieResponse(BaseModel):
-    id: int
-    nom: str
-    description: Optional[str]
-    ordre: int
-    actif: bool
-    tva_taux: float
-    image_url: Optional[str]
-    produits: list[ProduitResponse] = []
-
-    model_config = {"from_attributes": True}
-
-
-class CategorieListResponse(BaseModel):
-    id: int
-    nom: str
-    ordre: int
-    actif: bool
-    tva_taux: float
-
-    model_config = {"from_attributes": True}
 
 
 class ProduitTailleCreate(BaseModel):
     taille: TaillePizza
     prix: float
-
-
-class ProduitTailleResponse(BaseModel):
-    id: int
-    taille: TaillePizza
-    prix: float
-
-    model_config = {"from_attributes": True}
 
 
 class ProduitCreate(BaseModel):
@@ -92,6 +93,9 @@ class ProduitCreate(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     base_sauce: Optional[str] = None
+    allergenes: Optional[str] = None
+    est_pizza: bool = False
+    temps_preparation: int = 10
     tailles: list[ProduitTailleCreate] = []
 
 
@@ -102,34 +106,25 @@ class ProduitUpdate(BaseModel):
     base_sauce: Optional[str] = None
     actif: Optional[bool] = None
     categorie_id: Optional[int] = None
-
-
-class ProduitResponse(BaseModel):
-    id: int
-    categorie_id: int
-    nom: str
-    description: Optional[str]
-    image_url: Optional[str]
-    actif: bool
-    base_sauce: Optional[str]
-    tailles: list[ProduitTailleResponse] = []
-
-    model_config = {"from_attributes": True}
+    allergenes: Optional[str] = None
+    est_pizza: Optional[bool] = None
+    temps_preparation: Optional[int] = None
 
 
 class SupplementCreate(BaseModel):
     nom: str
     prix: float
     categorie: Optional[str] = None
+    allergenes: Optional[str] = None
 
 
 class SupplementResponse(BaseModel):
     id: int
     nom: str
     prix: float
-    categorie: Optional[str]
+    categorie: Optional[str] = None
     actif: bool
-
+    allergenes: Optional[str] = None
     model_config = {"from_attributes": True}
 
 
@@ -149,18 +144,16 @@ class FormuleElementResponse(BaseModel):
     id: int
     categorie_id: int
     nb_choix: int
-
     model_config = {"from_attributes": True}
 
 
 class FormuleResponse(BaseModel):
     id: int
     nom: str
-    description: Optional[str]
+    description: Optional[str] = None
     prix: float
     actif: bool
     elements: list[FormuleElementResponse] = []
-
     model_config = {"from_attributes": True}
 
 
@@ -169,6 +162,7 @@ class FormuleResponse(BaseModel):
 class ClientCreate(BaseModel):
     nom: str
     telephone: str
+    email: Optional[str] = None
     adresse: Optional[str] = None
     code_postal: Optional[str] = None
     ville: Optional[str] = None
@@ -179,11 +173,13 @@ class ClientResponse(BaseModel):
     id: int
     nom: str
     telephone: str
-    adresse: Optional[str]
-    code_postal: Optional[str]
-    ville: Optional[str]
-    notes: Optional[str]
-
+    email: Optional[str] = None
+    adresse: Optional[str] = None
+    code_postal: Optional[str] = None
+    ville: Optional[str] = None
+    notes: Optional[str] = None
+    points_fidelite: int = 0
+    nb_commandes: int = 0
     model_config = {"from_attributes": True}
 
 
@@ -205,7 +201,6 @@ class CreneauConfigResponse(BaseModel):
     intervalle_minutes: int
     capacite_max: int
     actif: bool
-
     model_config = {"from_attributes": True}
 
 
@@ -219,7 +214,6 @@ class CreneauResponse(BaseModel):
     verrouille: bool
     disponible: bool
     label: str
-
     model_config = {"from_attributes": True}
 
 
@@ -234,6 +228,9 @@ class LigneCommandeCreate(BaseModel):
     produit_id: int
     taille_id: Optional[int] = None
     quantite: int = 1
+    type_pate: Optional[TypePate] = None
+    moitie_moitie: bool = False
+    moitie_produit_id: Optional[int] = None
     notes: Optional[str] = None
     supplements: list[LigneSupplementCreate] = []
 
@@ -246,6 +243,7 @@ class CommandeCreate(BaseModel):
     client_nom: Optional[str] = None
     creneau_id: Optional[int] = None
     adresse_livraison: Optional[str] = None
+    code_promo: Optional[str] = None
     notes: Optional[str] = None
     lignes: list[LigneCommandeCreate]
 
@@ -253,23 +251,26 @@ class CommandeCreate(BaseModel):
 class LigneSupplementResponse(BaseModel):
     id: int
     supplement_id: int
-    supplement_nom: str = ""
     quantite: int
     prix: float
-
     model_config = {"from_attributes": True}
 
 
 class LigneCommandeResponse(BaseModel):
     id: int
     produit_id: int
-    produit_nom: str = ""
-    taille: Optional[TaillePizza] = None
+    taille_id: Optional[int] = None
     quantite: int
     prix_unitaire: float
-    notes: Optional[str]
+    type_pate: Optional[TypePate] = None
+    moitie_moitie: bool = False
+    moitie_produit_id: Optional[int] = None
+    notes: Optional[str] = None
     supplements: list[LigneSupplementResponse] = []
-
+    # Champs enrichis depuis les relations
+    produit: Optional[ProduitResponse] = None
+    taille: Optional[ProduitTailleResponse] = None
+    moitie_produit: Optional[ProduitResponse] = None
     model_config = {"from_attributes": True}
 
 
@@ -286,13 +287,14 @@ class CommandeResponse(BaseModel):
     montant_ttc: float
     frais_livraison: float
     remise: float
-    adresse_livraison: Optional[str]
-    mode_paiement: Optional[ModePaiement]
+    code_promo: Optional[str] = None
+    adresse_livraison: Optional[str] = None
+    mode_paiement: Optional[ModePaiement] = None
     statut_paiement: StatutPaiement
-    notes: Optional[str]
+    temps_estime: Optional[int] = None
+    notes: Optional[str] = None
     lignes: list[LigneCommandeResponse] = []
-    created_at: datetime
-
+    created_at: Optional[datetime] = None
     model_config = {"from_attributes": True}
 
 
@@ -311,10 +313,6 @@ class EncaissementRequest(BaseModel):
     commande_id: int
     paiements: list[PaiementItem]
     montant_recu_especes: Optional[float] = None
-
-
-class OuvertureCaisseRequest(BaseModel):
-    fond_de_caisse: float
 
 
 class TicketZResponse(BaseModel):
@@ -344,7 +342,6 @@ class LivreurResponse(BaseModel):
     telephone: str
     statut: StatutLivreur
     actif: bool
-
     model_config = {"from_attributes": True}
 
 
@@ -358,11 +355,10 @@ class ZoneLivraisonCreate(BaseModel):
 class ZoneLivraisonResponse(BaseModel):
     id: int
     nom: str
-    codes_postaux: Optional[list[str]]
-    rayon_km: Optional[float]
+    codes_postaux: Optional[list[str]] = None
+    rayon_km: Optional[float] = None
     frais_livraison: float
     actif: bool
-
     model_config = {"from_attributes": True}
 
 
@@ -371,46 +367,14 @@ class AssignerLivreurRequest(BaseModel):
     livreur_id: int
 
 
-# ── Stats ─────────────────────────────────────────────────────
+# ── Promotions ────────────────────────────────────────────────
 
-class StatJour(BaseModel):
-    date: date
-    nb_commandes: int
-    ca_ttc: float
-    panier_moyen: float
+class PromoCheckRequest(BaseModel):
+    code: str
+    montant: float
 
 
-class TopProduit(BaseModel):
-    produit_nom: str
-    quantite_vendue: int
-    ca_ttc: float
-
-
-class StatsResponse(BaseModel):
-    periode: str
-    ca_ttc: float
-    ca_ht: float
-    nb_commandes: int
-    panier_moyen: float
-    par_comptoir: dict[str, dict]
-    par_mode: dict[str, dict]
-    top_produits: list[TopProduit]
-    par_jour: list[StatJour]
-    par_creneau: dict[str, int]
-
-
-# ── Config ────────────────────────────────────────────────────
-
-class PizzeriaConfig(BaseModel):
-    nom: str = ""
-    telephone: str = ""
-    adresse: str = ""
-    siret: str = ""
-    tva_emporter: float = 10.0
-    tva_livraison: float = 10.0
-    logo_url: Optional[str] = None
-
-
-# Resoudre les references forward
-CategorieResponse.model_rebuild()
-TokenResponse.model_rebuild()
+class PromoCheckResponse(BaseModel):
+    valide: bool
+    remise: float = 0
+    message: str = ""
