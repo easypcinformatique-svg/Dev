@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+from datetime import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
@@ -115,12 +116,12 @@ async def seed():
         for jour in range(7):
             # Service midi
             db.add(CreneauConfig(
-                jour_semaine=jour, heure_debut="11:00", heure_fin="14:00",
+                jour_semaine=jour, heure_debut=time(11, 0), heure_fin=time(14, 0),
                 intervalle_minutes=15, capacite_max=8,
             ))
             # Service soir
             db.add(CreneauConfig(
-                jour_semaine=jour, heure_debut="18:00", heure_fin="22:30",
+                jour_semaine=jour, heure_debut=time(18, 0), heure_fin=time(22, 30),
                 intervalle_minutes=15, capacite_max=10,
             ))
 

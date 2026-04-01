@@ -31,18 +31,21 @@ async def lifespan(app: FastAPI):
 
 async def _auto_seed():
     """Insere les donnees de demo si aucun utilisateur n'existe."""
-    from backend.db.database import async_session
-    from backend.models import Utilisateur
-    from sqlalchemy import select
+    try:
+        from backend.db.database import async_session
+        from backend.models import Utilisateur
+        from sqlalchemy import select
 
-    async with async_session() as db:
-        result = await db.execute(select(Utilisateur).limit(1))
-        if result.scalar_one_or_none() is not None:
-            return  # Deja seed
+        async with async_session() as db:
+            result = await db.execute(select(Utilisateur).limit(1))
+            if result.scalar_one_or_none() is not None:
+                print("DB already seeded, skipping.")
+                return
 
-    # Lancer le seed
-    from backend.db.seed import seed
-    await seed()
+        from backend.db.seed import seed
+        await seed()
+    except Exception as e:
+        print(f"Auto-seed error (non-fatal): {e}")
 
 
 app = FastAPI(
