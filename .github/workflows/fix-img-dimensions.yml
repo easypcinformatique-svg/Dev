@@ -1,0 +1,57 @@
+name: Add width height to images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-img-dimensions.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add dimensions
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          python3 << 'ENDFIX'
+          import re
+
+          dims = {
+              'Tartufo': (1400, 1195),
+              'saint-jacques-': (1400, 1050),
+              '20230926_202527': (978, 696),
+              '20230926_203901': (1002, 861),
+              '20240123_201507': (1050, 913),
+              '20250425_192921': (1400, 1050),
+          }
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          count = 0
+          for name, (w, h) in dims.items():
+              for ext in ['.webp', '.jpg', '.png']:
+                  src = f'{name}{ext}'
+                  pattern = f'src="{src}"'
+                  if pattern in content and 'width=' not in content.split(pattern)[0][-50:]:
+                      replacement = f'src="{src}" width="{w}" height="{h}"'
+                      content = content.replace(pattern, replacement)
+                      count += 1
+                      print(f'  Added {w}x{h} to {src}')
+
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(content)
+          print(f'Total: {count} images updated')
+          ENDFIX
+
+          git add index.html
+          git commit -m "Add width/height attributes to all images (fix CLS)"
+          git push origin main
+          echo "Done!"

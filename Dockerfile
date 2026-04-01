@@ -1,18 +1,40 @@
-FROM python:3.11-slim
+# Dockerfile unifie - Backend API + Frontend statique en un seul service
+# Utilise pour le deploiement sur Render (free tier = 1 service)
+
+# ── Stage 1: Build Frontend ──
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+COPY frontend/package.json ./
+RUN npm install
+COPY frontend/ ./
+ARG VITE_API_URL=""
+ENV VITE_API_URL=$VITE_API_URL
+RUN npm run build
+
+# ── Stage 2: Backend + serve static ──
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Installer les dependances systeme
+# Deps systeme
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+    libpq-dev gcc && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copier et installer les dependances Python
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+# Python deps
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code source
-COPY . .
+# Copier le backend
+COPY backend/ /app/backend/
 
-# Lancer le bot avec dashboard (le port est lu depuis $PORT)
-CMD ["python", "hedge_fund_bot.py", "--dashboard"]
+# Copier le frontend builde
+COPY --from=frontend-builder /app/frontend/dist /app/static
+
+ENV PYTHONPATH=/app
+ENV PORT=8000
+
+EXPOSE 8000
+
+CMD uvicorn backend.main:app --host 0.0.0.0 --port $PORT

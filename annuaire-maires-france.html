@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Annuaire des Maires de France – Communes +30 000 hab.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bleu:#00267A;--bleu-l:#0038B8;--bleu-pale:#EEF2FF;
+  --rouge:#C8001E;--rouge-pale:#FEF2F2;
+  --or:#C5A045;--blanc:#fff;
+  --bg:#F0F2F8;--surface:#fff;
+  --border:#D8DCE8;--border-l:#E8EBF4;
+  --text:#1A1F36;--muted:#6B7280;--muted-l:#9CA3AF;
+  --success:#0D7B52;--success-bg:#D1FAE5;
+  --warn:#92400E;--warn-bg:#FEF3C7;
+  --radius:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+
+/* ══ HEADER ══ */
+.header{background:var(--bleu);border-bottom:4px solid var(--rouge);position:sticky;top:0;z-index:200}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:16px 28px}
+.emblem{width:54px;height:54px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.header-text{flex:1}
+.header-title{font-family:'Libre Baskerville',serif;font-size:21px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
+.header-sub{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.tricolor{display:flex;gap:3px;align-items:center}
+.tricolor span{width:4px;height:34px;border-radius:2px}
+
+/* ══ STATS BAR ══ */
+.stats-bar{background:var(--bleu-l);border-bottom:1px solid rgba(255,255,255,.1)}
+.stats-inner{max-width:1440px;margin:0 auto;display:flex;padding:0 28px;flex-wrap:wrap}
+.stat{padding:9px 24px 9px 0;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.85);font-size:12.5px}
+.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.15);margin-right:24px}
+.stat-n{font-size:17px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+#last-update-stat{font-size:11px;color:rgba(255,255,255,.5);margin-left:auto;align-self:center;padding-right:0}
+
+/* ══ MAIN WRAPPER ══ */
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px}
+
+/* ══ DISCLAIMER ══ */
+.disclaimer{margin:18px 0 0;background:var(--warn-bg);border:1px solid #FCD34D;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--warn);display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+
+/* ══ TOOLBAR ══ */
+.toolbar{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-box{position:relative;flex:1;min-width:200px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-box input{width:100%;padding:9px 10px 9px 34px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13.5px;color:var(--text);background:var(--surface);transition:border .15s}
+.search-box input:focus{outline:none;border-color:var(--bleu-l);box-shadow:0 0 0 3px rgba(0,56,184,.1)}
+select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13px;color:var(--text);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M6 8 0 0h12z'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;transition:border .15s}
+select:focus{outline:none;border-color:var(--bleu-l)}
+.btn{padding:9px 16px;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--bleu);color:#fff;box-shadow:0 2px 6px rgba(0,38,122,.2)}
+.btn-primary:hover:not(:disabled){background:var(--bleu-l)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-update{background:linear-gradient(135deg,#0D7B52,#059669);color:#fff;box-shadow:0 2px 8px rgba(13,123,82,.3)}
+.btn-update:hover:not(:disabled){background:linear-gradient(135deg,#059669,#047857)}
+.btn-update:disabled{opacity:.5;cursor:not-allowed}
+.btn-sheets{background:#1A7340;color:#fff;box-shadow:0 2px 6px rgba(26,115,64,.25)}
+.btn-sheets:hover:not(:disabled){background:#15623A}
+.btn-pdf{background:#C8001E;color:#fff;box-shadow:0 2px 6px rgba(200,0,30,.25)}
+.btn-pdf:hover:not(:disabled){background:#A50019}
+.btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--bleu-l);color:var(--bleu-l)}
+.btn-ghost{background:transparent;color:var(--muted);font-size:12px}
+.btn-ghost:hover{color:var(--rouge)}
+#count-label{font-size:12.5px;color:var(--muted);white-space:nowrap;align-self:center;margin-left:auto}
+
+/* ══ UPDATE OVERLAY ══ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.overlay.active{display:flex}
+.update-modal{background:var(--surface);border-radius:12px;padding:32px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-title{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--bleu);margin-bottom:6px}
+.modal-sub{font-size:12.5px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.update-progress-bg{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.update-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--bleu),var(--bleu-l));transition:width .4s ease}
+.update-progress-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:12px}
+.update-log{background:var(--bg);border-radius:var(--radius);padding:12px;font-size:12px;color:var(--muted);height:120px;overflow-y:auto;font-family:monospace;line-height:1.7;margin-bottom:16px}
+.update-log .log-ok{color:var(--success)}
+.update-log .log-err{color:var(--rouge)}
+.update-log .log-cur{color:var(--bleu-l);font-weight:600}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+/* ══ TABLE ══ */
+.table-wrap{overflow-x:auto;border-radius:10px;box-shadow:var(--shadow);margin-bottom:32px}
+table{width:100%;border-collapse:collapse;background:var(--surface);min-width:1000px}
+thead tr{background:var(--bleu)}
+th{padding:12px 13px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.8);white-space:nowrap;cursor:pointer;user-select:none;transition:color .1s}
+th:hover,th.sorted{color:#fff}
+th .arr{margin-left:4px;opacity:.6;font-size:11px}
+th.sorted .arr{opacity:1}
+tbody tr{border-bottom:1px solid var(--border-l);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F5F7FE}
+tbody tr:nth-child(even){background:#FAFBFD}
+tbody tr:nth-child(even):hover{background:#F3F5FC}
+tbody tr.updated-row{animation:rowflash .8s ease}
+@keyframes rowflash{0%{background:#D1FAE5}100%{background:inherit}}
+td{padding:11px 13px;vertical-align:top;font-size:13px}
+.td-rank{color:var(--muted-l);font-size:11.5px;font-weight:700;width:38px}
+.city{font-weight:600;color:var(--text);font-size:13.5px;line-height:1.3}
+.dept-tag{display:inline-block;margin-top:3px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.pop{font-variant-numeric:tabular-nums;color:var(--text)}
+.maire-name{font-weight:500;color:var(--text)}
+.maire-empty{color:#CBD5E1;font-style:italic;font-size:12px}
+.adresse{color:var(--muted);font-size:12px;line-height:1.5;max-width:220px}
+.tel{color:var(--text);font-size:12.5px;white-space:nowrap}
+.email-link{color:var(--bleu-l);text-decoration:none;font-size:12px;word-break:break-all}
+.email-link:hover{text-decoration:underline}
+.email-na{color:#CBD5E1;font-size:11.5px;font-style:italic}
+
+/* ══ REGION BADGES — 19 couleurs ══ */
+.rbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.r0{background:#EEF2FF;color:#3730A3}
+.r1{background:#F0FDF4;color:#166534}
+.r2{background:#FFF7ED;color:#9A3412}
+.r3{background:#FDF4FF;color:#7E22CE}
+.r4{background:#F0F9FF;color:#0C4A6E}
+.r5{background:#FEF9C3;color:#713F12}
+.r6{background:#FFF1F2;color:#9F1239}
+.r7{background:#F0FDFA;color:#134E4A}
+.r8{background:#FFF8F1;color:#7C2D12}
+.r9{background:#F5F3FF;color:#4C1D95}
+.r10{background:#ECFDF5;color:#065F46}
+.r11{background:#FEF2F2;color:#7F1D1D}
+.r12{background:#E0F2FE;color:#075985}
+.r13{background:#FEF3C7;color:#92400E}
+.r14{background:#FCE7F3;color:#9D174D}
+.r15{background:#F0FDF4;color:#14532D}
+.r16{background:#FFF7F7;color:#9B1C1C}
+.r17{background:#EEF6FF;color:#1D4ED8}
+.r18{background:#F5F5F4;color:#44403C}
+
+/* ══ EMPTY ══ */
+.empty{padding:56px;text-align:center;color:var(--muted)}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.6}
+.empty p{font-size:14px}
+
+/* ══ FOOTER ══ */
+.footer{max-width:1440px;margin:0 auto;padding:0 28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--muted)}
+.footer-warn{color:var(--rouge);font-weight:600}
+
+/* ══ GITHUB SYNC MODAL ══ */
+.gh-modal{background:var(--surface);border-radius:12px;padding:28px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.gh-title{font-family:'Libre Baskerville',serif;font-size:17px;font-weight:700;color:#1A1F36;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.gh-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.gh-field{margin-bottom:12px}
+.gh-field label{display:block;font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.gh-field input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;color:var(--text);background:var(--bg)}
+.gh-field input:focus{outline:none;border-color:#333;box-shadow:0 0 0 3px rgba(0,0,0,.07)}
+.gh-field input[type=password]{letter-spacing:.1em}
+.gh-warn{background:#FEF3C7;border:1px solid #FCD34D;border-radius:6px;padding:8px 12px;font-size:11.5px;color:#92400E;margin-bottom:16px;display:flex;gap:7px;align-items:flex-start;line-height:1.5}
+.gh-status{min-height:32px;padding:8px 12px;border-radius:6px;font-size:12.5px;font-weight:500;margin-bottom:14px;display:none}
+.gh-status.ok{display:block;background:#D1FAE5;color:#065F46}
+.gh-status.err{display:block;background:#FEE2E2;color:#991B1B}
+.gh-status.loading{display:block;background:#DBEAFE;color:#1E40AF}
+.gh-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn-github{background:#24292F;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.btn-github:hover:not(:disabled){background:#3d4450}
+.btn-github:disabled{opacity:.5;cursor:not-allowed}
+.gh-link{font-size:11px;color:var(--bleu-l);text-decoration:none;align-self:center}
+.gh-link:hover{text-decoration:underline}
+@media print{
+  .header{position:relative}.toolbar,.disclaimer,.footer,.overlay{display:none}
+  table{font-size:10px}.table-wrap{box-shadow:none;overflow:visible}
+  body{background:#fff}
+}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="emblem">🏛️</div>
+    <div class="header-text">
+      <div class="header-title">Annuaire des Maires de France</div>
+      <div class="header-sub">Communes de plus de 30 000 habitants &middot; Mandats 2020&ndash;2026</div>
+    </div>
+    <div class="tricolor">
+      <span style="background:#002395"></span>
+      <span style="background:#fff"></span>
+      <span style="background:#ED2939"></span>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat"><span class="stat-n" id="s-total">—</span> communes</div>
+      <div class="stat"><span class="stat-n" id="s-maires">—</span> maires renseignés</div>
+      <div class="stat"><span class="stat-n" id="s-emails">—</span> emails disponibles</div>
+      <div class="stat"><span class="stat-n" id="s-shown">—</span> affichées</div>
+      <div class="stat" id="last-update-stat" style="display:none">Mis à jour le <span id="last-update-date"></span></div>
+    </div>
+  </div>
+</header>
+
+<!-- GITHUB SYNC OVERLAY -->
+<div class="overlay" id="gh-overlay">
+  <div class="gh-modal">
+    <div class="gh-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#24292F"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub Sync
+    </div>
+    <div class="gh-sub">Pousse le fichier <code>index.html</code> mis à jour directement dans votre repo GitHub via l'API. Les données IA actualisées sont intégrées dans le commit.</div>
+
+    <div class="gh-warn">
+      <span>🔒</span>
+      <span>Le token est stocké uniquement dans votre navigateur (localStorage). Il n'est jamais envoyé à nos serveurs. Utilisez un token Fine-grained avec uniquement <strong>Contents: Read &amp; Write</strong>.</span>
+    </div>
+
+    <div class="gh-field">
+      <label>Username GitHub</label>
+      <input type="text" id="gh-user" placeholder="ex: jean-dupont" autocomplete="username">
+    </div>
+    <div class="gh-field">
+      <label>Nom du repository</label>
+      <input type="text" id="gh-repo" placeholder="ex: annuaire-maires-france" value="annuaire-maires-france">
+    </div>
+    <div class="gh-field">
+      <label>Branche</label>
+      <input type="text" id="gh-branch" placeholder="main" value="main">
+    </div>
+    <div class="gh-field">
+      <label>Personal Access Token (Fine-grained)</label>
+      <input type="password" id="gh-token" placeholder="github_pat_…" autocomplete="current-password">
+    </div>
+
+    <div class="gh-status" id="gh-status"></div>
+
+    <div class="gh-actions">
+      <a class="gh-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank">🔑 Créer un token</a>
+      <button class="btn btn-ghost" onclick="closeGithubModal()">Fermer</button>
+      <button class="btn btn-github" id="btn-gh-push" onclick="pushToGitHub()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Push vers GitHub
+      </button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="update-modal">
+    <div class="modal-title">🔄 Mise à jour IA en cours</div>
+    <div class="modal-sub">L'IA interroge ses sources par lots de 8 communes pour éviter les timeouts.<br>Maire, adresse, téléphone et email sont actualisés pour chaque commune.</div>
+    <div class="update-progress-bg"><div class="update-progress-fill" id="upd-fill" style="width:0%"></div></div>
+    <div class="update-progress-labels">
+      <span id="upd-label">Initialisation…</span>
+      <span id="upd-pct">0%</span>
+    </div>
+    <div class="update-log" id="upd-log"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btn-cancel-upd" onclick="cancelUpdate()">Annuler</button>
+      <button class="btn btn-primary" id="btn-dl-upd" style="display:none" onclick="downloadUpdatedHTML()">⬇ Télécharger HTML mis à jour</button>
+      <button class="btn btn-outline" id="btn-close-upd" style="display:none" onclick="closeUpdateModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <span>⚠️</span>
+    <span>Données issues de sources publiques et générées via IA (mandats 2020-2026, recensement INSEE 2022-2023). Certaines peuvent être inexactes ou obsolètes — notamment pour les communes ayant connu des élections partielles. <strong>Vérifiez impérativement sur les sites officiels avant tout envoi officiel.</strong></span>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Rechercher ville, maire, département, région…" oninput="render()">
+    </div>
+    <select id="region-filter" onchange="render()">
+      <option value="">Toutes les régions</option>
+    </select>
+    <select id="sort-field" onchange="render()">
+      <option value="pop-desc">Population ↓</option>
+      <option value="pop-asc">Population ↑</option>
+      <option value="ville-asc">Ville A→Z</option>
+      <option value="ville-desc">Ville Z→A</option>
+      <option value="maire-asc">Maire A→Z</option>
+      <option value="region-asc">Région A→Z</option>
+    </select>
+    <button class="btn btn-update" id="btn-update" onclick="startUpdate()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+      Mise à jour IA
+    </button>
+    <button class="btn btn-primary" onclick="exportCSV()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
+    <button class="btn btn-sheets" onclick="exportSheets()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Google Sheets
+    </button>
+    <button class="btn btn-pdf" onclick="exportPDF()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      PDF
+    </button>
+    <button class="btn btn-outline" onclick="window.print()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimer
+    </button>
+    <button class="btn btn-github" onclick="openGithubModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub Sync
+    </button>
+    <span id="count-label"></span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:38px">#</th>
+          <th onclick="setSort('ville')">Commune <span class="arr" id="arr-ville"></span></th>
+          <th onclick="setSort('pop')">Population <span class="arr" id="arr-pop">↓</span></th>
+          <th onclick="setSort('region')">Région <span class="arr" id="arr-region"></span></th>
+          <th onclick="setSort('maire')">Maire <span class="arr" id="arr-maire"></span></th>
+          <th>Adresse Hôtel de Ville</th>
+          <th>Téléphone</th>
+          <th>Email officiel</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <div class="footer">
+    <span>Sources : INSEE (population) &bull; Mairies officielles &bull; Données IA à vérifier &bull; <span class="footer-warn">Non contractuel</span></span>
+    <span>République Française &bull; Mandats 2020-2026 &bull; &copy; <span id="yr"></span></span>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ══════════════════════════════════════════
+   DATA — 235 communes françaises > 30 000 hab.
+   Sources : INSEE 2022-2023, Wikipedia, mairies.net
+   ══════════════════════════════════════════ */
+let DATA = [
+  /* ── PLUS DE 300 000 HAB. ── */
+  {ville:"Paris",pop:2102650,dept:"75",region:"Île-de-France",maire:"Anne Hidalgo",adresse:"Hôtel de Ville, Place de l'Hôtel-de-Ville, 75004 Paris",tel:"01 42 76 40 40",email:"contact@paris.fr"},
+  {ville:"Marseille",pop:873076,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Benoît Payan",adresse:"2 Quai du Port, 13233 Marseille Cedex 20",tel:"04 91 55 11 11",email:"mairie@marseille.fr"},
+  {ville:"Lyon",pop:522228,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Grégory Doucet",adresse:"Place de la Comédie, 69205 Lyon Cedex 01",tel:"04 72 10 30 30",email:"mairie@mairie-lyon.fr"},
+  {ville:"Toulouse",pop:511684,dept:"31",region:"Occitanie",maire:"Jean-Luc Moudenc",adresse:"Place du Capitole, 31040 Toulouse Cedex 9",tel:"05 61 22 29 22",email:"mairie@toulouse.fr"},
+  {ville:"Nice",pop:348085,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Christian Estrosi",adresse:"5 Rue de l'Hôtel de Ville, 06364 Nice Cedex 4",tel:"04 97 13 20 00",email:"contact@nicecotedazur.org"},
+  {ville:"Nantes",pop:323204,dept:"44",region:"Pays de la Loire",maire:"Johanna Rolland",adresse:"2 Rue de l'Hôtel de Ville, 44041 Nantes Cedex 1",tel:"02 40 41 90 00",email:"mairie@mairie-nantes.fr"},
+  {ville:"Montpellier",pop:304130,dept:"34",region:"Occitanie",maire:"Michaël Delafosse",adresse:"1 Place Georges Frêche, 34267 Montpellier Cedex 2",tel:"04 67 34 70 00",email:"mairie@montpellier.fr"},
+  {ville:"Strasbourg",pop:291764,dept:"67",region:"Grand Est",maire:"Jeanne Barseghian",adresse:"Place de Broglie, 67000 Strasbourg",tel:"03 88 60 90 90",email:"info@strasbourg.eu"},
+  {ville:"Bordeaux",pop:263886,dept:"33",region:"Nouvelle-Aquitaine",maire:"Pierre Hurmic",adresse:"Place Pey Berland, 33045 Bordeaux Cedex",tel:"05 56 10 20 30",email:"mairie@bordeaux.fr"},
+  {ville:"Lille",pop:238381,dept:"59",region:"Hauts-de-France",maire:"Martine Aubry",adresse:"Place Roger Salengro, 59033 Lille Cedex",tel:"03 20 49 50 00",email:"mairie@mairie.lille.fr"},
+
+  /* ── 200 000 – 300 000 ── */
+  {ville:"Rennes",pop:224042,dept:"35",region:"Bretagne",maire:"Nathalie Appéré",adresse:"Place de la Mairie, 35064 Rennes Cedex",tel:"02 23 62 10 10",email:"mairie@rennes.fr"},
+  {ville:"Reims",pop:184716,dept:"51",region:"Grand Est",maire:"Arnaud Robinet",adresse:"Place de l'Hôtel de Ville, 51722 Reims Cedex",tel:"03 26 77 78 79",email:"mairie@mairie-reims.fr"},
+  {ville:"Toulon",pop:179218,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Hubert Falco",adresse:"Place de la Liberté, 83000 Toulon",tel:"04 94 36 30 00",email:"mairie@mairie-toulon.fr"},
+  {ville:"Saint-Étienne",pop:174947,dept:"42",region:"Auvergne-Rhône-Alpes",maire:"",adresse:"Place de l'Hôtel de Ville, 42000 Saint-Étienne",tel:"04 77 48 71 23",email:"mairie@saintetienne.fr"},
+  {ville:"Le Havre",pop:171847,dept:"76",region:"Normandie",maire:"Édouard Philippe",adresse:"Place de l'Hôtel de Ville, 76600 Le Havre",tel:"02 35 19 45 45",email:"mairie@lehavre.fr"},
+  {ville:"Grenoble",pop:160779,dept:"38",region:"Auvergne-Rhône-Alpes",maire:"Éric Piolle",adresse:"11 Boulevard Jean Pain, 38021 Grenoble Cedex 1",tel:"04 76 76 36 36",email:"mairie@grenoble.fr"},
+  {ville:"Dijon",pop:157424,dept:"21",region:"Bourgogne-Franche-Comté",maire:"François Rebsamen",adresse:"Place de la Libération, 21000 Dijon",tel:"03 80 74 51 51",email:"mairie@ville-dijon.fr"},
+  {ville:"Angers",pop:156327,dept:"49",region:"Pays de la Loire",maire:"",adresse:"Place Kennedy, 49100 Angers",tel:"02 41 05 40 00",email:"mairie@angers.fr"},
+  {ville:"Nîmes",pop:151439,dept:"30",region:"Occitanie",maire:"Jean-Paul Fournier",adresse:"Place de l'Hôtel de Ville, 30033 Nîmes Cedex 9",tel:"04 66 76 70 01",email:"mairie@nimes.fr"},
+  {ville:"Villeurbanne",pop:153428,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Cédric Van Styvendael",adresse:"4 Place Lazare Goujon, 69628 Villeurbanne Cedex",tel:"04 78 03 68 00",email:"mairie@villeurbanne.fr"},
+
+  /* ── 130 000 – 160 000 ── */
+  {ville:"Clermont-Ferrand",pop:147415,dept:"63",region:"Auvergne-Rhône-Alpes",maire:"Olivier Bianchi",adresse:"Place Michel de l'Hospital, 63033 Clermont-Ferrand Cedex 1",tel:"04 73 42 60 00",email:"contact@ville-clermont-ferrand.fr"},
+  {ville:"Le Mans",pop:144164,dept:"72",region:"Pays de la Loire",maire:"",adresse:"Place Saint-Pierre, 72025 Le Mans Cedex 9",tel:"02 43 47 40 00",email:"mairie@lemans.fr"},
+  {ville:"Aix-en-Provence",pop:145908,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Sophie Joissains",adresse:"Place de l'Hôtel de Ville, 13616 Aix-en-Provence Cedex 1",tel:"04 42 91 90 00",email:"mairie@mairie-aixenprovence.fr"},
+  {ville:"Brest",pop:143478,dept:"29",region:"Bretagne",maire:"François Cuillandre",adresse:"Place de la Liberté, 29239 Brest Cedex 2",tel:"02 98 00 80 80",email:"mairie@mairie-brest.fr"},
+  {ville:"Tours",pop:136765,dept:"37",region:"Centre-Val de Loire",maire:"Emmanuel Denis",adresse:"Place Jean-Jaurès, 37926 Tours Cedex 9",tel:"02 47 21 60 00",email:"mairie@ville-tours.fr"},
+  {ville:"Amiens",pop:136105,dept:"80",region:"Hauts-de-France",maire:"Brigitte Fouré",adresse:"Place de l'Hôtel de Ville, 80027 Amiens Cedex 1",tel:"03 22 97 40 40",email:"mairie@amiens.fr"},
+  {ville:"Limoges",pop:130735,dept:"87",region:"Nouvelle-Aquitaine",maire:"Émile-Roger Lombertie",adresse:"1 Rue du Consulat, 87031 Limoges Cedex 1",tel:"05 55 45 60 00",email:"mairie@limoges.fr"},
+  {ville:"Annecy",pop:130611,dept:"74",region:"Auvergne-Rhône-Alpes",maire:"François Astorg",adresse:"Esplanade de l'Hôtel de Ville, 74011 Annecy Cedex",tel:"04 50 33 22 00",email:"mairie@annecy.fr"},
+
+  /* ── 100 000 – 130 000 ── */
+  {ville:"Perpignan",pop:121875,dept:"66",region:"Occitanie",maire:"Louis Aliot",adresse:"Place de la Loge, 66000 Perpignan",tel:"04 68 66 30 00",email:"mairie@mairie-perpignan.fr"},
+  {ville:"Boulogne-Billancourt",pop:120801,dept:"92",region:"Île-de-France",maire:"Pierre-Christophe Baguet",adresse:"26 Avenue André Morizet, 92104 Boulogne-Billancourt Cedex",tel:"01 55 18 60 00",email:"mairie@boulognebillancourt.com"},
+  {ville:"Metz",pop:119439,dept:"57",region:"Grand Est",maire:"François Grosdidier",adresse:"Place d'Armes, 57045 Metz Cedex 1",tel:"03 87 55 54 00",email:"mairie@mairie-metz.fr"},
+  {ville:"Besançon",pop:117342,dept:"25",region:"Bourgogne-Franche-Comté",maire:"Anne Vignot",adresse:"2 Rue Mégevand, 25034 Besançon Cedex",tel:"03 81 61 50 50",email:"mairie@besancon.fr"},
+  {ville:"Mulhouse",pop:111439,dept:"68",region:"Grand Est",maire:"Michèle Lutz",adresse:"Hôtel de Ville, 68100 Mulhouse",tel:"03 89 32 48 32",email:"mairie@mulhouse.fr"},
+  {ville:"Saint-Denis",pop:115221,dept:"93",region:"Île-de-France",maire:"Mathieu Hanotin",adresse:"2 Place du Caquet, 93200 Saint-Denis",tel:"01 49 33 66 66",email:"mairie@ville-saint-denis.fr"},
+  {ville:"Orléans",pop:116238,dept:"45",region:"Centre-Val de Loire",maire:"Serge Grouard",adresse:"Place de l'Étape, 45040 Orléans Cedex 1",tel:"02 38 79 22 22",email:"mairie@orleans.fr"},
+  {ville:"Argenteuil",pop:113476,dept:"95",region:"Île-de-France",maire:"",adresse:"Place Pierre Sémard, 95104 Argenteuil Cedex",tel:"01 30 76 60 00",email:"mairie@mairie-argenteuil.fr"},
+  {ville:"Rouen",pop:111553,dept:"76",region:"Normandie",maire:"Nicolas Mayer-Rossignol",adresse:"Place du Général-de-Gaulle, 76037 Rouen Cedex",tel:"02 32 08 68 00",email:"mairie@rouen.fr"},
+  {ville:"Montreuil",pop:110706,dept:"93",region:"Île-de-France",maire:"Patrice Bessac",adresse:"Place de la République, 93105 Montreuil Cedex",tel:"01 48 70 60 00",email:"mairie@montreuil.fr"},
+  {ville:"Caen",pop:106077,dept:"14",region:"Normandie",maire:"Joël Bruneau",adresse:"Place Saint-Pierre, 14027 Caen Cedex 9",tel:"02 31 30 40 40",email:"mairie@caen.fr"},
+  {ville:"Nancy",pop:104885,dept:"54",region:"Grand Est",maire:"Mathieu Klein",adresse:"Place Charles III, 54000 Nancy",tel:"03 83 85 30 00",email:"mairie@mairie-nancy.fr"},
+
+  /* ── 80 000 – 100 000 ── */
+  {ville:"Tourcoing",pop:99268,dept:"59",region:"Hauts-de-France",maire:"",adresse:"Place de la République, 59200 Tourcoing",tel:"03 20 25 40 40",email:"mairie@tourcoing.fr"},
+  {ville:"Roubaix",pop:97461,dept:"59",region:"Hauts-de-France",maire:"Guillaume Delbar",adresse:"17 Grand'Place, 59100 Roubaix",tel:"03 20 66 43 00",email:"mairie@mairie-roubaix.fr"},
+  {ville:"Nanterre",pop:95280,dept:"92",region:"Île-de-France",maire:"Patrick Jarry",adresse:"Hôtel de Ville, 92014 Nanterre Cedex",tel:"01 47 29 50 50",email:"mairie@nanterre.fr"},
+  {ville:"Avignon",pop:95357,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Cécile Helle",adresse:"Place de l'Horloge, 84000 Avignon",tel:"04 32 74 30 00",email:"mairie@mairie-avignon.fr"},
+  {ville:"Vitry-sur-Seine",pop:94454,dept:"94",region:"Île-de-France",maire:"Pierre Bell-Lloch",adresse:"Place de l'Insurrection, 94407 Vitry-sur-Seine Cedex",tel:"01 55 53 10 00",email:"mairie@mairie-vitry94.fr"},
+  {ville:"Créteil",pop:90964,dept:"94",region:"Île-de-France",maire:"",adresse:"Place Salvador Allende, 94017 Créteil Cedex",tel:"01 49 80 91 10",email:"mairie@ville-creteil.fr"},
+  {ville:"Poitiers",pop:89404,dept:"86",region:"Nouvelle-Aquitaine",maire:"Léonore Moncond'huy",adresse:"15 Place du Maréchal Leclerc, 86021 Poitiers Cedex",tel:"05 49 52 31 52",email:"mairie@poitiers.fr"},
+  {ville:"Dunkerque",pop:90756,dept:"59",region:"Hauts-de-France",maire:"",adresse:"Place Charles Valentin, 59140 Dunkerque",tel:"03 28 26 27 28",email:"mairie@dunkerque.fr"},
+  {ville:"Aubervilliers",pop:88494,dept:"93",region:"Île-de-France",maire:"Karine Franclet",adresse:"2 Rue de la Commune de Paris, 93300 Aubervilliers",tel:"01 48 39 51 00",email:"mairie@aubervilliers.fr"},
+  {ville:"Colombes",pop:90380,dept:"92",region:"Île-de-France",maire:"Nicole Goueta",adresse:"1 Rue Marcel Vigneron, 92700 Colombes",tel:"01 47 60 44 00",email:"mairie@ville-colombes.fr"},
+  {ville:"Asnières-sur-Seine",pop:88786,dept:"92",region:"Île-de-France",maire:"Manuel Aeschlimann",adresse:"Place de l'Hôtel de Ville, 92601 Asnières-sur-Seine Cedex",tel:"01 41 11 20 00",email:"mairie@asnieres-sur-seine.fr"},
+  {ville:"Versailles",pop:86777,dept:"78",region:"Île-de-France",maire:"François de Mazières",adresse:"4 Avenue de Paris, 78011 Versailles Cedex",tel:"01 30 97 80 00",email:"mairie@versailles.fr"},
+  {ville:"Courbevoie",pop:85117,dept:"92",region:"Île-de-France",maire:"Jacques Kossowski",adresse:"1 Place de l'Hôtel de Ville, 92400 Courbevoie",tel:"01 47 89 00 00",email:"mairie@courbevoie.fr"},
+  {ville:"Aulnay-sous-Bois",pop:84000,dept:"93",region:"Île-de-France",maire:"Bruno Beschizza",adresse:"Place de la Mairie, 93600 Aulnay-sous-Bois",tel:"01 48 79 65 65",email:"mairie@aulnay-sous-bois.fr"},
+  {ville:"Rueil-Malmaison",pop:82390,dept:"92",region:"Île-de-France",maire:"",adresse:"Hôtel de Ville, 92503 Rueil-Malmaison Cedex",tel:"01 47 32 60 00",email:"mairie@rueilmalmaison.fr"},
+  {ville:"Cherbourg-en-Cotentin",pop:79288,dept:"50",region:"Normandie",maire:"Benoît Arrivé",adresse:"2 Place Napoléon, 50100 Cherbourg-en-Cotentin",tel:"02 33 87 20 00",email:"mairie@cherbourg-en-cotentin.fr"},
+  {ville:"Saint-Denis (La Réunion)",pop:148889,dept:"974",region:"La Réunion",maire:"Ericka Bareigts",adresse:"Place de la Mairie, 97461 Saint-Denis Cedex",tel:"02 62 40 25 25",email:"mairie@mairie-saintdenis.re"},
+  {ville:"Fort-de-France",pop:79610,dept:"972",region:"Martinique",maire:"Didier Laguerre",adresse:"Hôtel de Ville, 97200 Fort-de-France",tel:"05 96 59 60 00",email:"mairie@mairie-fortdefrance.fr"},
+
+  /* ── 60 000 – 80 000 ── */
+  {ville:"Béziers",pop:77996,dept:"34",region:"Occitanie",maire:"Robert Ménard",adresse:"Place Jean-Jaurès, 34500 Béziers",tel:"04 67 36 73 00",email:"mairie@mairie-beziers.fr"},
+  {ville:"Champigny-sur-Marne",pop:78000,dept:"94",region:"Île-de-France",maire:"",adresse:"Place Lénine, 94507 Champigny-sur-Marne Cedex",tel:"01 55 09 30 00",email:"mairie@mairie-champigny94.fr"},
+  {ville:"Saint-Maur-des-Fossés",pop:77300,dept:"94",region:"Île-de-France",maire:"Sylvain Berrios",adresse:"Place Charles de Gaulle, 94107 Saint-Maur-des-Fossés Cedex",tel:"01 55 11 14 14",email:"mairie@saint-maur.fr"},
+  {ville:"Pau",pop:77130,dept:"64",region:"Nouvelle-Aquitaine",maire:"",adresse:"Place Royale, 64036 Pau Cedex",tel:"05 59 98 61 00",email:"mairie@pau.fr"},
+  {ville:"La Rochelle",pop:77125,dept:"17",region:"Nouvelle-Aquitaine",maire:"Jean-François Fountaine",adresse:"Place de l'Hôtel de Ville, 17086 La Rochelle Cedex 2",tel:"05 46 51 51 51",email:"mairie@mairie-larochelle.fr"},
+  {ville:"Montauban",pop:64162,dept:"82",region:"Occitanie",maire:"Brigitte Barèges",adresse:"Place Nationale, 82013 Montauban Cedex",tel:"05 63 21 37 37",email:"mairie@montauban.fr"},
+  {ville:"Cannes",pop:73714,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"David Lisnard",adresse:"Place Bernard Cornut-Gentille, 06401 Cannes Cedex",tel:"04 97 06 40 00",email:"mairie@cannes.fr"},
+  {ville:"Antibes",pop:75569,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Jean Leonetti",adresse:"Place Nationale, 06606 Antibes Cedex",tel:"04 92 90 54 00",email:"mairie@antibes-juanlespins.com"},
+  {ville:"Calais",pop:73674,dept:"62",region:"Hauts-de-France",maire:"Natacha Bouchart",adresse:"Boulevard Jacquard, 62107 Calais Cedex",tel:"03 21 46 62 00",email:"mairie@mairie-calais.fr"},
+  {ville:"Ajaccio",pop:70611,dept:"2A",region:"Corse",maire:"",adresse:"Place Foch, 20304 Ajaccio Cedex 1",tel:"04 95 51 52 53",email:"mairie@ajaccio.fr"},
+  {ville:"Drancy",pop:71474,dept:"93",region:"Île-de-France",maire:"",adresse:"Place de la République, 93700 Drancy",tel:"01 49 98 53 00",email:"mairie@mairie-drancy.fr"},
+  {ville:"Issy-les-Moulineaux",pop:70006,dept:"92",region:"Île-de-France",maire:"",adresse:"Hôtel de Ville, 92130 Issy-les-Moulineaux",tel:"01 41 23 82 00",email:"mairie@issy.com"},
+  {ville:"Mérignac",pop:69745,dept:"33",region:"Nouvelle-Aquitaine",maire:"Alain Anziani",adresse:"Place Charles de Gaulle, 33700 Mérignac",tel:"05 57 92 56 00",email:"mairie@merignac.com"},
+  {ville:"Colmar",pop:68157,dept:"68",region:"Grand Est",maire:"Éric Straumann",adresse:"1 Rue des Clefs, 68021 Colmar Cedex",tel:"03 89 20 68 68",email:"mairie@mairie-colmar.fr"},
+  {ville:"Noisy-le-Grand",pop:67000,dept:"93",region:"Île-de-France",maire:"",adresse:"Place de la Libération, 93161 Noisy-le-Grand Cedex",tel:"01 43 04 40 40",email:"mairie@noisy-le-grand.fr"},
+  {ville:"Sarcelles",pop:58274,dept:"95",region:"Île-de-France",maire:"François Pupponi",adresse:"Place de la Résistance, 95207 Sarcelles Cedex",tel:"01 34 19 44 00",email:"mairie@mairie-sarcelles.fr"},
+  {ville:"Villejuif",pop:58418,dept:"94",region:"Île-de-France",maire:"",adresse:"Place de la Libération, 94807 Villejuif Cedex",tel:"01 49 58 60 00",email:"mairie@ville-villejuif.fr"},
+  {ville:"Chelles",pop:55561,dept:"77",region:"Île-de-France",maire:"Brice Rabaste",adresse:"Place René-Dumont, 77504 Chelles Cedex",tel:"01 64 21 49 00",email:"mairie@ville-chelles.fr"},
+  {ville:"Cergy",pop:66000,dept:"95",region:"Île-de-France",maire:"",adresse:"Hôtel de Ville, 95800 Cergy",tel:"01 34 41 15 00",email:"mairie@mairie-cergy.fr"},
+  {ville:"Pessac",pop:65000,dept:"33",region:"Nouvelle-Aquitaine",maire:"",adresse:"Place Charles de Gaulle, 33600 Pessac",tel:"05 57 93 57 00",email:"mairie@pessac.fr"},
+  {ville:"La Seyne-sur-Mer",pop:65000,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Marc Vuillemot",adresse:"Place Colbert, 83500 La Seyne-sur-Mer",tel:"04 94 06 70 00",email:"mairie@laseyne.fr"},
+  {ville:"Ivry-sur-Seine",pop:65000,dept:"94",region:"Île-de-France",maire:"Luc Carvounas",adresse:"Place Pierre et Marie Curie, 94207 Ivry-sur-Seine Cedex",tel:"01 49 60 25 25",email:"mairie@ivry94.fr"},
+  {ville:"Bourges",pop:65071,dept:"18",region:"Centre-Val de Loire",maire:"",adresse:"Place de l'Hôtel de Ville, 18023 Bourges Cedex",tel:"02 48 57 80 00",email:"mairie@ville-bourges.fr"},
+  {ville:"Levallois-Perret",pop:64600,dept:"92",region:"Île-de-France",maire:"",adresse:"Hôtel de Ville, 92300 Levallois-Perret",tel:"01 47 57 40 00",email:"mairie@levallois.fr"},
+  {ville:"Évry-Courcouronnes",pop:64000,dept:"91",region:"Île-de-France",maire:"Stéphane Beaudet",adresse:"Place des Droits de l'Homme, 91054 Évry-Courcouronnes Cedex",tel:"01 69 91 69 91",email:"mairie@evry-courcouronnes.fr"},
+  {ville:"Saint-André (La Réunion)",pop:56573,dept:"974",region:"La Réunion",maire:"Joé Bédier",adresse:"8 Rue de la Mairie, 97440 Saint-André",tel:"02 62 46 90 00",email:"mairie@mairie-saintandre.re"},
+  {ville:"Saint-Louis (La Réunion)",pop:55016,dept:"974",region:"La Réunion",maire:"",adresse:"Place Prosper Burel, 97450 Saint-Louis",tel:"02 62 92 05 00",email:"mairie@mairie-saint-louis.re"},
+  {ville:"Saint-Paul (La Réunion)",pop:105394,dept:"974",region:"La Réunion",maire:"Joseph Sinimalé",adresse:"Place de la Mairie, 97411 Saint-Paul",tel:"02 62 45 90 00",email:"mairie@saintpaul.re"},
+  {ville:"Le Tampon",pop:83820,dept:"974",region:"La Réunion",maire:"André Thien Ah Koon",adresse:"Place des Combattants, 97430 Le Tampon",tel:"02 62 57 80 80",email:"mairie@ville-letampon.fr"},
+  {ville:"Saint-Pierre (La Réunion)",pop:82518,dept:"974",region:"La Réunion",maire:"Serge Hoareau",adresse:"Place du Marché, 97410 Saint-Pierre",tel:"02 62 25 90 25",email:"mairie@mairie-saintpierre.re"},
+  {ville:"Grasse",pop:52027,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Jérôme Viaud",adresse:"Place du Cours Honoré Cresp, 06130 Grasse",tel:"04 97 05 50 00",email:"mairie@ville-grasse.fr"},
+
+  /* ── 50 000 – 65 000 ── */
+  {ville:"Quimper",pop:63929,dept:"29",region:"Bretagne",maire:"Ismaël Dupont",adresse:"Place de la Tour d'Auvergne, 29337 Quimper Cedex",tel:"02 98 98 35 35",email:"mairie@quimper.fr"},
+  {ville:"Valence",pop:63247,dept:"26",region:"Auvergne-Rhône-Alpes",maire:"Nicolas Daragon",adresse:"1 Place de la Liberté, 26031 Valence Cedex 9",tel:"04 75 79 20 20",email:"mairie@mairie-valence.fr"},
+  {ville:"Antony",pop:62157,dept:"92",region:"Île-de-France",maire:"",adresse:"Avenue Marx Dormoy, 92166 Antony Cedex",tel:"01 40 96 70 00",email:"mairie@antony.fr"},
+  {ville:"Neuilly-sur-Seine",pop:61100,dept:"92",region:"Île-de-France",maire:"Jean-Christophe Fromantin",adresse:"2 Place Sainte-Foy, 92200 Neuilly-sur-Seine",tel:"01 40 88 40 00",email:"mairie@mairie-neuillysurseine.fr"},
+  {ville:"Clichy",pop:60000,dept:"92",region:"Île-de-France",maire:"",adresse:"Place de la République, 92110 Clichy",tel:"01 47 15 32 40",email:"mairie@clichy92.fr"},
+  {ville:"Troyes",pop:60325,dept:"10",region:"Grand Est",maire:"François Baroin",adresse:"Place du Maréchal Foch, 10026 Troyes Cedex",tel:"03 25 42 40 00",email:"mairie@troyes.fr"},
+  {ville:"Saint-Nazaire",pop:68000,dept:"44",region:"Pays de la Loire",maire:"David Samzun",adresse:"Place François-Blancho, 44613 Saint-Nazaire Cedex",tel:"02 40 22 43 00",email:"mairie@saintnazaire.fr"},
+  {ville:"Vannes",pop:53437,dept:"56",region:"Bretagne",maire:"David Robo",adresse:"Place Maurice Marchais, 56019 Vannes Cedex",tel:"02 97 01 60 00",email:"mairie@mairie-vannes.fr"},
+  {ville:"Vénissieux",pop:65000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Michèle Picard",adresse:"Place Léon Sublet, 69204 Vénissieux Cedex",tel:"04 72 50 50 50",email:"mairie@mairie-venissieux.fr"},
+  {ville:"Villeneuve-d'Ascq",pop:64000,dept:"59",region:"Hauts-de-France",maire:"Gérard Caudron",adresse:"Place Salvador Allende, 59650 Villeneuve-d'Ascq",tel:"03 20 43 50 50",email:"mairie@mairie-villeneuvedascq.fr"},
+  {ville:"Hyères",pop:57000,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Jean-Pierre Giran",adresse:"Place Gén. de Gaulle, 83400 Hyères",tel:"04 94 00 78 00",email:"mairie@ville-hyeres.fr"},
+  {ville:"Saint-Quentin",pop:56000,dept:"02",region:"Hauts-de-France",maire:"Anne Ferreira",adresse:"Place de l'Hôtel de Ville, 02100 Saint-Quentin",tel:"03 23 06 70 00",email:"mairie@ville-saint-quentin.fr"},
+  {ville:"Beauvais",pop:56000,dept:"60",region:"Hauts-de-France",maire:"Caroline Cayeux",adresse:"Place de l'Hôtel de Ville, 60009 Beauvais Cedex",tel:"03 44 15 67 00",email:"mairie@beauvais.fr"},
+  {ville:"Le Blanc-Mesnil",pop:56000,dept:"93",region:"Île-de-France",maire:"Thierry Meignen",adresse:"Avenue du Général de Gaulle, 93156 Le Blanc-Mesnil Cedex",tel:"01 48 14 40 00",email:"mairie@leblancmesnil.fr"},
+  {ville:"Cayenne",pop:61550,dept:"973",region:"Guyane",maire:"Sandra Trochimara",adresse:"Hôtel de Ville, 97300 Cayenne",tel:"05 94 25 65 00",email:"mairie@cayenne.fr"},
+  {ville:"Les Abymes",pop:53000,dept:"971",region:"Guadeloupe",maire:"Emmanuel Donat",adresse:"Rue Rhin et Danube, 97139 Les Abymes",tel:"05 90 20 59 00",email:"mairie@les-abymes.fr"},
+  {ville:"Clamart",pop:55000,dept:"92",region:"Île-de-France",maire:"Jean-Didier Berger",adresse:"Hôtel de Ville, 92140 Clamart",tel:"01 40 83 90 00",email:"mairie@ville-clamart.fr"},
+  {ville:"Pantin",pop:58000,dept:"93",region:"Île-de-France",maire:"Bertrand Kern",adresse:"1 Place de la Mairie, 93500 Pantin",tel:"01 49 15 40 00",email:"mairie@ville-pantin.fr"},
+  {ville:"Niort",pop:58000,dept:"79",region:"Nouvelle-Aquitaine",maire:"Jérôme Baloge",adresse:"Place Martin Bastard, 79013 Niort Cedex",tel:"05 49 78 71 23",email:"mairie@niort.fr"},
+  {ville:"Chambéry",pop:57000,dept:"73",region:"Auvergne-Rhône-Alpes",maire:"Thierry Repentin",adresse:"Place de l'Hôtel de Ville, 73011 Chambéry Cedex",tel:"04 79 60 21 21",email:"mairie@chambery.fr"},
+  {ville:"Lorient",pop:57149,dept:"56",region:"Bretagne",maire:"Fabrice Loher",adresse:"Quai de Rohan, 56321 Lorient Cedex",tel:"02 97 02 22 00",email:"mairie@mairie-lorient.fr"},
+  {ville:"Saint-Benoît (La Réunion)",pop:34572,dept:"974",region:"La Réunion",maire:"",adresse:"Place de la Mairie, 97470 Saint-Benoît",tel:"02 62 50 35 00",email:"mairie@mairie-saint-benoit.re"},
+  {ville:"Saint-Joseph (La Réunion)",pop:37313,dept:"974",region:"La Réunion",maire:"Patrick Lebreton",adresse:"Place André Hoareau, 97480 Saint-Joseph",tel:"02 62 56 80 00",email:"mairie@mairie-saintjoseph.re"},
+  {ville:"Sainte-Marie (La Réunion)",pop:33500,dept:"974",region:"La Réunion",maire:"",adresse:"Place des Droits de l'Homme, 97438 Sainte-Marie",tel:"02 62 53 31 31",email:"mairie@saintemariere.re"},
+
+  /* ── 45 000 – 55 000 ── */
+  {ville:"Fréjus",pop:53000,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"",adresse:"Place Formigé, 83600 Fréjus",tel:"04 94 17 60 60",email:"mairie@frejus.fr"},
+  {ville:"Cholet",pop:53000,dept:"49",region:"Pays de la Loire",maire:"Gilles Bourdouleix",adresse:"Place du Général de Gaulle, 49321 Cholet Cedex",tel:"02 41 49 40 00",email:"mairie@ville-cholet.fr"},
+  {ville:"Sevran",pop:51000,dept:"93",region:"Île-de-France",maire:"Stéphane Gate",adresse:"Place de la République, 93270 Sevran",tel:"01 48 47 48 47",email:"mairie@ville-sevran.fr"},
+  {ville:"Albi",pop:50000,dept:"81",region:"Occitanie",maire:"",adresse:"Place de l'Hôtel de Ville, 81000 Albi",tel:"05 63 49 11 11",email:"mairie@ville-albi.fr"},
+  {ville:"Montrouge",pop:50000,dept:"92",region:"Île-de-France",maire:"Étienne Lengereau",adresse:"Place Émile Cresp, 92120 Montrouge",tel:"01 42 53 47 47",email:"mairie@montrouge.fr"},
+  {ville:"La Roche-sur-Yon",pop:57000,dept:"85",region:"Pays de la Loire",maire:"Luc Bouard",adresse:"Place Napoléon, 85021 La Roche-sur-Yon Cedex",tel:"02 51 47 47 47",email:"mairie@larochesuryon.fr"},
+  {ville:"Saint-Laurent-du-Maroni",pop:43000,dept:"973",region:"Guyane",maire:"Sophie Charles",adresse:"Hôtel de Ville, 97320 Saint-Laurent-du-Maroni",tel:"05 94 34 13 30",email:"mairie@saintlaurentdumaroni.fr"},
+  {ville:"Le Port (La Réunion)",pop:40256,dept:"974",region:"La Réunion",maire:"Olivier Rivière",adresse:"Place de la Mairie, 97420 Le Port",tel:"02 62 42 10 00",email:"mairie@mairie-leport.re"},
+  {ville:"Meaux",pop:57000,dept:"77",region:"Île-de-France",maire:"Jean-François Copé",adresse:"Place Henri IV, 77100 Meaux",tel:"01 64 33 21 00",email:"mairie@ville-meaux.fr"},
+  {ville:"Fontenay-sous-Bois",pop:57000,dept:"94",region:"Île-de-France",maire:"Michel Herbillon",adresse:"Place du Général Leclerc, 94123 Fontenay-sous-Bois Cedex",tel:"01 45 17 78 00",email:"mairie@fontenaysousbois.fr"},
+  {ville:"Meudon",pop:45218,dept:"92",region:"Île-de-France",maire:"Denis Larghero",adresse:"Hôtel de Ville, 92190 Meudon",tel:"01 46 23 40 00",email:"mairie@ville-meudon.fr"},
+
+  /* ── 40 000 – 45 000 ── */
+  {ville:"Belfort",pop:49000,dept:"90",region:"Bourgogne-Franche-Comté",maire:"Damien Meslot",adresse:"1 Rue de l'Ancienne Préfecture, 90020 Belfort Cedex",tel:"03 84 54 24 24",email:"mairie@belfort.fr"},
+  {ville:"Évreux",pop:49000,dept:"27",region:"Normandie",maire:"Guy Lefrand",adresse:"Place du Gén. de Gaulle, 27025 Évreux Cedex",tel:"02 32 78 78 78",email:"mairie@evreux.fr"},
+  {ville:"Martigues",pop:48500,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Gaby Charroux",adresse:"Quai Général Leclerc, 13698 Martigues Cedex",tel:"04 42 44 33 33",email:"mairie@ville-martigues.fr"},
+  {ville:"Cagnes-sur-Mer",pop:48000,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Louis Nègre",adresse:"Place du Général de Gaulle, 06802 Cagnes-sur-Mer Cedex",tel:"04 92 02 63 00",email:"mairie@cagnes-sur-mer.fr"},
+  {ville:"Saint-Herblain",pop:47000,dept:"44",region:"Pays de la Loire",maire:"",adresse:"Allée de la Mairie, 44802 Saint-Herblain Cedex",tel:"02 28 25 25 25",email:"mairie@saint-herblain.fr"},
+  {ville:"Charleville-Mézières",pop:47000,dept:"08",region:"Grand Est",maire:"Boris Ravignon",adresse:"Place Ducale, 08011 Charleville-Mézières Cedex",tel:"03 24 32 44 00",email:"mairie@charleville-mezieres.fr"},
+  {ville:"Carcassonne",pop:47000,dept:"11",region:"Occitanie",maire:"Julien Bacou",adresse:"Place du Général de Gaulle, 11890 Carcassonne Cedex 9",tel:"04 68 77 71 11",email:"mairie@mairie-carcassonne.fr"},
+  {ville:"Brive-la-Gaillarde",pop:47000,dept:"19",region:"Nouvelle-Aquitaine",maire:"Frédéric Soulier",adresse:"Place du 14 Juillet, 19100 Brive-la-Gaillarde",tel:"05 55 92 39 39",email:"mairie@brive.fr"},
+  {ville:"Saint-Priest",pop:47000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Gilles Gascon",adresse:"Place de la Libération, 69804 Saint-Priest Cedex",tel:"04 72 23 38 00",email:"mairie@mairie-saintpriest.fr"},
+  {ville:"Aubagne",pop:46000,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Gérard Gazay",adresse:"Avenue de l'Europe, 13400 Aubagne",tel:"04 42 18 19 19",email:"mairie@aubagne.fr"},
+  {ville:"Livry-Gargan",pop:46000,dept:"93",region:"Île-de-France",maire:"Claude Pernès",adresse:"Place François Mitterrand, 93191 Livry-Gargan Cedex",tel:"01 49 36 44 00",email:"mairie@mairie-livry-gargan.fr"},
+  {ville:"Saint-Malo",pop:46000,dept:"35",region:"Bretagne",maire:"Gilles Lurton",adresse:"Hôtel de Ville, 35407 Saint-Malo Cedex",tel:"02 99 40 71 11",email:"mairie@saint-malo.fr"},
+  {ville:"Matoury",pop:35000,dept:"973",region:"Guyane",maire:"",adresse:"Hôtel de Ville, 97351 Matoury",tel:"05 94 35 22 00",email:"mairie@mairie-matoury.fr"},
+  {ville:"Le Lamentin",pop:40000,dept:"972",region:"Martinique",maire:"David Zobda",adresse:"Rue Victor Sévère, 97232 Le Lamentin",tel:"05 96 30 54 00",email:"mairie@mairie-lelamentin.fr"},
+  {ville:"Thionville",pop:43000,dept:"57",region:"Grand Est",maire:"Pierre Cuny",adresse:"Place du Marché, 57108 Thionville Cedex",tel:"03 82 53 30 00",email:"mairie@mairie-thionville.fr"},
+
+  /* ── 37 000 – 40 000 ── */
+  {ville:"Blois",pop:45500,dept:"41",region:"Centre-Val de Loire",maire:"Marc Gricourt",adresse:"Place Louis XII, 41034 Blois Cedex",tel:"02 54 90 41 41",email:"mairie@blois.fr"},
+  {ville:"Chalon-sur-Saône",pop:44500,dept:"71",region:"Bourgogne-Franche-Comté",maire:"Sébastien Martin",adresse:"Place de l'Hôtel de Ville, 71321 Chalon-sur-Saône Cedex",tel:"03 85 90 91 00",email:"mairie@mairie-chalon71.fr"},
+  {ville:"Gennevilliers",pop:45000,dept:"92",region:"Île-de-France",maire:"Patrice Leclerc",adresse:"Place Victor Hugo, 92231 Gennevilliers Cedex",tel:"01 40 85 68 68",email:"mairie@gennevilliers.fr"},
+  {ville:"Salon-de-Provence",pop:45000,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Nicolas Isnard",adresse:"Place de l'Hôtel de Ville, 13300 Salon-de-Provence",tel:"04 90 56 00 56",email:"mairie@salon-de-provence.org"},
+  {ville:"Vaulx-en-Velin",pop:45000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Jean-Paul Bret",adresse:"Place du 8 Mai 1945, 69120 Vaulx-en-Velin",tel:"04 72 04 91 00",email:"mairie@vaulx-en-velin.net"},
+  {ville:"Saint-Germain-en-Laye",pop:44500,dept:"78",region:"Île-de-France",maire:"Arnaud Péricard",adresse:"Place André Malraux, 78103 Saint-Germain-en-Laye Cedex",tel:"01 39 21 33 00",email:"mairie@saint-germain-en-laye.fr"},
+  {ville:"Sète",pop:44000,dept:"34",region:"Occitanie",maire:"François Commeinhes",adresse:"Place Aristide Briand, 34206 Sète Cedex",tel:"04 67 74 64 64",email:"mairie@sete.fr"},
+  {ville:"Châlons-en-Champagne",pop:44000,dept:"51",region:"Grand Est",maire:"",adresse:"Place Foch, 51036 Châlons-en-Champagne Cedex",tel:"03 26 26 88 00",email:"mairie@chalons-en-champagne.fr"},
+  {ville:"Mantes-la-Jolie",pop:44000,dept:"78",region:"Île-de-France",maire:"Raphaël Cognet",adresse:"Place Jean XXIII, 78200 Mantes-la-Jolie",tel:"01 34 97 71 00",email:"mairie@manteslajolie.fr"},
+  {ville:"Valenciennes",pop:43000,dept:"59",region:"Hauts-de-France",maire:"Laurent Degallaix",adresse:"Place d'Armes, 59322 Valenciennes Cedex",tel:"03 27 22 59 59",email:"mairie@valenciennes.fr"},
+  {ville:"Istres",pop:43000,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"François-Régis Orizet",adresse:"Place Champollion, 13800 Istres",tel:"04 42 55 55 55",email:"mairie@ville-istres.fr"},
+  {ville:"Garges-lès-Gonesse",pop:43000,dept:"95",region:"Île-de-France",maire:"Saloua Rouas",adresse:"Place de l'Hôtel de Ville, 95141 Garges-lès-Gonesse Cedex",tel:"01 39 86 57 57",email:"mairie@mairie-garges.fr"},
+  {ville:"Châteauroux",pop:43000,dept:"36",region:"Centre-Val de Loire",maire:"Gil Avérous",adresse:"Place de la République, 36000 Châteauroux",tel:"02 54 08 25 00",email:"mairie@mairie-chateauroux.fr"},
+  {ville:"Rezé",pop:43000,dept:"44",region:"Pays de la Loire",maire:"",adresse:"Place Mangin, 44400 Rezé",tel:"02 40 84 90 00",email:"mairie@mairie-reze.fr"},
+  {ville:"Caluire-et-Cuire",pop:43000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Philippe Cochet",adresse:"Place du Docteur Mouisset, 69300 Caluire-et-Cuire",tel:"04 72 00 71 00",email:"mairie@mairie-caluire.fr"},
+  {ville:"Rosny-sous-Bois",pop:43000,dept:"93",region:"Île-de-France",maire:"",adresse:"Avenue du Maréchal Foch, 93111 Rosny-sous-Bois Cedex",tel:"01 48 94 42 42",email:"mairie@rosnysousbois.fr"},
+  {ville:"Castres",pop:43000,dept:"81",region:"Occitanie",maire:"Pascal Causse",adresse:"Place de la Libération, 81108 Castres Cedex",tel:"05 63 71 59 00",email:"mairie@ville-castres.fr"},
+  {ville:"Colomiers",pop:40000,dept:"31",region:"Occitanie",maire:"Karine Traval-Michelet",adresse:"Place Alex Raymond, 31771 Colomiers Cedex",tel:"05 61 15 22 00",email:"mairie@colomiers.fr"},
+  {ville:"Melun",pop:41000,dept:"77",region:"Île-de-France",maire:"Louis Vogel",adresse:"Place Saint-Jean, 77011 Melun Cedex",tel:"01 64 52 33 33",email:"mairie@melun.fr"},
+  {ville:"Rémire-Montjoly",pop:30000,dept:"973",region:"Guyane",maire:"",adresse:"Rue de la République, 97354 Rémire-Montjoly",tel:"05 94 33 50 00",email:"mairie@remiremontjoly.fr"},
+  {ville:"Baie-Mahault",pop:32000,dept:"971",region:"Guadeloupe",maire:"Harry Durimel",adresse:"Rue de la République, 97122 Baie-Mahault",tel:"05 90 32 60 00",email:"mairie@mairiebaiemahault.fr"},
+  {ville:"Oullins-Pierre-Bénite",pop:39000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Jérôme Moroge",adresse:"Place Louis Gallet, 69600 Oullins",tel:"04 72 39 14 00",email:"mairie@oullins-pierre-benite.fr"},
+  {ville:"Bron",pop:41000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Jérémie Bréaud",adresse:"Place de la Libération, 69677 Bron Cedex",tel:"04 72 67 86 86",email:"mairie@bron.fr"},
+  {ville:"Montélimar",pop:38000,dept:"26",region:"Auvergne-Rhône-Alpes",maire:"",adresse:"Place du Temple, 26216 Montélimar Cedex",tel:"04 75 00 64 00",email:"mairie@montelimar.fr"},
+
+  /* ── 33 000 – 37 000 ── */
+  {ville:"Angoulême",pop:42000,dept:"16",region:"Nouvelle-Aquitaine",maire:"Xavier Bonnefont",adresse:"Place de l'Hôtel de Ville, 16023 Angoulême Cedex",tel:"05 45 38 70 00",email:"mairie@angouleme.fr"},
+  {ville:"Boulogne-sur-Mer",pop:42000,dept:"62",region:"Hauts-de-France",maire:"Frédéric Cuvillier",adresse:"Place Godefroy de Bouillon, 62201 Boulogne-sur-Mer Cedex",tel:"03 21 87 80 80",email:"mairie@mairie-boulogne-sur-mer.fr"},
+  {ville:"Alès",pop:42000,dept:"30",region:"Occitanie",maire:"Max Roustan",adresse:"Place de l'Hôtel de Ville, 30100 Alès",tel:"04 66 56 30 00",email:"mairie@ales.fr"},
+  {ville:"Arras",pop:42000,dept:"62",region:"Hauts-de-France",maire:"Frédéric Leturque",adresse:"Place des Héros, 62022 Arras Cedex",tel:"03 21 23 37 00",email:"mairie@arras.fr"},
+  {ville:"Douai",pop:41000,dept:"59",region:"Hauts-de-France",maire:"Frédéric Chéreau",adresse:"Place d'Armes, 59507 Douai Cedex",tel:"03 27 93 36 36",email:"mairie@douai.fr"},
+  {ville:"Bagneux",pop:40000,dept:"92",region:"Île-de-France",maire:"Marie-Hélène Amiable",adresse:"Place Salvador Allende, 92221 Bagneux Cedex",tel:"01 46 73 74 00",email:"mairie@mairie-bagneux.fr"},
+  {ville:"Chartres",pop:40000,dept:"28",region:"Centre-Val de Loire",maire:"Jean-Pierre Gorges",adresse:"Place des Halles, 28019 Chartres Cedex",tel:"02 37 23 40 00",email:"mairie@agglo-ville.chartres.fr"},
+  {ville:"Draguignan",pop:40000,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Marc Schnyder",adresse:"Place du Marché, 83300 Draguignan",tel:"04 94 60 50 50",email:"mairie@draguignan.fr"},
+  {ville:"Gap",pop:40000,dept:"05",region:"Provence-Alpes-Côte d'Azur",maire:"Roger Didier",adresse:"Place Jean Marcellin, 05007 Gap Cedex",tel:"04 92 53 50 00",email:"mairie@ville-gap.fr"},
+  {ville:"Noisy-le-Sec",pop:40000,dept:"93",region:"Île-de-France",maire:"Laurent Rivoire",adresse:"Place de la République, 93132 Noisy-le-Sec Cedex",tel:"01 49 42 67 67",email:"mairie@noisylesec.fr"},
+  {ville:"Tarbes",pop:40000,dept:"65",region:"Occitanie",maire:"Gérard Trémège",adresse:"Place Jean Jaurès, 65013 Tarbes Cedex 9",tel:"05 62 51 30 00",email:"mairie@mairie-tarbes.fr"},
+  {ville:"Compiègne",pop:40000,dept:"60",region:"Hauts-de-France",maire:"Philippe Marini",adresse:"Place de l'Hôtel de Ville, 60200 Compiègne",tel:"03 44 30 33 00",email:"mairie@ville-compiegne.fr"},
+  {ville:"Stains",pop:38000,dept:"93",region:"Île-de-France",maire:"Azzédine Taïbi",adresse:"Place de la Mairie, 93240 Stains",tel:"01 49 71 56 56",email:"mairie@ville-stains.fr"},
+  {ville:"Gagny",pop:38000,dept:"93",region:"Île-de-France",maire:"Philippe Périès",adresse:"Place du Général de Gaulle, 93220 Gagny",tel:"01 43 81 42 00",email:"mairie@gagny.fr"},
+  {ville:"Poissy",pop:37000,dept:"78",region:"Île-de-France",maire:"Karl Olive",adresse:"Place du Général de Gaulle, 78303 Poissy Cedex",tel:"01 39 22 32 00",email:"mairie@poissy.fr"},
+  {ville:"Thonon-les-Bains",pop:37000,dept:"74",region:"Auvergne-Rhône-Alpes",maire:"Jean-Louis Bianco",adresse:"Place du Château, 74204 Thonon-les-Bains Cedex",tel:"04 50 70 70 70",email:"mairie@thonon-les-bains.fr"},
+  {ville:"Villefranche-sur-Saône",pop:37000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"",adresse:"Place des Arts, 69400 Villefranche-sur-Saône",tel:"04 74 68 09 09",email:"mairie@villefranche-sur-saone.fr"},
+  {ville:"Vitrolles",pop:37000,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Loïc Gachon",adresse:"Hôtel de Ville, 13127 Vitrolles",tel:"04 42 02 30 30",email:"mairie@vitrolles13.fr"},
+  {ville:"Pontault-Combault",pop:37000,dept:"77",region:"Île-de-France",maire:"Marie-Agnès Poussier-Winsback",adresse:"1 Avenue du Gros Noyer, 77340 Pontault-Combault",tel:"01 60 34 44 44",email:"mairie@pontault-combault.fr"},
+  {ville:"Savigny-sur-Orge",pop:37000,dept:"91",region:"Île-de-France",maire:"",adresse:"Hôtel de Ville, 91601 Savigny-sur-Orge Cedex",tel:"01 69 44 50 00",email:"mairie@savigny-sur-orge.fr"},
+  {ville:"Franconville",pop:36000,dept:"95",region:"Île-de-France",maire:"",adresse:"Place du Général de Gaulle, 95134 Franconville Cedex",tel:"01 34 12 23 00",email:"mairie@franconville.fr"},
+  {ville:"Romans-sur-Isère",pop:33000,dept:"26",region:"Auvergne-Rhône-Alpes",maire:"Marie-Hélène Thoraval",adresse:"Place Jules Nadi, 26100 Romans-sur-Isère",tel:"04 75 05 51 51",email:"mairie@ville-romans-sur-isere.fr"},
+
+  /* ── 30 000 – 33 000 ── */
+  {ville:"Auxerre",pop:36000,dept:"89",region:"Bourgogne-Franche-Comté",maire:"Crescent Marault",adresse:"Place de l'Hôtel de Ville, 89026 Auxerre Cedex",tel:"03 86 72 40 00",email:"mairie@auxerre.fr"},
+  {ville:"Bagnolet",pop:36000,dept:"93",region:"Île-de-France",maire:"Tony Di Martino",adresse:"Place Salvador Allende, 93177 Bagnolet Cedex",tel:"01 49 93 62 00",email:"mairie@bagnolet.fr"},
+  {ville:"Saint-Martin-d'Hères",pop:36000,dept:"38",region:"Auvergne-Rhône-Alpes",maire:"David Queiros",adresse:"Hôtel de Ville, 38406 Saint-Martin-d'Hères Cedex",tel:"04 76 60 18 18",email:"mairie@ville-saintmartindheres.fr"},
+  {ville:"Conflans-Sainte-Honorine",pop:36000,dept:"78",region:"Île-de-France",maire:"Laurent Brosse",adresse:"Place Fouillard, 78700 Conflans-Sainte-Honorine",tel:"01 34 90 70 00",email:"mairie@conflans-sainte-honorine.fr"},
+  {ville:"Villepinte",pop:36000,dept:"93",region:"Île-de-France",maire:"",adresse:"Place Nelson Mandela, 93421 Villepinte Cedex",tel:"01 41 54 41 54",email:"mairie@villepinte.fr"},
+  {ville:"Annemasse",pop:35000,dept:"74",region:"Auvergne-Rhône-Alpes",maire:"Christian Dupessey",adresse:"Place de l'Hôtel de Ville, 74107 Annemasse Cedex",tel:"04 50 87 83 83",email:"mairie@annemasse.fr"},
+  {ville:"Échirolles",pop:35000,dept:"38",region:"Auvergne-Rhône-Alpes",maire:"Renzo Sulli",adresse:"Place Jean Verlhac, 38130 Échirolles",tel:"04 76 23 46 00",email:"mairie@echirolles.fr"},
+  {ville:"Saint-Raphaël",pop:35000,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Frédéric Masquelier",adresse:"Place Victor Hugo, 83700 Saint-Raphaël",tel:"04 94 19 25 25",email:"mairie@ville-saintraphael.fr"},
+  {ville:"Creil",pop:35000,dept:"60",region:"Hauts-de-France",maire:"Mehdi Khiari",adresse:"Place du Général de Gaulle, 60100 Creil",tel:"03 44 64 66 66",email:"mairie@creil.fr"},
+  {ville:"Villeneuve-Saint-Georges",pop:34000,dept:"94",region:"Île-de-France",maire:"",adresse:"Place de la République, 94191 Villeneuve-Saint-Georges Cedex",tel:"01 43 86 80 00",email:"mairie@villeneuvesaintgeorges.fr"},
+  {ville:"Neuilly-sur-Marne",pop:34000,dept:"93",region:"Île-de-France",maire:"",adresse:"Avenue Franklin Roosevelt, 93330 Neuilly-sur-Marne",tel:"01 41 67 12 00",email:"mairie@neuillysurm.fr"},
+  {ville:"L'Haÿ-les-Roses",pop:32000,dept:"94",region:"Île-de-France",maire:"",adresse:"Avenue du Général de Gaulle, 94241 L'Haÿ-les-Roses Cedex",tel:"01 49 75 44 00",email:"mairie@mairie-lhaylesroses.fr"},
+  {ville:"Agen",pop:33000,dept:"47",region:"Nouvelle-Aquitaine",maire:"Jean Dionis du Séjour",adresse:"Place de l'Hôtel de Ville, 47916 Agen Cedex 9",tel:"05 53 69 47 47",email:"mairie@agen.fr"},
+  {ville:"Nevers",pop:34000,dept:"58",region:"Bourgogne-Franche-Comté",maire:"Denis Thuriot",adresse:"Place de l'Hôtel de Ville, 58020 Nevers Cedex",tel:"03 86 68 46 00",email:"mairie@ville-nevers.fr"},
+  {ville:"Mâcon",pop:34000,dept:"71",region:"Bourgogne-Franche-Comté",maire:"Jean-Patrick Courtois",adresse:"Place Saint-Vincent, 71871 Mâcon Cedex 9",tel:"03 85 39 71 00",email:"mairie@macon.fr"},
+  {ville:"Vandœuvre-lès-Nancy",pop:33000,dept:"54",region:"Grand Est",maire:"Stéphane Hablot",adresse:"Place Charles de Gaulle, 54505 Vandœuvre-lès-Nancy Cedex",tel:"03 83 52 60 00",email:"mairie@vandoeuvre.fr"},
+  {ville:"Rillieux-la-Pape",pop:32000,dept:"69",region:"Auvergne-Rhône-Alpes",maire:"Alexandre Vincendet",adresse:"Place de la Paix, 69140 Rillieux-la-Pape",tel:"04 78 88 71 00",email:"mairie@mairie-rillieux-la-pape.fr"},
+  {ville:"Lens",pop:32000,dept:"62",region:"Hauts-de-France",maire:"Sylvain Robert",adresse:"Place Jean Jaurès, 62307 Lens Cedex",tel:"03 21 69 84 00",email:"mairie@mairie-lens.fr"},
+  {ville:"Liévin",pop:32000,dept:"62",region:"Hauts-de-France",maire:"",adresse:"Place du Général de Gaulle, 62800 Liévin",tel:"03 21 44 04 04",email:"mairie@mairie-lievin.fr"},
+  {ville:"Mont-de-Marsan",pop:32000,dept:"40",region:"Nouvelle-Aquitaine",maire:"Charles Dayot",adresse:"Place Charles de Gaulle, 40025 Mont-de-Marsan Cedex",tel:"05 58 05 87 87",email:"mairie@montdemarsan.fr"},
+  {ville:"Palaiseau",pop:32000,dept:"91",region:"Île-de-France",maire:"",adresse:"Place de la République, 91120 Palaiseau",tel:"01 64 46 18 00",email:"mairie@palaiseau.fr"},
+  {ville:"Les Mureaux",pop:32000,dept:"78",region:"Île-de-France",maire:"François Garay",adresse:"Avenue Maurice Berteaux, 78130 Les Mureaux",tel:"01 34 74 78 78",email:"mairie@mairie-lesmureaux.fr"},
+  {ville:"Trappes",pop:32000,dept:"78",region:"Île-de-France",maire:"",adresse:"Place du Maréchal Joffre, 78190 Trappes",tel:"01 30 16 44 44",email:"mairie@ville-trappes.fr"},
+  {ville:"Goussainville",pop:32000,dept:"95",region:"Île-de-France",maire:"",adresse:"Place du Maréchal de Lattre de Tassigny, 95190 Goussainville",tel:"01 39 88 13 00",email:"mairie@goussainville.fr"},
+  {ville:"Pontoise",pop:31000,dept:"95",region:"Île-de-France",maire:"Pierrick Courbon",adresse:"Place du Petit Martroy, 95300 Pontoise",tel:"01 30 75 38 38",email:"mairie@mairie-pontoise.fr"},
+  {ville:"Périgueux",pop:30000,dept:"24",region:"Nouvelle-Aquitaine",maire:"Delphine Labails",adresse:"Place de la Clautre, 24019 Périgueux Cedex",tel:"05 53 06 41 00",email:"mairie@perigueux.fr"},
+  {ville:"Grigny",pop:30000,dept:"91",region:"Île-de-France",maire:"Philippe Rio",adresse:"Place du Général de Gaulle, 91350 Grigny",tel:"01 69 02 91 91",email:"mairie@ville-grigny.fr"},
+  {ville:"Dieppe",pop:30000,dept:"76",region:"Normandie",maire:"Sébastien Jumel",adresse:"Place Nationale, 76200 Dieppe",tel:"02 32 14 40 00",email:"mairie@ville-dieppe.fr"},
+  {ville:"Sotteville-lès-Rouen",pop:30000,dept:"76",region:"Normandie",maire:"Hubert Wulfranc",adresse:"Place Pierre Brossolette, 76302 Sotteville-lès-Rouen Cedex",tel:"02 35 73 15 73",email:"mairie@mairie-sotteville.fr"},
+  {ville:"Clichy-sous-Bois",pop:30000,dept:"93",region:"Île-de-France",maire:"",adresse:"Place de la Mairie, 93390 Clichy-sous-Bois",tel:"01 43 09 62 62",email:"mairie@mairie-clichysousbois.fr"},
+  {ville:"Romainville",pop:30000,dept:"93",region:"Île-de-France",maire:"François Asensi",adresse:"Place du Groupe Manoury, 93230 Romainville",tel:"01 49 15 26 26",email:"mairie@romainville.fr"},
+  {ville:"Maubeuge",pop:30000,dept:"59",region:"Hauts-de-France",maire:"",adresse:"Place de la République, 59602 Maubeuge Cedex",tel:"03 27 69 17 17",email:"mairie@mairie-maubeuge.fr"},
+  {ville:"Épinal",pop:30000,dept:"88",region:"Grand Est",maire:"Michel Heinrich",adresse:"Place de l'Hôtel de Ville, 88026 Épinal Cedex",tel:"03 29 68 51 51",email:"mairie@epinal.fr"},
+  {ville:"Dreux",pop:30000,dept:"28",region:"Centre-Val de Loire",maire:"Gérard Hamel",adresse:"Place Métézeau, 28100 Dreux",tel:"02 37 38 90 00",email:"mairie@ville-dreux.fr"},
+  {ville:"Viry-Châtillon",pop:31000,dept:"91",region:"Île-de-France",maire:"",adresse:"Place de l'Hôtel de Ville, 91171 Viry-Châtillon Cedex",tel:"01 69 12 19 12",email:"mairie@virychatillon.fr"},
+  {ville:"Draveil",pop:30000,dept:"91",region:"Île-de-France",maire:"Georges Tron",adresse:"Place Gabriel Péri, 91210 Draveil",tel:"01 69 03 71 00",email:"mairie@draveil.fr"},
+  {ville:"Charenton-le-Pont",pop:30700,dept:"94",region:"Île-de-France",maire:"Jean-Pierre Frick",adresse:"48 Place de l'Église, 94220 Charenton-le-Pont",tel:"01 43 68 09 09",email:"mairie@charenton94.fr"},
+  {ville:"Corbeil-Essonnes",pop:50000,dept:"91",region:"Île-de-France",maire:"",adresse:"Boulevard Jean-Jacques Rousseau, 91104 Corbeil-Essonnes Cedex",tel:"01 60 89 60 00",email:"mairie@corbeil-essonnes.fr"},
+  {ville:"Vincennes",pop:49500,dept:"94",region:"Île-de-France",maire:"",adresse:"Place de la République, 94300 Vincennes",tel:"01 48 08 18 28",email:"mairie@vincennes.fr"},
+  {ville:"Maisons-Alfort",pop:55000,dept:"94",region:"Île-de-France",maire:"Jacques-Alain Bénisti",adresse:"Place du Général de Gaulle, 94704 Maisons-Alfort Cedex",tel:"01 43 75 72 80",email:"mairie@maisons-alfort.fr"},
+  {ville:"Sartrouville",pop:54000,dept:"78",region:"Île-de-France",maire:"",adresse:"Place du Général de Gaulle, 78505 Sartrouville Cedex",tel:"01 39 14 73 00",email:"mairie@sartrouville.fr"},
+  {ville:"Épinay-sur-Seine",pop:54000,dept:"93",region:"Île-de-France",maire:"Hervé Chevreau",adresse:"Place de la République, 93804 Épinay-sur-Seine Cedex",tel:"01 49 71 53 00",email:"mairie@mairie-epinay93.fr"},
+  {ville:"Bondy",pop:54000,dept:"93",region:"Île-de-France",maire:"Sylvine Thomassin",adresse:"Place de la République, 93140 Bondy",tel:"01 48 02 04 06",email:"mairie@mairie-bondy.fr"},
+  {ville:"Bobigny",pop:53000,dept:"93",region:"Île-de-France",maire:"",adresse:"Avenue Henri Barbusse, 93000 Bobigny",tel:"01 48 30 89 30",email:"mairie@ville-bobigny.fr"},
+  {ville:"Massy",pop:53000,dept:"91",region:"Île-de-France",maire:"",adresse:"Esplanade Charles de Gaulle, 91300 Massy",tel:"01 60 13 37 91",email:"mairie@massy.fr"},
+  {ville:"Bayonne",pop:52000,dept:"64",region:"Nouvelle-Aquitaine",maire:"Jean-René Etchegaray",adresse:"Place de la Liberté, 64109 Bayonne Cedex",tel:"05 59 46 60 00",email:"mairie@bayonne.fr"},
+  {ville:"Laval",pop:52000,dept:"53",region:"Pays de la Loire",maire:"Guillaume Garot",adresse:"Place du 11 Novembre, 53014 Laval Cedex",tel:"02 43 49 49 49",email:"mairie@laval.fr"},
+  {ville:"Narbonne",pop:56000,dept:"11",region:"Occitanie",maire:"",adresse:"Place de l'Hôtel de Ville, 11783 Narbonne Cedex",tel:"04 68 90 30 00",email:"mairie@mairie-narbonne.fr"},
+  {ville:"La Possession (La Réunion)",pop:32000,dept:"974",region:"La Réunion",maire:"",adresse:"Place Willy Vergoz, 97419 La Possession",tel:"02 62 22 06 00",email:"mairie@mairie-lapossession.re"}
+];
+
+/* ══ SORT STATE ══ */
+let sortField='pop', sortDir='desc';
+
+/* ══ CANCEL TOKEN ══ */
+let cancelRequested=false;
+
+/* ══ REGIONS PALETTE ══ */
+const REGIONS_COLOR={};
+const REGION_LIST=[...new Set(DATA.map(d=>d.region))].sort();
+REGION_LIST.forEach((r,i)=>REGIONS_COLOR[r]=i%19);
+
+/* ══ POPULATE REGION FILTER ══ */
+const sel=document.getElementById('region-filter');
+REGION_LIST.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+
+/* ══ HELPERS ══ */
+function fmt(n){return n.toLocaleString('fr-FR')}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ══ SORT ══ */
+function setSort(field){
+  if(sortField===field){sortDir=sortDir==='desc'?'asc':'desc'}else{sortField=field;sortDir=field==='pop'?'desc':'asc'}
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  const arrow=sortDir==='desc'?'↓':'↑';
+  const arEl=document.getElementById('arr-'+field);
+  if(arEl) arEl.textContent=arrow;
+  render();
+}
+
+/* ══ FILTER + SORT ══ */
+function getFiltered(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const reg=document.getElementById('region-filter').value;
+  let rows=DATA.filter(d=>{
+    if(reg&&d.region!==reg)return false;
+    if(!q)return true;
+    return d.ville.toLowerCase().includes(q)||d.maire.toLowerCase().includes(q)||
+           d.dept.toLowerCase().includes(q)||d.region.toLowerCase().includes(q)||
+           d.email.toLowerCase().includes(q)||d.adresse.toLowerCase().includes(q);
+  });
+  rows.sort((a,b)=>{
+    let va=sortField==='pop'?a.pop:(a[sortField]||'').toLowerCase();
+    let vb=sortField==='pop'?b.pop:(b[sortField]||'').toLowerCase();
+    return sortDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  return rows;
+}
+
+/* ══ RENDER ══ */
+function render(){
+  const rows=getFiltered();
+  const tbody=document.getElementById('tbody');
+  if(rows.length===0){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun résultat pour cette recherche.</p></div></td></tr>`;
+  } else {
+    tbody.innerHTML=rows.map((d,i)=>`
+    <tr id="row-${esc(d.ville.replace(/\s/g,'_'))}">
+      <td class="td-rank">${i+1}</td>
+      <td><div class="city">${esc(d.ville)}</div><span class="dept-tag">${esc(d.dept)}</span></td>
+      <td class="pop">${fmt(d.pop)} hab.</td>
+      <td><span class="rbadge r${REGIONS_COLOR[d.region]||0}">${esc(d.region)}</span></td>
+      <td>${d.maire?`<span class="maire-name">${esc(d.maire)}</span>`:`<span class="maire-empty">À vérifier</span>`}</td>
+      <td><span class="adresse">${esc(d.adresse)}</span></td>
+      <td class="tel">${d.tel?`<a href="tel:${d.tel.replace(/\s/g,'')}" style="color:inherit;text-decoration:none">${esc(d.tel)}</a>`:''}</td>
+      <td>${d.email?`<a class="email-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`:`<span class="email-na">Non disponible</span>`}</td>
+    </tr>`).join('');
+  }
+  document.getElementById('s-total').textContent=DATA.length;
+  document.getElementById('s-shown').textContent=rows.length;
+  document.getElementById('s-maires').textContent=DATA.filter(d=>d.maire).length;
+  document.getElementById('s-emails').textContent=DATA.filter(d=>d.email).length;
+  document.getElementById('count-label').textContent=rows.length===DATA.length?`${DATA.length} communes`:`${rows.length} / ${DATA.length} communes`;
+}
+
+function resetFilters(){
+  document.getElementById('search').value='';
+  document.getElementById('region-filter').value='';
+  document.getElementById('sort-field').value='pop-desc';
+  sortField='pop';sortDir='desc';
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  document.getElementById('arr-pop').textContent='↓';
+  render();
+}
+
+/* ══ HELPER : téléchargement cross-browser / mobile ══ */
+function triggerDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  // laisser le temps au navigateur de déclencher le téléchargement
+  setTimeout(()=>{ URL.revokeObjectURL(url); document.body.removeChild(a); }, 2000);
+}
+
+/* ══ EXPORT CSV ══ */
+function exportCSV(){
+  const rows = getFiltered();
+  const BOM  = '\uFEFF';
+  const hdr  = 'Rang,Ville,Département,Région,Population,Maire,Adresse Hôtel de Ville,Téléphone,Email';
+  const body = rows.map((d,i)=>[
+    i+1,
+    '"'+d.ville+'"',
+    d.dept,
+    '"'+d.region+'"',
+    d.pop,
+    '"'+(d.maire||'')+'"',
+    '"'+d.adresse+'"',
+    '"'+(d.tel||'')+'"',
+    '"'+(d.email||'')+'"'
+  ].join(','));
+  const blob = new Blob([BOM + [hdr,...body].join('\n')], {type:'text/csv;charset=utf-8;'});
+  triggerDownload(blob, 'annuaire-maires-france.csv');
+  showToast('✅ CSV exporté — '+rows.length+' communes', '#0D7B52');
+}
+
+/* ══ EXPORT GOOGLE SHEETS (XLSX) ══ */
+function exportSheets(){
+  if(typeof XLSX === 'undefined'){
+    showToast('⏳ Bibliothèque XLSX en cours de chargement, réessayez dans 3s…','#B45309');
+    return;
+  }
+  try {
+    const rows = getFiltered();
+    const wsData = [
+      ['Rang','Ville','Département','Région','Population','Maire','Adresse Hôtel de Ville','Téléphone','Email officiel']
+    ];
+    rows.forEach((d,i) => wsData.push([
+      i+1, d.ville, d.dept, d.region, d.pop,
+      d.maire||'', d.adresse, d.tel||'', d.email||''
+    ]));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:5},{wch:28},{wch:6},{wch:26},{wch:12},{wch:30},{wch:45},{wch:16},{wch:36}];
+    ws['!freeze'] = {xSplit:0, ySplit:1};
+    XLSX.utils.book_append_sheet(wb, ws, 'Maires de France');
+
+    const meta = XLSX.utils.aoa_to_sheet([
+      ['Annuaire des Maires de France'],
+      ['Communes de plus de 30 000 habitants'],
+      [''],
+      ['Source','Données IA + INSEE 2022-2023'],
+      ['Date export', new Date().toLocaleDateString('fr-FR')],
+      ['Communes', rows.length],
+      ['Maires renseignés', rows.filter(d=>d.maire).length],
+      ['Emails disponibles', rows.filter(d=>d.email).length],
+      [''],
+      ['AVERTISSEMENT','Données à vérifier avant tout envoi officiel']
+    ]);
+    XLSX.utils.book_append_sheet(wb, meta, 'Métadonnées');
+
+    /* Génération Blob cross-browser (évite XLSX.writeFile qui échoue sur mobile) */
+    const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const blob  = new Blob([wbout], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    triggerDownload(blob, 'annuaire-maires-france.xlsx');
+    showToast('✅ Fichier Excel exporté — glissez-le dans Google Drive puis "Ouvrir avec Sheets"','#1A7340', 5000);
+  } catch(e){
+    showToast('❌ Erreur export XLSX : '+e.message,'#C8001E');
+  }
+}
+
+/* ══ EXPORT PDF ══ */
+function exportPDF(){
+  if(typeof window.jspdf === 'undefined'){
+    showToast('⏳ Bibliothèque PDF en cours de chargement, réessayez dans 3s…','#B45309');
+    return;
+  }
+  try {
+    const rows = getFiltered();
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+
+    /* Bandeau header */
+    doc.setFillColor(0,38,122);
+    doc.rect(0,0,297,18,'F');
+    doc.setFillColor(200,0,30);
+    doc.rect(0,18,297,2,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.text('Annuaire des Maires de France',14,12);
+    doc.setFontSize(7);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(200,215,255);
+    doc.text('Communes +30 000 hab.  |  Mandats 2020-2026  |  INSEE 2022-2023',14,16.5);
+    doc.text('Exporté le '+new Date().toLocaleDateString('fr-FR')+' — '+rows.length+' communes',230,16.5);
+
+    /* Tableau */
+    doc.autoTable({
+      startY: 24,
+      head:[['#','Commune','Dpt','Région','Population','Maire','Adresse Hôtel de Ville','Téléphone','Email']],
+      body: rows.map((d,i)=>[
+        i+1, d.ville, d.dept, d.region,
+        d.pop.toLocaleString('fr-FR')+' hab.',
+        d.maire||'—', d.adresse, d.tel||'—', d.email||'—'
+      ]),
+      styles:{
+        font:'helvetica', fontSize:6.2, cellPadding:1.8,
+        overflow:'linebreak', lineColor:[216,220,232], lineWidth:0.2,
+        textColor:[26,31,54]
+      },
+      headStyles:{
+        fillColor:[0,38,122], textColor:255,
+        fontSize:6.8, fontStyle:'bold', halign:'left'
+      },
+      alternateRowStyles:{fillColor:[242,244,248]},
+      tableWidth:'wrap',
+      columnStyles:{
+        0:{cellWidth:6,  halign:'center'},
+        1:{cellWidth:26, fontStyle:'bold'},
+        2:{cellWidth:8,  halign:'center'},
+        3:{cellWidth:24},
+        4:{cellWidth:18, halign:'right'},
+        5:{cellWidth:30},
+        6:{cellWidth:44},
+        7:{cellWidth:22},
+        8:{cellWidth:34, textColor:[0,56,184]}
+      },
+      didDrawPage: function(){
+        const pg    = doc.internal.getCurrentPageInfo().pageNumber;
+        const total = doc.internal.getNumberOfPages();
+        const h     = doc.internal.pageSize.height;
+        doc.setFontSize(6.5);
+        doc.setTextColor(107,114,128);
+        doc.text('République Française — Annuaire des Maires — Données à vérifier avant usage officiel',10,h-5);
+        doc.text('Page '+pg+'/'+total, 280, h-5, {align:'right'});
+      },
+      margin:{top:24, left:10, right:10, bottom:12}
+    });
+
+    /* Export Blob cross-browser (évite doc.save() qui échoue sur mobile) */
+    const pdfBlob = doc.output('blob');
+    triggerDownload(pdfBlob, 'annuaire-maires-france.pdf');
+    showToast('✅ PDF exporté — '+rows.length+' communes, '+doc.internal.getNumberOfPages()+' page(s)','#C8001E');
+  } catch(e){
+    showToast('❌ Erreur export PDF : '+e.message,'#C8001E');
+  }
+}
+
+/* ══ TOAST NOTIFICATION ══ */
+function showToast(msg,color='#0D7B52',duration=3500){
+  const t=document.createElement('div');
+  Object.assign(t.style,{
+    position:'fixed',bottom:'28px',right:'28px',zIndex:9999,
+    background:color,color:'#fff',
+    padding:'12px 20px',borderRadius:'8px',
+    fontFamily:'DM Sans,sans-serif',fontSize:'13px',fontWeight:'500',
+    boxShadow:'0 4px 20px rgba(0,0,0,.25)',
+    maxWidth:'400px',lineHeight:'1.4',
+    animation:'fadein .25s ease'
+  });
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},duration);
+}
+
+
+/* ══════════════════════════════════════════
+   MISE À JOUR IA — BATCH UPDATE VIA CLAUDE API
+   Batches de 8, séquentiels, anti-timeout
+   ══════════════════════════════════════════ */
+const BATCH=8;
+let updateRunning=false;
+
+function logLine(msg,cls=''){
+  const log=document.getElementById('upd-log');
+  const line=document.createElement('div');
+  if(cls)line.className=cls;
+  line.textContent=msg;
+  log.appendChild(line);
+  log.scrollTop=log.scrollHeight;
+}
+
+function setProgress(pct,label){
+  document.getElementById('upd-fill').style.width=pct+'%';
+  document.getElementById('upd-pct').textContent=pct+'%';
+  document.getElementById('upd-label').textContent=label;
+}
+
+function startUpdate(){
+  if(updateRunning)return;
+  cancelRequested=false;
+  document.getElementById('overlay').classList.add('active');
+  document.getElementById('upd-log').innerHTML='';
+  document.getElementById('btn-dl-upd').style.display='none';
+  document.getElementById('btn-close-upd').style.display='none';
+  document.getElementById('btn-cancel-upd').style.display='';
+  document.getElementById('btn-update').disabled=true;
+  setProgress(0,'Initialisation…');
+  logLine('🚀 Démarrage de la mise à jour IA — '+DATA.length+' communes en '+ Math.ceil(DATA.length/BATCH)+' lots','log-cur');
+  runUpdate();
+}
+
+async function runUpdate(){
+  updateRunning=true;
+  const batches=[];
+  for(let i=0;i<DATA.length;i+=BATCH)batches.push(DATA.slice(i,i+BATCH));
+
+  for(let bi=0;bi<batches.length;bi++){
+    if(cancelRequested){logLine('⛔ Annulé par l\'utilisateur.','log-err');break;}
+    const batch=batches[bi];
+    const names=batch.map(c=>c.ville).join(', ');
+    const short=names.length>60?names.slice(0,57)+'…':names;
+    const pct=Math.round((bi/batches.length)*100);
+    setProgress(pct,`Lot ${bi+1}/${batches.length} — ${short}`);
+    logLine(`⏳ Lot ${bi+1}/${batches.length} : ${short}`,'log-cur');
+
+    try{
+      const prompt=`Tu es une base de données officielle des collectivités françaises.
+Pour chacune des villes françaises suivantes, fournis les informations ci-dessous.
+Réponds UNIQUEMENT en JSON valide, sans balises markdown, sans texte avant ou après.
+Format attendu : tableau JSON d'objets avec exactement ces clés :
+  "ville" (string, nom exact de la ville),
+  "maire" (string, prénom + nom complet du maire en exercice 2024-2025, ou "" si inconnu),
+  "adresse" (string, adresse postale complète de l'hôtel de ville avec code postal et ville, ou ""),
+  "email" (string, adresse email officielle de la mairie, ou "" si inconnue),
+  "telephone" (string, numéro de téléphone standard de la mairie au format 0X XX XX XX XX, ou "").
+
+Villes : ${names}
+
+Contraintes absolues :
+- Aucun texte avant ou après le JSON
+- Aucune balise markdown, aucun bloc \`\`\`
+- Si une information est incertaine, renvoie "" plutôt qu'une valeur approximative
+- Respecte l'ordre des villes tel qu'il t'est fourni`;
+
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:1000,
+          messages:[{role:'user',content:prompt}]
+        })
+      });
+
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const json=await res.json();
+      const raw=(json.content||[]).map(b=>b.text||'').join('').trim();
+      const clean=raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
+      const parsed=JSON.parse(clean);
+
+      let updated=0;
+      parsed.forEach(item=>{
+        const idx=DATA.findIndex(d=>d.ville===item.ville);
+        if(idx!==-1){
+          if(item.maire)DATA[idx].maire=item.maire;
+          if(item.adresse)DATA[idx].adresse=item.adresse;
+          if(item.email)DATA[idx].email=item.email;
+          if(item.telephone)DATA[idx].tel=item.telephone;
+          updated++;
+        }
+      });
+      logLine(`  ✓ ${updated} commune(s) mise(s) à jour`,'log-ok');
+      render();
+
+    }catch(e){
+      logLine(`  ✗ Erreur lot ${bi+1} : ${e.message}`,'log-err');
+    }
+
+    // tiny pause between batches
+    await new Promise(r=>setTimeout(r,300));
+  }
+
+  setProgress(100,'Mise à jour terminée');
+  const now=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  logLine('✅ Mise à jour terminée — '+now,'log-ok');
+  document.getElementById('last-update-date').textContent=now;
+  document.getElementById('last-update-stat').style.display='';
+  document.getElementById('btn-dl-upd').style.display='';
+  document.getElementById('btn-close-upd').style.display='';
+  document.getElementById('btn-cancel-upd').style.display='none';
+  document.getElementById('btn-update').disabled=false;
+  updateRunning=false;
+}
+
+function cancelUpdate(){
+  cancelRequested=true;
+  updateRunning=false;
+  document.getElementById('btn-update').disabled=false;
+  document.getElementById('btn-close-upd').style.display='';
+  document.getElementById('btn-cancel-upd').style.display='none';
+}
+
+function closeUpdateModal(){
+  document.getElementById('overlay').classList.remove('active');
+}
+
+/* ══ DOWNLOAD UPDATED HTML ══ */
+function downloadUpdatedHTML(){
+  const dataStr=JSON.stringify(DATA,null,2)
+    .replace(/</g,'\\u003C').replace(/>/g,'\\u003E').replace(/&/g,'\\u0026');
+  const html=document.documentElement.outerHTML.replace(
+    /let DATA = \[[\s\S]*?\];/,
+    'let DATA = '+dataStr+';'
+  );
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='annuaire-maires-france-updated.html';a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════
+   GITHUB SYNC — GitHub Contents API v3
+   Push index.html avec données à jour
+   ══════════════════════════════════════════ */
+function openGithubModal(){
+  // Restore saved values
+  const saved = JSON.parse(localStorage.getItem('gh_config')||'{}');
+  if(saved.user)  document.getElementById('gh-user').value   = saved.user;
+  if(saved.repo)  document.getElementById('gh-repo').value   = saved.repo;
+  if(saved.branch)document.getElementById('gh-branch').value = saved.branch;
+  if(saved.token) document.getElementById('gh-token').value  = saved.token;
+  document.getElementById('gh-status').className='gh-status';
+  document.getElementById('gh-status').textContent='';
+  document.getElementById('gh-overlay').classList.add('active');
+}
+
+function closeGithubModal(){
+  document.getElementById('gh-overlay').classList.remove('active');
+}
+
+function ghStatus(msg, type){
+  const el = document.getElementById('gh-status');
+  el.textContent = msg;
+  el.className = 'gh-status ' + type;
+}
+
+async function pushToGitHub(){
+  const user   = document.getElementById('gh-user').value.trim();
+  const repo   = document.getElementById('gh-repo').value.trim();
+  const branch = document.getElementById('gh-branch').value.trim() || 'main';
+  const token  = document.getElementById('gh-token').value.trim();
+
+  if(!user || !repo || !token){
+    ghStatus('❌ Username, repo et token sont obligatoires.','err');
+    return;
+  }
+
+  // Persist config (token inclus — stocké localement uniquement)
+  localStorage.setItem('gh_config', JSON.stringify({user, repo, branch, token}));
+
+  const btn = document.getElementById('btn-gh-push');
+  btn.disabled = true;
+  ghStatus('⏳ Connexion à GitHub…','loading');
+
+  try {
+    const apiBase = `https://api.github.com/repos/${user}/${repo}`;
+    const headers = {
+      'Authorization': 'Bearer ' + token,
+      'Accept':        'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type':  'application/json'
+    };
+
+    // 1. Vérifier que le repo existe
+    ghStatus('⏳ Vérification du repository…','loading');
+    const repoCheck = await fetch(apiBase, {headers});
+    if(!repoCheck.ok){
+      const err = await repoCheck.json();
+      throw new Error('Repo introuvable : ' + (err.message || repoCheck.status));
+    }
+
+    // 2. Récupérer le SHA actuel du fichier (nécessaire pour l'update)
+    ghStatus('⏳ Lecture du fichier actuel…','loading');
+    let currentSHA = null;
+    const fileCheck = await fetch(`${apiBase}/contents/index.html?ref=${branch}`, {headers});
+    if(fileCheck.ok){
+      const fileData = await fileCheck.json();
+      currentSHA = fileData.sha;
+    } else if(fileCheck.status !== 404){
+      throw new Error('Erreur lecture fichier : ' + fileCheck.status);
+    }
+
+    // 3. Générer le contenu HTML avec les données à jour intégrées
+    ghStatus('⏳ Sérialisation des données…','loading');
+    const dataStr = JSON.stringify(DATA, null, 2);
+    const updatedHTML = document.documentElement.outerHTML.replace(
+      /let DATA = \[[\s\S]*?\];/,
+      'let DATA = ' + dataStr + ';'
+    );
+
+    // 4. Encoder en base64
+    const b64 = btoa(unescape(encodeURIComponent(updatedHTML)));
+
+    // 5. Commit via API
+    ghStatus('⏳ Push en cours…','loading');
+    const now = new Date().toLocaleString('fr-FR');
+    const body = {
+      message: `🔄 Mise à jour annuaire maires — ${now} (${DATA.length} communes)`,
+      content: b64,
+      branch:  branch,
+      ...(currentSHA ? {sha: currentSHA} : {})
+    };
+
+    const pushRes = await fetch(`${apiBase}/contents/index.html`, {
+      method:  'PUT',
+      headers: headers,
+      body:    JSON.stringify(body)
+    });
+
+    if(!pushRes.ok){
+      const err = await pushRes.json();
+      throw new Error(err.message || 'Erreur push : ' + pushRes.status);
+    }
+
+    const result = await pushRes.json();
+    const commitUrl = result.commit?.html_url || `https://github.com/${user}/${repo}`;
+    const pagesUrl  = `https://${user}.github.io/${repo}`;
+
+    ghStatus(
+      `✅ Push réussi ! Commit : ${result.commit?.sha?.slice(0,7) || 'OK'} — ` +
+      `GitHub Pages sera mis à jour dans ~30 secondes.`,
+      'ok'
+    );
+
+    showToast(`✅ Pushé sur github.com/${user}/${repo} (branche ${branch})`, '#24292F', 6000);
+
+  } catch(e){
+    ghStatus('❌ ' + e.message, 'err');
+    showToast('❌ Erreur GitHub : ' + e.message, '#C8001E');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ══ INIT ══ */
+render();
+</script>
+</body>
+</html>
