@@ -1,0 +1,549 @@
+/* Scanner Encheres 13 - Stylesheet */
+
+:root {
+    --primary: #1e3a5f;
+    --primary-light: #2c5282;
+    --accent: #e8912d;
+    --accent-hover: #d47d1e;
+    --bg: #f0f4f8;
+    --card-bg: #ffffff;
+    --text: #2d3748;
+    --text-light: #718096;
+    --border: #e2e8f0;
+    --success: #38a169;
+    --warning: #d69e2e;
+    --danger: #e53e3e;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+    --radius: 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 0;
+    box-shadow: var(--shadow-lg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo-icon {
+    font-size: 36px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.subtitle {
+    font-size: 13px;
+    opacity: 0.8;
+    font-weight: 300;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.last-update {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(232, 145, 45, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.scan-icon {
+    font-size: 18px;
+}
+
+/* Stats Bar */
+.stats-bar {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Filters */
+.filters-section {
+    max-width: 1400px;
+    margin: 0 auto 20px;
+    padding: 0 24px;
+}
+
+.filters-row {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    box-shadow: var(--shadow);
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 140px;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+/* Scanning indicator */
+.scanning-indicator {
+    max-width: 1400px;
+    margin: 0 auto 16px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Auctions Grid */
+.auctions-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+}
+
+.auctions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 18px;
+}
+
+.loading-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.loading-placeholder p {
+    margin-top: 12px;
+}
+
+/* Auction Card */
+.auction-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid transparent;
+}
+
+.auction-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.auction-card.cat-immobilier { border-left-color: #3182ce; }
+.auction-card.cat-vehicules { border-left-color: #e53e3e; }
+.auction-card.cat-mobilier { border-left-color: #38a169; }
+.auction-card.cat-art { border-left-color: #805ad5; }
+.auction-card.cat-bijoux { border-left-color: #d69e2e; }
+.auction-card.cat-electronique { border-left-color: #00b5d8; }
+.auction-card.cat-autre { border-left-color: #a0aec0; }
+
+.card-header {
+    padding: 16px 18px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.card-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.badge-immobilier { background: #ebf8ff; color: #2b6cb0; }
+.badge-vehicules { background: #fff5f5; color: #c53030; }
+.badge-mobilier { background: #f0fff4; color: #276749; }
+.badge-art { background: #faf5ff; color: #6b46c1; }
+.badge-bijoux { background: #fffff0; color: #975a16; }
+.badge-electronique { background: #e6fffa; color: #00838f; }
+.badge-autre { background: #f7fafc; color: #4a5568; }
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+}
+
+.card-body {
+    padding: 0 18px;
+    flex: 1;
+}
+
+.card-description {
+    font-size: 13px;
+    color: var(--text-light);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.detail-icon {
+    font-size: 14px;
+}
+
+.card-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafbfc;
+}
+
+.card-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.card-price.no-price {
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.card-source {
+    font-size: 11px;
+    color: var(--text-light);
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+.card-link:hover {
+    background: rgba(30, 58, 95, 0.08);
+}
+
+/* Date badge */
+.date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.date-soon {
+    background: #fff5f5;
+    color: var(--danger);
+}
+
+.date-upcoming {
+    background: #fffff0;
+    color: var(--warning);
+}
+
+.date-later {
+    background: #f0fff4;
+    color: var(--success);
+}
+
+/* No results */
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.no-results-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+/* Errors */
+.errors-container {
+    max-width: 1400px;
+    margin: 0 auto 16px;
+    padding: 0 24px;
+}
+
+.error-item {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 7px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--danger);
+    margin-bottom: 8px;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 30px 24px;
+    color: var(--text-light);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+}
+
+.footer p + p {
+    margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .auctions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .logo h1 {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-bar {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-number {
+        font-size: 22px;
+    }
+
+    .card-details {
+        flex-direction: column;
+        gap: 6px;
+    }
+}
+
+/* Animation */
+.auction-card {
+    animation: fadeInUp 0.3s ease forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auction-card:nth-child(1) { animation-delay: 0s; }
+.auction-card:nth-child(2) { animation-delay: 0.05s; }
+.auction-card:nth-child(3) { animation-delay: 0.1s; }
+.auction-card:nth-child(4) { animation-delay: 0.15s; }
+.auction-card:nth-child(5) { animation-delay: 0.2s; }
+.auction-card:nth-child(6) { animation-delay: 0.25s; }
+.auction-card:nth-child(7) { animation-delay: 0.3s; }
+.auction-card:nth-child(8) { animation-delay: 0.35s; }
+.auction-card:nth-child(9) { animation-delay: 0.4s; }
