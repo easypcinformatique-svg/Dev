@@ -21,10 +21,28 @@ import backend.models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Cree les tables au demarrage."""
+    """Cree les tables et seed les donnees au demarrage."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    # Auto-seed si la DB est vide
+    await _auto_seed()
     yield
+
+
+async def _auto_seed():
+    """Insere les donnees de demo si aucun utilisateur n'existe."""
+    from backend.db.database import async_session
+    from backend.models import Utilisateur
+    from sqlalchemy import select
+
+    async with async_session() as db:
+        result = await db.execute(select(Utilisateur).limit(1))
+        if result.scalar_one_or_none() is not None:
+            return  # Deja seed
+
+    # Lancer le seed
+    from backend.db.seed import seed
+    await seed()
 
 
 app = FastAPI(
