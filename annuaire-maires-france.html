@@ -221,6 +221,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     </select>
     <input type="number" id="pop-min" placeholder="Pop. min" min="0" step="1000" oninput="render()" title="Population minimum : n'affiche que les communes ayant au moins ce nombre d'habitants (ex : 50000)" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
     <input type="number" id="pop-max" placeholder="Pop. max" min="0" step="1000" oninput="render()" title="Population maximum : n'affiche que les communes ayant au plus ce nombre d'habitants (ex : 100000)" style="width:90px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="N'afficher que les communes avec adresse + email (prêtes pour le publipostage)"><input type="checkbox" id="publipostable" onchange="render()"> Publipostable</label>
     <span id="count-label" title="Nombre de communes affichées par rapport au total après application des filtres"></span>
   </div>
 
@@ -621,6 +622,8 @@ function getFiltered(){
   let rows=DATA.filter(d=>{
     if(reg&&d.region!==reg)return false;
     if(d.pop<popMin||d.pop>popMax)return false;
+    const publiOnly=document.getElementById('publipostable').checked;
+    if(publiOnly&&(!d.adresse||!d.maire))return false;
     if(!q)return true;
     return d.ville.toLowerCase().includes(q)||d.maire.toLowerCase().includes(q)||
            d.dept.toLowerCase().includes(q)||d.region.toLowerCase().includes(q)||
@@ -750,63 +753,85 @@ function exportSheets(){
 }
 
 /* ══ EXPORT PUBLIPOSTAGE ══ */
+const PRENOMS_F=new Set("marie anne sophie nathalie catherine isabelle martine brigitte françoise christine sylvie céline audrey stéphanie virginie sandrine delphine valérie agnès hélène joëlle michèle caroline léonore johanna jacqueline ericka sandra juliana nicole karine doriane josée laurence camille frédérique véronique charlotte mélissa kristell natacha amandine magalie roxane geneviève lucile joséphine patricia corinne bernadette monique laura séverine florence morgane élisabeth jeanne marguerite saloua laure chantal cécile claire".split(" "));
+function getCivilite(prenom){
+  let p=(prenom||"").toLowerCase().trim();
+  if(p.includes("-"))p=p.split("-")[0];
+  return PRENOMS_F.has(p)?"Mme":"M.";
+}
+
 function exportPublipostage(){
   const rows=getFiltered();
-  const esc=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
-
   function parseAddr(addr){
-    if(!addr)return {rue:'',cp:'',ville:''};
-    addr=addr.trim();
-    const m=addr.match(/^(.*?)\s*(\d{5})\s+(.+)$/);
-    if(m)return {rue:m[1].trim(),cp:m[2],ville:m[3].trim()};
-    const m2=addr.match(/^(\d{5})\s+(.+)$/);
-    if(m2)return {rue:'',cp:m2[1],ville:m2[2].trim()};
-    return {rue:addr,cp:'',ville:''};
+    if(!addr)return{rue:"",cp:"",ville:""};
+    const m=addr.trim().match(/^(.*?)\s*(\d{5})\s+(.+)$/);
+    if(m)return{rue:m[1].trim(),cp:m[2],ville:m[3].trim()};
+    return{rue:addr,cp:"",ville:""};
   }
-
   function parseMaire(name){
-    if(!name)return {civilite:'',prenom:'',nom:''};
-    const parts=name.trim().split(/\s+/);
-    if(parts.length===1)return {civilite:'',prenom:'',nom:parts[0]};
-    return {civilite:'',prenom:parts[0],nom:parts.slice(1).join(' ')};
+    if(!name)return{prenom:"",nom:""};
+    const p=name.trim().split(/\s+/);
+    return p.length===1?{prenom:"",nom:p[0]}:{prenom:p[0],nom:p.slice(1).join(" ")};
   }
 
   const wb=XLSX.utils.book_new();
 
-  // Onglet 1: Publipostage Courrier
-  const courrier=[['Commune','Population','Département','Région','Civilité','Prénom Maire','Nom Maire','Fonction','Adresse Mairie ligne 1','Code postal','Ville Mairie','Téléphone','Email']];
+  // Onglet 1: Courrier
+  const c1=[["Civilité","Prénom","Nom","Fonction","Commune","Population","Adresse ligne 1","Adresse ligne 2","Code postal","Ville","Département","Région","Téléphone","Email","Bloc adresse enveloppe"]];
   rows.forEach(d=>{
     const a=parseAddr(d.adresse);
     const n=parseMaire(d.maire);
-    courrier.push([d.ville,d.pop,d.dept+' - '+d.region.split(' ')[0],d.region,n.civilite,n.prenom,n.nom,'Maire',a.rue,a.cp,a.ville||d.ville,d.tel,d.email]);
+    const civ=getCivilite(n.prenom);
+    const fonction=civ==="Mme"?"Madame la Maire":"Monsieur le Maire";
+    const bloc=fonction+"\n"+d.ville+"\n"+(a.rue?a.rue+"\n":"")+(a.cp?a.cp+" ":"")+(a.ville||d.ville);
+    c1.push([civ,n.prenom,n.nom,"Maire",d.ville,d.pop,a.rue,"",a.cp,a.ville||d.ville,d.dept+" - "+d.region,d.region,d.tel,d.email,bloc]);
   });
-  const ws1=XLSX.utils.aoa_to_sheet(courrier);
-  ws1['!cols']=[{wch:25},{wch:10},{wch:8},{wch:25},{wch:5},{wch:15},{wch:20},{wch:8},{wch:45},{wch:7},{wch:25},{wch:16},{wch:30}];
-  XLSX.utils.book_append_sheet(wb,ws1,'Publipostage Courrier');
+  const ws1=XLSX.utils.aoa_to_sheet(c1);
+  ws1["!cols"]=[{wch:5},{wch:15},{wch:20},{wch:8},{wch:25},{wch:10},{wch:40},{wch:15},{wch:7},{wch:25},{wch:30},{wch:25},{wch:16},{wch:30},{wch:45}];
+  XLSX.utils.book_append_sheet(wb,ws1,"Publipostage Courrier");
 
-  // Onglet 2: Publipostage Email
-  const emailing=[['Email','Civilité','Prénom','Nom','Fonction','Commune','Population','Département','Région','Téléphone']];
+  // Onglet 2: Email
+  const c2=[["Email","Civilité","Prénom","Nom","Formule politesse","Commune","Population","Département","Région","Téléphone"]];
   rows.forEach(d=>{
     const n=parseMaire(d.maire);
-    emailing.push([d.email,n.civilite,n.prenom,n.nom,'Maire',d.ville,d.pop,d.dept,d.region,d.tel]);
+    const civ=getCivilite(n.prenom);
+    const formule=civ==="Mme"?"Madame la Maire":"Monsieur le Maire";
+    c2.push([d.email,civ,n.prenom,n.nom,formule,d.ville,d.pop,d.dept+" - "+d.region,d.region,d.tel]);
   });
-  const ws2=XLSX.utils.aoa_to_sheet(emailing);
-  ws2['!cols']=[{wch:30},{wch:5},{wch:15},{wch:20},{wch:8},{wch:25},{wch:10},{wch:5},{wch:25},{wch:16}];
-  XLSX.utils.book_append_sheet(wb,ws2,'Publipostage Email');
+  const ws2=XLSX.utils.aoa_to_sheet(c2);
+  ws2["!cols"]=[{wch:30},{wch:5},{wch:15},{wch:20},{wch:22},{wch:25},{wch:10},{wch:30},{wch:25},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws2,"Publipostage Email");
 
-  // Onglet 3: Données complètes
-  const complet=[['Commune','Population','Département','Région','Maire (Nom complet)','Adresse complète Mairie','Code postal','Ville Mairie','Téléphone','Email']];
+  // Onglet 3: Étiquettes (format compact pour impression)
+  const c3=[["Ligne 1 (destinataire)","Ligne 2 (structure)","Ligne 3 (adresse)","Ligne 4 (CP + Ville)"]];
   rows.forEach(d=>{
     const a=parseAddr(d.adresse);
-    complet.push([d.ville,d.pop,d.dept+' - '+d.region.split(' ')[0],d.region,d.maire,d.adresse,a.cp,a.ville||d.ville,d.tel,d.email]);
+    const n=parseMaire(d.maire);
+    const civ=getCivilite(n.prenom);
+    const dest=civ+" "+d.maire;
+    c3.push([dest,"Mairie de "+d.ville,a.rue,(a.cp?a.cp+" ":"")+(a.ville||d.ville)]);
   });
-  const ws3=XLSX.utils.aoa_to_sheet(complet);
-  ws3['!cols']=[{wch:25},{wch:10},{wch:8},{wch:25},{wch:25},{wch:45},{wch:7},{wch:25},{wch:16},{wch:30}];
-  XLSX.utils.book_append_sheet(wb,ws3,'Données complètes');
+  const ws3=XLSX.utils.aoa_to_sheet(c3);
+  ws3["!cols"]=[{wch:30},{wch:30},{wch:45},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws3,"Étiquettes");
 
-  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  triggerDownload(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'publipostage-maires.xlsx');
-  showToast('Export publipostage : 3 onglets (Courrier + Email + Données)','#7C3AED',5000);
+  // Onglet 4: Données complètes
+  const c4=[["Commune","Population","Département","Région","Maire","Adresse Mairie","CP","Ville","Téléphone","Email"]];
+  rows.forEach(d=>{
+    const a=parseAddr(d.adresse);
+    c4.push([d.ville,d.pop,d.dept+" - "+d.region,d.region,d.maire,d.adresse,a.cp,a.ville||d.ville,d.tel,d.email]);
+  });
+  const ws4=XLSX.utils.aoa_to_sheet(c4);
+  ws4["!cols"]=[{wch:25},{wch:10},{wch:30},{wch:25},{wch:25},{wch:45},{wch:7},{wch:25},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws4,"Données complètes");
+
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+  triggerDownload(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"publipostage-maires.xlsx");
+
+  // Stats
+  const withAddr=rows.filter(d=>d.adresse).length;
+  const withEmail=rows.filter(d=>d.email).length;
+  showToast(withAddr+" adresses courrier + "+withEmail+" emails — 4 onglets","#7C3AED",5000);
 }
 
 /* ══ EXPORT PDF ══ */
