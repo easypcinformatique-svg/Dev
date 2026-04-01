@@ -138,6 +138,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="SIVOM">SIVOM</option>
       <option value="PETR">PETR</option>
       <option value="POLEM">Pôle métropolitain</option>
+      <option value="SEMOP">SEMOP</option>
+      <option value="SPLA">SPLA</option>
+      <option value="SPLA-IN">SPLA-IN</option>
     </select>
     <select id="region-filter" onchange="render()" title="Filtrer par région (regroupe les départements)">
       <option value="">Toutes les régions</option>
@@ -2009,8 +2012,8 @@ function render(){
     tbody.innerHTML='<tr><td colspan="9"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun résultat.</p></div></td></tr>';
   } else {
     tbody.innerHTML=rows.map((d,i)=>{
-      const typeCls={'SEM':'type-sem','SPL':'type-spl','SM':'type-sm','CA':'type-ca','CC':'type-cc','METRO':'type-metro','SIVU':'type-sivu','SIVOM':'type-sivom','PETR':'type-petr','POLEM':'type-polem'}[d.type]||'type-sm';
-      const typeLabel={'SM':'Syndicat Mixte','CA':'Com. Agglo','CC':'Com. Communes','METRO':'Métropole','PETR':'PETR','POLEM':'Pôle Métro'}[d.type]||d.type;
+      const typeCls={'SEM':'type-sem','SPL':'type-spl','SM':'type-sm','CA':'type-ca','CC':'type-cc','METRO':'type-metro','SIVU':'type-sivu','SIVOM':'type-sivom','PETR':'type-petr','POLEM':'type-polem','SEMOP':'type-semop','SPLA':'type-sem','SPLA-IN':'type-sem','EPL':'type-spl','MET69':'type-metro'}[d.type]||'type-sm';
+      const typeLabel={'SM':'Syndicat Mixte','CA':'Com. Agglo','CC':'Com. Communes','METRO':'Métropole','PETR':'PETR','POLEM':'Pôle Métro','SEMOP':'SEMOP','SPLA':'SPLA','SPLA-IN':'SPLA-IN','MET69':'Métropole Lyon','EPL':'EPL'}[d.type]||d.type;
       return `<tr>
         <td class="td-rank">${i+1}</td>
         <td><div class="nom-struct">${esc(d.nom)}</div></td>
