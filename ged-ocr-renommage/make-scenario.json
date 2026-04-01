@@ -27,7 +27,7 @@
     },
     {
       "id": 2,
-      "module": "google-drive:DownloadAFile",
+      "module": "google-drive:getAFile",
       "version": 1,
       "parameters": {
         "__IMTCONN__": {
@@ -65,7 +65,7 @@
     },
     {
       "id": 4,
-      "module": "google-drive:MoveAFile",
+      "module": "google-drive:moveAFileIntoAFolder",
       "version": 1,
       "parameters": {
         "__IMTCONN__": {
