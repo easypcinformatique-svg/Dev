@@ -95,21 +95,28 @@ function setupSheet() {
  * Fonction principale : traite les nouveaux fichiers dans le dossier source
  */
 function processNewScans() {
-  const sourceFolder = DriveApp.getFolderById(CONFIG.SOURCE_FOLDER_ID);
-  const destFolder = DriveApp.getFolderById(CONFIG.DEST_FOLDER_ID);
-  const files = sourceFolder.getFiles();
+  var sourceFolder = DriveApp.getFolderById(CONFIG.SOURCE_FOLDER_ID);
+  var destFolder = DriveApp.getFolderById(CONFIG.DEST_FOLDER_ID);
+  var files = sourceFolder.getFiles();
+  var count = 0;
+  var MAX_FILES = 5; // Traiter max 5 fichiers par execution
 
-  while (files.hasNext()) {
-    const file = files.next();
-    const mimeType = file.getMimeType();
+  while (files.hasNext() && count < MAX_FILES) {
+    var file = files.next();
+    var mimeType = file.getMimeType();
 
     // Traiter uniquement les PDF et images
     if (!mimeType.includes("pdf") && !mimeType.includes("image")) {
       continue;
     }
 
+    // Pause de 5 secondes entre chaque fichier pour respecter le quota
+    if (count > 0) {
+      Utilities.sleep(5000);
+    }
+
     try {
-      const newName = analyzeWithGemini(file);
+      var newName = analyzeWithGemini(file);
 
       if (newName && newName.endsWith(".pdf")) {
         // Renommer le fichier
@@ -127,10 +134,19 @@ function processNewScans() {
         Logger.log("Erreur nommage pour: " + file.getName());
       }
     } catch (error) {
+      // Si quota depasse, arreter immediatement
+      if (error.message && error.message.indexOf("429") > -1) {
+        Logger.log("Quota Gemini depasse. Arret. Reprendra dans 10 minutes.");
+        return;
+      }
       logToSheet(file, "ERREUR: " + error.message, "Erreur");
       Logger.log("Erreur: " + error.message);
     }
+
+    count++;
   }
+
+  Logger.log("Fichiers traites: " + count);
 }
 
 /**
