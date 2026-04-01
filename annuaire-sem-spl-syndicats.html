@@ -112,11 +112,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <div class="stats-bar">
   <div class="stats-inner">
     <div class="stat" title="Nombre total de structures"><span class="stat-n" id="s-total">—</span> structures</div>
-    <div class="stat" title="SEM"><span class="stat-n" id="s-sem">—</span> SEM</div>
-    <div class="stat" title="SPL"><span class="stat-n" id="s-spl">—</span> SPL</div>
-    <div class="stat" title="Syndicats Mixtes"><span class="stat-n" id="s-sm">—</span> SM</div>
-    <div class="stat" title="Communautés d'agglomération et de communes"><span class="stat-n" id="s-epci">—</span> CA/CC/METRO</div>
-    <div class="stat" title="SIVU et SIVOM"><span class="stat-n" id="s-sivu">—</span> SIVU/SIVOM</div>
+    <div class="stat" title="Fiches avec adresse + président = prêtes pour courrier"><span class="stat-n" id="s-courrier" style="color:#86EFAC">—</span> 📬 courrier</div>
+    <div class="stat" title="Fiches avec email = prêtes pour emailing"><span class="stat-n" id="s-email" style="color:#93C5FD">—</span> 📧 email</div>
+    <div class="stat" title="Fiches avec téléphone"><span class="stat-n" id="s-tel" style="color:#FCD34D">—</span> 📞 tél</div>
     <div class="stat" title="Structures affichées après filtres"><span class="stat-n" id="s-shown">—</span> affichées</div>
   </div>
 </div>
@@ -176,7 +174,23 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="dept-asc">Département</option>
       <option value="secteur-asc">Secteur</option>
     </select>
-    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="N'afficher que les structures avec adresse complète + président (prêtes pour le publipostage)"><input type="checkbox" id="publipostable" onchange="render()"> Publipostable uniquement</label>
+    <select id="secteur-filter" onchange="render()" title="Filtrer par secteur d'activité">
+      <option value="">Tous les secteurs</option>
+      <option value="eau">Eau / Environnement</option>
+      <option value="dechets">Déchets / Valorisation</option>
+      <option value="transport">Transports / Mobilité</option>
+      <option value="energie">Énergie</option>
+      <option value="amenagement">Aménagement / Urbanisme</option>
+      <option value="habitat">Habitat / Logement</option>
+      <option value="tourisme">Tourisme</option>
+      <option value="culture">Éducation / Culture</option>
+      <option value="numerique">Numérique</option>
+      <option value="admin">Administration territoriale</option>
+      <option value="dev">Développement économique</option>
+    </select>
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="Adresse + président = prêt courrier"><input type="checkbox" id="publipostable" onchange="render()"> 📬 Courrier</label>
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="Avec email uniquement"><input type="checkbox" id="with-email" onchange="render()"> 📧 Email</label>
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="Avec téléphone uniquement"><input type="checkbox" id="with-tel" onchange="render()"> 📞 Tél</label>
     <span id="count-label"></span>
   </div>
   <div class="toolbar" style="margin-top:0;padding-top:0">
@@ -1992,11 +2006,17 @@ function getFiltered(){
   const regionF=document.getElementById('region-filter').value;
   const deptF=document.getElementById('dept-filter').value;
   const publiOnly=document.getElementById('publipostable').checked;
+    const emailOnly=document.getElementById('with-email').checked;
+    const telOnly=document.getElementById('with-tel').checked;
+    const secteurF=document.getElementById('secteur-filter').value;
   let rows=DATA.filter(d=>{
     if(typeF&&d.type!==typeF)return false;
     if(regionF&&!REGIONS[regionF].includes(d.dept))return false;
     if(deptF&&d.dept!==deptF)return false;
     if(publiOnly&&(!d.adresse||!d.president))return false;
+    if(emailOnly&&!d.email)return false;
+    if(telOnly&&!d.tel)return false;
+    if(secteurF){const s=d.secteur.toLowerCase();const map={eau:'eau|rivière|bassin|assainissement|hydraul|huveaune|gapeau|argens',dechets:'déchet|ordure|valorisation|évodia|sydevom|sytrad',transport:'transport|mobilité|sytral|smmag',energie:'énergie|électri',amenagement:'aménagement|urbanisme|scot|zone industrialo',habitat:'habitat|logement|immobili|construction',tourisme:'tourisme|station|ski|montagne|loisir|plage',culture:'éducation|culture|musique|conservatoire|école',numerique:'numérique|informatique|haut débit|inforoute',admin:'administration territoriale',dev:'développement'};if(map[secteurF]&&!new RegExp(map[secteurF],'i').test(s))return false;}
     if(!q)return true;
     return d.nom.toLowerCase().includes(q)||d.ville.toLowerCase().includes(q)||
            d.secteur.toLowerCase().includes(q)||d.dept.includes(q)||
@@ -2026,23 +2046,21 @@ function render(){
       const typeLabel={'SM':'Syndicat Mixte','CA':'Com. Agglo','CC':'Com. Communes','METRO':'Métropole','PETR':'PETR','POLEM':'Pôle Métro','SEMOP':'SEMOP','SPLA':'SPLA','SPLA-IN':'SPLA-IN','MET69':'Métropole Lyon','EPL':'EPL'}[d.type]||d.type;
       return `<tr>
         <td class="td-rank">${i+1}</td>
-        <td><div class="nom-struct">${esc(d.nom)}</div></td>
+        <td><div class="nom-struct"><span title="${[d.adresse?'✓ Adresse':'✗ Adresse',d.president?'✓ Président':'✗ Président',d.tel?'✓ Tél':'✗ Tél',d.email?'✓ Email':'✗ Email'].join(', ')}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:${(d.adresse&&d.president&&d.tel&&d.email)?'#10B981':(d.adresse&&d.president)?'#F59E0B':'#EF4444'}"></span>${esc(d.nom)}</div></td>
         <td><span class="type-badge ${typeCls}">${typeLabel}</span></td>
         <td><span class="dept-tag">${esc(d.dept)}</span> ${esc(d.deptNom)}</td>
         <td>${esc(d.ville)}</td>
         <td><span class="secteur">${d.adresse?esc(d.adresse):'—'}</span></td>
         <td><span class="secteur">${esc(d.secteur)}</span></td>
         <td>${d.president?esc(d.president):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}</td>
-        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}</td>
+        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}<div style="margin-top:3px"><button onclick="toggleContact('${esc(d.siren)}')" class="btn-tag" style="font-size:9px;padding:1px 6px;border-radius:3px;border:1px solid var(--border);background:${isContacted(d.siren)?'#D1FAE5':'var(--bg)'};color:${isContacted(d.siren)?'#065F46':'var(--muted)'};cursor:pointer" title="Marquer comme contacté">${isContacted(d.siren)?'✓ Contacté':'☐ À contacter'}</button></div></td>
       </tr>`;
     }).join('');
   }
   document.getElementById('s-total').textContent=DATA.length;
-  document.getElementById('s-sem').textContent=DATA.filter(d=>d.type==='SEM').length;
-  document.getElementById('s-spl').textContent=DATA.filter(d=>d.type==='SPL').length;
-  document.getElementById('s-sm').textContent=DATA.filter(d=>d.type==='SM').length;
-  document.getElementById('s-epci').textContent=DATA.filter(d=>['CA','CC','METRO'].includes(d.type)).length;
-  document.getElementById('s-sivu').textContent=DATA.filter(d=>['SIVU','SIVOM'].includes(d.type)).length;
+  document.getElementById('s-courrier').textContent=rows.filter(d=>d.adresse&&d.president).length;
+  document.getElementById('s-email').textContent=rows.filter(d=>d.email).length;
+  document.getElementById('s-tel').textContent=rows.filter(d=>d.tel).length;
   document.getElementById('s-shown').textContent=rows.length;
   document.getElementById('count-label').textContent=rows.length===DATA.length?DATA.length+' structures':rows.length+' / '+DATA.length+' structures';
 }
@@ -2183,6 +2201,16 @@ function exportGoogleSheets(){
 function showToast(msg,bg,ms){
   const t=document.createElement('div');t.className='toast';t.style.background=bg||'#333';t.textContent=msg;
   document.body.appendChild(t);setTimeout(()=>t.remove(),ms||3000);
+}
+
+/* ══ SUIVI CONTACTS ══ */
+function getContacted(){try{return JSON.parse(localStorage.getItem('contacted')||'{}');}catch(e){return{};}}
+function isContacted(siren){return !!getContacted()[siren];}
+function toggleContact(siren){
+  const c=getContacted();
+  if(c[siren]){delete c[siren];}else{c[siren]=new Date().toISOString().slice(0,10);}
+  localStorage.setItem('contacted',JSON.stringify(c));
+  render();
 }
 
 /* ══ INIT ══ */
