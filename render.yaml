@@ -1,29 +1,31 @@
 services:
   - type: web
-    name: polymarket-bot
-    runtime: docker
-    repo: https://github.com/easypcinformatique-svg/Dev
-    branch: claude/pokymarket-work-MXwve
-    plan: free
-    dockerfilePath: ./Dockerfile
-    envVars:
-      - key: PORT
-        value: 5050
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  - type: web
-    name: immo-sniper-dashboard
+    name: pizzacaisse
     runtime: docker
     repo: https://github.com/easypcinformatique-svg/Dev
     branch: master
     plan: free
-    dockerfilePath: ./immo-sniper-dashboard/Dockerfile
-    rootDir: immo-sniper-dashboard
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: PORT
-        value: 5051
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pizzacaisse-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
       - key: PYTHONUNBUFFERED
         value: "1"
-      - key: SCAN_INTERVAL
-        value: "45"
+      - key: PIZZERIA_NOM
+        value: "Ma Pizzeria"
+      - key: PIZZERIA_TEL
+        value: ""
+      - key: PIZZERIA_ADRESSE
+        value: ""
+      - key: PIZZERIA_SIRET
+        value: ""
+
+databases:
+  - name: pizzacaisse-db
+    plan: free
+    databaseName: pizzacaisse
+    user: pizzacaisse

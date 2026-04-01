@@ -1,0 +1,103 @@
+name: SEO batch 2 (breadcrumbs, hreflang, LCP, service worker)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/seo-batch-2.yml'
+
+jobs:
+  apply-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 18 - Preload hero image for LCP
+        run: |
+          cd site
+          if ! grep -q "preload.*hero" index.html; then
+            sed -i 's|</title>|</title>\n<link rel="preload" as="image" href="/hero1.webp" type="image/webp">|' index.html
+            echo "Added hero preload"
+          fi
+
+      - name: 17 - Add hreflang tags
+        run: |
+          cd site
+          if ! grep -q "hreflang" index.html; then
+            sed -i 's|</title>|</title>\n<link rel="alternate" hreflang="fr" href="https://pizzanapolicarpentras.fr/">\n<link rel="alternate" hreflang="x-default" href="https://pizzanapolicarpentras.fr/">|' index.html
+            echo "Added hreflang tags"
+          fi
+
+      - name: 16 - Add breadcrumbs Schema to blog pages
+        run: |
+          cd site
+          for dir in blog/meilleures-pizzas-carpentras blog/pizza-artisanale-carpentras blog/pate-pizza-maison-carpentras blog/faq-livraison-pizza-carpentras blog/guide-livraison-pizza-carpentras blog/commander-pizza-groupe-carpentras blog/que-faire-carpentras-ce-soir blog/que-faire-monteux-ce-soir blog/que-faire-pernes-les-fontaines-ce-soir blog/que-faire-mazan-ce-soir blog/que-faire-aubignan-ce-soir blog/que-faire-caromb-ce-soir blog/que-faire-loriol-du-comtat-ce-soir blog/que-faire-saint-didier-ce-soir blog/que-faire-serres-ce-soir; do
+            if [ -f "$dir/index.html" ] && ! grep -q "BreadcrumbList" "$dir/index.html"; then
+              SLUG=$(basename "$dir")
+              TITLE=$(echo "$SLUG" | sed 's/-/ /g;s/\b./\u&/g')
+              BREADCRUMB="{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Accueil\",\"item\":\"https://pizzanapolicarpentras.fr/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Blog\",\"item\":\"https://pizzanapolicarpentras.fr/blog/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"$TITLE\"}]}"
+              sed -i "s|</head>|<script type=\"application/ld+json\">$BREADCRUMB</script>\n</head>|" "$dir/index.html"
+              echo "Added breadcrumbs to $dir"
+            fi
+          done
+
+          # Breadcrumbs for delivery pages
+          for dir in livraison-pizza-carpentras livraison-pizza-monteux livraison-pizza-pernes-les-fontaines livraison-pizza-mazan livraison-pizza-aubignan livraison-pizza-caromb livraison-pizza-loriol-du-comtat livraison-pizza-saint-didier livraison-pizza-serres livraison-pizza-84200; do
+            if [ -f "$dir/index.html" ] && ! grep -q "BreadcrumbList" "$dir/index.html"; then
+              CITY=$(echo "$dir" | sed 's/livraison-pizza-//;s/-/ /g;s/\b./\u&/g')
+              BREADCRUMB="{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Accueil\",\"item\":\"https://pizzanapolicarpentras.fr/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Livraison Pizza $CITY\"}]}"
+              sed -i "s|</head>|<script type=\"application/ld+json\">$BREADCRUMB</script>\n</head>|" "$dir/index.html"
+              echo "Added breadcrumbs to $dir"
+            fi
+          done
+
+      - name: 19 - Create Service Worker for offline menu
+        run: |
+          cd site
+          cat > sw.js << 'SWEOF'
+          const CACHE='pizza-napoli-v1';
+          const URLS=['/','/hero1.webp','/Tartufo.webp','/saint-jacques-.webp','/favicon.svg'];
+          self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)).then(()=>self.skipWaiting())));
+          self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+          self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{if(resp.ok&&e.request.method==='GET'){const c=resp.clone();caches.open(CACHE).then(cache=>cache.put(e.request,c));}return resp;}).catch(()=>caches.match('/'))));});
+          SWEOF
+          echo "Created sw.js"
+
+          # Register service worker in index.html
+          if ! grep -q "serviceWorker" index.html; then
+            sed -i "s|</body>|<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}</script>\n</body>|" index.html
+            echo "Registered service worker"
+          fi
+
+      - name: 22 - Convert blog images to WebP
+        run: |
+          sudo apt-get install -y webp > /dev/null 2>&1
+          cd site
+          find blog/ -name "*.jpg" -o -name "*.png" | while read img; do
+            name="${img%.*}"
+            cwebp -q 75 "$img" -o "${name}.webp" 2>/dev/null && echo "Converted: $img"
+          done
+          # Update img src in blog HTML files
+          find blog/ -name "index.html" | while read html; do
+            sed -i 's/\.jpg"/\.webp"/g; s/\.png"/\.webp"/g' "$html"
+          done
+          echo "Blog images converted"
+
+      - name: Commit and push
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          cd site
+          git add -A
+          git diff --cached --stat
+          git commit -m "SEO batch 2: preload LCP, hreflang, breadcrumbs, service worker, blog WebP" || echo "No changes"
+          git push origin main
+          echo "All deployed!"
