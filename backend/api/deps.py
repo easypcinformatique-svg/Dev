@@ -27,6 +27,7 @@ async def get_current_user(
 
 async def require_admin(user=Depends(get_current_user)):
     """Verifie que l'utilisateur est admin."""
-    if user.role.value != "admin":
+    from backend.models.enums import Role
+    if user.role != Role.ADMIN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin requis")
     return user
