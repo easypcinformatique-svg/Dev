@@ -62,7 +62,10 @@ Aucune explication. Aucun guillemet. Aucun point avant .pdf.`;
  */
 function setup() {
   // Supprimer les anciens triggers
-  ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    ScriptApp.deleteTrigger(triggers[i]);
+  }
 
   // Creer le trigger toutes les 10 minutes
   ScriptApp.newTrigger("processNewScans")
