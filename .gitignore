@@ -1,17 +1,41 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.env
-instance/
-uploads/
-*.db
-venv/
-.venv/
-token.json
-credentials.json
 *.egg-info/
 dist/
 build/
-backtest_report.html
+venv/
+.venv/
+
+# Node
+node_modules/
+.next/
+
+# Env
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# DB
+*.db
+*.sqlite3
+
+# Logs
 logs/
+*.log
+
+# Secrets
+token.json
+credentials.json
+
+# Build
+*.html.bak
