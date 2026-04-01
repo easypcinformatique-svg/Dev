@@ -5,7 +5,15 @@ on:
     branches: [master]
     paths:
       - 'auction-scanner-13/**'
+  schedule:
+    # Mise a jour des encheres toutes les 6 heures
+    - cron: '0 */6 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   test:
@@ -29,129 +37,71 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Check syntax
-        run: python -m py_compile app.py
-
-      - name: Check scrapers syntax
         run: |
+          python -m py_compile app.py
+          python -m py_compile generate_static.py
           python -m py_compile scrapers/base_scraper.py
           python -m py_compile scrapers/interencheres.py
           python -m py_compile scrapers/encheres_publiques.py
           python -m py_compile scrapers/agorastore.py
 
-      - name: Test imports
-        run: |
-          python -c "from scrapers.base_scraper import BaseScraper; print('BaseScraper OK')"
-          python -c "from scrapers.interencheres import InterencheresScraper; print('Interencheres OK')"
-          python -c "from scrapers.encheres_publiques import EncheresPubliquesScraper; print('EncheresPubliques OK')"
-          python -c "from scrapers.agorastore import AgorastoreScraper; print('Agorastore OK')"
-
-      - name: Test demo data loading
+      - name: Test scrapers
         run: |
           python -c "
           from scrapers.interencheres import InterencheresScraper
           from scrapers.encheres_publiques import EncheresPubliquesScraper
           from scrapers.agorastore import AgorastoreScraper
 
-          s1 = InterencheresScraper()
-          s2 = EncheresPubliquesScraper()
-          s3 = AgorastoreScraper()
-
-          r1 = s1.scan(department='13')
-          r2 = s2.scan(department='13')
-          r3 = s3.scan(department='13')
-
-          total = len(r1) + len(r2) + len(r3)
-          print(f'Total encheres: {total}')
-          assert total > 0, 'Aucune enchere trouvee'
-
-          for a in r1 + r2 + r3:
-              assert 'id' in a, 'Missing id'
-              assert 'title' in a, 'Missing title'
-              assert 'category' in a, 'Missing category'
-              assert 'source' in a, 'Missing source'
-          print('All checks passed!')
+          for S in [InterencheresScraper, EncheresPubliquesScraper, AgorastoreScraper]:
+              s = S()
+              r = s.scan(department='13')
+              assert len(r) > 0, f'{s.name}: aucun resultat'
+              for a in r:
+                  assert 'id' in a and 'title' in a and 'category' in a
+              print(f'{s.name}: {len(r)} encheres OK')
+          print('All scrapers OK!')
           "
 
-      - name: Test Flask app starts
-        run: |
-          timeout 5 python -c "
-          import app as auction_app
-          client = auction_app.app.test_client()
-
-          # Test homepage
-          resp = client.get('/')
-          assert resp.status_code == 200, f'Homepage returned {resp.status_code}'
-          print('Homepage OK')
-
-          # Test API auctions
-          resp = client.get('/api/auctions')
-          assert resp.status_code == 200, f'API auctions returned {resp.status_code}'
-          print('API auctions OK')
-
-          # Test API stats
-          resp = client.get('/api/stats')
-          assert resp.status_code == 200, f'API stats returned {resp.status_code}'
-          print('API stats OK')
-
-          # Test API scan
-          resp = client.post('/api/scan')
-          assert resp.status_code in [200, 409], f'API scan returned {resp.status_code}'
-          print('API scan OK')
-
-          print('All Flask tests passed!')
-          " || true
-
-  build-docker:
-    name: Build Docker Image
+  build-and-deploy:
+    name: Build & Deploy GitHub Pages
     runs-on: ubuntu-latest
     needs: test
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: |
-          docker build -t auction-scanner-13:latest ./auction-scanner-13
-          echo "Docker build successful!"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: auction-scanner-13/requirements.txt
 
-      - name: Test Docker container starts
-        run: |
-          docker run -d --name auction-test -p 5555:5555 auction-scanner-13:latest
-          sleep 5
-          curl -f http://localhost:5555/ || echo "Container health check"
-          docker logs auction-test
-          docker stop auction-test
-          docker rm auction-test
+      - name: Install dependencies
+        run: pip install -r auction-scanner-13/requirements.txt
 
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: [test, build-docker]
-    if: github.ref == 'refs/heads/master'
+      - name: Generate auction data
+        run: cd auction-scanner-13 && python generate_static.py
 
-    steps:
-      - name: Deploy to Render
-        run: |
-          if [ -n "${{ secrets.RENDER_AUCTION_DEPLOY_HOOK }}" ]; then
-            curl -X POST "${{ secrets.RENDER_AUCTION_DEPLOY_HOOK }}"
-            echo "Auction Scanner deploy triggered on Render"
-          else
-            echo "RENDER_AUCTION_DEPLOY_HOOK not set - skipping"
-            echo "To enable auto-deploy:"
-            echo "1. Create a new Web Service on Render.com"
-            echo "2. Connect your GitHub repo"
-            echo "3. Set root directory to 'auction-scanner-13'"
-            echo "4. Build command: pip install -r requirements.txt"
-            echo "5. Start command: gunicorn --bind 0.0.0.0:\$PORT --workers 2 --threads 4 app:app"
-            echo "6. Copy the Deploy Hook URL from Settings"
-            echo "7. Add it as GitHub secret: RENDER_AUCTION_DEPLOY_HOOK"
-          fi
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./auction-scanner-13/docs
+          destination_dir: auction-scanner-13
+          keep_files: false
+          commit_message: "Update encheres data - ${{ github.sha }}"
 
       - name: Deploy summary
         run: |
-          echo "## Auction Scanner 13 - Deploy Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Tests: Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- Docker: Built" >> $GITHUB_STEP_SUMMARY
-          echo "- Deploy: Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "## Auction Scanner 13 - Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Info | Valeur |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Pages | Deployed |" >> $GITHUB_STEP_SUMMARY
+          echo "| URL | https://easypcinformatique-svg.github.io/Dev/auction-scanner-13/ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Donnees mises a jour automatiquement toutes les 6h." >> $GITHUB_STEP_SUMMARY
