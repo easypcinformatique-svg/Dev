@@ -1,0 +1,166 @@
+name: MAJ automatique SEM/SPL/SM — dirigeants et contacts
+
+on:
+  schedule:
+    # Tous les mercredis à 7h du matin (UTC)
+    - cron: '0 7 * * 3'
+  workflow_dispatch:
+
+jobs:
+  update-dirigeants:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: "Récupérer les dirigeants via API Annuaire des Entreprises"
+        run: |
+          python3 << 'PYEOF'
+          import json, re, time, urllib.request, unicodedata
+          from datetime import datetime
+
+          def title_case(s):
+              small = {"de","du","des","le","la","les","l","d","en","sur","sous","et"}
+              parts = re.split(r"([-\s'])", s.lower())
+              return "".join(w.capitalize() if (i==0 or w not in small) else w for i,w in enumerate(parts))
+
+          # 1. Lire le fichier HTML
+          print("📄 Lecture de annuaire-sem-spl-syndicats.html…")
+          with open("annuaire-sem-spl-syndicats.html", "r", encoding="utf-8") as f:
+              html = f.read()
+
+          # 2. Extraire les données
+          data_match = re.search(r"let DATA=\[([\s\S]*?)\];", html)
+          if not data_match:
+              print("❌ DATA introuvable"); exit(0)
+
+          # Extraire chaque structure avec son SIREN
+          entries = re.findall(
+              r'\{nom:"([^"]*)".*?type:"([^"]*)".*?dept:"([^"]*)".*?president:"([^"]*)".*?tel:"([^"]*)".*?email:"([^"]*)".*?siren:"([^"]*)"\}',
+              html
+          )
+          print(f"📋 {len(entries)} structures trouvées")
+
+          # 3. Pour chaque structure avec un SIREN, interroger l'API
+          API_BASE = "https://recherche-entreprises.api.gouv.fr/search"
+          updates = {}
+          errors = 0
+          skipped = 0
+
+          for nom, typ, dept, president, tel, email, siren in entries:
+              if not siren or len(siren) < 9:
+                  skipped += 1
+                  continue
+
+              # Ne pas écraser un président déjà renseigné
+              if president:
+                  continue
+
+              try:
+                  url = f"{API_BASE}?q={siren}&per_page=1"
+                  req = urllib.request.Request(url, headers={"User-Agent": "annuaire-sem-spl-bot/1.0"})
+                  with urllib.request.urlopen(req, timeout=10) as resp:
+                      data = json.load(resp)
+
+                  results = data.get("results", [])
+                  if not results:
+                      continue
+
+                  r = results[0]
+                  dirigeants = r.get("dirigeants", [])
+                  siege = r.get("siege", {})
+
+                  # Trouver le président ou DG
+                  pres_name = ""
+                  for d in dirigeants:
+                      qual = (d.get("qualite", "") or "").lower()
+                      nom_d = d.get("nom", "")
+                      prenom_d = d.get("prenom", "")
+                      if not nom_d:
+                          continue
+                      full = f"{title_case(prenom_d)} {title_case(nom_d)}" if prenom_d else title_case(nom_d)
+
+                      if "président" in qual or "directeur général" in qual or "directrice" in qual:
+                          pres_name = full
+                          break
+
+                  # Si pas de président trouvé, prendre le premier dirigeant
+                  if not pres_name and dirigeants:
+                      d = dirigeants[0]
+                      nom_d = d.get("nom", "")
+                      prenom_d = d.get("prenom", "")
+                      if nom_d:
+                          pres_name = f"{title_case(prenom_d)} {title_case(nom_d)}" if prenom_d else title_case(nom_d)
+
+                  if pres_name:
+                      updates[siren] = {"president": pres_name}
+                      print(f"  ✅ {nom} → {pres_name}")
+
+                  # Rate limiting: 5 req/sec max
+                  time.sleep(0.25)
+
+              except Exception as e:
+                  errors += 1
+                  if errors > 20:
+                      print(f"⚠ Trop d'erreurs ({errors}), arrêt")
+                      break
+                  time.sleep(1)
+
+          print(f"\n📊 {len(updates)} dirigeants trouvés, {skipped} sans SIREN, {errors} erreurs")
+
+          # 4. Appliquer les mises à jour
+          if updates:
+              for siren, info in updates.items():
+                  pres = info["president"].replace('"', '\\"')
+                  # Remplacer president:"" pour cette structure (identifiée par son SIREN)
+                  pattern = r'(siren:"' + re.escape(siren) + r'")'
+                  # Find the full entry and update president
+                  entry_pattern = re.compile(
+                      r'(\{nom:"[^"]*".*?president:")("")(.*?siren:"' + re.escape(siren) + r'")'
+                  )
+                  match = entry_pattern.search(html)
+                  if match:
+                      html = html[:match.start(2)] + '"' + pres + '"' + html[match.end(2):]
+
+              # Mettre à jour la version
+              now = datetime.now()
+              ver = f"v.{now.year}.{now.month:02d}.{now.day:02d}-{now.hour:02d}h{now.minute:02d}"
+              html = re.sub(r'v\.\d{4}\.\d{2}\.\d{2}(-\d{2}h\d{2})?', ver, html)
+
+              with open("annuaire-sem-spl-syndicats.html", "w", encoding="utf-8") as f:
+                  f.write(html)
+              print(f"\n✅ Fichier mis à jour — {ver}")
+          else:
+              print("\nℹ Aucune mise à jour nécessaire")
+
+          PYEOF
+
+      - name: Vérifier s'il y a des changements
+        id: check
+        run: |
+          if git diff --quiet annuaire-sem-spl-syndicats.html 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ Aucun changement"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📝 Changements détectés"
+          fi
+
+      - name: Commit et push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add annuaire-sem-spl-syndicats.html
+          git commit -m "🔄 MAJ auto dirigeants SEM/SPL/SM — $(date +'%d/%m/%Y %H:%M')
+
+          Source: API Annuaire des Entreprises (data.gouv.fr)
+          Récupération automatique des dirigeants via SIREN."
+          git push
