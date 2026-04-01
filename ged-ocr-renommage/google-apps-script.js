@@ -1,265 +1,429 @@
 /**
- * GED Automatique - OCR + Renommage via Google Apps Script
+ * GED Automatique - OCR Google Drive + Nommage intelligent
  *
- * Surveille un dossier Google Drive, analyse les documents avec Gemini,
- * renomme et deplace les fichiers, log dans Google Sheets.
+ * Utilise l'OCR integre de Google Drive (gratuit, illimite).
+ * Pas besoin de cle API externe.
  *
  * Installation :
  * 1. Ouvrir le Google Sheets "Log_GED"
  * 2. Extensions > Apps Script
  * 3. Coller ce code
- * 4. Remplacer GEMINI_API_KEY par ta cle
- * 5. Cliquer "Executer" sur la fonction setup()
- * 6. Autoriser les acces Google
- * C'est tout. Le script tourne automatiquement toutes les 10 minutes.
+ * 4. Selectionner "setup" > Executer
+ * 5. Autoriser les acces Google
+ * C'est tout.
  */
 
 // === CONFIGURATION ===
-const CONFIG = {
-  GEMINI_API_KEY: "AIzaSyC1DZfSSnnqqCIqLf09ACNk9igsdGqkfwA",
+var CONFIG = {
   SOURCE_FOLDER_ID: "1DkY7c22I7RQ4DtPo8FMkoAyMpSCrVEnF",
   DEST_FOLDER_ID: "1SpW0Us4bcLyrnHSSxq4nxMkYF1eDoe_l",
   SPREADSHEET_ID: "1sGofzRvhgRKPrH__2fUVIHSI6U3W6X_Sc4jTFPe1iHk",
-  SHEET_NAME: "Log_GED",
-  GEMINI_MODEL: "gemini-2.0-flash"
+  SHEET_NAME: "Log_GED"
 };
 
-// === PROMPT GEMINI ===
-const PROMPT = `INSTRUCTION: Generate ONLY a filename. No explanation. No quotes.
+// === MOTS-CLES POUR DETECTION DU TYPE ===
+var TYPE_KEYWORDS = {
+  "Facture": ["facture", "invoice", "fact.", "n° facture", "numero facture", "montant ttc", "total ttc", "net a payer"],
+  "Devis": ["devis", "estimation", "proposition commerciale", "offre de prix"],
+  "Contrat": ["contrat", "convention", "accord", "conditions generales", "entre les soussignes"],
+  "Releve": ["releve", "releve de compte", "solde", "credit", "debit", "operations"],
+  "Avis": ["avis d'imposition", "avis d'impot", "taxe fonciere", "taxe habitation", "impot", "dgfip", "tresor public"],
+  "Courrier": ["courrier", "madame monsieur", "objet :", "veuillez agreer", "cordialement", "recommande"],
+  "Bulletin": ["bulletin de paie", "bulletin de salaire", "salaire net", "net a payer avant impot", "cotisations"],
+  "Attestation": ["attestation", "certifie", "atteste que", "attestation de"],
+  "Acte": ["acte de", "notaire", "acte authentique", "acte de vente"],
+  "Quittance": ["quittance", "loyer", "quittance de loyer"],
+  "Rapport": ["rapport", "bilan", "compte rendu", "analyse"]
+};
 
-FORMAT: YYYY-MM-DD_Type_Emetteur_Detail.pdf
+// === EMETTEURS CONNUS ===
+var KNOWN_EMITTERS = {
+  "edf": "EDF",
+  "engie": "Engie",
+  "total": "Total",
+  "totalenergies": "TotalEnergies",
+  "free": "Free",
+  "orange": "Orange",
+  "sfr": "SFR",
+  "bouygues": "Bouygues",
+  "bnp": "BNP",
+  "bnp paribas": "BNP",
+  "credit agricole": "Credit-Agricole",
+  "societe generale": "Societe-Generale",
+  "lcl": "LCL",
+  "la banque postale": "Banque-Postale",
+  "caisse d'epargne": "Caisse-Epargne",
+  "credit mutuel": "Credit-Mutuel",
+  "axa": "AXA",
+  "maif": "MAIF",
+  "macif": "MACIF",
+  "matmut": "Matmut",
+  "groupama": "Groupama",
+  "urssaf": "URSSAF",
+  "cpam": "CPAM",
+  "ameli": "CPAM",
+  "pole emploi": "Pole-Emploi",
+  "france travail": "France-Travail",
+  "caf": "CAF",
+  "impots": "Impots",
+  "dgfip": "Impots",
+  "tresor public": "Tresor-Public",
+  "prefecture": "Prefecture",
+  "mairie": "Mairie",
+  "amazon": "Amazon",
+  "google": "Google",
+  "microsoft": "Microsoft",
+  "apple": "Apple",
+  "ikea": "IKEA",
+  "leroy merlin": "Leroy-Merlin",
+  "boulanger": "Boulanger",
+  "darty": "Darty",
+  "fnac": "Fnac",
+  "brother": "Brother",
+  "ovh": "OVH",
+  "o2switch": "O2switch",
+  "ionos": "Ionos"
+};
 
-RULES:
-- YYYY-MM-DD = document date (use 0000-00-00 if missing)
-- Type = one of: Facture, Devis, Contrat, Releve, Avis, Courrier, Bulletin, Attestation, Acte, Quittance, Rapport, Autre
-- Emetteur = short company name (max 20 chars, no spaces use dashes)
-- Detail = amount if invoice (ex: 312EUR) or keyword (ex: Resiliation)
-- No accents, no spaces, no special chars except _ - EUR
-- Max 80 characters total
-
-EXAMPLES:
-2026-03-28_Facture_EDF_312EUR.pdf
-2026-01-15_Contrat_ELCR-Maconnerie_Travaux.pdf
-2025-12-10_Avis_Impots_Taxe-Fonciere.pdf
-0000-00-00_Courrier_Mairie_Urbanisme.pdf
-
-OUTPUT FORMAT: Just the filename, nothing else. Example: 2026-03-28_Facture_EDF_312EUR.pdf`;
-
-/**
- * Installation : cree le trigger automatique toutes les 10 minutes
- * Executer cette fonction UNE SEULE FOIS
- */
 function setup() {
-  // Supprimer les anciens triggers
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     ScriptApp.deleteTrigger(triggers[i]);
   }
 
-  // Creer le trigger toutes les 10 minutes
   var builder = ScriptApp.newTrigger("processNewScans");
   var timeBuilder = builder.timeBased();
   timeBuilder.everyMinutes(10);
   timeBuilder.create();
 
-  // Verifier les en-tetes du Sheet
   setupSheet();
-
   Logger.log("Setup termine. Le script s'execute toutes les 10 minutes.");
 }
 
-/**
- * Cree les en-tetes dans le Google Sheets si absentes
- */
 function setupSheet() {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
   }
 
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
-      "Date traitement",
-      "Nom original",
-      "Nom final",
-      "Taille (Ko)",
-      "Statut"
-    ]);
-    sheet.getRange(1, 1, 1, 5).setFontWeight("bold");
+    sheet.appendRow(["Date traitement", "Nom original", "Nom final", "Taille (Ko)", "Texte OCR (extrait)", "Statut"]);
+    sheet.getRange(1, 1, 1, 6).setFontWeight("bold");
   }
 }
 
-/**
- * Fonction principale : traite les nouveaux fichiers dans le dossier source
- */
 function processNewScans() {
   var sourceFolder = DriveApp.getFolderById(CONFIG.SOURCE_FOLDER_ID);
   var destFolder = DriveApp.getFolderById(CONFIG.DEST_FOLDER_ID);
   var files = sourceFolder.getFiles();
   var count = 0;
-  var MAX_FILES = 5; // Traiter max 5 fichiers par execution
+  var MAX_FILES = 5;
 
   while (files.hasNext() && count < MAX_FILES) {
     var file = files.next();
     var mimeType = file.getMimeType();
 
-    // Traiter uniquement les PDF et images
-    if (!mimeType.includes("pdf") && !mimeType.includes("image")) {
+    if (mimeType.indexOf("pdf") === -1 && mimeType.indexOf("image") === -1) {
       continue;
     }
 
-    // Pause de 5 secondes entre chaque fichier pour respecter le quota
-    if (count > 0) {
-      Utilities.sleep(5000);
-    }
-
     try {
-      var newName = analyzeWithGemini(file);
+      // OCR via Google Drive (convertir en Google Doc puis extraire le texte)
+      var ocrText = extractTextFromFile(file);
+      Logger.log("OCR pour " + file.getName() + ": " + ocrText.substring(0, 100));
 
-      if (newName && newName.endsWith(".pdf")) {
-        // Renommer le fichier
-        file.setName(newName);
-
-        // Deplacer vers le dossier destination
-        file.moveTo(destFolder);
-
-        // Logger dans Google Sheets
-        logToSheet(file, newName, "Traite");
-
-        Logger.log("Traite: " + newName);
-      } else {
-        logToSheet(file, "ERREUR: " + (newName || "reponse vide"), "Erreur");
-        Logger.log("Erreur nommage pour: " + file.getName());
+      if (!ocrText || ocrText.length < 10) {
+        logToSheet(file, "ERREUR: OCR vide ou trop court", "", "Erreur");
+        Logger.log("OCR trop court pour: " + file.getName());
+        count++;
+        continue;
       }
+
+      // Analyser le texte et generer le nom
+      var newName = generateFilename(ocrText);
+      Logger.log("Nom genere: " + newName);
+
+      // Renommer et deplacer
+      file.setName(newName);
+      file.moveTo(destFolder);
+
+      logToSheet(file, newName, ocrText.substring(0, 200), "Traite");
+      Logger.log("Traite: " + newName);
+
     } catch (error) {
-      // Si quota depasse, arreter immediatement
-      if (error.message && error.message.indexOf("429") > -1) {
-        Logger.log("Quota Gemini depasse. Arret. Reprendra dans 10 minutes.");
-        return;
-      }
-      logToSheet(file, "ERREUR: " + error.message, "Erreur");
-      Logger.log("Erreur: " + error.message);
+      logToSheet(file, "ERREUR: " + error.message, "", "Erreur");
+      Logger.log("Erreur pour " + file.getName() + ": " + error.message);
     }
 
     count++;
+
+    // Pause entre fichiers
+    if (count < MAX_FILES) {
+      Utilities.sleep(2000);
+    }
   }
 
   Logger.log("Fichiers traites: " + count);
 }
 
 /**
- * Envoie le fichier a Gemini pour OCR + nommage
+ * Extrait le texte d'un fichier via OCR Google Drive
  */
-function analyzeWithGemini(file) {
-  const blob = file.getBlob();
-  const base64Data = Utilities.base64Encode(blob.getBytes());
-  const mimeType = file.getMimeType();
-
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/"
-    + CONFIG.GEMINI_MODEL
-    + ":generateContent?key="
-    + CONFIG.GEMINI_API_KEY;
-
-  const payload = {
-    contents: [{
-      parts: [
-        {
-          inlineData: {
-            mimeType: mimeType,
-            data: base64Data
-          }
-        },
-        {
-          text: PROMPT
-        }
-      ]
-    }],
-    generationConfig: {
-      maxOutputTokens: 80,
-      temperature: 0.1
-    }
+function extractTextFromFile(file) {
+  // Utiliser l'API Drive pour convertir en Google Doc (avec OCR)
+  var resource = {
+    title: "temp_ocr_" + file.getName(),
+    mimeType: "application/vnd.google-apps.document"
   };
 
-  const options = {
-    method: "post",
-    contentType: "application/json",
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
+  var options = {
+    ocr: true,
+    ocrLanguage: "fr"
   };
 
-  const response = UrlFetchApp.fetch(url, options);
-  const json = JSON.parse(response.getContentText());
+  // Inserer le fichier comme Google Doc avec OCR
+  var blob = file.getBlob();
+  var docFile = Drive.Files.insert(resource, blob, options);
 
-  if (json.candidates && json.candidates[0] && json.candidates[0].content) {
-    var rawText = json.candidates[0].content.parts[0].text.trim();
-    Logger.log("Reponse brute Gemini: " + rawText);
+  // Ouvrir le Google Doc et extraire le texte
+  var doc = DocumentApp.openById(docFile.id);
+  var text = doc.getBody().getText();
 
-    // Nettoyer les guillemets, backticks, espaces
-    var name = rawText.replace(/["`']/g, "").trim();
+  // Supprimer le fichier temporaire
+  DriveApp.getFileById(docFile.id).setTrashed(true);
 
-    // Extraire le nom de fichier si Gemini a ajoute du texte autour
-    var match = name.match(/\d{4}-\d{2}-\d{2}_[A-Za-z][\w\-]*_[\w\-]+[\w\-€EUR]*\.pdf/);
-    if (match) {
-      return match[0];
-    }
+  return text;
+}
 
-    // Si le format est presque bon (contient .pdf et des underscores)
-    if (name.indexOf(".pdf") > -1 && name.indexOf("_") > -1) {
-      // Garder seulement la partie avant et incluant .pdf
-      var pdfIndex = name.indexOf(".pdf");
-      name = name.substring(0, pdfIndex + 4);
-      // Remplacer les espaces par des tirets
-      name = name.replace(/ /g, "-");
-      return name;
-    }
+/**
+ * Genere un nom de fichier a partir du texte OCR
+ */
+function generateFilename(text) {
+  var textLower = text.toLowerCase();
 
-    // Dernier recours : reformater la reponse en nom valide
-    name = name.replace(/\.pdf$/i, "");
-    name = name.replace(/ /g, "-");
-    name = name.replace(/[^a-zA-Z0-9_\-]/g, "");
-    if (name.length > 60) name = name.substring(0, 60);
-    return "0000-00-00_Autre_" + name + ".pdf";
+  // 1. Trouver la date
+  var date = extractDate(text);
+
+  // 2. Trouver le type de document
+  var docType = detectType(textLower);
+
+  // 3. Trouver l'emetteur
+  var emitter = detectEmitter(textLower);
+
+  // 4. Trouver le detail (montant ou mot-cle)
+  var detail = extractDetail(textLower, docType);
+
+  // Construire le nom
+  var name = date + "_" + docType + "_" + emitter;
+  if (detail) {
+    name = name + "_" + detail;
+  }
+  name = name + ".pdf";
+
+  // Nettoyer
+  name = removeAccents(name);
+  name = name.replace(/ /g, "-");
+  name = name.replace(/[^a-zA-Z0-9_\-\.EUR€]/g, "");
+
+  // Limiter a 80 caracteres
+  if (name.length > 80) {
+    name = name.substring(0, 76) + ".pdf";
   }
 
-  // Log erreur API
-  Logger.log("Erreur API Gemini: " + response.getContentText().substring(0, 200));
-  return null;
+  return name;
 }
 
 /**
- * Ajoute une ligne dans le Google Sheets
+ * Extrait une date du texte (formats FR courants)
  */
-function logToSheet(file, newName, statut) {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+function extractDate(text) {
+  // Format: JJ/MM/AAAA ou JJ-MM-AAAA ou JJ.MM.AAAA
+  var match = text.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
+  if (match) {
+    return match[3] + "-" + match[2] + "-" + match[1];
+  }
 
-  const now = Utilities.formatDate(new Date(), "Europe/Paris", "yyyy-MM-dd HH:mm");
-  const sizeKo = Math.round(file.getSize() / 1024);
-  const originalName = file.getName();
+  // Format: AAAA-MM-JJ
+  match = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    return match[0];
+  }
 
-  sheet.appendRow([
-    now,
-    originalName,
-    newName,
-    sizeKo,
-    statut
-  ]);
+  // Format texte: "15 mars 2026"
+  var mois = {
+    "janvier": "01", "fevrier": "02", "mars": "03", "avril": "04",
+    "mai": "05", "juin": "06", "juillet": "07", "aout": "08",
+    "septembre": "09", "octobre": "10", "novembre": "11", "decembre": "12",
+    "février": "02", "août": "08", "décembre": "12"
+  };
+
+  var textLower = text.toLowerCase();
+  for (var m in mois) {
+    var regex = new RegExp("(\\d{1,2})\\s+" + m + "\\s+(\\d{4})");
+    match = textLower.match(regex);
+    if (match) {
+      var jour = match[1].length === 1 ? "0" + match[1] : match[1];
+      return match[2] + "-" + mois[m] + "-" + jour;
+    }
+  }
+
+  return "0000-00-00";
 }
 
 /**
- * Fonction de test : traite un seul fichier pour verifier que tout marche
+ * Detecte le type de document
  */
+function detectType(textLower) {
+  var bestType = "Autre";
+  var bestScore = 0;
+
+  for (var type in TYPE_KEYWORDS) {
+    var keywords = TYPE_KEYWORDS[type];
+    var score = 0;
+    for (var i = 0; i < keywords.length; i++) {
+      if (textLower.indexOf(keywords[i]) > -1) {
+        score++;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestType = type;
+    }
+  }
+
+  return bestType;
+}
+
+/**
+ * Detecte l'emetteur du document
+ */
+function detectEmitter(textLower) {
+  // Chercher dans les emetteurs connus
+  for (var key in KNOWN_EMITTERS) {
+    if (textLower.indexOf(key) > -1) {
+      return KNOWN_EMITTERS[key];
+    }
+  }
+
+  // Tenter d'extraire un nom d'entreprise (apres "de:" ou en haut du document)
+  var lines = textLower.split("\n");
+  for (var i = 0; i < Math.min(lines.length, 5); i++) {
+    var line = lines[i].trim();
+    if (line.length > 2 && line.length < 30 && line.indexOf("@") === -1) {
+      var cleaned = line.replace(/[^a-zA-Z0-9 \-]/g, "").trim();
+      if (cleaned.length > 2 && cleaned.length < 25) {
+        // Capitaliser
+        cleaned = cleaned.split(" ").map(function(w) {
+          return w.charAt(0).toUpperCase() + w.slice(1);
+        }).join("-");
+        return cleaned.substring(0, 20);
+      }
+    }
+  }
+
+  return "Inconnu";
+}
+
+/**
+ * Extrait le detail (montant ou mot-cle)
+ */
+function extractDetail(textLower, docType) {
+  // Si facture ou devis, chercher un montant
+  if (docType === "Facture" || docType === "Devis" || docType === "Quittance") {
+    // Chercher "total ttc", "net a payer", "montant ttc"
+    var montantPatterns = [
+      /(?:total\s*ttc|net\s*[aà]\s*payer|montant\s*ttc|montant\s*total)[:\s]*(\d[\d\s]*[,\.]\d{2})/i,
+      /(\d[\d\s]*[,\.]\d{2})\s*(?:€|eur|euros)/i,
+      /€\s*(\d[\d\s]*[,\.]\d{2})/i
+    ];
+
+    for (var i = 0; i < montantPatterns.length; i++) {
+      var match = textLower.match(montantPatterns[i]);
+      if (match) {
+        var montant = match[1].replace(/\s/g, "").replace(",", ".").replace(/\.(\d{2})$/, "$1");
+        // Reconvertir en entier si possible
+        var num = parseFloat(match[1].replace(/\s/g, "").replace(",", "."));
+        if (!isNaN(num)) {
+          if (num === Math.floor(num)) {
+            return Math.floor(num) + "EUR";
+          }
+          return num.toFixed(2).replace(".", ",") + "EUR";
+        }
+      }
+    }
+  }
+
+  // Pour les avis, chercher le type d'impot
+  if (docType === "Avis") {
+    if (textLower.indexOf("taxe fonciere") > -1) return "Taxe-Fonciere";
+    if (textLower.indexOf("taxe habitation") > -1) return "Taxe-Habitation";
+    if (textLower.indexOf("impot sur le revenu") > -1) return "Impot-Revenu";
+  }
+
+  // Pour les bulletins de paie, chercher le mois
+  if (docType === "Bulletin") {
+    var moisNoms = ["janvier", "fevrier", "mars", "avril", "mai", "juin",
+      "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
+    for (var j = 0; j < moisNoms.length; j++) {
+      if (textLower.indexOf(moisNoms[j]) > -1) {
+        return moisNoms[j].charAt(0).toUpperCase() + moisNoms[j].slice(1);
+      }
+    }
+  }
+
+  // Pour les releves, chercher le mois
+  if (docType === "Releve") {
+    var moisNoms2 = ["janvier", "fevrier", "mars", "avril", "mai", "juin",
+      "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
+    for (var k = 0; k < moisNoms2.length; k++) {
+      if (textLower.indexOf(moisNoms2[k]) > -1) {
+        return moisNoms2[k].charAt(0).toUpperCase() + moisNoms2[k].slice(1);
+      }
+    }
+  }
+
+  return "";
+}
+
+/**
+ * Supprime les accents
+ */
+function removeAccents(str) {
+  var accents = "àâäéèêëïîôùûüçÀÂÄÉÈÊËÏÎÔÙÛÜÇ";
+  var sans    = "aaaeeeeiiouuucAAAEEEEIIOUUUC";
+  var result = "";
+  for (var i = 0; i < str.length; i++) {
+    var idx = accents.indexOf(str[i]);
+    result += idx > -1 ? sans[idx] : str[i];
+  }
+  return result;
+}
+
+function logToSheet(file, newName, ocrText, statut) {
+  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+
+  var now = Utilities.formatDate(new Date(), "Europe/Paris", "yyyy-MM-dd HH:mm");
+  var sizeKo = Math.round(file.getSize() / 1024);
+  var originalName = file.getName();
+
+  sheet.appendRow([now, originalName, newName, sizeKo, ocrText, statut]);
+}
+
 function testOneFile() {
-  const sourceFolder = DriveApp.getFolderById(CONFIG.SOURCE_FOLDER_ID);
-  const files = sourceFolder.getFiles();
+  var sourceFolder = DriveApp.getFolderById(CONFIG.SOURCE_FOLDER_ID);
+  var files = sourceFolder.getFiles();
 
   if (files.hasNext()) {
-    const file = files.next();
+    var file = files.next();
     Logger.log("Test avec: " + file.getName());
 
-    const newName = analyzeWithGemini(file);
+    var ocrText = extractTextFromFile(file);
+    Logger.log("Texte OCR: " + ocrText.substring(0, 300));
+
+    var newName = generateFilename(ocrText);
     Logger.log("Nom genere: " + newName);
   } else {
     Logger.log("Aucun fichier dans le dossier source.");
