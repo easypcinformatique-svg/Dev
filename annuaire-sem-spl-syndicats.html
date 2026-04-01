@@ -176,6 +176,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="dept-asc">Département</option>
       <option value="secteur-asc">Secteur</option>
     </select>
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="N'afficher que les structures avec adresse complète + président (prêtes pour le publipostage)"><input type="checkbox" id="publipostable" onchange="render()"> Publipostable uniquement</label>
     <span id="count-label"></span>
   </div>
   <div class="toolbar" style="margin-top:0;padding-top:0">
@@ -1990,10 +1991,12 @@ function getFiltered(){
   const typeF=document.getElementById('type-filter').value;
   const regionF=document.getElementById('region-filter').value;
   const deptF=document.getElementById('dept-filter').value;
+  const publiOnly=document.getElementById('publipostable').checked;
   let rows=DATA.filter(d=>{
     if(typeF&&d.type!==typeF)return false;
     if(regionF&&!REGIONS[regionF].includes(d.dept))return false;
     if(deptF&&d.dept!==deptF)return false;
+    if(publiOnly&&(!d.adresse||!d.president))return false;
     if(!q)return true;
     return d.nom.toLowerCase().includes(q)||d.ville.toLowerCase().includes(q)||
            d.secteur.toLowerCase().includes(q)||d.dept.includes(q)||
@@ -2082,71 +2085,75 @@ function exportPDF(){
 
 function exportPublipostage(){
   const rows=getFiltered();
-  const esc=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
-
-  // Parse address into components
+  const PRENOMS_F=new Set("marie anne sophie nathalie catherine isabelle martine brigitte françoise christine sylvie céline audrey stéphanie virginie sandrine delphine valérie agnès hélène joëlle michèle caroline léonore johanna jacqueline ericka sandra juliana nicole karine doriane josée laurence camille frédérique véronique charlotte mélissa kristell natacha amandine magalie roxane geneviève lucile joséphine patricia corinne bernadette monique laura séverine florence morgane élisabeth jeanne marguerite saloua laure chantal cécile claire".split(" "));
+  function getCiv(prenom){let p=(prenom||"").toLowerCase().trim();if(p.includes("-"))p=p.split("-")[0];return PRENOMS_F.has(p)?"Mme":"M.";}
   function parseAddr(addr){
-    if(!addr)return {rue:'',cp:'',ville:''};
-    addr=addr.trim();
-    // Try to extract CP (5 digits) and ville
-    const m=addr.match(/^(.*?)\s*(\d{5})\s+(.+)$/);
-    if(m)return {rue:m[1].trim(),cp:m[2],ville:m[3].trim()};
-    // Try CP at start
-    const m2=addr.match(/^(\d{5})\s+(.+)$/);
-    if(m2)return {rue:'',cp:m2[1],ville:m2[2].trim()};
-    return {rue:addr,cp:'',ville:''};
+    if(!addr)return{rue:"",cp:"",ville:""};
+    const m=addr.trim().match(/^(.*?)\s*(\d{5})\s+(.+)$/);
+    if(m)return{rue:m[1].trim(),cp:m[2],ville:m[3].trim()};
+    return{rue:addr,cp:"",ville:""};
   }
-
-  // Parse president name
   function parseName(name){
-    if(!name)return {civilite:'',prenom:'',nom:''};
-    const parts=name.trim().split(/\s+/);
-    if(parts.length===1)return {civilite:'',prenom:'',nom:parts[0]};
-    // First part = prenom, rest = nom
-    return {civilite:'',prenom:parts[0],nom:parts.slice(1).join(' ')};
+    if(!name)return{prenom:"",nom:""};
+    const p=name.trim().split(/\s+/);
+    return p.length===1?{prenom:"",nom:p[0]}:{prenom:p[0],nom:p.slice(1).join(" ")};
   }
-
-  // Build Excel with 2 sheets: Publipostage Courrier + Publipostage Email
+  const REGIONS={"01":"Auvergne-Rhône-Alpes","04":"PACA","05":"PACA","06":"PACA","07":"Auvergne-Rhône-Alpes","13":"PACA","26":"Auvergne-Rhône-Alpes","30":"Occitanie","34":"Occitanie","38":"Auvergne-Rhône-Alpes","48":"Occitanie","69":"Auvergne-Rhône-Alpes","73":"Auvergne-Rhône-Alpes","74":"Auvergne-Rhône-Alpes","83":"PACA","84":"PACA","88":"Grand Est"};
   const wb=XLSX.utils.book_new();
 
-  // Sheet 1: Courrier postal
-  const courrier=[['Structure','Type','SIREN','Civilité','Prénom destinataire','Nom destinataire','Fonction','Adresse ligne 1','Adresse ligne 2','Code postal','Ville','Département','Région','Téléphone']];
+  // Onglet 1: Courrier (enveloppe à fenêtre)
+  const c1=[["Civilité","Prénom","Nom","Fonction","Structure","Type","Adresse ligne 1","Code postal","Ville","Département","Région","Téléphone","Email","Bloc adresse fenêtre"]];
   rows.forEach(d=>{
     const a=parseAddr(d.adresse);
     const n=parseName(d.president);
-    const region=({'01':'Auvergne-Rhône-Alpes','04':'PACA','05':'PACA','06':'PACA','07':'Auvergne-Rhône-Alpes','13':'PACA','26':'Auvergne-Rhône-Alpes','30':'Occitanie','34':'Occitanie','38':'Auvergne-Rhône-Alpes','48':'Occitanie','69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes','83':'PACA','84':'PACA','88':'Grand Est'})[d.dept]||'';
-    courrier.push([d.nom,d.type,d.siren,n.civilite,n.prenom,n.nom,'Président(e)',a.rue,'',a.cp,a.ville,d.dept+' - '+d.deptNom,region,d.tel]);
+    const civ=getCiv(n.prenom);
+    const fonction=civ==="Mme"?"Madame la Présidente":"Monsieur le Président";
+    const bloc=fonction+"\n"+d.nom+"\n"+(a.rue?a.rue+"\n":"")+(a.cp?a.cp+" ":"")+(a.ville||d.ville);
+    c1.push([civ,n.prenom,n.nom,"Président(e)",d.nom,d.type,a.rue,a.cp,a.ville||d.ville,d.dept+" - "+d.deptNom,REGIONS[d.dept]||"",d.tel,d.email,bloc]);
   });
-  const ws1=XLSX.utils.aoa_to_sheet(courrier);
-  // Set column widths
-  ws1['!cols']=[{wch:35},{wch:8},{wch:12},{wch:5},{wch:15},{wch:20},{wch:12},{wch:40},{wch:20},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16}];
-  XLSX.utils.book_append_sheet(wb,ws1,'Publipostage Courrier');
+  const ws1=XLSX.utils.aoa_to_sheet(c1);
+  ws1["!cols"]=[{wch:5},{wch:15},{wch:20},{wch:12},{wch:35},{wch:8},{wch:40},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16},{wch:30},{wch:45}];
+  XLSX.utils.book_append_sheet(wb,ws1,"Publipostage Courrier");
 
-  // Sheet 2: Emailing
-  const emailing=[['Email','Prénom','Nom','Structure','Type','Fonction','Téléphone','Ville','Département','Région','SIREN']];
+  // Onglet 2: Email
+  const c2=[["Email","Civilité","Prénom","Nom","Formule politesse","Structure","Type","Département","Région","Téléphone"]];
   rows.forEach(d=>{
     const n=parseName(d.president);
-    const region=({'01':'Auvergne-Rhône-Alpes','04':'PACA','05':'PACA','06':'PACA','07':'Auvergne-Rhône-Alpes','13':'PACA','26':'Auvergne-Rhône-Alpes','30':'Occitanie','34':'Occitanie','38':'Auvergne-Rhône-Alpes','48':'Occitanie','69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes','83':'PACA','84':'PACA','88':'Grand Est'})[d.dept]||'';
-    emailing.push([d.email,n.prenom,n.nom,d.nom,d.type,'Président(e)',d.tel,d.ville,d.dept+' - '+d.deptNom,region,d.siren]);
+    const civ=getCiv(n.prenom);
+    const formule=civ==="Mme"?"Madame la Présidente":"Monsieur le Président";
+    c2.push([d.email,civ,n.prenom,n.nom,formule,d.nom,d.type,d.dept+" - "+d.deptNom,REGIONS[d.dept]||"",d.tel]);
   });
-  const ws2=XLSX.utils.aoa_to_sheet(emailing);
-  ws2['!cols']=[{wch:30},{wch:15},{wch:20},{wch:35},{wch:8},{wch:12},{wch:16},{wch:20},{wch:25},{wch:25},{wch:12}];
-  XLSX.utils.book_append_sheet(wb,ws2,'Publipostage Email');
+  const ws2=XLSX.utils.aoa_to_sheet(c2);
+  ws2["!cols"]=[{wch:30},{wch:5},{wch:15},{wch:20},{wch:25},{wch:35},{wch:8},{wch:25},{wch:25},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws2,"Publipostage Email");
 
-  // Sheet 3: Données complètes
-  const complet=[['Structure','Sigle/Type','SIREN','Président/DG','Adresse complète','Code postal','Ville','Département','Région','Téléphone','Email','Site web','Secteur']];
+  // Onglet 3: Étiquettes (enveloppe à fenêtre - 4 lignes AFNOR NF Z 10-011)
+  const c3=[["Ligne 1 (destinataire)","Ligne 2 (structure)","Ligne 3 (adresse)","Ligne 4 (CP + Ville)"]];
   rows.forEach(d=>{
     const a=parseAddr(d.adresse);
-    const region=({'01':'Auvergne-Rhône-Alpes','04':'PACA','05':'PACA','06':'PACA','07':'Auvergne-Rhône-Alpes','13':'PACA','26':'Auvergne-Rhône-Alpes','30':'Occitanie','34':'Occitanie','38':'Auvergne-Rhône-Alpes','48':'Occitanie','69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes','83':'PACA','84':'PACA','88':'Grand Est'})[d.dept]||'';
-    complet.push([d.nom,d.type,d.siren,d.president,d.adresse,a.cp,a.ville,d.dept+' - '+d.deptNom,region,d.tel,d.email,'',d.secteur]);
+    const n=parseName(d.president);
+    const civ=getCiv(n.prenom);
+    c3.push([civ+" "+(d.president||"Le Président"),d.nom,a.rue,(a.cp?a.cp+" ":"")+(a.ville||d.ville)]);
   });
-  const ws3=XLSX.utils.aoa_to_sheet(complet);
-  ws3['!cols']=[{wch:35},{wch:8},{wch:12},{wch:25},{wch:45},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16},{wch:30},{wch:25},{wch:25}];
-  XLSX.utils.book_append_sheet(wb,ws3,'Données complètes');
+  const ws3=XLSX.utils.aoa_to_sheet(c3);
+  ws3["!cols"]=[{wch:35},{wch:40},{wch:45},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws3,"Étiquettes fenêtre");
 
-  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  triggerDownload(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'publipostage-annuaire.xlsx');
-  showToast('Export publipostage : 3 onglets (Courrier + Email + Données complètes)','#7C3AED',5000);
+  // Onglet 4: Données complètes
+  const c4=[["Structure","Type","SIREN","Président/DG","Adresse complète","CP","Ville","Département","Région","Téléphone","Email","Secteur"]];
+  rows.forEach(d=>{
+    const a=parseAddr(d.adresse);
+    c4.push([d.nom,d.type,d.siren,d.president,d.adresse,a.cp,a.ville||d.ville,d.dept+" - "+d.deptNom,REGIONS[d.dept]||"",d.tel,d.email,d.secteur]);
+  });
+  const ws4=XLSX.utils.aoa_to_sheet(c4);
+  ws4["!cols"]=[{wch:35},{wch:8},{wch:12},{wch:25},{wch:45},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16},{wch:30},{wch:25}];
+  XLSX.utils.book_append_sheet(wb,ws4,"Données complètes");
+
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+  triggerDownload(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"publipostage-annuaire.xlsx");
+  const withAddr=rows.filter(d=>d.adresse).length;
+  const withEmail=rows.filter(d=>d.email).length;
+  showToast(withAddr+" adresses courrier + "+withEmail+" emails — 4 onglets","#7C3AED",5000);
 }
 
 function exportGoogleSheets(){
