@@ -116,7 +116,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <div class="stat" title="Fiches avec email = prêtes pour emailing"><span class="stat-n" id="s-email" style="color:#93C5FD">—</span> 📧 email</div>
     <div class="stat" title="Fiches avec téléphone"><span class="stat-n" id="s-tel" style="color:#FCD34D">—</span> 📞 tél</div>
     <div class="stat" title="Structures affichées après filtres"><span class="stat-n" id="s-shown">—</span> affichées</div>
-    <div class="stat" title="Marqués comme clients"><span class="stat-n" id="s-clients" style="color:#86EFAC">—</span> ✅ clients</div>
+    <div class="stat" title="Prospects non contactés"><span class="stat-n" id="s-prospects" style="color:#9CA3AF">—</span> ☐ prospects</div>
+    <div class="stat" title="Contactés en attente"><span class="stat-n" id="s-contacted" style="color:#93C5FD">—</span> 📤 contactés</div>
+    <div class="stat" title="Clients convertis"><span class="stat-n" id="s-clients" style="color:#86EFAC">—</span> ✅ clients</div>
   </div>
 </div>
 <div class="wrap">
@@ -224,6 +226,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Publipostage
     </button>
+    <button class="btn" onclick="exportCRM()" style="background:#6B7280;color:#fff;font-size:11px;padding:6px 10px" title="Sauvegarder vos statuts CRM (Prospect/Client/Notes) dans un fichier JSON">💾 Sauver CRM</button>
+    <button class="btn" onclick="document.getElementById('import-crm').click()" style="background:#6B7280;color:#fff;font-size:11px;padding:6px 10px" title="Restaurer vos statuts CRM depuis un fichier JSON sauvegardé">📂 Charger CRM</button>
+    <input type="file" id="import-crm" accept=".json" style="display:none" onchange="importCRM(this)">
     <button class="btn btn-outline" onclick="window.print()" title="Imprimer">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
@@ -2079,7 +2084,7 @@ function render(){
         <td><span class="secteur">${d.adresse?esc(d.adresse):'—'}</span></td>
         <td><span class="secteur">${esc(d.secteur)}</span></td>
         <td>${d.president?esc(d.president):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}</td>
-        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}<div style="margin-top:3px"><button onclick="cycleCRM('${esc(d.siren)}')" style="font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid var(--border);background:${CRM_COLORS[getCRMStatus(d.siren).status]||'var(--bg)'};color:${CRM_TEXT_COLORS[getCRMStatus(d.siren).status]||'var(--muted)'};cursor:pointer;font-weight:500" title="Cliquez pour changer le statut : Prospect → Contacté → Client → Pas intéressé">${CRM_LABELS[getCRMStatus(d.siren).status]||'☐ Prospect'}${getCRMStatus(d.siren).date?' ('+getCRMStatus(d.siren).date+')':''}</button></div></td>
+        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}<div style="margin-top:3px;display:flex;gap:3px;flex-wrap:wrap;align-items:center"><button onclick="cycleCRM('${esc(d.siren)}')" style="font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid var(--border);background:${CRM_COLORS[getCRMStatus(d.siren).status]||'var(--bg)'};color:${CRM_TEXT_COLORS[getCRMStatus(d.siren).status]||'var(--muted)'};cursor:pointer;font-weight:500" title="Cliquez pour changer le statut">${CRM_LABELS[getCRMStatus(d.siren).status]||'☐ Prospect'}${getCRMStatus(d.siren).date?' '+getCRMStatus(d.siren).date:''}</button><button onclick="editNote('${esc(d.siren)}')" style="font-size:9px;padding:2px 5px;border-radius:3px;border:1px solid var(--border);background:${getCRMStatus(d.siren).notes?'#FEF3C7':'var(--bg)'};color:var(--muted);cursor:pointer" title="${getCRMStatus(d.siren).notes||'Ajouter une note'}">${getCRMStatus(d.siren).notes?'📝':'+'}</button>${d.siren&&d.siren.length>=9?'<a href="https://www.pappers.fr/entreprise/'+d.siren+'" target="_blank" style="font-size:9px;color:var(--bleu-l);text-decoration:none" title="Voir sur Pappers.fr (finances, dirigeants)">📊</a>':''}</div>${getCRMStatus(d.siren).notes?'<div style="font-size:9px;color:var(--warn);margin-top:2px;font-style:italic">'+esc(getCRMStatus(d.siren).notes).slice(0,40)+'</div>':''}</td>
       </tr>`;
     }).join('');
   }
@@ -2089,7 +2094,10 @@ function render(){
   document.getElementById('s-tel').textContent=rows.filter(d=>d.tel).length;
   document.getElementById('s-shown').textContent=rows.length;
   const crm=getCRM();
-  document.getElementById('s-clients').textContent=Object.values(crm).filter(v=>v.status==='client').length;
+  const allSirens=rows.map(d=>d.siren);
+  document.getElementById('s-prospects').textContent=allSirens.filter(s=>!crm[s]||!crm[s].status).length;
+  document.getElementById('s-contacted').textContent=allSirens.filter(s=>crm[s]&&crm[s].status==='contacted').length;
+  document.getElementById('s-clients').textContent=allSirens.filter(s=>crm[s]&&crm[s].status==='client').length;
   document.getElementById('count-label').textContent=rows.length===DATA.length?DATA.length+' structures':rows.length+' / '+DATA.length+' structures';
 }
 
@@ -2259,15 +2267,59 @@ function isContacted(siren){return getCRMStatus(siren).status==='contacted';}
 function cycleCRM(siren){
   const c=getCRM();
   const current=(c[siren]||{}).status||'';
+  const notes=(c[siren]||{}).notes||'';
   const order=['','contacted','client','not_interested'];
   const next=order[(order.indexOf(current)+1)%order.length];
   if(next){
-    c[siren]={status:next,date:new Date().toISOString().slice(0,10)};
+    c[siren]={status:next,date:new Date().toISOString().slice(0,10),notes:notes};
   } else {
-    delete c[siren];
+    c[siren]={status:'',date:'',notes:notes};
   }
   localStorage.setItem(CRM_KEY,JSON.stringify(c));
   render();
+}
+
+function editNote(siren){
+  const c=getCRM();
+  const current=(c[siren]||{}).notes||'';
+  const note=prompt('Note pour cette structure :',current);
+  if(note!==null){
+    if(!c[siren])c[siren]={status:'',date:''};
+    c[siren].notes=note;
+    localStorage.setItem(CRM_KEY,JSON.stringify(c));
+    render();
+  }
+}
+
+function exportCRM(){
+  const data=JSON.stringify(getCRM(),null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='crm-prospection-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  URL.revokeObjectURL(url);
+  showToast('CRM sauvegardé ('+Object.keys(getCRM()).length+' fiches)','#6B7280',3000);
+}
+
+function importCRM(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      const existing=getCRM();
+      // Merge: imported data overwrites existing
+      const merged={...existing,...data};
+      localStorage.setItem(CRM_KEY,JSON.stringify(merged));
+      render();
+      showToast('CRM chargé : '+Object.keys(data).length+' fiches importées','#10B981',3000);
+    }catch(err){
+      showToast('Erreur : fichier JSON invalide','#EF4444',3000);
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
 }
 
 function getCRMCounts(){
