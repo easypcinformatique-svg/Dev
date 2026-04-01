@@ -243,6 +243,10 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       PDF
     </button>
+    <button class="btn" onclick="exportPublipostage()" style="background:#7C3AED;color:#fff" title="Export optimisé pour le publipostage — champs séparés pour fusion Word et emailing">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Publipostage
+    </button>
     <button class="btn btn-outline" onclick="window.print()" title="Imprimer le tableau directement depuis le navigateur. La mise en page est optimisée pour l'impression (en-tête masqué, tableau pleine largeur).">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
@@ -743,6 +747,66 @@ function exportSheets(){
   } catch(e){
     showToast('❌ Erreur export XLSX : '+e.message,'#C8001E');
   }
+}
+
+/* ══ EXPORT PUBLIPOSTAGE ══ */
+function exportPublipostage(){
+  const rows=getFiltered();
+  const esc=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
+
+  function parseAddr(addr){
+    if(!addr)return {rue:'',cp:'',ville:''};
+    addr=addr.trim();
+    const m=addr.match(/^(.*?)\s*(\d{5})\s+(.+)$/);
+    if(m)return {rue:m[1].trim(),cp:m[2],ville:m[3].trim()};
+    const m2=addr.match(/^(\d{5})\s+(.+)$/);
+    if(m2)return {rue:'',cp:m2[1],ville:m2[2].trim()};
+    return {rue:addr,cp:'',ville:''};
+  }
+
+  function parseMaire(name){
+    if(!name)return {civilite:'',prenom:'',nom:''};
+    const parts=name.trim().split(/\s+/);
+    if(parts.length===1)return {civilite:'',prenom:'',nom:parts[0]};
+    return {civilite:'',prenom:parts[0],nom:parts.slice(1).join(' ')};
+  }
+
+  const wb=XLSX.utils.book_new();
+
+  // Onglet 1: Publipostage Courrier
+  const courrier=[['Commune','Population','Département','Région','Civilité','Prénom Maire','Nom Maire','Fonction','Adresse Mairie ligne 1','Code postal','Ville Mairie','Téléphone','Email']];
+  rows.forEach(d=>{
+    const a=parseAddr(d.adresse);
+    const n=parseMaire(d.maire);
+    courrier.push([d.ville,d.pop,d.dept+' - '+d.region.split(' ')[0],d.region,n.civilite,n.prenom,n.nom,'Maire',a.rue,a.cp,a.ville||d.ville,d.tel,d.email]);
+  });
+  const ws1=XLSX.utils.aoa_to_sheet(courrier);
+  ws1['!cols']=[{wch:25},{wch:10},{wch:8},{wch:25},{wch:5},{wch:15},{wch:20},{wch:8},{wch:45},{wch:7},{wch:25},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Publipostage Courrier');
+
+  // Onglet 2: Publipostage Email
+  const emailing=[['Email','Civilité','Prénom','Nom','Fonction','Commune','Population','Département','Région','Téléphone']];
+  rows.forEach(d=>{
+    const n=parseMaire(d.maire);
+    emailing.push([d.email,n.civilite,n.prenom,n.nom,'Maire',d.ville,d.pop,d.dept,d.region,d.tel]);
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(emailing);
+  ws2['!cols']=[{wch:30},{wch:5},{wch:15},{wch:20},{wch:8},{wch:25},{wch:10},{wch:5},{wch:25},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Publipostage Email');
+
+  // Onglet 3: Données complètes
+  const complet=[['Commune','Population','Département','Région','Maire (Nom complet)','Adresse complète Mairie','Code postal','Ville Mairie','Téléphone','Email']];
+  rows.forEach(d=>{
+    const a=parseAddr(d.adresse);
+    complet.push([d.ville,d.pop,d.dept+' - '+d.region.split(' ')[0],d.region,d.maire,d.adresse,a.cp,a.ville||d.ville,d.tel,d.email]);
+  });
+  const ws3=XLSX.utils.aoa_to_sheet(complet);
+  ws3['!cols']=[{wch:25},{wch:10},{wch:8},{wch:25},{wch:25},{wch:45},{wch:7},{wch:25},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Données complètes');
+
+  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  triggerDownload(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'publipostage-maires.xlsx');
+  showToast('Export publipostage : 3 onglets (Courrier + Email + Données)','#7C3AED',5000);
 }
 
 /* ══ EXPORT PDF ══ */
