@@ -185,7 +185,16 @@ function extractTextFromFile(file) {
 
   // Inserer le fichier comme Google Doc avec OCR
   var blob = file.getBlob();
-  var docFile = Drive.Files.insert(resource, blob, options);
+  var docFile;
+
+  // Essayer v2 (insert) puis v3 (create)
+  try {
+    docFile = Drive.Files.insert(resource, blob, options);
+  } catch(e) {
+    // Drive API v3
+    var v3resource = { name: resource.title, mimeType: resource.mimeType };
+    docFile = Drive.Files.create(v3resource, blob, { ocrLanguage: "fr", fields: "id" });
+  }
 
   // Ouvrir le Google Doc et extraire le texte
   var doc = DocumentApp.openById(docFile.id);
