@@ -1,0 +1,21 @@
+name: Deploy PizzaCaisse
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    name: Trigger Render Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Render
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo "Deploy triggered on Render"
+          else
+            echo "RENDER_DEPLOY_HOOK_URL not set - skipping auto-deploy"
+            echo "To enable: go to Render Dashboard > Service > Settings > Deploy Hook"
+            echo "Copy the URL and add it as a GitHub secret named RENDER_DEPLOY_HOOK_URL"
+          fi
