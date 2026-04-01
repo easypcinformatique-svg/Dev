@@ -1,13 +1,12 @@
-name: MAJ automatique SEM/SPL/SM — dirigeants et contacts
+name: MAJ automatique SEM/SPL/SM — dirigeants, adresses et contacts
 
 on:
   schedule:
-    # Tous les mercredis à 7h du matin (UTC)
     - cron: '0 7 * * 3'
   workflow_dispatch:
 
 jobs:
-  update-dirigeants:
+  update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout gh-pages
@@ -20,137 +19,279 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: "Récupérer les dirigeants via API Annuaire des Entreprises"
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: "Étape 1 : API Annuaire des Entreprises — dirigeants + adresses"
         run: |
           python3 << 'PYEOF'
-          import json, re, time, urllib.request, unicodedata
-          from datetime import datetime
+          import json, re, time
+          import requests
 
           def title_case(s):
               small = {"de","du","des","le","la","les","l","d","en","sur","sous","et"}
               parts = re.split(r"([-\s'])", s.lower())
               return "".join(w.capitalize() if (i==0 or w not in small) else w for i,w in enumerate(parts))
 
-          # 1. Lire le fichier HTML
-          print("📄 Lecture de annuaire-sem-spl-syndicats.html…")
-          with open("annuaire-sem-spl-syndicats.html", "r", encoding="utf-8") as f:
+          with open("annuaire-sem-spl-syndicats.html", "r") as f:
               html = f.read()
 
-          # 2. Extraire les données
-          data_match = re.search(r"let DATA=\[([\s\S]*?)\];", html)
-          if not data_match:
-              print("❌ DATA introuvable"); exit(0)
+          API = "https://recherche-entreprises.api.gouv.fr/search"
+          pattern = re.compile(r'\{nom:"([^"]*)".*?adresse:"([^"]*)".*?president:"([^"]*)".*?siren:"(\d{9,})"\}')
+          matches = list(pattern.finditer(html))
+          print(f"📋 {len(matches)} structures avec SIREN")
 
-          # Extraire chaque structure avec son SIREN
-          entries = re.findall(
-              r'\{nom:"([^"]*)".*?type:"([^"]*)".*?dept:"([^"]*)".*?president:"([^"]*)".*?tel:"([^"]*)".*?email:"([^"]*)".*?siren:"([^"]*)"\}',
-              html
-          )
-          print(f"📋 {len(entries)} structures trouvées")
-
-          # 3. Pour chaque structure avec un SIREN, interroger l'API
-          API_BASE = "https://recherche-entreprises.api.gouv.fr/search"
-          updates = {}
-          errors = 0
-          skipped = 0
-
-          for nom, typ, dept, president, tel, email, siren in entries:
-              if not siren or len(siren) < 9:
-                  skipped += 1
+          updates = []
+          for m in matches:
+              nom, adresse, president, siren = m.group(1), m.group(2), m.group(3), m.group(4)
+              if adresse and president:
                   continue
+              try:
+                  r = requests.get(f"{API}?q={siren}&per_page=1",
+                      headers={"User-Agent": "annuaire-bot/1.0"}, timeout=10)
+                  data = r.json()
+                  results = data.get("results", [])
+                  if not results: continue
+                  res = results[0]
 
-              # Ne pas écraser un président déjà renseigné
-              if president:
+                  new_adresse = adresse
+                  if not adresse:
+                      siege = res.get("siege", {})
+                      new_adresse = siege.get("adresse", "")
+
+                  new_pres = president
+                  if not president:
+                      for d in res.get("dirigeants", []):
+                          qual = (d.get("qualite","") or "").lower()
+                          nom_d, prenom_d = d.get("nom",""), d.get("prenom","")
+                          if nom_d and ("président" in qual or "directeur général" in qual):
+                              new_pres = f"{title_case(prenom_d)} {title_case(nom_d)}" if prenom_d else title_case(nom_d)
+                              break
+
+                  entry = html[m.start():m.end()]
+                  new_entry = entry
+                  if new_adresse and not adresse:
+                      new_entry = new_entry.replace('adresse:""', f'adresse:"{new_adresse}"')
+                  if new_pres and not president:
+                      new_entry = new_entry.replace('president:""', f'president:"{new_pres}"')
+                  if new_entry != entry:
+                      updates.append((m.start(), m.end(), new_entry, nom))
+                  time.sleep(0.25)
+              except: pass
+
+          updates.sort(key=lambda x: x[0], reverse=True)
+          for start, end, new_text, nom in updates:
+              html = html[:start] + new_text + html[end:]
+
+          with open("annuaire-sem-spl-syndicats.html", "w") as f:
+              f.write(html)
+          print(f"✅ Étape 1 : {len(updates)} mises à jour (adresses + dirigeants)")
+          PYEOF
+
+      - name: "Étape 2 : Scraping des sites officiels — téléphones et emails"
+        run: |
+          python3 << 'PYEOF'
+          import re, time, json
+          import requests
+          from bs4 import BeautifulSoup
+
+          with open("annuaire-sem-spl-syndicats.html", "r") as f:
+              html = f.read()
+
+          # Build a map of SIREN → annuaire-entreprises URL to get website
+          API = "https://recherche-entreprises.api.gouv.fr/search"
+          pattern = re.compile(r'\{nom:"([^"]*)".*?tel:"([^"]*)".*?email:"([^"]*)".*?siren:"(\d{9,})"\}')
+          matches = list(pattern.finditer(html))
+
+          updates = []
+          scraped = 0
+          errors = 0
+
+          for m in matches:
+              nom, tel, email, siren = m.group(1), m.group(2), m.group(3), m.group(4)
+              if tel and email:
                   continue
 
               try:
-                  url = f"{API_BASE}?q={siren}&per_page=1"
-                  req = urllib.request.Request(url, headers={"User-Agent": "annuaire-sem-spl-bot/1.0"})
-                  with urllib.request.urlopen(req, timeout=10) as resp:
-                      data = json.load(resp)
-
+                  # Get website from API
+                  r = requests.get(f"{API}?q={siren}&per_page=1",
+                      headers={"User-Agent": "annuaire-bot/1.0"}, timeout=10)
+                  data = r.json()
                   results = data.get("results", [])
-                  if not results:
-                      continue
+                  if not results: continue
 
-                  r = results[0]
-                  dirigeants = r.get("dirigeants", [])
-                  siege = r.get("siege", {})
+                  # Try to get complements (website)
+                  complements = results[0].get("complements", {})
+                  # The API doesn't always have website, try nom_url
+                  siege = results[0].get("siege", {})
 
-                  # Trouver le président ou DG
-                  pres_name = ""
-                  for d in dirigeants:
-                      qual = (d.get("qualite", "") or "").lower()
-                      nom_d = d.get("nom", "")
-                      prenom_d = d.get("prenom", "")
-                      if not nom_d:
-                          continue
-                      full = f"{title_case(prenom_d)} {title_case(nom_d)}" if prenom_d else title_case(nom_d)
+                  # Build potential website URLs from the nom
+                  nom_clean = nom.lower().replace(" ", "").replace("'", "")
+                  potential_urls = []
 
-                      if "président" in qual or "directeur général" in qual or "directrice" in qual:
-                          pres_name = full
-                          break
+                  # Check if there's a known website pattern
+                  nom_slug = re.sub(r'[^a-z0-9]', '', nom.lower())
 
-                  # Si pas de président trouvé, prendre le premier dirigeant
-                  if not pres_name and dirigeants:
-                      d = dirigeants[0]
-                      nom_d = d.get("nom", "")
-                      prenom_d = d.get("prenom", "")
-                      if nom_d:
-                          pres_name = f"{title_case(prenom_d)} {title_case(nom_d)}" if prenom_d else title_case(nom_d)
+                  # Try common patterns for public structures
+                  ville = siege.get("libelle_commune", "").lower().replace(" ", "-")
 
-                  if pres_name:
-                      updates[siren] = {"president": pres_name}
-                      print(f"  ✅ {nom} → {pres_name}")
+                  # For now, try the annuaire-entreprises page which sometimes has contacts
+                  ae_url = f"https://annuaire-entreprises.data.gouv.fr/entreprise/{siren}"
 
-                  # Rate limiting: 5 req/sec max
-                  time.sleep(0.25)
+                  try:
+                      resp = requests.get(ae_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+                      if resp.status_code == 200:
+                          soup = BeautifulSoup(resp.text, 'lxml')
+                          page_text = soup.get_text()
+
+                          # Extract phone numbers (French format)
+                          if not tel:
+                              phones = re.findall(r'(?:0[1-9])[\s.-]?(?:\d{2}[\s.-]?){4}', page_text)
+                              if phones:
+                                  tel_found = phones[0].strip()
+                                  # Format: 0X XX XX XX XX
+                                  digits = re.sub(r'\D', '', tel_found)
+                                  if len(digits) == 10:
+                                      tel_found = f"{digits[:2]} {digits[2:4]} {digits[4:6]} {digits[6:8]} {digits[8:10]}"
+
+                          # Extract emails
+                          if not email:
+                              emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.-]+', page_text)
+                              # Filter out common non-contact emails
+                              for e in emails:
+                                  if not any(x in e.lower() for x in ['noreply', 'example', 'test', '@gouv.fr']):
+                                      email_found = e
+                                      break
+
+                  except: pass
+
+                  # Apply updates
+                  entry = html[m.start():m.end()]
+                  new_entry = entry
+                  changed = False
+
+                  if 'tel_found' in dir() and tel_found and not tel:
+                      new_entry = new_entry.replace('tel:""', f'tel:"{tel_found}"')
+                      changed = True
+                      del tel_found
+
+                  if 'email_found' in dir() and email_found and not email:
+                      new_entry = new_entry.replace('email:""', f'email:"{email_found}"')
+                      changed = True
+                      del email_found
+
+                  if changed:
+                      updates.append((m.start(), m.end(), new_entry, nom))
+                      scraped += 1
+                      print(f"  ✅ {nom}")
+
+                  time.sleep(0.5)  # Be nice to servers
 
               except Exception as e:
                   errors += 1
-                  if errors > 20:
-                      print(f"⚠ Trop d'erreurs ({errors}), arrêt")
-                      break
+                  if errors > 20: break
                   time.sleep(1)
 
-          print(f"\n📊 {len(updates)} dirigeants trouvés, {skipped} sans SIREN, {errors} erreurs")
+          # Apply updates
+          updates.sort(key=lambda x: x[0], reverse=True)
+          for start, end, new_text, nom in updates:
+              html = html[:start] + new_text + html[end:]
 
-          # 4. Appliquer les mises à jour
-          if updates:
-              for siren, info in updates.items():
-                  pres = info["president"].replace('"', '\\"')
-                  # Remplacer president:"" pour cette structure (identifiée par son SIREN)
-                  pattern = r'(siren:"' + re.escape(siren) + r'")'
-                  # Find the full entry and update president
-                  entry_pattern = re.compile(
-                      r'(\{nom:"[^"]*".*?president:")("")(.*?siren:"' + re.escape(siren) + r'")'
-                  )
-                  match = entry_pattern.search(html)
-                  if match:
-                      html = html[:match.start(2)] + '"' + pres + '"' + html[match.end(2):]
-
-              # Mettre à jour la version
-              now = datetime.now()
-              ver = f"v.{now.year}.{now.month:02d}.{now.day:02d}-{now.hour:02d}h{now.minute:02d}"
-              html = re.sub(r'v\.\d{4}\.\d{2}\.\d{2}(-\d{2}h\d{2})?', ver, html)
-
-              with open("annuaire-sem-spl-syndicats.html", "w", encoding="utf-8") as f:
-                  f.write(html)
-              print(f"\n✅ Fichier mis à jour — {ver}")
-          else:
-              print("\nℹ Aucune mise à jour nécessaire")
-
+          with open("annuaire-sem-spl-syndicats.html", "w") as f:
+              f.write(html)
+          print(f"\n✅ Étape 2 : {scraped} contacts trouvés par scraping, {errors} erreurs")
           PYEOF
 
-      - name: Vérifier s'il y a des changements
+      - name: "Étape 3 : Recherche contacts via Pages Jaunes / Google"
+        run: |
+          python3 << 'PYEOF'
+          import re, time, json
+          import requests
+          from bs4 import BeautifulSoup
+          from datetime import datetime
+
+          with open("annuaire-sem-spl-syndicats.html", "r") as f:
+              html = f.read()
+
+          # Find structures still missing tel or email
+          pattern = re.compile(r'\{nom:"([^"]*)".*?ville:"([^"]*)".*?tel:"".*?siren:"([^"]*)"\}')
+          matches = list(pattern.finditer(html))
+          print(f"🔍 {len(matches)} structures sans téléphone")
+
+          updates = []
+          found = 0
+
+          for m in matches:
+              nom, ville, siren = m.group(1), m.group(2), m.group(3)
+
+              # Try societe.com for phone
+              if siren and len(siren) >= 9:
+                  try:
+                      # Use a Google-like search to find contact info
+                      search_url = f"https://www.google.com/search?q={requests.utils.quote(nom + ' ' + ville + ' téléphone contact')}&num=3"
+                      resp = requests.get(search_url,
+                          headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+                          timeout=10)
+
+                      if resp.status_code == 200:
+                          # Extract phone from Google snippet
+                          phones = re.findall(r'(?:0[1-9])[\s.-]?(?:\d{2}[\s.-]?){4}', resp.text)
+                          emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.-]+', resp.text)
+
+                          entry = html[m.start():m.end()]
+                          new_entry = entry
+                          changed = False
+
+                          if phones:
+                              digits = re.sub(r'\D', '', phones[0])
+                              if len(digits) == 10:
+                                  tel = f"{digits[:2]} {digits[2:4]} {digits[4:6]} {digits[6:8]} {digits[8:10]}"
+                                  new_entry = new_entry.replace('tel:""', f'tel:"{tel}"')
+                                  changed = True
+
+                          if emails:
+                              for e in emails:
+                                  if not any(x in e.lower() for x in ['google', 'gstatic', 'youtube', 'schema']):
+                                      new_entry = new_entry.replace('email:""', f'email:"{e}"')
+                                      changed = True
+                                      break
+
+                          if changed:
+                              updates.append((m.start(), m.end(), new_entry, nom))
+                              found += 1
+                              if found <= 20:
+                                  print(f"  ✅ {nom}")
+
+                      time.sleep(2)  # Slow down for Google
+
+                  except:
+                      time.sleep(3)
+
+              if found >= 50:  # Limit to avoid bans
+                  print("⚠ Limite de 50 atteinte")
+                  break
+
+          updates.sort(key=lambda x: x[0], reverse=True)
+          for start, end, new_text, nom in updates:
+              html = html[:start] + new_text + html[end:]
+
+          # Update version
+          now = datetime.now()
+          ver = f"v.{now.year}.{now.month:02d}.{now.day:02d}-{now.hour:02d}h{now.minute:02d}"
+          html = re.sub(r'v\.\d{4}\.\d{2}\.\d{2}(-\d{2}h\d{2})?', ver, html)
+
+          with open("annuaire-sem-spl-syndicats.html", "w") as f:
+              f.write(html)
+          print(f"\n✅ Étape 3 : {found} contacts trouvés via recherche web")
+          PYEOF
+
+      - name: Vérifier changements
         id: check
         run: |
           if git diff --quiet annuaire-sem-spl-syndicats.html 2>/dev/null; then
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "✅ Aucun changement"
           else
             echo "changed=true" >> $GITHUB_OUTPUT
-            echo "📝 Changements détectés"
           fi
 
       - name: Commit et push
@@ -159,8 +300,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add annuaire-sem-spl-syndicats.html
-          git commit -m "🔄 MAJ auto dirigeants SEM/SPL/SM — $(date +'%d/%m/%Y %H:%M')
+          git commit -m "🔄 MAJ auto SEM/SPL/SM — $(date +'%d/%m/%Y %H:%M')
 
-          Source: API Annuaire des Entreprises (data.gouv.fr)
-          Récupération automatique des dirigeants via SIREN."
+          Sources:
+          - API Annuaire des Entreprises (dirigeants + adresses)
+          - Scraping sites officiels (téléphones + emails)
+          - Recherche web (contacts manquants)"
           git push
