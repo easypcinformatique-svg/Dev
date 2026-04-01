@@ -148,9 +148,10 @@ function extractDate(text) {
   match = text.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (match) { return match[0]; }
   var mois = {
-    "janvier": "01", "fevrier": "02", "mars": "03", "avril": "04",
-    "mai": "05", "juin": "06", "juillet": "07", "aout": "08",
-    "septembre": "09", "octobre": "10", "novembre": "11", "decembre": "12"
+    "janvier": "01", "fevrier": "02", "février": "02", "mars": "03", "avril": "04",
+    "mai": "05", "juin": "06", "juillet": "07", "aout": "08", "août": "08",
+    "septembre": "09", "octobre": "10", "novembre": "11",
+    "decembre": "12", "décembre": "12"
   };
   var textLower = text.toLowerCase();
   for (var m in mois) {
