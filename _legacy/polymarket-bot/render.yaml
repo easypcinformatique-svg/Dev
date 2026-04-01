@@ -11,3 +11,21 @@ services:
         value: 5050
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: GITHUB_TOKEN
+        value: "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"
+
+  - type: web
+    name: immo-sniper-dashboard
+    runtime: docker
+    repo: https://github.com/easypcinformatique-svg/Dev
+    branch: master
+    plan: free
+    dockerfilePath: ./immo-sniper-dashboard/Dockerfile
+    rootDir: immo-sniper-dashboard
+    envVars:
+      - key: PORT
+        value: 5051
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: SCAN_INTERVAL
+        value: "45"

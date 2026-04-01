@@ -31,8 +31,8 @@ logger = logging.getLogger("signal_detector")
 #  CONFIGURATION
 # ================================================================
 
-# Comptes Twitter a surveiller par categorie
-WATCHED_ACCOUNTS = {
+# Comptes Twitter a surveiller par categorie (defaut, surchargeable via constructeur)
+DEFAULT_WATCHED_ACCOUNTS = {
     "politique_us": [
         "realDonaldTrump", "POTUS", "WhiteHouse", "SpeakerJohnson",
         "VP", "SecYellen",
@@ -49,6 +49,8 @@ WATCHED_ACCOUNTS = {
         "NATO", "UN", "SecBlinken", "WarMonitor3",
     ],
 }
+# Retrocompatibilite
+WATCHED_ACCOUNTS = DEFAULT_WATCHED_ACCOUNTS
 
 # Mots-cles generaux a surveiller
 GENERAL_KEYWORDS = [
@@ -89,10 +91,20 @@ class TweetSignal:
 class SignalDetector:
     """Detecteur de signaux base sur Twitter/News."""
 
-    def __init__(self, bearer_token: str = "", signal_log_path: str = "logs/signals.json"):
+    def __init__(self, bearer_token: str = "", signal_log_path: str = "logs/signals.json",
+                 watched_accounts: dict[str, list[str]] | None = None):
+        """Initialise le detecteur de signaux Twitter/News.
+
+        Args:
+            bearer_token: Token Twitter API (ou via env TWITTER_BEARER_TOKEN).
+            signal_log_path: Chemin du fichier de log des signaux.
+            watched_accounts: Comptes Twitter a surveiller par categorie.
+                Si None, utilise DEFAULT_WATCHED_ACCOUNTS.
+        """
         self.bearer_token = bearer_token or os.environ.get("TWITTER_BEARER_TOKEN", "")
         self.signal_log_path = Path(signal_log_path)
         self.signal_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self.watched_accounts = watched_accounts or DEFAULT_WATCHED_ACCOUNTS
 
         # Rate limiting
         self._signals_this_hour: list[str] = []  # timestamps
@@ -119,7 +131,8 @@ class SignalDetector:
     def scan_tweets(self, keywords: list[str] = None,
                     since_minutes: int = 5) -> list[dict]:
         """
-        Cherche les tweets recents contenant des mots-cles.
+        Cherche les tweets/news recents contenant des mots-cles.
+        Fallback : Twitter API -> Nitter scraping -> RSS News feeds.
 
         Returns:
             Liste de dicts {id, text, author, created_at, engagement}.
@@ -131,11 +144,16 @@ class SignalDetector:
 
         if self.bearer_token:
             tweets = self._scan_twitter_api(keywords, since_minutes)
-        else:
+
+        if not tweets:
             tweets = self._scan_nitter(keywords, since_minutes)
 
+        # Fallback RSS si aucun tweet trouve
+        if not tweets:
+            tweets = self._scan_rss_feeds(keywords)
+
         # Aussi scanner les comptes surveilles
-        for category, accounts in WATCHED_ACCOUNTS.items():
+        for category, accounts in self.watched_accounts.items():
             for account in accounts[:3]:  # Limiter pour eviter le rate limit
                 try:
                     account_tweets = self._get_account_tweets(account, since_minutes)
@@ -226,6 +244,57 @@ class SignalDetector:
                 logger.debug(f"Nitter {instance} echoue: {e}")
                 continue
 
+        return tweets
+
+    def _scan_rss_feeds(self, keywords: list[str]) -> list[dict]:
+        """Fallback: scan des flux RSS d'actualites financieres/crypto."""
+        RSS_FEEDS = [
+            "https://feeds.bbci.co.uk/news/business/rss.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
+            "https://www.coindesk.com/arc/outboundfeeds/rss/",
+        ]
+        tweets = []
+        kw_lower = [kw.lower() for kw in keywords[:10]]
+
+        for feed_url in RSS_FEEDS:
+            try:
+                resp = self._session.get(feed_url, timeout=10)
+                if resp.status_code != 200:
+                    continue
+
+                # Parse XML basique sans dependance
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(resp.content)
+
+                for item in root.iter("item"):
+                    title_el = item.find("title")
+                    desc_el = item.find("description")
+                    title = title_el.text if title_el is not None and title_el.text else ""
+                    desc = desc_el.text if desc_el is not None and desc_el.text else ""
+                    text = f"{title} {desc}".strip()
+
+                    # Filtre par mots-cles
+                    text_lower = text.lower()
+                    if any(kw in text_lower for kw in kw_lower):
+                        tweets.append({
+                            "id": f"rss-{hash(text)%10**8}",
+                            "text": text[:300],
+                            "author": feed_url.split("/")[2],
+                            "created_at": datetime.utcnow().isoformat(),
+                            "engagement": 50,
+                            "category": "news_rss",
+                        })
+
+                    if len(tweets) >= 15:
+                        break
+                if len(tweets) >= 15:
+                    break
+            except Exception as e:
+                logger.debug(f"RSS feed {feed_url} echoue: {e}")
+                continue
+
+        if tweets:
+            logger.info(f"SignalDetector: {len(tweets)} articles RSS (fallback)")
         return tweets
 
     def _get_account_tweets(self, username: str,

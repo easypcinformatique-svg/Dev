@@ -1,0 +1,29 @@
+name: Fix Tartufo duplicate width height
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-tartufo-dup.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Remove duplicate width/height on Tartufo img
+          sed -i 's/ loading="lazy" width="1400" height="1195">/ loading="lazy">/' index.html
+          echo "Fixed Tartufo duplicate attributes"
+
+          git add index.html
+          git commit -m "Fix duplicate width/height on Tartufo image"
+          git push origin main

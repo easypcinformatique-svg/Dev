@@ -9,6 +9,11 @@ import unittest
 
 from trade_logger import TradeLogger, ClosedTrade, OpenTrade, POLYMARKET_FEE_PCT
 
+# IDs de test valides (0x + 64 chars hex)
+M1 = "0x" + "a" * 64
+M2 = "0x" + "b" * 64
+M3 = "0x" + "c" * 64
+
 
 class TestTradeLogger(unittest.TestCase):
     """Tests pour la classe TradeLogger."""
@@ -30,7 +35,7 @@ class TestTradeLogger(unittest.TestCase):
 
     def test_log_entry_returns_trade_id(self):
         tid = self.logger.log_entry(
-            market_id="0xabc123",
+            market_id=M1,
             token_id="tok_yes",
             question="Will X happen?",
             side="YES",
@@ -44,7 +49,7 @@ class TestTradeLogger(unittest.TestCase):
 
     def test_log_entry_stores_open_trade(self):
         self.logger.log_entry(
-            market_id="0xabc123",
+            market_id=M1,
             token_id="tok_yes",
             question="Will X happen?",
             side="YES",
@@ -52,32 +57,36 @@ class TestTradeLogger(unittest.TestCase):
             size_usd=100.0,
             shares=166.67,
         )
-        self.assertIn("0xabc123", self.logger.open_trades)
-        t = self.logger.open_trades["0xabc123"]
+        self.assertIn(M1, self.logger.open_trades)
+        t = self.logger.open_trades[M1]
         self.assertEqual(t.side, "YES")
         self.assertAlmostEqual(t.entry_price, 0.60)
 
     def test_log_entry_increments_counter(self):
-        self.logger.log_entry("m1", "t1", "Q1", "YES", 0.5, 50, 100)
-        self.logger.log_entry("m2", "t2", "Q2", "NO", 0.4, 40, 100)
+        self.logger.log_entry(M1, "t1", "Q1", "YES", 0.5, 50, 100)
+        self.logger.log_entry(M2, "t2", "Q2", "NO", 0.4, 40, 100)
         self.assertEqual(self.logger._trade_counter, 2)
 
     def test_log_entry_with_custom_time(self):
         self.logger.log_entry(
-            market_id="m1", token_id="t1", question="Q",
+            market_id=M1, token_id="t1", question="Q",
             side="YES", entry_price=0.5, size_usd=50, shares=100,
             entry_time="2025-06-15T10:30:00",
         )
-        t = self.logger.open_trades["m1"]
+        t = self.logger.open_trades[M1]
         self.assertEqual(t.entry_time, "2025-06-15T10:30:00")
+
+    def test_log_entry_rejects_synthetic_market_id(self):
+        with self.assertRaises(ValueError):
+            self.logger.log_entry("PM-TEC-0028", "t1", "Q", "YES", 0.5, 50, 100)
 
     # ------------------------------------------------------------------
     #  LOG EXIT
     # ------------------------------------------------------------------
 
     def test_log_exit_returns_closed_trade(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        closed = self.logger.log_exit("m1", 0.70, "take_profit")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        closed = self.logger.log_exit(M1, 0.70, "take_profit")
         self.assertIsInstance(closed, ClosedTrade)
         self.assertEqual(closed.exit_reason, "take_profit")
 
@@ -86,8 +95,8 @@ class TestTradeLogger(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_log_exit_pnl_calculation_yes(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        closed = self.logger.log_exit("m1", 0.70, "take_profit")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        closed = self.logger.log_exit(M1, 0.70, "take_profit")
 
         # PnL brut = (0.70 - 0.50) * 200 = 40
         self.assertAlmostEqual(closed.pnl_gross, 40.0, places=2)
@@ -102,34 +111,39 @@ class TestTradeLogger(unittest.TestCase):
         self.assertAlmostEqual(closed.pnl_net, 35.2, places=2)
 
     def test_log_exit_pnl_calculation_no(self):
-        self.logger.log_entry("m1", "t1", "Q", "NO", 0.60, 100, 166.67)
-        closed = self.logger.log_exit("m1", 0.40, "take_profit")
+        self.logger.log_entry(M1, "t1", "Q", "NO", 0.60, 100, 166.67)
+        closed = self.logger.log_exit(M1, 0.40, "take_profit")
 
         # PnL brut = (0.60 - 0.40) * 166.67 = 33.334
         self.assertAlmostEqual(closed.pnl_gross, 33.334, places=2)
 
     def test_log_exit_removes_from_open(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        self.logger.log_exit("m1", 0.70, "take_profit")
-        self.assertNotIn("m1", self.logger.open_trades)
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        self.logger.log_exit(M1, 0.70, "take_profit")
+        self.assertNotIn(M1, self.logger.open_trades)
 
     def test_log_exit_adds_to_closed(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        self.logger.log_exit("m1", 0.70, "take_profit")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        self.logger.log_exit(M1, 0.70, "take_profit")
         self.assertEqual(len(self.logger.closed_trades), 1)
 
     def test_log_exit_custom_time(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        closed = self.logger.log_exit("m1", 0.70, "tp", exit_time="2025-07-01T12:00:00")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        closed = self.logger.log_exit(M1, 0.70, "tp", exit_time="2025-07-01T12:00:00")
         self.assertEqual(closed.exit_time, "2025-07-01T12:00:00")
+
+    def test_log_exit_rejects_epoch_time(self):
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        with self.assertRaises(ValueError):
+            self.logger.log_exit(M1, 0.70, "tp", exit_time="1970-01-01T00:00:00")
 
     # ------------------------------------------------------------------
     #  PERSISTENCE CSV
     # ------------------------------------------------------------------
 
     def test_csv_created_on_exit(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        self.logger.log_exit("m1", 0.70, "take_profit")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        self.logger.log_exit(M1, 0.70, "take_profit")
         csv_path = os.path.join(self.tmpdir, "test_trades.csv")
         self.assertTrue(os.path.exists(csv_path))
 
@@ -140,9 +154,10 @@ class TestTradeLogger(unittest.TestCase):
         self.assertEqual(rows[0]["side"], "YES")
 
     def test_csv_appends_multiple_trades(self):
+        mids = [M1, M2, M3]
         for i in range(3):
-            self.logger.log_entry(f"m{i}", f"t{i}", "Q", "YES", 0.50, 100, 200)
-            self.logger.log_exit(f"m{i}", 0.70, "tp")
+            self.logger.log_entry(mids[i], f"t{i}", "Q", "YES", 0.50, 100, 200)
+            self.logger.log_exit(mids[i], 0.70, "tp")
 
         csv_path = os.path.join(self.tmpdir, "test_trades.csv")
         with open(csv_path) as f:
@@ -154,7 +169,7 @@ class TestTradeLogger(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_json_created_on_entry(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
         json_path = os.path.join(self.tmpdir, "test_trades.json")
         self.assertTrue(os.path.exists(json_path))
 
@@ -163,9 +178,9 @@ class TestTradeLogger(unittest.TestCase):
         self.assertEqual(len(data["open_trades"]), 1)
 
     def test_json_reload_preserves_state(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        self.logger.log_exit("m1", 0.70, "tp")
-        self.logger.log_entry("m2", "t2", "Q2", "NO", 0.40, 50, 125)
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        self.logger.log_exit(M1, 0.70, "tp")
+        self.logger.log_entry(M2, "t2", "Q2", "NO", 0.40, 50, 125)
 
         # Recharger depuis le JSON
         logger2 = TradeLogger(
@@ -174,7 +189,7 @@ class TestTradeLogger(unittest.TestCase):
             json_file="test_trades.json",
         )
         self.assertEqual(len(logger2.closed_trades), 1)
-        self.assertIn("m2", logger2.open_trades)
+        self.assertIn(M2, logger2.open_trades)
 
     # ------------------------------------------------------------------
     #  GET STATS
@@ -187,12 +202,12 @@ class TestTradeLogger(unittest.TestCase):
 
     def test_get_stats_with_trades(self):
         # Trade gagnant
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        self.logger.log_exit("m1", 0.70, "tp")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        self.logger.log_exit(M1, 0.70, "tp")
 
         # Trade perdant
-        self.logger.log_entry("m2", "t2", "Q", "YES", 0.60, 100, 166.67)
-        self.logger.log_exit("m2", 0.40, "sl")
+        self.logger.log_entry(M2, "t2", "Q", "YES", 0.60, 100, 166.67)
+        self.logger.log_exit(M2, 0.40, "sl")
 
         stats = self.logger.get_stats()
         self.assertEqual(stats["total_trades"], 2)
@@ -204,14 +219,14 @@ class TestTradeLogger(unittest.TestCase):
 
     def test_get_stats_profit_factor(self):
         # 2 trades gagnants, 1 perdant
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.40, 100, 250)
-        self.logger.log_exit("m1", 0.80, "tp")
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.40, 100, 250)
+        self.logger.log_exit(M1, 0.80, "tp")
 
-        self.logger.log_entry("m2", "t2", "Q", "YES", 0.30, 100, 333.33)
-        self.logger.log_exit("m2", 0.60, "tp")
+        self.logger.log_entry(M2, "t2", "Q", "YES", 0.30, 100, 333.33)
+        self.logger.log_exit(M2, 0.60, "tp")
 
-        self.logger.log_entry("m3", "t3", "Q", "YES", 0.70, 100, 142.86)
-        self.logger.log_exit("m3", 0.30, "sl")
+        self.logger.log_entry(M3, "t3", "Q", "YES", 0.70, 100, 142.86)
+        self.logger.log_exit(M3, 0.30, "sl")
 
         stats = self.logger.get_stats()
         self.assertEqual(stats["total_trades"], 3)
@@ -225,8 +240,8 @@ class TestTradeLogger(unittest.TestCase):
         self.assertEqual(POLYMARKET_FEE_PCT, 0.02)
 
     def test_fees_always_positive(self):
-        self.logger.log_entry("m1", "t1", "Q", "YES", 0.50, 100, 200)
-        closed = self.logger.log_exit("m1", 0.30, "sl")  # Trade perdant
+        self.logger.log_entry(M1, "t1", "Q", "YES", 0.50, 100, 200)
+        closed = self.logger.log_exit(M1, 0.30, "sl")  # Trade perdant
         self.assertGreater(closed.fees_entry, 0)
         self.assertGreater(closed.fees_exit, 0)
         self.assertGreater(closed.fees_total, 0)
