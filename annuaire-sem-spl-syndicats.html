@@ -116,6 +116,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <div class="stat" title="Fiches avec email = prêtes pour emailing"><span class="stat-n" id="s-email" style="color:#93C5FD">—</span> 📧 email</div>
     <div class="stat" title="Fiches avec téléphone"><span class="stat-n" id="s-tel" style="color:#FCD34D">—</span> 📞 tél</div>
     <div class="stat" title="Structures affichées après filtres"><span class="stat-n" id="s-shown">—</span> affichées</div>
+    <div class="stat" title="Marqués comme clients"><span class="stat-n" id="s-clients" style="color:#86EFAC">—</span> ✅ clients</div>
   </div>
 </div>
 <div class="wrap">
@@ -173,6 +174,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="type-asc">Type</option>
       <option value="dept-asc">Département</option>
       <option value="secteur-asc">Secteur</option>
+      <option value="crm-asc">Statut CRM</option>
     </select>
     <select id="secteur-filter" onchange="render()" title="Filtrer par secteur d'activité">
       <option value="">Tous les secteurs</option>
@@ -191,6 +193,14 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="Adresse + président = prêt courrier"><input type="checkbox" id="publipostable" onchange="render()"> 📬 Courrier</label>
     <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="Avec email uniquement"><input type="checkbox" id="with-email" onchange="render()"> 📧 Email</label>
     <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer" title="Avec téléphone uniquement"><input type="checkbox" id="with-tel" onchange="render()"> 📞 Tél</label>
+    <select id="crm-filter" onchange="render()" title="Filtrer par statut de prospection" style="font-size:12px;padding:5px 8px">
+      <option value="">Tous statuts</option>
+      <option value="prospect">☐ Prospects (non contactés)</option>
+      <option value="contacted">📤 Contactés</option>
+      <option value="client">✅ Clients</option>
+      <option value="not_interested">⛔ Pas intéressés</option>
+      <option value="prospect+contacted">📋 Prospects + Contactés</option>
+    </select>
     <span id="count-label"></span>
   </div>
   <div class="toolbar" style="margin-top:0;padding-top:0">
@@ -2016,6 +2026,15 @@ function getFiltered(){
     if(publiOnly&&(!d.adresse||!d.president))return false;
     if(emailOnly&&!d.email)return false;
     if(telOnly&&!d.tel)return false;
+    const crmF=document.getElementById('crm-filter').value;
+    if(crmF){
+      const st=getCRMStatus(d.siren).status||'prospect';
+      if(crmF==='prospect'&&st!=='')return false;
+      if(crmF==='contacted'&&st!=='contacted')return false;
+      if(crmF==='client'&&st!=='client')return false;
+      if(crmF==='not_interested'&&st!=='not_interested')return false;
+      if(crmF==='prospect+contacted'&&st!==''&&st!=='contacted')return false;
+    }
     if(secteurF){const s=d.secteur.toLowerCase();const map={eau:'eau|rivière|bassin|assainissement|hydraul|huveaune|gapeau|argens',dechets:'déchet|ordure|valorisation|évodia|sydevom|sytrad',transport:'transport|mobilité|sytral|smmag',energie:'énergie|électri',amenagement:'aménagement|urbanisme|scot|zone industrialo',habitat:'habitat|logement|immobili|construction',tourisme:'tourisme|station|ski|montagne|loisir|plage',culture:'éducation|culture|musique|conservatoire|école',numerique:'numérique|informatique|haut débit|inforoute',admin:'administration territoriale',dev:'développement'};if(map[secteurF]&&!new RegExp(map[secteurF],'i').test(s))return false;}
     if(!q)return true;
     return d.nom.toLowerCase().includes(q)||d.ville.toLowerCase().includes(q)||
@@ -2028,8 +2047,15 @@ function getFiltered(){
   const sField=sf2||sortField;
   const sDir=sd2||sortDir;
   rows.sort((a,b)=>{
-    let va=(a[sField]||'').toLowerCase();
-    let vb=(b[sField]||'').toLowerCase();
+    let va,vb;
+    if(sField==='crm'){
+      const order={'client':0,'contacted':1,'':2,'not_interested':3};
+      va=order[getCRMStatus(a.siren).status||'']||2;
+      vb=order[getCRMStatus(b.siren).status||'']||2;
+    } else {
+      va=(a[sField]||'').toLowerCase();
+      vb=(b[sField]||'').toLowerCase();
+    }
     return sDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
   });
   return rows;
@@ -2053,7 +2079,7 @@ function render(){
         <td><span class="secteur">${d.adresse?esc(d.adresse):'—'}</span></td>
         <td><span class="secteur">${esc(d.secteur)}</span></td>
         <td>${d.president?esc(d.president):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}</td>
-        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}<div style="margin-top:3px"><button onclick="toggleContact('${esc(d.siren)}')" class="btn-tag" style="font-size:9px;padding:1px 6px;border-radius:3px;border:1px solid var(--border);background:${isContacted(d.siren)?'#D1FAE5':'var(--bg)'};color:${isContacted(d.siren)?'#065F46':'var(--muted)'};cursor:pointer" title="Marquer comme contacté">${isContacted(d.siren)?'✓ Contacté':'☐ À contacter'}</button></div></td>
+        <td>${d.tel||d.email?[d.tel?'<div style="font-size:12px">'+esc(d.tel)+'</div>':'',d.email?'<a href="mailto:'+esc(d.email)+'" style="color:var(--bleu-l);font-size:12px;text-decoration:none">'+esc(d.email)+'</a>':''].join(''):'<span style="color:#CBD5E1;font-style:italic;font-size:12px">—</span>'}<div style="margin-top:3px"><button onclick="cycleCRM('${esc(d.siren)}')" style="font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid var(--border);background:${CRM_COLORS[getCRMStatus(d.siren).status]||'var(--bg)'};color:${CRM_TEXT_COLORS[getCRMStatus(d.siren).status]||'var(--muted)'};cursor:pointer;font-weight:500" title="Cliquez pour changer le statut : Prospect → Contacté → Client → Pas intéressé">${CRM_LABELS[getCRMStatus(d.siren).status]||'☐ Prospect'}${getCRMStatus(d.siren).date?' ('+getCRMStatus(d.siren).date+')':''}</button></div></td>
       </tr>`;
     }).join('');
   }
@@ -2062,6 +2088,8 @@ function render(){
   document.getElementById('s-email').textContent=rows.filter(d=>d.email).length;
   document.getElementById('s-tel').textContent=rows.filter(d=>d.tel).length;
   document.getElementById('s-shown').textContent=rows.length;
+  const crm=getCRM();
+  document.getElementById('s-clients').textContent=Object.values(crm).filter(v=>v.status==='client').length;
   document.getElementById('count-label').textContent=rows.length===DATA.length?DATA.length+' structures':rows.length+' / '+DATA.length+' structures';
 }
 
@@ -2120,14 +2148,14 @@ function exportPublipostage(){
   const wb=XLSX.utils.book_new();
 
   // Onglet 1: Courrier (enveloppe à fenêtre)
-  const c1=[["Civilité","Prénom","Nom","Fonction","Structure","Type","Adresse ligne 1","Code postal","Ville","Département","Région","Téléphone","Email","Bloc adresse fenêtre"]];
+  const c1=[["Statut CRM","Date contact","Civilité","Prénom","Nom","Fonction","Structure","Type","Adresse ligne 1","Code postal","Ville","Département","Région","Téléphone","Email","Bloc adresse fenêtre"]];
   rows.forEach(d=>{
     const a=parseAddr(d.adresse);
     const n=parseName(d.president);
     const civ=getCiv(n.prenom);
     const fonction=civ==="Mme"?"Madame la Présidente":"Monsieur le Président";
     const bloc=fonction+"\n"+d.nom+"\n"+(a.rue?a.rue+"\n":"")+(a.cp?a.cp+" ":"")+(a.ville||d.ville);
-    c1.push([civ,n.prenom,n.nom,"Président(e)",d.nom,d.type,a.rue,a.cp,a.ville||d.ville,d.dept+" - "+d.deptNom,REGIONS[d.dept]||"",d.tel,d.email,bloc]);
+    const crm_s=getCRMStatus(d.siren);c1.push([CRM_LABELS[crm_s.status]||'Prospect',crm_s.date||'',civ,n.prenom,n.nom,"Président(e)",d.nom,d.type,a.rue,a.cp,a.ville||d.ville,d.dept+" - "+d.deptNom,REGIONS[d.dept]||"",d.tel,d.email,bloc]);
   });
   const ws1=XLSX.utils.aoa_to_sheet(c1);
   ws1["!cols"]=[{wch:5},{wch:15},{wch:20},{wch:12},{wch:35},{wch:8},{wch:40},{wch:7},{wch:25},{wch:25},{wch:25},{wch:16},{wch:30},{wch:45}];
@@ -2203,14 +2231,50 @@ function showToast(msg,bg,ms){
   document.body.appendChild(t);setTimeout(()=>t.remove(),ms||3000);
 }
 
-/* ══ SUIVI CONTACTS ══ */
-function getContacted(){try{return JSON.parse(localStorage.getItem('contacted')||'{}');}catch(e){return{};}}
-function isContacted(siren){return !!getContacted()[siren];}
-function toggleContact(siren){
-  const c=getContacted();
-  if(c[siren]){delete c[siren];}else{c[siren]=new Date().toISOString().slice(0,10);}
-  localStorage.setItem('contacted',JSON.stringify(c));
+/* ══ CRM PROSPECTION ══ */
+const CRM_KEY='crm_status';
+const CRM_LABELS={
+  '':'☐ Prospect',
+  'contacted':'📤 Contacté',
+  'client':'✅ Client',
+  'not_interested':'⛔ Pas intéressé'
+};
+const CRM_COLORS={
+  '':'var(--bg)',
+  'contacted':'#DBEAFE',
+  'client':'#D1FAE5',
+  'not_interested':'#FEE2E2'
+};
+const CRM_TEXT_COLORS={
+  '':'var(--muted)',
+  'contacted':'#1E40AF',
+  'client':'#065F46',
+  'not_interested':'#991B1B'
+};
+
+function getCRM(){try{return JSON.parse(localStorage.getItem(CRM_KEY)||'{}');}catch(e){return{};}}
+function getCRMStatus(siren){return getCRM()[siren]||{status:'',date:''};}
+function isContacted(siren){return getCRMStatus(siren).status==='contacted';}
+
+function cycleCRM(siren){
+  const c=getCRM();
+  const current=(c[siren]||{}).status||'';
+  const order=['','contacted','client','not_interested'];
+  const next=order[(order.indexOf(current)+1)%order.length];
+  if(next){
+    c[siren]={status:next,date:new Date().toISOString().slice(0,10)};
+  } else {
+    delete c[siren];
+  }
+  localStorage.setItem(CRM_KEY,JSON.stringify(c));
   render();
+}
+
+function getCRMCounts(){
+  const crm=getCRM();
+  const counts={prospect:0,contacted:0,client:0,not_interested:0};
+  // Count based on current filtered view
+  return counts;
 }
 
 /* ══ INIT ══ */
