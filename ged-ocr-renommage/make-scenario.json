@@ -109,7 +109,7 @@
       "mapper": {
         "fileId": "{{1.id}}",
         "newName": "{{trim(4.data.candidates[].content.parts[].text)}}",
-        "targetFolderId": "REMPLACER_PAR_ID_DOSSIER_SCANS_TRAITES",
+        "targetFolderId": "1SpW0Us4bcLyrnHSSxq4nxMkYF1eDoe_l",
         "newDriveId": "MyDrive"
       },
       "metadata": {
