@@ -25,36 +25,25 @@ const CONFIG = {
 };
 
 // === PROMPT GEMINI ===
-const PROMPT = `Tu es un assistant de gestion documentaire.
-Analyse ce document scanne et genere exactement un nom de fichier.
+const PROMPT = `INSTRUCTION: Generate ONLY a filename. No explanation. No quotes.
 
-REGLES STRICTES :
-- Format : AAAA-MM-JJ_Type_Emetteur_Detail.pdf
-- Max 80 caracteres total
-- Pas d'espaces : remplace par des tirets
-- Pas d'accents (e->e, e->e, c->c, etc.)
-- Pas de caracteres speciaux sauf _ et - et EUR
-- Tout en minuscules sauf la premiere lettre de chaque segment
+FORMAT: YYYY-MM-DD_Type_Emetteur_Detail.pdf
 
-TYPES DE DOCUMENTS (utilise exactement ces valeurs) :
-Facture / Devis / Contrat / Releve / Avis / Courrier / Bulletin / Attestation / Acte / Quittance / Rapport / Autre
+RULES:
+- YYYY-MM-DD = document date (use 0000-00-00 if missing)
+- Type = one of: Facture, Devis, Contrat, Releve, Avis, Courrier, Bulletin, Attestation, Acte, Quittance, Rapport, Autre
+- Emetteur = short company name (max 20 chars, no spaces use dashes)
+- Detail = amount if invoice (ex: 312EUR) or keyword (ex: Resiliation)
+- No accents, no spaces, no special chars except _ - EUR
+- Max 80 characters total
 
-LOGIQUE DE NOMMAGE :
-1. DATE : prends la date du document (pas la date d'aujourd'hui). Si absente, utilise 0000-00-00
-2. TYPE : identifie parmi la liste ci-dessus
-3. EMETTEUR : nom court de l'entreprise/organisme emetteur (max 20 caracteres, abrege si besoin)
-4. DETAIL : montant TTC si facture/devis (ex: 1250EUR), ou mot-cle si autre type (ex: Resiliation, Avenant, Solde)
-
-Exemples valides :
+EXAMPLES:
 2026-03-28_Facture_EDF_312EUR.pdf
 2026-01-15_Contrat_ELCR-Maconnerie_Travaux.pdf
-2026-02-01_Releve_BNP_Fevrier2026.pdf
 2025-12-10_Avis_Impots_Taxe-Fonciere.pdf
-2026-03-05_Devis_Plombier-Martin_850EUR.pdf
 0000-00-00_Courrier_Mairie_Urbanisme.pdf
 
-Reponds UNIQUEMENT avec le nom du fichier.
-Aucune explication. Aucun guillemet. Aucun point avant .pdf.`;
+OUTPUT FORMAT: Just the filename, nothing else. Example: 2026-03-28_Facture_EDF_312EUR.pdf`;
 
 /**
  * Installation : cree le trigger automatique toutes les 10 minutes
@@ -188,16 +177,38 @@ function analyzeWithGemini(file) {
   const json = JSON.parse(response.getContentText());
 
   if (json.candidates && json.candidates[0] && json.candidates[0].content) {
-    let name = json.candidates[0].content.parts[0].text.trim();
-    // Nettoyer les guillemets ou espaces parasites
-    name = name.replace(/["`]/g, "").trim();
-    // S'assurer que ca finit par .pdf
-    if (!name.endsWith(".pdf")) {
-      name = name + ".pdf";
+    var rawText = json.candidates[0].content.parts[0].text.trim();
+    Logger.log("Reponse brute Gemini: " + rawText);
+
+    // Nettoyer les guillemets, backticks, espaces
+    var name = rawText.replace(/["`']/g, "").trim();
+
+    // Extraire le nom de fichier si Gemini a ajoute du texte autour
+    var match = name.match(/\d{4}-\d{2}-\d{2}_[A-Za-z][\w\-]*_[\w\-]+[\w\-€EUR]*\.pdf/);
+    if (match) {
+      return match[0];
     }
-    return name;
+
+    // Si le format est presque bon (contient .pdf et des underscores)
+    if (name.indexOf(".pdf") > -1 && name.indexOf("_") > -1) {
+      // Garder seulement la partie avant et incluant .pdf
+      var pdfIndex = name.indexOf(".pdf");
+      name = name.substring(0, pdfIndex + 4);
+      // Remplacer les espaces par des tirets
+      name = name.replace(/ /g, "-");
+      return name;
+    }
+
+    // Dernier recours : reformater la reponse en nom valide
+    name = name.replace(/\.pdf$/i, "");
+    name = name.replace(/ /g, "-");
+    name = name.replace(/[^a-zA-Z0-9_\-]/g, "");
+    if (name.length > 60) name = name.substring(0, 60);
+    return "0000-00-00_Autre_" + name + ".pdf";
   }
 
+  // Log erreur API
+  Logger.log("Erreur API Gemini: " + response.getContentText().substring(0, 200));
   return null;
 }
 
