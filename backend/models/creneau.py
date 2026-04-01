@@ -39,4 +39,6 @@ class Creneau(Base):
 
     @property
     def label(self) -> str:
-        return f"{self.heure_debut.strftime('%H:%M')}-{self.heure_fin.strftime('%H:%M')}"
+        start = str(self.heure_debut)[:5] if self.heure_debut else "??:??"
+        end = str(self.heure_fin)[:5] if self.heure_fin else "??:??"
+        return f"{start}-{end}"

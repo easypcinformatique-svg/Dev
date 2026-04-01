@@ -88,8 +88,10 @@ async def get_creneaux_disponibles(db: AsyncSession, jour: date) -> list[Creneau
 
 
 async def incrementer_creneau(db: AsyncSession, creneau_id: int) -> Creneau | None:
-    """Incremente le compteur du creneau. Retourne None si plein."""
-    result = await db.execute(select(Creneau).where(Creneau.id == creneau_id))
+    """Incremente le compteur du creneau avec verrou pour eviter les race conditions."""
+    result = await db.execute(
+        select(Creneau).where(Creneau.id == creneau_id).with_for_update()
+    )
     creneau = result.scalar_one_or_none()
     if not creneau or not creneau.disponible:
         return None
