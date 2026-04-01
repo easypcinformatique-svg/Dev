@@ -12,35 +12,32 @@ class BaseScraper:
     base_url = ""
 
     CATEGORY_KEYWORDS = {
-        "immobilier": [
-            "appartement", "maison", "terrain", "local", "immeuble",
-            "villa", "studio", "parking", "garage", "bureau", "commerce",
-            "entrepot", "hangar", "fonds de commerce"
+        "appartement": [
+            "appartement", "studio", "t1", "t2", "t3", "t4", "t5",
+            "f1", "f2", "f3", "f4", "f5", "duplex", "loft",
+            "pieces", "etage", "ascenseur", "balcon", "terrasse"
         ],
-        "vehicules": [
-            "voiture", "vehicule", "auto", "moto", "scooter", "camion",
-            "utilitaire", "fourgon", "caravane", "bateau", "quad",
-            "remorque", "tracteur", "poids lourd"
+        "maison": [
+            "maison", "villa", "pavillon", "bastide", "mas",
+            "provencale", "piscine", "jardin", "dependances",
+            "chambres", "plain-pied"
         ],
-        "mobilier": [
-            "meuble", "canape", "table", "chaise", "armoire", "lit",
-            "bureau", "commode", "buffet", "etagere", "cuisine equipee",
-            "electromenager", "vaisselle"
+        "terrain": [
+            "terrain", "parcelle", "constructible", "viabilise",
+            "lotissement", "foncier", "zone uc", "plu", "cos"
         ],
-        "art": [
-            "tableau", "peinture", "sculpture", "lithographie", "estampe",
-            "gravure", "dessin", "aquarelle", "huile sur toile",
-            "bronze", "ceramique", "porcelaine", "antiquite"
+        "local": [
+            "local", "commercial", "bureau", "boutique", "commerce",
+            "profession liberale", "vitrine", "entrepot", "hangar",
+            "atelier", "fonds de commerce"
         ],
-        "bijoux": [
-            "bijou", "bague", "collier", "bracelet", "montre", "pendentif",
-            "boucle", "diamant", "or", "argent", "perle", "saphir",
-            "emeraude", "rubis"
+        "parking": [
+            "parking", "garage", "box", "place de stationnement",
+            "sous-sol", "souterrain"
         ],
-        "electronique": [
-            "ordinateur", "telephone", "tablette", "ecran", "televiseur",
-            "tv", "console", "imprimante", "serveur", "informatique",
-            "materiel informatique", "iphone", "samsung"
+        "immeuble": [
+            "immeuble", "rapport", "copropriete", "lots",
+            "rendement", "locatif", "investissement"
         ]
     }
 

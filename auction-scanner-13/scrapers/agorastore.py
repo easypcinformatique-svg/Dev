@@ -1,4 +1,4 @@
-"""Scraper pour Agorastore.fr - Ventes aux encheres de materiels publics."""
+"""Scraper pour Agorastore.fr - Biens immobiliers publics aux encheres."""
 
 import re
 from datetime import datetime, timedelta
@@ -13,13 +13,13 @@ except ImportError:
 
 
 class AgorastoreScraper(BaseScraper):
-    """Scraper pour agorastore.fr (materiels publics et collectivites)."""
+    """Scraper pour agorastore.fr (biens immobiliers publics)."""
 
     name = "Agorastore"
     base_url = "https://www.agorastore.fr"
 
     def scan(self, department="13", cities=None):
-        """Scan les ventes de materiels publics dans le 13."""
+        """Scan les ventes immobilieres publiques dans le 13."""
         if not HAS_DEPS:
             return self._get_demo_data()
 
@@ -32,7 +32,8 @@ class AgorastoreScraper(BaseScraper):
             search_url = f"{self.base_url}/recherche"
             params = {
                 "departement": "13",
-                "localisation": "Bouches-du-Rhone"
+                "localisation": "Bouches-du-Rhone",
+                "categorie": "immobilier"
             }
 
             response = requests.get(search_url, params=params, headers=headers, timeout=15)
@@ -56,7 +57,7 @@ class AgorastoreScraper(BaseScraper):
         return auctions
 
     def _parse_item(self, item):
-        """Parse un lot Agorastore."""
+        """Parse un bien immobilier Agorastore."""
         title_el = item.select_one("h2, h3, .title, .product-title")
         if not title_el:
             return None
@@ -99,7 +100,7 @@ class AgorastoreScraper(BaseScraper):
             url=url,
             image_url=image_url,
             source_name="Agorastore",
-            auction_type="Vente materiel public"
+            auction_type="Vente bien public"
         )
 
     def _parse_date(self, date_text):
@@ -117,67 +118,55 @@ class AgorastoreScraper(BaseScraper):
         return date_text
 
     def _get_demo_data(self):
-        """Donnees de demonstration materiel public."""
+        """Donnees de demonstration biens immobiliers publics."""
         today = datetime.now()
         return [
             self.format_auction(
-                title="Lot de 12 ordinateurs Dell - Mairie de Marseille",
-                description="Ordinateurs de bureau Dell OptiPlex, ecrans 24 pouces inclus, claviers et souris. Bon etat general, 3 ans d'usage.",
-                price_estimate=100,
-                date_vente=(today + timedelta(days=4)).strftime("%Y-%m-%d"),
-                ville="Marseille",
-                address="Hotel de Ville, Quai du Port",
-                url="https://www.agorastore.fr/",
-                image_url="",
-                source_name="Agorastore",
-                auction_type="Vente materiel public"
-            ),
-            self.format_auction(
-                title="Vehicule utilitaire Renault Master - Conseil Departemental",
-                description="Renault Master L2H2 DCI 130, 2019, 85000km, revision a jour. Signalisation retiree.",
-                price_estimate=8500,
-                date_vente=(today + timedelta(days=6)).strftime("%Y-%m-%d"),
-                ville="Aix-en-Provence",
-                address="Parc auto departemental",
-                url="https://www.agorastore.fr/",
-                image_url="",
-                source_name="Agorastore",
-                auction_type="Vente materiel public"
-            ),
-            self.format_auction(
-                title="Mobilier de bureau - Restructuration administration",
-                description="Lot comprenant: 20 bureaux, 20 chaises de bureau, 10 armoires metalliques, 5 tables de reunion. Enlevement sur place.",
-                price_estimate=200,
-                date_vente=(today + timedelta(days=8)).strftime("%Y-%m-%d"),
-                ville="Martigues",
-                address="Centre administratif, Avenue Louis Sammut",
-                url="https://www.agorastore.fr/",
-                image_url="",
-                source_name="Agorastore",
-                auction_type="Vente materiel public"
-            ),
-            self.format_auction(
-                title="Tondeuse autoportee John Deere - Commune d'Aubagne",
-                description="Tondeuse autoportee John Deere X350, 2020, bon etat, 500h. Avec bac de ramassage et kit mulching.",
-                price_estimate=1200,
+                title="Ancien bureau de poste 150m2 - Transformation possible",
+                description="Ancien bureau de poste desaffecte, 150m2 sur 2 niveaux, facade pierre. Possibilite transformation en habitation ou commerce. Toiture refaite 2021.",
+                price_estimate=110000,
                 date_vente=(today + timedelta(days=9)).strftime("%Y-%m-%d"),
-                ville="Aubagne",
-                address="Services techniques municipaux",
+                ville="Arles",
+                address="Direction des Domaines, Prefecture des Bouches-du-Rhone",
                 url="https://www.agorastore.fr/",
                 image_url="",
                 source_name="Agorastore",
-                auction_type="Vente materiel public"
+                auction_type="Cession bien public"
             ),
             self.format_auction(
-                title="Lot photocopieurs Konica Minolta - Hopital Nord",
-                description="3 photocopieurs multifonctions Konica Minolta Bizhub C258, sous contrat maintenance jusqu'en 2024. Fonctionnels.",
-                price_estimate=300,
-                date_vente=(today + timedelta(days=11)).strftime("%Y-%m-%d"),
-                ville="Marseille",
-                address="Hopital Nord, Chemin des Bourrely",
+                title="Logement de fonction T4 90m2 - Ecole communale",
+                description="Ancien logement de fonction attenant a l'ecole communale. T4, 90m2, jardin 300m2. Libre de toute occupation. Bon etat general.",
+                price_estimate=165000,
+                date_vente=(today + timedelta(days=15)).strftime("%Y-%m-%d"),
+                ville="Istres",
+                address="Mairie d'Istres, Service du patrimoine",
                 url="https://www.agorastore.fr/",
                 image_url="",
                 source_name="Agorastore",
-                auction_type="Vente materiel public"
+                auction_type="Cession bien public"
+            ),
+            self.format_auction(
+                title="Terrain communal 1200m2 - Zone constructible",
+                description="Parcelle communale en zone UC du PLU, 1200m2, plat, viabilise en limite. COS permettant R+2. Quartier residentiel proche ecoles.",
+                price_estimate=145000,
+                date_vente=(today + timedelta(days=20)).strftime("%Y-%m-%d"),
+                ville="Vitrolles",
+                address="Mairie de Vitrolles",
+                url="https://www.agorastore.fr/",
+                image_url="",
+                source_name="Agorastore",
+                auction_type="Cession bien public"
+            ),
+            self.format_auction(
+                title="Local associatif 60m2 - Centre ville Martigues",
+                description="Local en rez-de-chaussee, 60m2, vitrine sur rue pietonne. Ancien local associatif, bon etat. Ideal profession liberale ou commerce.",
+                price_estimate=78000,
+                date_vente=(today + timedelta(days=11)).strftime("%Y-%m-%d"),
+                ville="Martigues",
+                address="Mairie de Martigues, Direction de l'immobilier",
+                url="https://www.agorastore.fr/",
+                image_url="",
+                source_name="Agorastore",
+                auction_type="Cession bien public"
             ),
         ]

@@ -1,6 +1,6 @@
 """
-Scanner d'encheres - Departement 13 (Bouches-du-Rhone)
-Application web Flask pour scanner et agreger les ventes aux encheres
+Scanner Immobilier Encheres 13 - Departement 13 (Bouches-du-Rhone)
+Application web Flask pour scanner les ventes immobilieres aux encheres
 dans le departement 13 (Marseille, Aix-en-Provence, etc.)
 """
 
@@ -25,13 +25,13 @@ auction_cache = {
 }
 
 CATEGORIES = {
-    "all": "Toutes categories",
-    "immobilier": "Immobilier",
-    "vehicules": "Vehicules",
-    "mobilier": "Mobilier & Objets",
-    "art": "Art & Antiquites",
-    "bijoux": "Bijoux & Montres",
-    "electronique": "Electronique",
+    "all": "Tous types de biens",
+    "appartement": "Appartements",
+    "maison": "Maisons & Villas",
+    "terrain": "Terrains",
+    "local": "Locaux commerciaux",
+    "parking": "Parkings & Garages",
+    "immeuble": "Immeubles de rapport",
     "autre": "Autre"
 }
 

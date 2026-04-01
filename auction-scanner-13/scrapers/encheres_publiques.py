@@ -121,10 +121,10 @@ class EncheresPubliquesScraper(BaseScraper):
         today = datetime.now()
         return [
             self.format_auction(
-                title="Appartement T2 45m2 - Quartier Castellane",
-                description="Vente sur saisie immobiliere. Appartement T2, 45m2, 3eme etage, cave. Mise a prix fixee par le juge.",
+                title="Appartement T2 45m2 - Saisie immobiliere - Castellane",
+                description="Vente sur saisie immobiliere. Appartement T2, 45m2, 3eme etage, cave. Mise a prix fixee par le juge. Quartier en pleine renovation.",
                 price_estimate=65000,
-                date_vente=(today + timedelta(days=12)).strftime("%Y-%m-%d"),
+                date_vente=(today + timedelta(days=10)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille, 6 rue Joseph Autran",
                 url="https://www.encheres-publiques.com/",
@@ -133,10 +133,10 @@ class EncheresPubliquesScraper(BaseScraper):
                 auction_type="Saisie immobiliere"
             ),
             self.format_auction(
-                title="Local commercial 80m2 - Centre ville",
-                description="Local commercial en rez-de-chaussee, vitrine sur rue, excellent emplacement. Vente sur liquidation judiciaire.",
+                title="Local commercial 80m2 - Liquidation judiciaire - Centre Aix",
+                description="Local commercial en rez-de-chaussee, vitrine 6m sur rue passante, excellent emplacement centre-ville. Possibilite transformation habitation.",
                 price_estimate=95000,
-                date_vente=(today + timedelta(days=18)).strftime("%Y-%m-%d"),
+                date_vente=(today + timedelta(days=16)).strftime("%Y-%m-%d"),
                 ville="Aix-en-Provence",
                 address="Tribunal Judiciaire d'Aix-en-Provence",
                 url="https://www.encheres-publiques.com/",
@@ -146,7 +146,7 @@ class EncheresPubliquesScraper(BaseScraper):
             ),
             self.format_auction(
                 title="Villa T5 150m2 avec piscine - Les Alpilles",
-                description="Villa provencale, 5 pieces, 150m2, terrain 2000m2, piscine, garage double. Vue Alpilles. Vente sur licitation.",
+                description="Villa provencale, 5 pieces, 150m2 habitables, terrain 2000m2, piscine 10x5, garage double. Vue Alpilles. DPE classe C.",
                 price_estimate=320000,
                 date_vente=(today + timedelta(days=25)).strftime("%Y-%m-%d"),
                 ville="Salon-de-Provence",
@@ -157,15 +157,39 @@ class EncheresPubliquesScraper(BaseScraper):
                 auction_type="Vente sur licitation"
             ),
             self.format_auction(
-                title="Parking souterrain - Vieux Port",
-                description="Place de parking en sous-sol securise, residence recente, acces badge. Proche Vieux-Port.",
+                title="Parking souterrain - Vieux Port - Investissement",
+                description="Place de parking en sous-sol securise, residence recente, acces badge 24h/24. A 200m du Vieux-Port. Rendement locatif 5%.",
                 price_estimate=18000,
-                date_vente=(today + timedelta(days=10)).strftime("%Y-%m-%d"),
+                date_vente=(today + timedelta(days=7)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille",
                 url="https://www.encheres-publiques.com/",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Vente judiciaire"
+            ),
+            self.format_auction(
+                title="Immeuble de rapport 6 lots - Quartier Noailles",
+                description="Immeuble R+3, 6 appartements (2xT1 + 3xT2 + 1xT3), 280m2 total. Loyers actuels 3200 EUR/mois. Ravalement recente.",
+                price_estimate=420000,
+                date_vente=(today + timedelta(days=30)).strftime("%Y-%m-%d"),
+                ville="Marseille",
+                address="Tribunal Judiciaire de Marseille",
+                url="https://www.encheres-publiques.com/",
+                image_url="",
+                source_name="Encheres Publiques",
+                auction_type="Vente judiciaire"
+            ),
+            self.format_auction(
+                title="Appartement T3 70m2 - Dernier etage - Aubagne",
+                description="Appartement T3 lumineux, 70m2, dernier etage, terrasse 20m2, vue collines. 2 places parking. Residence avec piscine.",
+                price_estimate=145000,
+                date_vente=(today + timedelta(days=12)).strftime("%Y-%m-%d"),
+                ville="Aubagne",
+                address="Tribunal Judiciaire de Marseille",
+                url="https://www.encheres-publiques.com/",
+                image_url="",
+                source_name="Encheres Publiques",
+                auction_type="Saisie immobiliere"
             ),
         ]
