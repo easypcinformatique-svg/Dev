@@ -88,133 +88,17 @@ jobs:
           print(f"✅ Étape 1 : {len(updates)} mises à jour (adresses + dirigeants)")
           PYEOF
 
-      - name: "Étape 2 : Scraping des sites officiels — téléphones et emails"
+      - name: "Étape 2 : Scraping annuaire-entreprises.data.gouv.fr — téléphones"
         run: |
           python3 << 'PYEOF'
-          import re, time, json
+          import re, time
           import requests
-          from bs4 import BeautifulSoup
-
-          with open("annuaire-sem-spl-syndicats.html", "r") as f:
-              html = f.read()
-
-          # Build a map of SIREN → annuaire-entreprises URL to get website
-          API = "https://recherche-entreprises.api.gouv.fr/search"
-          pattern = re.compile(r'\{nom:"([^"]*)".*?tel:"([^"]*)".*?email:"([^"]*)".*?siren:"(\d{9,})"\}')
-          matches = list(pattern.finditer(html))
-
-          updates = []
-          scraped = 0
-          errors = 0
-
-          for m in matches:
-              nom, tel, email, siren = m.group(1), m.group(2), m.group(3), m.group(4)
-              if tel and email:
-                  continue
-
-              try:
-                  # Get website from API
-                  r = requests.get(f"{API}?q={siren}&per_page=1",
-                      headers={"User-Agent": "annuaire-bot/1.0"}, timeout=10)
-                  data = r.json()
-                  results = data.get("results", [])
-                  if not results: continue
-
-                  # Try to get complements (website)
-                  complements = results[0].get("complements", {})
-                  # The API doesn't always have website, try nom_url
-                  siege = results[0].get("siege", {})
-
-                  # Build potential website URLs from the nom
-                  nom_clean = nom.lower().replace(" ", "").replace("'", "")
-                  potential_urls = []
-
-                  # Check if there's a known website pattern
-                  nom_slug = re.sub(r'[^a-z0-9]', '', nom.lower())
-
-                  # Try common patterns for public structures
-                  ville = siege.get("libelle_commune", "").lower().replace(" ", "-")
-
-                  # For now, try the annuaire-entreprises page which sometimes has contacts
-                  ae_url = f"https://annuaire-entreprises.data.gouv.fr/entreprise/{siren}"
-
-                  try:
-                      resp = requests.get(ae_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-                      if resp.status_code == 200:
-                          soup = BeautifulSoup(resp.text, 'lxml')
-                          page_text = soup.get_text()
-
-                          # Extract phone numbers (French format)
-                          if not tel:
-                              phones = re.findall(r'(?:0[1-9])[\s.-]?(?:\d{2}[\s.-]?){4}', page_text)
-                              if phones:
-                                  tel_found = phones[0].strip()
-                                  # Format: 0X XX XX XX XX
-                                  digits = re.sub(r'\D', '', tel_found)
-                                  if len(digits) == 10:
-                                      tel_found = f"{digits[:2]} {digits[2:4]} {digits[4:6]} {digits[6:8]} {digits[8:10]}"
-
-                          # Extract emails
-                          if not email:
-                              emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.-]+', page_text)
-                              # Filter out common non-contact emails
-                              for e in emails:
-                                  if not any(x in e.lower() for x in ['noreply', 'example', 'test', '@gouv.fr']):
-                                      email_found = e
-                                      break
-
-                  except: pass
-
-                  # Apply updates
-                  entry = html[m.start():m.end()]
-                  new_entry = entry
-                  changed = False
-
-                  if 'tel_found' in dir() and tel_found and not tel:
-                      new_entry = new_entry.replace('tel:""', f'tel:"{tel_found}"')
-                      changed = True
-                      del tel_found
-
-                  if 'email_found' in dir() and email_found and not email:
-                      new_entry = new_entry.replace('email:""', f'email:"{email_found}"')
-                      changed = True
-                      del email_found
-
-                  if changed:
-                      updates.append((m.start(), m.end(), new_entry, nom))
-                      scraped += 1
-                      print(f"  ✅ {nom}")
-
-                  time.sleep(0.5)  # Be nice to servers
-
-              except Exception as e:
-                  errors += 1
-                  if errors > 20: break
-                  time.sleep(1)
-
-          # Apply updates
-          updates.sort(key=lambda x: x[0], reverse=True)
-          for start, end, new_text, nom in updates:
-              html = html[:start] + new_text + html[end:]
-
-          with open("annuaire-sem-spl-syndicats.html", "w") as f:
-              f.write(html)
-          print(f"\n✅ Étape 2 : {scraped} contacts trouvés par scraping, {errors} erreurs")
-          PYEOF
-
-      - name: "Étape 3 : Recherche contacts via Pages Jaunes / Google"
-        run: |
-          python3 << 'PYEOF'
-          import re, time, json
-          import requests
-          from bs4 import BeautifulSoup
           from datetime import datetime
 
           with open("annuaire-sem-spl-syndicats.html", "r") as f:
               html = f.read()
 
-          # Find structures still missing tel or email
-          pattern = re.compile(r'\{nom:"([^"]*)".*?ville:"([^"]*)".*?tel:"".*?siren:"([^"]*)"\}')
+          pattern = re.compile(r'\{nom:"([^"]*)".*?tel:"".*?siren:"(\d{9,})"\}')
           matches = list(pattern.finditer(html))
           print(f"🔍 {len(matches)} structures sans téléphone")
 
@@ -222,67 +106,56 @@ jobs:
           found = 0
 
           for m in matches:
-              nom, ville, siren = m.group(1), m.group(2), m.group(3)
+              nom, siren = m.group(1), m.group(2)
+              try:
+                  url = f"https://annuaire-entreprises.data.gouv.fr/entreprise/{siren}"
+                  resp = requests.get(url,
+                      headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+                      timeout=10)
 
-              # Try societe.com for phone
-              if siren and len(siren) >= 9:
-                  try:
-                      # Use a Google-like search to find contact info
-                      search_url = f"https://www.google.com/search?q={requests.utils.quote(nom + ' ' + ville + ' téléphone contact')}&num=3"
-                      resp = requests.get(search_url,
-                          headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
-                          timeout=10)
+                  if resp.status_code == 200:
+                      page = resp.text
+                      entry = html[m.start():m.end()]
+                      new_entry = entry
+                      changed = False
 
-                      if resp.status_code == 200:
-                          # Extract phone from Google snippet
-                          phones = re.findall(r'(?:0[1-9])[\s.-]?(?:\d{2}[\s.-]?){4}', resp.text)
-                          emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.-]+', resp.text)
+                      phones = re.findall(r'(?:0[1-9])[\s.-]?(?:\d{2}[\s.-]?){4}', page)
+                      valid = [p for p in phones if re.sub(r'\D','',p) != siren[:10]]
+                      if valid:
+                          digits = re.sub(r'\D', '', valid[0])
+                          if len(digits) == 10:
+                              tel = f"{digits[:2]} {digits[2:4]} {digits[4:6]} {digits[6:8]} {digits[8:10]}"
+                              new_entry = new_entry.replace('tel:""', f'tel:"{tel}"')
+                              changed = True
 
-                          entry = html[m.start():m.end()]
-                          new_entry = entry
-                          changed = False
-
-                          if phones:
-                              digits = re.sub(r'\D', '', phones[0])
-                              if len(digits) == 10:
-                                  tel = f"{digits[:2]} {digits[2:4]} {digits[4:6]} {digits[6:8]} {digits[8:10]}"
-                                  new_entry = new_entry.replace('tel:""', f'tel:"{tel}"')
+                      emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.-]+', page)
+                      for e in emails:
+                          if not any(x in e.lower() for x in ['gouv.fr','data.gouv','google','noreply','beta.gouv']):
+                              if 'email:""' in new_entry:
+                                  new_entry = new_entry.replace('email:""', f'email:"{e}"')
                                   changed = True
+                              break
 
-                          if emails:
-                              for e in emails:
-                                  if not any(x in e.lower() for x in ['google', 'gstatic', 'youtube', 'schema']):
-                                      new_entry = new_entry.replace('email:""', f'email:"{e}"')
-                                      changed = True
-                                      break
+                      if changed:
+                          updates.append((m.start(), m.end(), new_entry))
+                          found += 1
+                          print(f"  ✅ {nom}")
 
-                          if changed:
-                              updates.append((m.start(), m.end(), new_entry, nom))
-                              found += 1
-                              if found <= 20:
-                                  print(f"  ✅ {nom}")
-
-                      time.sleep(2)  # Slow down for Google
-
-                  except:
-                      time.sleep(3)
-
-              if found >= 50:  # Limit to avoid bans
-                  print("⚠ Limite de 50 atteinte")
-                  break
+                  time.sleep(0.5)
+              except:
+                  time.sleep(1)
 
           updates.sort(key=lambda x: x[0], reverse=True)
-          for start, end, new_text, nom in updates:
+          for start, end, new_text in updates:
               html = html[:start] + new_text + html[end:]
 
-          # Update version
           now = datetime.now()
           ver = f"v.{now.year}.{now.month:02d}.{now.day:02d}-{now.hour:02d}h{now.minute:02d}"
           html = re.sub(r'v\.\d{4}\.\d{2}\.\d{2}(-\d{2}h\d{2})?', ver, html)
 
           with open("annuaire-sem-spl-syndicats.html", "w") as f:
               f.write(html)
-          print(f"\n✅ Étape 3 : {found} contacts trouvés via recherche web")
+          print(f"\n✅ Étape 2 : {found} contacts trouvés via annuaire-entreprises")
           PYEOF
 
       - name: Vérifier changements
