@@ -13,6 +13,10 @@ from flask import Flask, render_template, jsonify, request
 from scrapers.interencheres import InterencheresScraper
 from scrapers.encheres_publiques import EncheresPubliquesScraper
 from scrapers.agorastore import AgorastoreScraper
+from scrapers.cd13 import CD13Scraper
+from scrapers.mairies import MairiesScraper
+from scrapers.france_domaine import FranceDomaineScraper
+from scrapers.licitor import LicitorScraper
 
 app = Flask(__name__)
 
@@ -52,6 +56,10 @@ def get_all_scrapers():
         InterencheresScraper(),
         EncheresPubliquesScraper(),
         AgorastoreScraper(),
+        CD13Scraper(),
+        MairiesScraper(),
+        FranceDomaineScraper(),
+        LicitorScraper(),
     ]
 
 

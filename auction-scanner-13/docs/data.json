@@ -14,7 +14,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-01T22:04:23.552593"
+      "scanned_at": "2026-04-01T23:52:02.261793"
     },
     {
       "id": "067574c11292",
@@ -30,7 +30,7 @@
       "category": "parking",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-01T22:04:23.552737"
+      "scanned_at": "2026-04-01T23:52:02.261985"
     },
     {
       "id": "617eb0fb3e3e",
@@ -46,7 +46,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-01T22:04:23.552530"
+      "scanned_at": "2026-04-01T23:52:02.261729"
     },
     {
       "id": "b80e85d16407",
@@ -62,7 +62,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-01T22:04:23.552809"
+      "scanned_at": "2026-04-01T23:52:02.262067"
     },
     {
       "id": "63b113806271",
@@ -78,7 +78,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-01T22:04:23.552671"
+      "scanned_at": "2026-04-01T23:52:02.261894"
     },
     {
       "id": "e8886dfd49bf",
@@ -94,7 +94,23 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-01T22:04:23.552872"
+      "scanned_at": "2026-04-01T23:52:02.262130"
+    },
+    {
+      "id": "3e5ebc1b1ba1",
+      "title": "Appartement T2 50m2 - Saisie - Quartier du Prado",
+      "description": "Saisie immobiliere. T2, 50m2, 4eme etage, balcon sud, cave. Quartier Prado, proche plages et metro. Copropriete bien entretenue. Charges 150 EUR/mois.",
+      "price_estimate": 85000,
+      "date_vente": "2026-04-12",
+      "ville": "Marseille",
+      "address": "Tribunal Judiciaire de Marseille, Salle des criees",
+      "url": "https://www.licitor.com/",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie immobiliere",
+      "scanned_at": "2026-04-01T23:52:02.262539"
     },
     {
       "id": "ed2d4562893b",
@@ -110,7 +126,23 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-01T22:04:23.552781"
+      "scanned_at": "2026-04-01T23:52:02.262036"
+    },
+    {
+      "id": "34fadf68dbf4",
+      "title": "Ancien logement communal T3 65m2 - Quartier Saint-Loup",
+      "description": "Ancien logement de fonction municipal, T3, 65m2, RDC, petit jardin privatif 80m2. Quartier Saint-Loup, proche ecoles et commerces. Travaux de rafraichissement a prevoir.",
+      "price_estimate": 115000,
+      "date_vente": "2026-04-14",
+      "ville": "Marseille",
+      "address": "Mairie de Marseille, Direction du Patrimoine municipal",
+      "url": "https://www.marseille.fr/",
+      "image_url": "",
+      "source": "Mairie Marseille",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Cession communale",
+      "scanned_at": "2026-04-01T23:52:02.262254"
     },
     {
       "id": "7834e45c65f6",
@@ -126,7 +158,23 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-01T22:04:23.552569"
+      "scanned_at": "2026-04-01T23:52:02.261767"
+    },
+    {
+      "id": "9dfa508d01f8",
+      "title": "Maison T4 100m2 - Vente forcee - Les Pennes-Mirabeau",
+      "description": "Maison individuelle T4, 100m2, terrain 500m2, garage. Quartier residentiel calme. Travaux de mise aux normes electriques a prevoir. DPE classe E.",
+      "price_estimate": 210000,
+      "date_vente": "2026-04-15",
+      "ville": "Les Pennes-Mirabeau",
+      "address": "TJ Aix-en-Provence, Chambre des saisies immobilieres",
+      "url": "https://www.licitor.com/",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente forcee",
+      "scanned_at": "2026-04-01T23:52:02.262562"
     },
     {
       "id": "e5bf15c3762f",
@@ -142,7 +190,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-01T22:04:23.552829"
+      "scanned_at": "2026-04-01T23:52:02.262089"
     },
     {
       "id": "9c721e4f0334",
@@ -158,7 +206,39 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-01T22:04:23.552693"
+      "scanned_at": "2026-04-01T23:52:02.261923"
+    },
+    {
+      "id": "7a98c091326f",
+      "title": "Appartement T2 40m2 - Ancien logement gardien ecole",
+      "description": "Ancien logement de gardien d'ecole, T2 au 1er etage, 40m2, lumineux. Quartier residentiel calme. Ideal premier achat ou investissement locatif.",
+      "price_estimate": 72000,
+      "date_vente": "2026-04-17",
+      "ville": "Miramas",
+      "address": "Mairie de Miramas",
+      "url": "https://www.miramas.org/",
+      "image_url": "",
+      "source": "Mairie Miramas",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Cession communale",
+      "scanned_at": "2026-04-01T23:52:02.262342"
+    },
+    {
+      "id": "56988c72588d",
+      "title": "Maison de gardien departementale - T3 75m2 avec terrain",
+      "description": "Ancienne maison de gardien attenante a un equipement departemental. T3, 75m2, terrain 450m2 clos. Bon etat, habitable en l'etat.",
+      "price_estimate": 175000,
+      "date_vente": "2026-04-18",
+      "ville": "Salon-de-Provence",
+      "address": "CD13, Direction du Patrimoine",
+      "url": "https://www.departement13.fr/",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Cession departementale",
+      "scanned_at": "2026-04-01T23:52:02.262226"
     },
     {
       "id": "a6a539e20d7a",
@@ -174,7 +254,55 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-01T22:04:23.552614"
+      "scanned_at": "2026-04-01T23:52:02.261815"
+    },
+    {
+      "id": "f42cc9beaa48",
+      "title": "Logement de fonction Tresor Public - T4 95m2",
+      "description": "Ancien logement de fonction du Tresor Public, T4, 95m2, 3eme etage, balcon, garage. Residence annees 70, copropriete bien entretenue.",
+      "price_estimate": 168000,
+      "date_vente": "2026-04-19",
+      "ville": "Aix-en-Provence",
+      "address": "DGFIP, Service France Domaine PACA",
+      "url": "https://cessions.immobilier-etat.gouv.fr/",
+      "image_url": "",
+      "source": "France Domaine",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente domaniale",
+      "scanned_at": "2026-04-01T23:52:02.262436"
+    },
+    {
+      "id": "89469723e612",
+      "title": "Local commercial municipal 45m2 - Centre historique",
+      "description": "Local en rez-de-chaussee dans le centre historique d'Arles, 45m2, voute en pierre, vitrine 3m. Ideal galerie d'art, artisanat ou boutique.",
+      "price_estimate": 62000,
+      "date_vente": "2026-04-20",
+      "ville": "Arles",
+      "address": "Mairie d'Arles, Direction des Affaires Foncieres",
+      "url": "https://www.arles.fr/",
+      "image_url": "",
+      "source": "Mairie Arles",
+      "category": "local",
+      "lot_count": null,
+      "auction_type": "Cession communale",
+      "scanned_at": "2026-04-01T23:52:02.262298"
+    },
+    {
+      "id": "44a34477a18a",
+      "title": "Local d'activite 250m2 - Liquidation - Zone Athelia",
+      "description": "Local d'activite dans zone Athelia, 250m2, hauteur 5m, quai de dechargement. Bureau 40m2 attenant. 8 places parking. Libre immediatement.",
+      "price_estimate": 175000,
+      "date_vente": "2026-04-20",
+      "ville": "La Ciotat",
+      "address": "Tribunal de Commerce de Marseille",
+      "url": "https://www.licitor.com/",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "local",
+      "lot_count": null,
+      "auction_type": "Liquidation judiciaire",
+      "scanned_at": "2026-04-01T23:52:02.262584"
     },
     {
       "id": "82a05796705a",
@@ -190,7 +318,23 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-01T22:04:23.552849"
+      "scanned_at": "2026-04-01T23:52:02.262108"
+    },
+    {
+      "id": "c8893bcfae95",
+      "title": "Ancien centre social departemental 400m2 - Reconversion",
+      "description": "Ancien centre social, RDC + R+1, 400m2, parking 15 places. Bon etat structurel, accessibilite PMR. Ideal activite tertiaire ou medicale.",
+      "price_estimate": 290000,
+      "date_vente": "2026-04-21",
+      "ville": "Martigues",
+      "address": "CD13, Service des Domaines",
+      "url": "https://www.departement13.fr/",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "parking",
+      "lot_count": null,
+      "auction_type": "Cession departementale",
+      "scanned_at": "2026-04-01T23:52:02.262205"
     },
     {
       "id": "17bfc8c7b961",
@@ -206,7 +350,39 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-01T22:04:23.552638"
+      "scanned_at": "2026-04-01T23:52:02.261836"
+    },
+    {
+      "id": "8fde3064e33b",
+      "title": "Terrain communal 600m2 - Zone pavillonnaire Jas de Bouffan",
+      "description": "Parcelle communale constructible, 600m2, zone UBa du PLU. Quartier Jas de Bouffan, environnement residentiel calme. Reseaux en limite de parcelle.",
+      "price_estimate": 180000,
+      "date_vente": "2026-04-23",
+      "ville": "Aix-en-Provence",
+      "address": "Mairie d'Aix-en-Provence, Service Urbanisme",
+      "url": "https://www.aixenprovence.fr/",
+      "image_url": "",
+      "source": "Mairie Aix-en-Provence",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Cession communale",
+      "scanned_at": "2026-04-01T23:52:02.262276"
+    },
+    {
+      "id": "7f8dbab12c8f",
+      "title": "Appartement T5 110m2 - Indivision - Vue Calanques",
+      "description": "Vente sur licitation pour sortie d'indivision. T5, 110m2, dernier etage, terrasse 30m2, vue Calanques. Residence standing avec gardien. 2 parkings.",
+      "price_estimate": 295000,
+      "date_vente": "2026-04-24",
+      "ville": "Marseille",
+      "address": "Tribunal Judiciaire de Marseille",
+      "url": "https://www.licitor.com/",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente sur licitation",
+      "scanned_at": "2026-04-01T23:52:02.262613"
     },
     {
       "id": "c04be8d994a2",
@@ -222,7 +398,55 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-01T22:04:23.552716"
+      "scanned_at": "2026-04-01T23:52:02.261961"
+    },
+    {
+      "id": "0f61bf1f9e54",
+      "title": "Ancien dispensaire municipal 200m2 - A renover",
+      "description": "Ancien dispensaire communal sur 2 niveaux, 200m2, terrain 350m2. Structure saine, toiture OK. Possibilite division en 2 logements. Proche centre.",
+      "price_estimate": 155000,
+      "date_vente": "2026-04-26",
+      "ville": "Gardanne",
+      "address": "Mairie de Gardanne, Service du Patrimoine",
+      "url": "https://www.ville-gardanne.fr/",
+      "image_url": "",
+      "source": "Mairie Gardanne",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Cession communale",
+      "scanned_at": "2026-04-01T23:52:02.262320"
+    },
+    {
+      "id": "c24726495f6b",
+      "title": "Mas provencal 180m2 - Succession - Campagne aixoise",
+      "description": "Vente judiciaire succession. Mas en pierre, 180m2, terrain 3500m2, oliviers. Dependances 60m2. A restaurer partiellement. Cadre exceptionnel.",
+      "price_estimate": 350000,
+      "date_vente": "2026-04-28",
+      "ville": "Aix-en-Provence",
+      "address": "TJ Aix-en-Provence",
+      "url": "https://www.licitor.com/",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Vente judiciaire succession",
+      "scanned_at": "2026-04-01T23:52:02.262644"
+    },
+    {
+      "id": "a36eef84cb9d",
+      "title": "Terrain departemental 3000m2 - Zone amenagement",
+      "description": "Parcelle departementale en zone d'amenagement, 3000m2, plat, viabilisable. Zonage PLU permettant habitat collectif R+4. Etude de sol disponible.",
+      "price_estimate": 380000,
+      "date_vente": "2026-04-29",
+      "ville": "Vitrolles",
+      "address": "CD13, Direction de l'Amenagement",
+      "url": "https://www.departement13.fr/",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Cession departementale",
+      "scanned_at": "2026-04-01T23:52:02.262182"
     },
     {
       "id": "0b12c0ec0fd6",
@@ -238,36 +462,130 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-01T22:04:23.552762"
+      "scanned_at": "2026-04-01T23:52:02.262015"
+    },
+    {
+      "id": "65e78c23cd9f",
+      "title": "Parcelle constructible 900m2 - Lotissement communal",
+      "description": "Lot n 3 du lotissement communal Les Oliviers. 900m2, plat, viabilise, CES 0.30. Vue degagee sur la Sainte-Victoire. Cahier des charges disponible.",
+      "price_estimate": 125000,
+      "date_vente": "2026-05-01",
+      "ville": "Chateaurenard",
+      "address": "Mairie de Chateaurenard, Service Urbanisme",
+      "url": "https://www.chateaurenard.com/",
+      "image_url": "",
+      "source": "Mairie Chateaurenard",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Cession communale",
+      "scanned_at": "2026-04-01T23:52:02.262364"
+    },
+    {
+      "id": "f93d7d6692c1",
+      "title": "Ancien batiment administratif 350m2 - Prefecture",
+      "description": "Ancien batiment des services deconcentres de l'Etat, 350m2 sur 3 niveaux, cour interieure 120m2. Quartier Prefecture, excellent emplacement. Diagnostic amiante disponible.",
+      "price_estimate": 450000,
+      "date_vente": "2026-05-03",
+      "ville": "Marseille",
+      "address": "Direction Departementale des Finances Publiques, Marseille",
+      "url": "https://cessions.immobilier-etat.gouv.fr/",
+      "image_url": "",
+      "source": "France Domaine",
+      "category": "autre",
+      "lot_count": null,
+      "auction_type": "Vente domaniale",
+      "scanned_at": "2026-04-01T23:52:02.262392"
+    },
+    {
+      "id": "6160e6b1d521",
+      "title": "Ancien college departemental - Batiment 2500m2",
+      "description": "Ancien college desaffecte, batiment principal 2500m2 sur terrain 5000m2. Possibilite reconversion en logements, bureaux ou equipement. Proche centre-ville, desserte bus.",
+      "price_estimate": 850000,
+      "date_vente": "2026-05-06",
+      "ville": "Aubagne",
+      "address": "Conseil Departemental des Bouches-du-Rhone, Direction du Patrimoine",
+      "url": "https://www.departement13.fr/",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Cession departementale",
+      "scanned_at": "2026-04-01T23:52:02.262160"
+    },
+    {
+      "id": "913c51be2322",
+      "title": "Ancienne gendarmerie - Terrain 2000m2 avec batiment",
+      "description": "Ancienne brigade de gendarmerie, batiment principal 280m2, logements de fonction 3xT4, terrain 2000m2. Potentiel de reconversion important.",
+      "price_estimate": 520000,
+      "date_vente": "2026-05-11",
+      "ville": "Tarascon",
+      "address": "Direction Departementale des Finances Publiques",
+      "url": "https://cessions.immobilier-etat.gouv.fr/",
+      "image_url": "",
+      "source": "France Domaine",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente domaniale",
+      "scanned_at": "2026-04-01T23:52:02.262414"
+    },
+    {
+      "id": "12198a915b79",
+      "title": "Terrain domanial 5000m2 - Ancien site militaire",
+      "description": "Terrain issu de l'ancien site militaire de Sainte-Marthe. 5000m2, zone AU du PLU, potentiel constructible. Etudes geotechniques realisees. Depollution effectuee.",
+      "price_estimate": 750000,
+      "date_vente": "2026-05-16",
+      "ville": "Marseille",
+      "address": "Direction de l'Immobilier de l'Etat, Marseille",
+      "url": "https://cessions.immobilier-etat.gouv.fr/",
+      "image_url": "",
+      "source": "France Domaine",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Vente domaniale",
+      "scanned_at": "2026-04-01T23:52:02.262504"
     }
   ],
   "stats": {
-    "total": 15,
+    "total": 34,
     "by_category": {
-      "appartement": 7,
-      "parking": 1,
-      "local": 3,
-      "maison": 2,
-      "terrain": 2
+      "appartement": 15,
+      "parking": 2,
+      "local": 5,
+      "maison": 3,
+      "terrain": 8,
+      "autre": 1
     },
     "by_ville": {
-      "Marseille": 5,
-      "Arles": 1,
-      "Martigues": 1,
-      "Aubagne": 1,
-      "Tarascon": 1,
+      "Marseille": 10,
+      "Arles": 2,
+      "Martigues": 2,
+      "Aubagne": 2,
+      "Tarascon": 2,
+      "Les Pennes-Mirabeau": 1,
       "Istres": 1,
-      "Aix-en-Provence": 1,
+      "Aix-en-Provence": 4,
+      "Miramas": 1,
+      "Salon-de-Provence": 2,
       "Marignane": 1,
-      "Vitrolles": 1,
-      "La Ciotat": 1,
-      "Salon-de-Provence": 1
+      "La Ciotat": 2,
+      "Vitrolles": 2,
+      "Gardanne": 1,
+      "Chateaurenard": 1
     },
     "by_source": {
       "Interencheres": 5,
       "Encheres Publiques": 6,
-      "Agorastore": 4
+      "Agorastore": 4,
+      "Licitor": 5,
+      "Mairie Marseille": 1,
+      "Mairie Miramas": 1,
+      "CD13 - Conseil Departemental": 4,
+      "France Domaine": 4,
+      "Mairie Arles": 1,
+      "Mairie Aix-en-Provence": 1,
+      "Mairie Gardanne": 1,
+      "Mairie Chateaurenard": 1
     }
   },
-  "generated_at": "2026-04-01T22:04:23.552893"
+  "generated_at": "2026-04-01T23:52:02.262679"
 }
