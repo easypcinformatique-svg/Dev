@@ -26,7 +26,7 @@ var TYPE_KEYWORDS = {
   "Facture": ["facture", "invoice", "fact.", "n° facture", "numero facture", "montant ttc", "total ttc", "net a payer"],
   "Devis": ["devis", "estimation", "proposition commerciale", "offre de prix"],
   "Contrat": ["contrat", "convention", "accord", "conditions generales", "entre les soussignes"],
-  "Releve": ["releve", "releve de compte", "solde", "credit", "debit", "operations"],
+  "Releve": ["releve", "releve de compte", "releve bancaire", "solde crediteur", "solde debiteur", "vos operations"],
   "Avis": ["avis d'imposition", "avis d'impot", "taxe fonciere", "taxe habitation", "impot", "dgfip", "tresor public"],
   "Courrier": ["courrier", "madame monsieur", "objet :", "veuillez agreer", "cordialement", "recommande"],
   "Bulletin": ["bulletin de paie", "bulletin de salaire", "salaire net", "net a payer avant impot", "cotisations"],
@@ -36,54 +36,29 @@ var TYPE_KEYWORDS = {
   "Rapport": ["rapport", "bilan", "compte rendu", "analyse"]
 };
 
-// === EMETTEURS CONNUS ===
-var KNOWN_EMITTERS = {
-  "edf": "EDF",
-  "engie": "Engie",
-  "total": "Total",
-  "totalenergies": "TotalEnergies",
-  "free": "Free",
-  "orange": "Orange",
-  "sfr": "SFR",
-  "bouygues": "Bouygues",
-  "bnp": "BNP",
-  "bnp paribas": "BNP",
-  "credit agricole": "Credit-Agricole",
-  "societe generale": "Societe-Generale",
-  "lcl": "LCL",
-  "la banque postale": "Banque-Postale",
-  "caisse d'epargne": "Caisse-Epargne",
-  "credit mutuel": "Credit-Mutuel",
-  "axa": "AXA",
-  "maif": "MAIF",
-  "macif": "MACIF",
-  "matmut": "Matmut",
-  "groupama": "Groupama",
-  "urssaf": "URSSAF",
-  "cpam": "CPAM",
-  "ameli": "CPAM",
-  "pole emploi": "Pole-Emploi",
-  "france travail": "France-Travail",
-  "caf": "CAF",
-  "impots": "Impots",
-  "dgfip": "Impots",
-  "tresor public": "Tresor-Public",
-  "prefecture": "Prefecture",
-  "mairie": "Mairie",
-  "amazon": "Amazon",
-  "google": "Google",
-  "microsoft": "Microsoft",
-  "apple": "Apple",
-  "ikea": "IKEA",
-  "leroy merlin": "Leroy-Merlin",
-  "boulanger": "Boulanger",
-  "darty": "Darty",
-  "fnac": "Fnac",
-  "brother": "Brother",
-  "ovh": "OVH",
-  "o2switch": "O2switch",
-  "ionos": "Ionos"
-};
+// === EMETTEURS CONNUS (du plus specifique au plus generique) ===
+var KNOWN_EMITTERS = [
+  ["totalenergies", "TotalEnergies"], ["engie", "Engie"], ["edf", "EDF"],
+  ["free mobile", "Free"], ["freebox", "Free"], ["free", "Free"],
+  ["orange", "Orange"], ["sfr", "SFR"], ["bouygues telecom", "Bouygues"],
+  ["credit agricole", "Credit-Agricole"], ["credit mutuel", "Credit-Mutuel"],
+  ["bnp paribas", "BNP"], ["societe generale", "Societe-Generale"],
+  ["la banque postale", "Banque-Postale"], ["caisse d'epargne", "Caisse-Epargne"],
+  ["lcl", "LCL"], ["boursorama", "Boursorama"], ["fortuneo", "Fortuneo"],
+  ["axa", "AXA"], ["maif", "MAIF"], ["macif", "MACIF"], ["matmut", "Matmut"],
+  ["groupama", "Groupama"], ["allianz", "Allianz"], ["generali", "Generali"],
+  ["urssaf", "URSSAF"], ["cpam", "CPAM"], ["ameli", "CPAM"],
+  ["pole emploi", "Pole-Emploi"], ["france travail", "France-Travail"],
+  ["caf", "CAF"], ["dgfip", "Impots"], ["tresor public", "Tresor-Public"],
+  ["direction generale des finances", "Impots"],
+  ["prefecture", "Prefecture"], ["mairie", "Mairie"],
+  ["leroy merlin", "Leroy-Merlin"], ["castorama", "Castorama"],
+  ["boulanger", "Boulanger"], ["darty", "Darty"], ["fnac", "Fnac"],
+  ["amazon", "Amazon"], ["cdiscount", "Cdiscount"], ["ikea", "IKEA"],
+  ["ovh", "OVH"], ["o2switch", "O2switch"], ["ionos", "Ionos"],
+  ["google", "Google"], ["microsoft", "Microsoft"], ["apple", "Apple"],
+  ["brother", "Brother"], ["bouygues", "Bouygues"]
+];
 
 function setup() {
   var triggers = ScriptApp.getProjectTriggers();
@@ -309,10 +284,10 @@ function detectType(textLower) {
  * Detecte l'emetteur du document
  */
 function detectEmitter(textLower) {
-  // Chercher dans les emetteurs connus
-  for (var key in KNOWN_EMITTERS) {
-    if (textLower.indexOf(key) > -1) {
-      return KNOWN_EMITTERS[key];
+  // Chercher dans les emetteurs connus (tableau ordonne du plus specifique au plus generique)
+  for (var e = 0; e < KNOWN_EMITTERS.length; e++) {
+    if (textLower.indexOf(KNOWN_EMITTERS[e][0]) > -1) {
+      return KNOWN_EMITTERS[e][1];
     }
   }
 
