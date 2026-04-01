@@ -100,17 +100,23 @@ async def health_check():
 
 
 @app.post("/api/seed")
-async def run_seed():
+async def run_seed(force: bool = False):
     """Endpoint pour initialiser la DB avec les donnees demo."""
     try:
         from backend.db.database import async_session
         from backend.models import Utilisateur
-        from sqlalchemy import select
+        from sqlalchemy import select, delete
 
-        async with async_session() as db:
-            result = await db.execute(select(Utilisateur).limit(1))
-            if result.scalar_one_or_none() is not None:
-                return {"status": "already_seeded"}
+        if force:
+            # Vider toutes les tables et re-seeder
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.drop_all)
+                await conn.run_sync(Base.metadata.create_all)
+        else:
+            async with async_session() as db:
+                result = await db.execute(select(Utilisateur).limit(1))
+                if result.scalar_one_or_none() is not None:
+                    return {"status": "already_seeded", "hint": "Use ?force=true to reset"}
 
         from backend.db.seed import seed
         await seed()
