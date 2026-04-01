@@ -50,11 +50,11 @@ const ANNONCES = [
 ].map(a => ({...a, url: buildSourceUrl(a.source, a.ville, a.cp, a.type, a.prix, a.surface)}));
 
 const ENCHERES = [
-  { id:1, type:"JUDICIAIRE", bien:"Maison T5 - 127m²", ville:"Vitrolles", cp:"13127", mise_a_prix:155000, estimation:280000, decote_potentielle:44.6, date_audience:new Date(Date.now()+3*24*3600*1000), tribunal:"TJ Aix-en-Provence", avocat:"Me. Rousseau", rg:"2024/00342", visites:"14 et 21 mars 14h-16h", score:94, surface:127, terrain:320 },
-  { id:2, type:"NOTARIALE", bien:"Terrain constructible - 900m²", ville:"Marignane", cp:"13700", mise_a_prix:68000, estimation:135000, decote_potentielle:49.6, date_audience:new Date(Date.now()+8*24*3600*1000), tribunal:"Chambre Notaires 13", avocat:"Me. Fontaine", rg:"NOT-2024-1189", visites:"Sur RDV", score:87, surface:900, terrain:900 },
-  { id:3, type:"JUDICIAIRE", bien:"Appartement T4 - 89m² + cave", ville:"Marseille 8e", cp:"13008", mise_a_prix:120000, estimation:210000, decote_potentielle:42.9, date_audience:new Date(Date.now()+14*24*3600*1000), tribunal:"TJ Marseille", avocat:"Me. Benedetti", rg:"2024/00891", visites:"Non communiquées", score:78, surface:89, terrain:null },
-  { id:4, type:"NOTARIALE", bien:"Local commercial - 220m²", ville:"Aix-en-Provence", cp:"13100", mise_a_prix:245000, estimation:410000, decote_potentielle:40.2, date_audience:new Date(Date.now()+21*24*3600*1000), tribunal:"Chambre Notaires 13", avocat:"Me. Luccioni", rg:"NOT-2024-2201", visites:"12 et 19 mars 10h-12h", score:71, surface:220, terrain:null },
-  { id:5, type:"JUDICIAIRE", bien:"Maison T4 - 98m² + garage", ville:"Berre-l'Etang", cp:"13130", mise_a_prix:89000, estimation:195000, decote_potentielle:54.4, date_audience:new Date(Date.now()+5*24*3600*1000), tribunal:"TJ Aix-en-Provence", avocat:"Me. Hernandez", rg:"2024/01102", visites:"Non autorisées (occupé)", score:82, surface:98, terrain:180 },
+  { id:1, type:"JUDICIAIRE", bien:"Maison T5 - 127m²", ville:"Vitrolles", cp:"13127", mise_a_prix:155000, estimation:280000, decote_potentielle:44.6, date_audience:new Date(Date.now()+3*24*3600*1000), tribunal:"TJ Aix-en-Provence", avocat:"Me. Rousseau", rg:"2024/00342", visites:"14 et 21 mars 14h-16h", score:94, surface:127, terrain:320, url:"https://www.encheres-publiques.com/ventes-judiciaires/immobilier/bouches-du-rhone-13" },
+  { id:2, type:"NOTARIALE", bien:"Terrain constructible - 900m²", ville:"Marignane", cp:"13700", mise_a_prix:68000, estimation:135000, decote_potentielle:49.6, date_audience:new Date(Date.now()+8*24*3600*1000), tribunal:"Chambre Notaires 13", avocat:"Me. Fontaine", rg:"NOT-2024-1189", visites:"Sur RDV", score:87, surface:900, terrain:900, url:"https://www.immobilier.notaires.fr/fr/ventes-aux-encheres?typeVente=NOTARIALE&departement=13" },
+  { id:3, type:"JUDICIAIRE", bien:"Appartement T4 - 89m² + cave", ville:"Marseille 8e", cp:"13008", mise_a_prix:120000, estimation:210000, decote_potentielle:42.9, date_audience:new Date(Date.now()+14*24*3600*1000), tribunal:"TJ Marseille", avocat:"Me. Benedetti", rg:"2024/00891", visites:"Non communiquées", score:78, surface:89, terrain:null, url:"https://www.encheres-publiques.com/ventes-judiciaires/immobilier/bouches-du-rhone-13" },
+  { id:4, type:"NOTARIALE", bien:"Local commercial - 220m²", ville:"Aix-en-Provence", cp:"13100", mise_a_prix:245000, estimation:410000, decote_potentielle:40.2, date_audience:new Date(Date.now()+21*24*3600*1000), tribunal:"Chambre Notaires 13", avocat:"Me. Luccioni", rg:"NOT-2024-2201", visites:"12 et 19 mars 10h-12h", score:71, surface:220, terrain:null, url:"https://www.immobilier.notaires.fr/fr/ventes-aux-encheres?typeVente=NOTARIALE&departement=13" },
+  { id:5, type:"JUDICIAIRE", bien:"Maison T4 - 98m² + garage", ville:"Berre-l'Etang", cp:"13130", mise_a_prix:89000, estimation:195000, decote_potentielle:54.4, date_audience:new Date(Date.now()+5*24*3600*1000), tribunal:"TJ Aix-en-Provence", avocat:"Me. Hernandez", rg:"2024/01102", visites:"Non autorisées (occupé)", score:82, surface:98, terrain:180, url:"https://www.encheres-publiques.com/ventes-judiciaires/immobilier/bouches-du-rhone-13" },
 ];
 
 const STATS_SEMAINE = [
@@ -250,6 +250,13 @@ function FluxTab({ S, colTpl, filtreType, setFiltreType, filtreScore, setFiltreS
 function EncheresTab({ S }) {
   return (
     <div className="si">
+      {/* Liens rapides vers les sites d'enchères */}
+      <div style={{display:"flex",gap:"8px",marginBottom:"14px",flexWrap:"wrap"}}>
+        <a href="https://www.encheres-publiques.com/ventes-judiciaires/immobilier/bouches-du-rhone-13" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"5px",background:"rgba(255,59,59,0.1)",color:"#ff5555",padding:"6px 14px",borderRadius:"3px",fontSize:"10px",textDecoration:"none",border:"1px solid rgba(255,59,59,0.2)",fontFamily:"inherit",letterSpacing:"0.06em"}}>ENCHÈRES JUDICIAIRES — DEPT 13 ↗</a>
+        <a href="https://www.immobilier.notaires.fr/fr/ventes-aux-encheres?typeVente=NOTARIALE&departement=13" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"5px",background:"rgba(255,107,53,0.1)",color:"#ff6b35",padding:"6px 14px",borderRadius:"3px",fontSize:"10px",textDecoration:"none",border:"1px solid rgba(255,107,53,0.2)",fontFamily:"inherit",letterSpacing:"0.06em"}}>ENCHÈRES NOTARIALES — DEPT 13 ↗</a>
+        <a href="https://www.licitor.com/ventes-aux-encheres-immobilieres.html?dep=13" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"5px",background:"rgba(167,139,250,0.1)",color:"#a78bfa",padding:"6px 14px",borderRadius:"3px",fontSize:"10px",textDecoration:"none",border:"1px solid rgba(167,139,250,0.2)",fontFamily:"inherit",letterSpacing:"0.06em"}}>LICITOR — TOUTES ENCHÈRES 13 ↗</a>
+        <a href="https://www.tribunal-de-commerce.fr/ventes-encheres" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"5px",background:"rgba(96,184,255,0.1)",color:"#60b8ff",padding:"6px 14px",borderRadius:"3px",fontSize:"10px",textDecoration:"none",border:"1px solid rgba(96,184,255,0.2)",fontFamily:"inherit",letterSpacing:"0.06em"}}>TRIBUNAL DE COMMERCE ↗</a>
+      </div>
       <div style={{display:"grid",gap:"12px"}}>
         {ENCHERES.sort((a,b)=>a.date_audience-b.date_audience).map(e=>{
           const jours = joursAvant(e.date_audience);
@@ -287,6 +294,10 @@ function EncheresTab({ S }) {
                     <div><span style={{color:"#3a6080"}}>Avocat:</span> {e.avocat}</div>
                     <div><span style={{color:"#3a6080"}}>Visites:</span> {e.visites}</div>
                     <div><span style={{color:"#3a6080"}}>Surface:</span> {e.surface}m²{e.terrain?` (terrain: ${e.terrain}m²)`:""}</div>
+                  </div>
+                  <div style={{display:"flex",gap:"6px",marginTop:"10px"}}>
+                    <a href={e.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"4px",background:"rgba(0,150,255,0.15)",color:"#60b8ff",padding:"5px 12px",borderRadius:"3px",fontSize:"10px",textDecoration:"none",border:"1px solid #0088ff33",fontFamily:"inherit",letterSpacing:"0.05em"}}>VOIR L'ENCHÈRE ↗</a>
+                    {e.type==="JUDICIAIRE" && <a href={`https://www.avocats-aix.com/annuaire?speciality=droit+immobilier`} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"4px",background:"rgba(255,179,0,0.12)",color:"#ffb300",padding:"5px 12px",borderRadius:"3px",fontSize:"10px",textDecoration:"none",border:"1px solid rgba(255,179,0,0.2)",fontFamily:"inherit",letterSpacing:"0.05em"}}>TROUVER UN AVOCAT ↗</a>}
                   </div>
                 </div>
               </div>
