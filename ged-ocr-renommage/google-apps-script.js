@@ -68,10 +68,10 @@ function setup() {
   }
 
   // Creer le trigger toutes les 10 minutes
-  ScriptApp.newTrigger("processNewScans")
-    .timeDriven()
-    .everyMinutes(10)
-    .create();
+  var builder = ScriptApp.newTrigger("processNewScans");
+  var timeBuilder = builder.timeDriven();
+  timeBuilder.everyMinutes(10);
+  timeBuilder.create();
 
   // Verifier les en-tetes du Sheet
   setupSheet();
