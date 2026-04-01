@@ -11,79 +11,126 @@ var CONFIG = {
 };
 
 var TYPE_KEYWORDS = {
-  "Facture": ["facture", "invoice", "fact n", "fact.", "numero facture", "montant ttc", "total ttc", "net a payer", "facture n", "facture du", "doit"],
-  "Devis": ["devis", "estimation", "proposition commerciale", "offre de prix", "devis n"],
-  "Contrat": ["contrat", "convention", "conditions generales", "entre les soussignes", "bail", "contrat de"],
-  "Releve": ["releve de compte", "releve bancaire", "releve mensuel", "vos operations", "releve n", "nouveau solde", "ancien solde", "date valeur"],
-  "Avis": ["avis d imposition", "avis d impot", "taxe fonciere", "taxe habitation", "dgfip", "tresor public", "impot sur le revenu", "avis de situation", "direction generale des finances"],
-  "Courrier": ["madame monsieur", "objet :", "veuillez agreer", "cordialement", "recommande", "a l attention de", "pli recommande"],
-  "Bulletin": ["bulletin de paie", "bulletin de salaire", "salaire net", "net a payer avant impot", "cotisations", "salaire brut", "conges payes"],
-  "Attestation": ["attestation", "certifie", "atteste que", "attestation de", "je soussigne"],
-  "Acte": ["acte de", "notaire", "acte authentique", "acte de vente", "acte notarie"],
-  "Quittance": ["quittance", "quittance de loyer", "loyer du mois"],
-  "Rapport": ["rapport", "compte rendu", "rapport de", "proces verbal"]
+  "Facture": ["facture", "invoice", "fact.", "fact n", "facture n", "facture du", "numero de facture", "montant ttc", "total ttc", "net a payer", "total ht", "montant ht", "tva", "echeance", "conditions de paiement", "en votre aimable reglement", "facture acquittee", "proforma", "avoir", "note de credit", "doit", "acompte", "arrete la presente facture", "duplicata", "abonnement", "redevance", "consommation", "detail des prestations", "main d oeuvre", "fournitures"],
+  "Devis": ["devis", "devis estimatif", "devis descriptif", "estimation", "proposition commerciale", "offre de prix", "offre commerciale", "chiffrage", "devis n", "numero de devis", "validite du devis", "bon pour accord", "lu et approuve", "delai d execution", "delai de realisation", "acompte a la commande", "sans engagement", "prix ferme", "forfait"],
+  "Contrat": ["contrat", "convention", "conditions generales", "entre les soussignes", "bail", "contrat de", "ci-apres denomme", "d une part", "d autre part", "il est convenu", "objet du contrat", "duree du contrat", "prise d effet", "resiliation", "tacite reconduction", "obligations", "avenant", "annexe", "conditions particulieres", "fait en double exemplaire", "paraphe"],
+  "Releve": ["releve de compte", "releve bancaire", "releve mensuel", "extrait de compte", "solde precedent", "nouveau solde", "solde crediteur", "solde debiteur", "date de valeur", "date d operation", "vos operations", "total des debits", "total des credits", "virement", "prelevement", "prelevement sepa", "paiement carte", "paiement cb", "retrait dab", "agios", "frais bancaires", "arrete de compte"],
+  "Avis": ["avis d imposition", "avis d impot", "taxe fonciere", "taxe d habitation", "dgfip", "tresor public", "impot sur le revenu", "direction generale des finances", "revenu fiscal de reference", "revenu net imposable", "nombre de parts", "taux d imposition", "prelevement a la source", "tiers provisionnel", "mensualisation", "centre des finances publiques", "numero fiscal", "date de mise en recouvrement", "cotisation fonciere", "cfe", "ifi", "contribution sociale"],
+  "Courrier": ["madame monsieur", "objet :", "veuillez agreer", "cordialement", "recommande", "a l attention de", "pli recommande", "mise en demeure", "je soussigne", "j ai l honneur", "je vous prie de bien vouloir", "salutations distinguees", "dans l attente de votre reponse", "suite a votre courrier", "par la presente", "accuse de reception", "cachet de la poste", "piece jointe", "reclamation", "contestation", "notification", "convocation", "rappel", "relance", "sommation"],
+  "Bulletin": ["bulletin de paie", "bulletin de salaire", "fiche de paie", "salaire brut", "salaire net", "net a payer", "net imposable", "net fiscal", "matricule", "numero de securite sociale", "convention collective", "coefficient", "taux horaire", "salaire de base", "heures supplementaires", "prime", "indemnite", "conges payes", "rtt", "cotisations salariales", "cotisations patronales", "urssaf", "retraite complementaire", "agirc", "arrco", "prevoyance", "mutuelle", "csg", "crds", "prelevement a la source", "cumul annuel", "cumul brut"],
+  "Attestation": ["attestation", "certifie", "atteste que", "attestation de", "je soussigne", "declare sur l honneur", "attestation sur l honneur", "attestation de domicile", "attestation d hebergement", "attestation employeur", "attestation de travail", "attestation de salaire", "attestation de droits", "attestation d assurance", "attestation de responsabilite civile", "certificat", "certificat medical", "certificat de scolarite", "delivre pour servir et valoir", "fait pour servir et valoir"],
+  "Acte": ["acte notarie", "acte authentique", "acte de vente", "acte de propriete", "acte de naissance", "acte de mariage", "acte de deces", "notaire", "office notarial", "etude notariale", "par devant", "maitre", "comparant", "minute", "grosse", "expedition", "publicite fonciere", "cadastre", "reference cadastrale", "copropriete", "compromis de vente", "promesse de vente", "diagnostics", "loi carrez", "donation", "succession", "testament"],
+  "Quittance": ["quittance", "quittance de loyer", "recu de loyer", "loyer", "montant du loyer", "loyer principal", "charges locatives", "charges recuperables", "provision pour charges", "regularisation des charges", "bailleur", "proprietaire", "locataire", "preneur", "depot de garantie", "apl", "aide au logement", "taxe d ordures menageres", "pour acquit", "indice de reference des loyers", "irl", "loyer du mois"],
+  "Rapport": ["rapport", "compte rendu", "proces-verbal", "proces verbal", "rapport d activite", "rapport annuel", "rapport de gestion", "rapport d expertise", "rapport de mission", "rapport d audit", "rapport technique", "rapport de synthese", "introduction", "sommaire", "conclusions", "recommandations", "preconisations", "annexes", "diagnostic", "expertise", "inspection", "controle", "audit"]
 };
 
-// Emetteurs : [mot-cle normalise (sans accent, minuscule), nom affiche]
-// Ordre : du plus specifique au plus generique
 var KNOWN_EMITTERS = [
   // Syndics / Immobilier
   ["a bis syndic", "Abis-Syndic"], ["foncia", "Foncia"], ["nexity", "Nexity"],
-  ["oralia", "Oralia"], ["citya", "Citya"], ["syndic", "Syndic"],
+  ["oralia", "Oralia"], ["citya", "Citya"], ["lamy", "Lamy"], ["sergic", "Sergic"],
+  ["immo de france", "Immo-de-France"], ["laforet", "Laforet"],
+  ["century 21", "Century21"], ["guy hoquet", "Guy-Hoquet"], ["orpi", "Orpi"],
+  ["stephane plaza", "Stephane-Plaza"], ["square habitat", "Square-Habitat"],
+  ["paris habitat", "Paris-Habitat"], ["syndic", "Syndic"],
   // Energie
   ["totalenergies", "TotalEnergies"], ["engie", "Engie"], ["edf", "EDF"],
   ["direct energie", "Direct-Energie"], ["eni", "ENI"], ["vattenfall", "Vattenfall"],
-  ["veolia", "Veolia"], ["suez", "Suez"], ["grdf", "GRDF"],
+  ["ekwateur", "Ekwateur"], ["ilek", "Ilek"], ["enercoop", "Enercoop"],
+  ["veolia", "Veolia"], ["suez", "Suez"], ["grdf", "GRDF"], ["enedis", "Enedis"],
+  ["antargaz", "Antargaz"], ["butagaz", "Butagaz"], ["primagaz", "Primagaz"],
+  ["dalkia", "Dalkia"], ["saur", "Saur"],
   // Telecom
   ["free mobile", "Free-Mobile"], ["freebox", "Free"],
-  ["orange", "Orange"], ["sosh", "Sosh"], ["sfr", "SFR"], ["red by sfr", "RED-SFR"],
+  ["orange", "Orange"], ["sosh", "Sosh"],
+  ["sfr", "SFR"], ["red by sfr", "RED-SFR"],
   ["bouygues telecom", "Bouygues-Telecom"], ["b&you", "BandYou"],
-  // Banques (specifiques avant generiques)
+  ["la poste mobile", "LaPoste-Mobile"], ["nrj mobile", "NRJ-Mobile"],
+  ["prixtel", "Prixtel"], ["coriolis", "Coriolis"],
+  ["nordnet", "Nordnet"], ["numericable", "Numericable"],
+  // Banques
   ["credit agricole", "Credit-Agricole"], ["credit mutuel", "Credit-Mutuel"],
-  ["credit lyonnais", "LCL"], ["bnp paribas", "BNP"],
-  ["societe generale", "Societe-Generale"], ["la banque postale", "Banque-Postale"],
-  ["caisse d epargne", "Caisse-Epargne"], ["banque populaire", "Banque-Populaire"],
-  ["cic", "CIC"], ["lcl", "LCL"], ["boursorama", "Boursorama"],
+  ["credit lyonnais", "LCL"], ["credit cooperatif", "Credit-Cooperatif"],
+  ["credit du nord", "Credit-du-Nord"],
+  ["bnp paribas", "BNP"], ["societe generale", "Societe-Generale"],
+  ["la banque postale", "Banque-Postale"], ["caisse d epargne", "Caisse-Epargne"],
+  ["banque populaire", "Banque-Populaire"],
+  ["cic", "CIC"], ["lcl", "LCL"], ["bred", "BRED"],
+  ["boursorama", "Boursorama"], ["boursobank", "BoursoBank"],
   ["fortuneo", "Fortuneo"], ["ing direct", "ING"], ["hello bank", "HelloBank"],
   ["monabanq", "Monabanq"], ["n26", "N26"], ["revolut", "Revolut"],
+  ["orange bank", "Orange-Bank"], ["ma french bank", "MaFrenchBank"],
+  ["nickel", "Nickel"], ["bforbank", "BforBank"],
+  ["banque palatine", "Banque-Palatine"], ["natixis", "Natixis"],
+  ["arkea", "Arkea"], ["hsbc", "HSBC"],
   // Assurances
   ["axa", "AXA"], ["maif", "MAIF"], ["macif", "MACIF"], ["matmut", "Matmut"],
   ["groupama", "Groupama"], ["allianz", "Allianz"], ["generali", "Generali"],
-  ["mma", "MMA"], ["maaf", "MAAF"], ["gmf", "GMF"], ["pacifica", "Pacifica"],
-  ["harmonie mutuelle", "Harmonie"], ["alan", "Alan"], ["luko", "Luko"],
+  ["mma", "MMA"], ["maaf", "MAAF"], ["gmf", "GMF"], ["gan", "GAN"],
+  ["pacifica", "Pacifica"], ["aviva", "Aviva"], ["swiss life", "Swiss-Life"],
+  ["ag2r la mondiale", "AG2R"], ["malakoff humanis", "Malakoff-Humanis"],
+  ["harmonie mutuelle", "Harmonie-Mutuelle"], ["alan", "Alan"], ["luko", "Luko"],
+  ["direct assurance", "Direct-Assurance"], ["cnp assurances", "CNP"],
+  ["covea", "Covea"], ["april", "April"],
   // Sante
-  ["cpam", "CPAM"], ["ameli", "CPAM"], ["mgen", "MGEN"],
-  ["mutuelle", "Mutuelle"], ["harmonie", "Harmonie"],
+  ["cpam", "CPAM"], ["ameli", "CPAM"], ["mgen", "MGEN"], ["mnh", "MNH"],
+  ["uneo", "UNEO"], ["mutuelle", "Mutuelle"],
   // Organismes publics
   ["urssaf", "URSSAF"], ["pole emploi", "Pole-Emploi"],
   ["france travail", "France-Travail"], ["caf", "CAF"],
   ["dgfip", "Impots"], ["tresor public", "Tresor-Public"],
-  ["direction generale des finances", "Impots"], ["impots.gouv", "Impots"],
-  ["service des impots", "Impots"],
+  ["direction generale des finances", "Impots"],
+  ["impots.gouv", "Impots"], ["service des impots", "Impots"],
+  ["centre des finances publiques", "Impots"],
   ["prefecture", "Prefecture"], ["sous-prefecture", "Sous-Prefecture"],
-  ["mairie", "Mairie"], ["tribunal", "Tribunal"],
+  ["mairie", "Mairie"], ["commune", "Mairie"],
+  ["tribunal", "Tribunal"], ["greffe", "Greffe"],
   ["securite sociale", "Secu"], ["carsat", "CARSAT"], ["cnav", "CNAV"],
-  // Commerce / Grande distribution
+  ["agirc-arrco", "Agirc-Arrco"], ["ircantec", "Ircantec"],
+  ["msa", "MSA"], ["ants", "ANTS"],
+  ["education nationale", "Education-Nationale"], ["rectorat", "Rectorat"],
+  ["crous", "CROUS"], ["mission locale", "Mission-Locale"],
+  ["ars", "ARS"], ["ademe", "ADEME"], ["anah", "ANAH"],
+  ["chambre de commerce", "CCI"], ["chambre des metiers", "CMA"],
+  // Grande distribution
   ["leroy merlin", "Leroy-Merlin"], ["castorama", "Castorama"],
-  ["brico depot", "Brico-Depot"], ["mr bricolage", "MrBricolage"],
+  ["brico depot", "Brico-Depot"], ["bricomarche", "Bricomarche"],
+  ["mr bricolage", "MrBricolage"],
   ["boulanger", "Boulanger"], ["darty", "Darty"], ["fnac", "Fnac"],
   ["amazon", "Amazon"], ["cdiscount", "Cdiscount"], ["ikea", "IKEA"],
-  ["but", "BUT"], ["conforama", "Conforama"], ["auchan", "Auchan"],
-  ["carrefour", "Carrefour"], ["leclerc", "Leclerc"], ["lidl", "Lidl"],
-  ["intermarche", "Intermarche"],
+  ["but", "BUT"], ["conforama", "Conforama"],
+  ["auchan", "Auchan"], ["carrefour", "Carrefour"], ["leclerc", "Leclerc"],
+  ["lidl", "Lidl"], ["intermarche", "Intermarche"], ["casino", "Casino"],
+  ["monoprix", "Monoprix"], ["picard", "Picard"],
+  ["decathlon", "Decathlon"], ["go sport", "GoSport"], ["intersport", "Intersport"],
+  ["cultura", "Cultura"], ["action", "Action"], ["gifi", "Gifi"],
+  ["maisons du monde", "Maisons-du-Monde"],
   // Auto
   ["norauto", "Norauto"], ["speedy", "Speedy"], ["midas", "Midas"],
+  ["euromaster", "Euromaster"], ["feu vert", "Feu-Vert"],
   ["peugeot", "Peugeot"], ["renault", "Renault"], ["citroen", "Citroen"],
+  ["volkswagen", "Volkswagen"], ["toyota", "Toyota"], ["dacia", "Dacia"],
   // Tech / Hebergement
   ["ovh", "OVH"], ["o2switch", "O2switch"], ["ionos", "Ionos"],
-  ["gandi", "Gandi"], ["scaleway", "Scaleway"],
+  ["gandi", "Gandi"], ["scaleway", "Scaleway"], ["infomaniak", "Infomaniak"],
   ["google", "Google"], ["microsoft", "Microsoft"], ["apple", "Apple"],
   ["adobe", "Adobe"], ["spotify", "Spotify"], ["netflix", "Netflix"],
+  ["disney", "Disney"], ["canal plus", "Canal-Plus"],
+  ["paypal", "PayPal"], ["stripe", "Stripe"],
+  // Services / Livraison
+  ["la poste", "La-Poste"], ["chronopost", "Chronopost"], ["colissimo", "Colissimo"],
+  ["ups", "UPS"], ["fedex", "FedEx"], ["dhl", "DHL"], ["mondial relay", "Mondial-Relay"],
   // BTP / Artisans
   ["plombier", "Plombier"], ["electricien", "Electricien"],
   ["maconnerie", "Maconnerie"], ["peintre", "Peintre"],
+  ["chauffagiste", "Chauffagiste"], ["couvreur", "Couvreur"],
+  ["menuisier", "Menuisier"], ["serrurier", "Serrurier"],
+  ["carreleur", "Carreleur"], ["plaquiste", "Plaquiste"],
+  ["jardinier", "Jardinier"], ["paysagiste", "Paysagiste"],
+  ["ramoneur", "Ramoneur"], ["architecte", "Architecte"],
+  ["geometre", "Geometre"], ["diagnostiqueur", "Diagnostiqueur"],
   // Divers
-  ["la poste", "La-Poste"], ["chronopost", "Chronopost"], ["colissimo", "Colissimo"],
+  ["doctolib", "Doctolib"], ["booking", "Booking"], ["airbnb", "Airbnb"],
+  ["uber", "Uber"], ["blablacar", "Blablacar"],
   ["brother", "Brother"], ["bouygues", "Bouygues"], ["free", "Free"],
   ["cleor", "Cleor"]
 ];
@@ -164,9 +211,6 @@ function extractTextFromFile(file) {
   return text;
 }
 
-/**
- * Supprime tous les accents d'une chaine
- */
 function removeAccents(str) {
   if (!str) return "";
   var from = "àâäãéèêëïîìôöòùûüçñÀÂÄÃÉÈÊËÏÎÌÔÖÒÙÛÜÇÑ";
@@ -179,31 +223,22 @@ function removeAccents(str) {
   return result;
 }
 
-/**
- * Normalise le texte : minuscules + sans accents
- * Applique UNE SEULE FOIS avant toute analyse
- */
 function normalize(text) {
   return removeAccents(text).toLowerCase();
 }
 
 function generateFilename(text) {
-  // Normaliser le texte une seule fois (minuscules + sans accents)
   var norm = normalize(text);
   var date = extractDate(text, norm);
   var docType = detectType(norm);
   var emitter = detectEmitter(norm);
   var detail = extractDetail(norm, docType);
-
   var name = date + "_" + docType + "_" + emitter;
   if (detail) { name = name + "_" + detail; }
   name = name + ".pdf";
-
-  // Nettoyage final du nom
   name = removeAccents(name);
   name = name.replace(/ /g, "-");
   name = name.replace(/[^a-zA-Z0-9_\-\.EUR]/g, "");
-  // Eviter les doubles tirets
   name = name.replace(/-+/g, "-");
   name = name.replace(/_-/g, "_");
   name = name.replace(/-_/g, "_");
@@ -211,48 +246,36 @@ function generateFilename(text) {
   return name;
 }
 
-/**
- * Extrait la date du document
- * Cherche dans l'ordre : JJ/MM/AAAA, AAAA-MM-JJ, "24 decembre 2021"
- */
 function extractDate(originalText, norm) {
-  // Format: JJ/MM/AAAA ou JJ-MM-AAAA ou JJ.MM.AAAA
   var match = originalText.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
   if (match) {
     var d = parseInt(match[1]), m = parseInt(match[2]);
-    // Si le jour > 12, c'est bien JJ/MM/AAAA
-    // Si le mois > 12, c'est MM/JJ/AAAA (format US) -> inverser
     if (m > 12 && d <= 12) { var tmp = d; d = m; m = tmp; }
     if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
       return match[3] + "-" + pad(m) + "-" + pad(d);
     }
   }
-
-  // Format: AAAA-MM-JJ
   match = originalText.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (match) { return match[0]; }
-
-  // Format texte: "24 decembre 2021" (sur le texte normalise sans accents)
   var moisMap = {
     "janvier": "01", "fevrier": "02", "mars": "03", "avril": "04",
     "mai": "05", "juin": "06", "juillet": "07", "aout": "08",
     "septembre": "09", "octobre": "10", "novembre": "11", "decembre": "12"
   };
   for (var m2 in moisMap) {
-    // Gere "24 decembre 2021" et aussi "vendredi 24 decembre 2021"
     var regex = new RegExp("(\\d{1,2})\\s+" + m2 + "\\s+(\\d{4})");
     match = norm.match(regex);
     if (match) {
       return match[2] + "-" + moisMap[m2] + "-" + pad(parseInt(match[1]));
     }
-    // Gere aussi "decembre 2021" sans jour
-    var regex2 = new RegExp(m2 + "\\s+(\\d{4})");
+  }
+  for (var m3 in moisMap) {
+    var regex2 = new RegExp(m3 + "\\s+(\\d{4})");
     match = norm.match(regex2);
     if (match) {
-      return match[1] + "-" + moisMap[m2] + "-01";
+      return match[1] + "-" + moisMap[m3] + "-01";
     }
   }
-
   return "0000-00-00";
 }
 
@@ -260,9 +283,6 @@ function pad(n) {
   return n < 10 ? "0" + n : "" + n;
 }
 
-/**
- * Detecte le type de document par mots-cles
- */
 function detectType(norm) {
   var bestType = "Autre";
   var bestScore = 0;
@@ -277,33 +297,22 @@ function detectType(norm) {
   return bestType;
 }
 
-/**
- * Detecte l'emetteur : d'abord dans l'en-tete, puis dans tout le texte
- */
 function detectEmitter(norm) {
   var lines = norm.split("\n");
-
-  // En-tete = 10 premieres lignes
   var header = "";
   for (var h = 0; h < Math.min(lines.length, 10); h++) {
     header += lines[h] + " ";
   }
-
-  // Chercher d'abord dans l'en-tete
   for (var e = 0; e < KNOWN_EMITTERS.length; e++) {
     if (header.indexOf(KNOWN_EMITTERS[e][0]) > -1) {
       return KNOWN_EMITTERS[e][1];
     }
   }
-
-  // Puis dans tout le texte
   for (var f = 0; f < KNOWN_EMITTERS.length; f++) {
     if (norm.indexOf(KNOWN_EMITTERS[f][0]) > -1) {
       return KNOWN_EMITTERS[f][1];
     }
   }
-
-  // Dernier recours : premiere ligne significative comme nom
   for (var i = 0; i < Math.min(lines.length, 5); i++) {
     var line = lines[i].trim();
     if (line.length > 3 && line.length < 40 && line.indexOf("@") === -1 && line.indexOf("http") === -1) {
@@ -322,31 +331,24 @@ function detectEmitter(norm) {
   return "Inconnu";
 }
 
-/**
- * Extrait un detail : montant TTC pour factures, mot-cle pour autres
- */
 function extractDetail(norm, docType) {
-  // Montant pour factures/devis/quittances
   if (docType === "Facture" || docType === "Devis" || docType === "Quittance") {
     var montant = extractMontant(norm);
     if (montant) return montant;
   }
-
-  // Avis d'impot
   if (docType === "Avis") {
     if (norm.indexOf("taxe fonciere") > -1) return "Taxe-Fonciere";
-    if (norm.indexOf("taxe habitation") > -1) return "Taxe-Habitation";
+    if (norm.indexOf("taxe d habitation") > -1) return "Taxe-Habitation";
     if (norm.indexOf("impot sur le revenu") > -1) return "Impot-Revenu";
     if (norm.indexOf("cotisation fonciere") > -1) return "CFE";
+    if (norm.indexOf("ifi") > -1) return "IFI";
+    if (norm.indexOf("contribution sociale") > -1) return "Contrib-Sociale";
   }
-
-  // Bulletins et releves : chercher le mois
   if (docType === "Bulletin" || docType === "Releve") {
     var moisNoms = ["janvier", "fevrier", "mars", "avril", "mai", "juin",
       "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
     for (var j = 0; j < moisNoms.length; j++) {
       if (norm.indexOf(moisNoms[j]) > -1) {
-        // Chercher aussi l'annee apres le mois
         var regAnnee = new RegExp(moisNoms[j] + "\\s*(\\d{4})");
         var matchA = norm.match(regAnnee);
         if (matchA) {
@@ -356,46 +358,61 @@ function extractDetail(norm, docType) {
       }
     }
   }
-
-  // Contrat : type de contrat
   if (docType === "Contrat") {
     if (norm.indexOf("bail") > -1) return "Bail";
     if (norm.indexOf("travaux") > -1) return "Travaux";
     if (norm.indexOf("assurance") > -1) return "Assurance";
     if (norm.indexOf("maintenance") > -1) return "Maintenance";
+    if (norm.indexOf("location") > -1) return "Location";
+    if (norm.indexOf("prestation") > -1) return "Prestation";
+    if (norm.indexOf("abonnement") > -1) return "Abonnement";
   }
-
-  // Attestation : type
   if (docType === "Attestation") {
     if (norm.indexOf("domicile") > -1) return "Domicile";
     if (norm.indexOf("assurance") > -1) return "Assurance";
     if (norm.indexOf("responsabilite civile") > -1) return "RC";
     if (norm.indexOf("travail") > -1) return "Travail";
     if (norm.indexOf("hebergement") > -1) return "Hebergement";
+    if (norm.indexOf("droits") > -1) return "Droits";
+    if (norm.indexOf("formation") > -1) return "Formation";
+    if (norm.indexOf("scolarite") > -1) return "Scolarite";
+    if (norm.indexOf("vigilance") > -1) return "Vigilance";
   }
-
-  // Courrier : sujet
   if (docType === "Courrier") {
     if (norm.indexOf("resiliation") > -1) return "Resiliation";
     if (norm.indexOf("reclamation") > -1) return "Reclamation";
     if (norm.indexOf("mise en demeure") > -1) return "Mise-en-demeure";
     if (norm.indexOf("preavis") > -1) return "Preavis";
     if (norm.indexOf("convocation") > -1) return "Convocation";
+    if (norm.indexOf("rappel") > -1) return "Rappel";
+    if (norm.indexOf("renouvellement") > -1) return "Renouvellement";
+    if (norm.indexOf("confirmation") > -1) return "Confirmation";
+    if (norm.indexOf("refus") > -1) return "Refus";
+    if (norm.indexOf("acceptation") > -1) return "Acceptation";
   }
-
+  if (docType === "Acte") {
+    if (norm.indexOf("vente") > -1) return "Vente";
+    if (norm.indexOf("donation") > -1) return "Donation";
+    if (norm.indexOf("succession") > -1) return "Succession";
+    if (norm.indexOf("naissance") > -1) return "Naissance";
+    if (norm.indexOf("mariage") > -1) return "Mariage";
+    if (norm.indexOf("deces") > -1) return "Deces";
+  }
+  if (docType === "Rapport") {
+    if (norm.indexOf("expertise") > -1) return "Expertise";
+    if (norm.indexOf("audit") > -1) return "Audit";
+    if (norm.indexOf("diagnostic") > -1) return "Diagnostic";
+    if (norm.indexOf("annuel") > -1) return "Annuel";
+    if (norm.indexOf("activite") > -1) return "Activite";
+    if (norm.indexOf("incident") > -1) return "Incident";
+  }
   return "";
 }
 
-/**
- * Extrait le montant principal du document
- */
 function extractMontant(norm) {
   var patterns = [
-    // "Total TTC : 1 234,56" ou "Net a payer : 1234,56"
     /(?:total\s*ttc|net\s*a\s*payer|montant\s*ttc|montant\s*total|montant\s*du|total\s*general)[:\s]*(\d[\d\s]*[,\.]\d{2})/,
-    // "1 234,56 €" ou "1234,56 eur"
     /(\d[\d\s]*[,\.]\d{2})\s*(?:€|eur|euros)/,
-    // "€ 1 234,56"
     /(?:€|eur)\s*(\d[\d\s]*[,\.]\d{2})/
   ];
   for (var i = 0; i < patterns.length; i++) {
