@@ -358,4 +358,82 @@ class AdjudicationsScraper(BaseScraper):
                 source_name="Adjudications TJ Aix",
                 auction_type="ADJUGE le 26/06/2024 - MAP 99 000 EUR"
             ),
+            # === CABINET EKLAR (Marseille) ===
+            self.format_auction(
+                title="ADJUGE 191 000 EUR - Maison + terrain, Marseille 15e",
+                description="Maison d'habitation avec terrain. Adjuge 191 000 EUR le 09/03/2026.",
+                price_estimate=191000,
+                date_vente="2026-03-09",
+                ville="Marseille",
+                address="Marseille 13015",
+                url="https://www.eklar.com/vente",
+                source_name="Adjudications Eklar",
+                auction_type="ADJUGE le 09/03/2026"
+            ),
+            self.format_auction(
+                title="ADJUGE 66 000 EUR - Appart + cave, Salon-de-Provence",
+                description="Appartement avec cave. Mise a prix 30 000 EUR, adjuge 66 000 EUR (x2.2).",
+                price_estimate=66000,
+                date_vente="2026-03-09",
+                ville="Salon-de-Provence",
+                address="Salon-de-Provence 13300",
+                url="https://www.eklar.com/vente",
+                source_name="Adjudications Eklar",
+                auction_type="ADJUGE le 09/03/2026 - MAP 30 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 66 000 EUR - Appart + cave Res. Trianon, Marseille 13e",
+                description="Appartement avec cave, residence Trianon. Mise a prix 60 000 EUR, adjuge 66 000 EUR (x1.1).",
+                price_estimate=66000,
+                date_vente="2026-03-04",
+                ville="Marseille",
+                address="Residence Trianon, Marseille 13013",
+                url="https://www.eklar.com/vente",
+                source_name="Adjudications Eklar",
+                auction_type="ADJUGE le 04/03/2026 - MAP 60 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 155 000 EUR - Appart 110m2, Marseille 1er (au prix MAP)",
+                description="Appartement environ 110m2. Mise a prix 155 000 EUR, adjuge au meme prix (pas de surenchere).",
+                price_estimate=155000,
+                date_vente="2026-02-04",
+                ville="Marseille",
+                address="Marseille 13001",
+                url="https://www.eklar.com/vente",
+                source_name="Adjudications Eklar",
+                auction_type="ADJUGE le 04/02/2026 - MAP 155 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 24 000 EUR - Appart T1, 4 Rue Coutellerie, Marseille 2e (au prix MAP)",
+                description="Appartement T1 rue Coutellerie. Mise a prix 24 000 EUR, adjuge au meme prix.",
+                price_estimate=24000,
+                date_vente="2025-03-05",
+                ville="Marseille",
+                address="4 Rue Coutellerie, 13002 Marseille",
+                url=url_jb,
+                source_name="Adjudications TJ Marseille",
+                auction_type="ADJUGE le 05/03/2025 - MAP 24 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 30 000 EUR - Appart, Marseille 8e (au prix MAP)",
+                description="Appartement 8e arrondissement. Mise a prix 30 000 EUR, adjuge au meme prix.",
+                price_estimate=30000,
+                date_vente="2025-12-10",
+                ville="Marseille",
+                address="Marseille 13008",
+                url="https://www.eklar.com/vente",
+                source_name="Adjudications Eklar",
+                auction_type="ADJUGE le 10/12/2025 - MAP 30 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 110 000 EUR - Appart + cave + parking, Marseille 10e (au prix MAP)",
+                description="Appartement avec cave et parking. Mise a prix 110 000 EUR, adjuge au meme prix.",
+                price_estimate=110000,
+                date_vente="2025-10-01",
+                ville="Marseille",
+                address="Marseille 13010",
+                url="https://www.eklar.com/vente",
+                source_name="Adjudications Eklar",
+                auction_type="ADJUGE le 01/10/2025 - MAP 110 000 EUR"
+            ),
         ]
