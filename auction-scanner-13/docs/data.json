@@ -1,6 +1,70 @@
 {
   "auctions": [
     {
+      "id": "96f0f2d9bc28",
+      "title": "Appartement 49m2 - 14 rue des Cordelles, Marseille 2e",
+      "description": "Appartement communal 49m2 au 14 rue des Cordelles, 13002 Marseille. Mise a prix 20 249 EUR. Vente via Agorastore en partenariat avec la Ville de Marseille.",
+      "price_estimate": 20249,
+      "date_vente": "",
+      "ville": "Marseille",
+      "address": "14 rue des Cordelles, 13002 Marseille",
+      "url": "https://www.marseille.fr/offres-de-biens-communaux",
+      "image_url": "",
+      "source": "Mairie Marseille",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Cession communale via Agorastore",
+      "scanned_at": "2026-04-02T08:56:29.695025"
+    },
+    {
+      "id": "47cfb4e11267",
+      "title": "Maison 247m2 - 107 rue Charras, Marseille 7e",
+      "description": "Maison communale 247m2 au 107 rue Charras, 13007 Marseille. Mise a prix 430 000 EUR. Quartier Endoume/Roucas Blanc. Vente via Agorastore.",
+      "price_estimate": 430000,
+      "date_vente": "",
+      "ville": "Marseille",
+      "address": "107 rue Charras, 13007 Marseille",
+      "url": "https://www.marseille.fr/offres-de-biens-communaux",
+      "image_url": "",
+      "source": "Mairie Marseille",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Cession communale via Agorastore",
+      "scanned_at": "2026-04-02T08:56:29.695039"
+    },
+    {
+      "id": "0e0f89224555",
+      "title": "Maison 95m2 - 15 boulevard Pomeon, Marseille 9e",
+      "description": "Maison communale 95m2 au 15 boulevard Pomeon, 13009 Marseille. Mise a prix 135 000 EUR. Quartier Mazargues/Vaufrege. Vente via Agorastore.",
+      "price_estimate": 135000,
+      "date_vente": "",
+      "ville": "Marseille",
+      "address": "15 boulevard Pomeon, 13009 Marseille",
+      "url": "https://www.marseille.fr/offres-de-biens-communaux",
+      "image_url": "",
+      "source": "Mairie Marseille",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Cession communale via Agorastore",
+      "scanned_at": "2026-04-02T08:56:29.695052"
+    },
+    {
+      "id": "8f347928c716",
+      "title": "Maison 254m2 - 67 rue de la Maurelle, Marseille 13e",
+      "description": "Maison communale 254m2 au 67 rue de la Maurelle, 13013 Marseille. Mise a prix 285 000 EUR. Quartier Chateau-Gombert/Saint-Mitre. Vente via Agorastore.",
+      "price_estimate": 285000,
+      "date_vente": "",
+      "ville": "Marseille",
+      "address": "67 rue de la Maurelle, 13013 Marseille",
+      "url": "https://www.marseille.fr/offres-de-biens-communaux",
+      "image_url": "",
+      "source": "Mairie Marseille",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Cession communale via Agorastore",
+      "scanned_at": "2026-04-02T08:56:29.695067"
+    },
+    {
       "id": "25c2c69775fe",
       "title": "Studio 28m2 - Quartier Castellane - Investissement locatif",
       "description": "Studio meuble, 28m2, 2eme etage, loyer actuel 450 EUR/mois. Ideal investissement locatif. Proche metro Castellane.",
@@ -14,7 +78,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:50:33.498331"
+      "scanned_at": "2026-04-02T08:56:29.694628"
     },
     {
       "id": "a96330a69e83",
@@ -30,7 +94,7 @@
       "category": "parking",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:50:33.498450"
+      "scanned_at": "2026-04-02T08:56:29.694743"
     },
     {
       "id": "c121cdc2a17a",
@@ -46,7 +110,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:50:33.498281"
+      "scanned_at": "2026-04-02T08:56:29.694567"
     },
     {
       "id": "6fb1925dd1b5",
@@ -62,7 +126,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:50:33.498508"
+      "scanned_at": "2026-04-02T08:56:29.694835"
     },
     {
       "id": "546e13d30c82",
@@ -78,7 +142,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:50:33.498394"
+      "scanned_at": "2026-04-02T08:56:29.694689"
     },
     {
       "id": "6b6aa6390b9f",
@@ -94,7 +158,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:50:33.498562"
+      "scanned_at": "2026-04-02T08:56:29.694885"
     },
     {
       "id": "78bee0ef5444",
@@ -110,7 +174,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:50:33.498897"
+      "scanned_at": "2026-04-02T08:56:29.695157"
     },
     {
       "id": "60be7745e230",
@@ -126,23 +190,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:50:33.498482"
-    },
-    {
-      "id": "dbc69dda58a2",
-      "title": "Ancien logement communal T3 65m2 - Quartier Saint-Loup",
-      "description": "Ancien logement de fonction municipal, T3, 65m2, RDC, petit jardin privatif 80m2. Quartier Saint-Loup, proche ecoles et commerces. Travaux de rafraichissement a prevoir.",
-      "price_estimate": 115000,
-      "date_vente": "2026-04-15",
-      "ville": "Marseille",
-      "address": "Mairie de Marseille, Direction du Patrimoine municipal",
-      "url": "https://www.marseille.fr/offres-de-biens-communaux",
-      "image_url": "",
-      "source": "Mairie Marseille",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:50:33.498675"
+      "scanned_at": "2026-04-02T08:56:29.694807"
     },
     {
       "id": "978241057ab0",
@@ -158,7 +206,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:50:33.498311"
+      "scanned_at": "2026-04-02T08:56:29.694596"
     },
     {
       "id": "fe368f956bb0",
@@ -174,7 +222,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente forcee",
-      "scanned_at": "2026-04-02T08:50:33.498914"
+      "scanned_at": "2026-04-02T08:56:29.695173"
     },
     {
       "id": "f5f533973364",
@@ -190,7 +238,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:50:33.498525"
+      "scanned_at": "2026-04-02T08:56:29.694852"
     },
     {
       "id": "18ff449519f4",
@@ -206,39 +254,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:50:33.498413"
-    },
-    {
-      "id": "73ec90eb6001",
-      "title": "Appartement T2 40m2 - Ancien logement gardien ecole",
-      "description": "Ancien logement de gardien d'ecole, T2 au 1er etage, 40m2, lumineux. Quartier residentiel calme. Ideal premier achat ou investissement locatif.",
-      "price_estimate": 72000,
-      "date_vente": "2026-04-18",
-      "ville": "Miramas",
-      "address": "Mairie de Miramas",
-      "url": "https://www.miramas.org/",
-      "image_url": "",
-      "source": "Mairie Miramas",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:50:33.498744"
-    },
-    {
-      "id": "e62050168bbf",
-      "title": "Maison de gardien departementale - T3 75m2 avec terrain",
-      "description": "Ancienne maison de gardien attenante a un equipement departemental. T3, 75m2, terrain 450m2 clos. Bon etat, habitable en l'etat.",
-      "price_estimate": 175000,
-      "date_vente": "2026-04-19",
-      "ville": "Salon-de-Provence",
-      "address": "CD13, Direction du Patrimoine",
-      "url": "https://www.departement13.fr/les-ventes-immobilieres",
-      "image_url": "",
-      "source": "CD13 - Conseil Departemental",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:50:33.498652"
+      "scanned_at": "2026-04-02T08:56:29.694707"
     },
     {
       "id": "9dd39c445a19",
@@ -254,7 +270,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:50:33.498348"
+      "scanned_at": "2026-04-02T08:56:29.694646"
     },
     {
       "id": "8965e4ce0518",
@@ -270,23 +286,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:50:33.498855"
-    },
-    {
-      "id": "81c08bf8d6d4",
-      "title": "Local commercial municipal 45m2 - Centre historique",
-      "description": "Local en rez-de-chaussee dans le centre historique d'Arles, 45m2, voute en pierre, vitrine 3m. Ideal galerie d'art, artisanat ou boutique.",
-      "price_estimate": 62000,
-      "date_vente": "2026-04-21",
-      "ville": "Arles",
-      "address": "Mairie d'Arles, Direction des Affaires Foncieres",
-      "url": "https://www.arles.fr/",
-      "image_url": "",
-      "source": "Mairie Arles",
-      "category": "local",
-      "lot_count": null,
-      "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:50:33.498710"
+      "scanned_at": "2026-04-02T08:56:29.695122"
     },
     {
       "id": "4b0f3cbea872",
@@ -302,7 +302,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:50:33.498930"
+      "scanned_at": "2026-04-02T08:56:29.695188"
     },
     {
       "id": "64ce5f3a76e7",
@@ -318,23 +318,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:50:33.498545"
-    },
-    {
-      "id": "0776d953e7e5",
-      "title": "Ancien centre social departemental 400m2 - Reconversion",
-      "description": "Ancien centre social, RDC + R+1, 400m2, parking 15 places. Bon etat structurel, accessibilite PMR. Ideal activite tertiaire ou medicale.",
-      "price_estimate": 290000,
-      "date_vente": "2026-04-22",
-      "ville": "Martigues",
-      "address": "CD13, Service des Domaines",
-      "url": "https://www.departement13.fr/les-ventes-immobilieres",
-      "image_url": "",
-      "source": "CD13 - Conseil Departemental",
-      "category": "parking",
-      "lot_count": null,
-      "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:50:33.498636"
+      "scanned_at": "2026-04-02T08:56:29.694868"
     },
     {
       "id": "bad2eaa150fd",
@@ -350,23 +334,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:50:33.498366"
-    },
-    {
-      "id": "3864691558e7",
-      "title": "Terrain communal 600m2 - Zone pavillonnaire Jas de Bouffan",
-      "description": "Parcelle communale constructible, 600m2, zone UBa du PLU. Quartier Jas de Bouffan, environnement residentiel calme. Reseaux en limite de parcelle.",
-      "price_estimate": 180000,
-      "date_vente": "2026-04-24",
-      "ville": "Aix-en-Provence",
-      "address": "Mairie d'Aix-en-Provence, Service Urbanisme",
-      "url": "https://www.aixenprovence.fr/",
-      "image_url": "",
-      "source": "Mairie Aix-en-Provence",
-      "category": "terrain",
-      "lot_count": null,
-      "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:50:33.498692"
+      "scanned_at": "2026-04-02T08:56:29.694663"
     },
     {
       "id": "09ab926f33da",
@@ -382,7 +350,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:50:33.498947"
+      "scanned_at": "2026-04-02T08:56:29.695204"
     },
     {
       "id": "53204a617327",
@@ -398,23 +366,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:50:33.498433"
-    },
-    {
-      "id": "4db602943309",
-      "title": "Ancien dispensaire municipal 200m2 - A renover",
-      "description": "Ancien dispensaire communal sur 2 niveaux, 200m2, terrain 350m2. Structure saine, toiture OK. Possibilite division en 2 logements. Proche centre.",
-      "price_estimate": 155000,
-      "date_vente": "2026-04-27",
-      "ville": "Gardanne",
-      "address": "Mairie de Gardanne, Service du Patrimoine",
-      "url": "https://www.ville-gardanne.fr/",
-      "image_url": "",
-      "source": "Mairie Gardanne",
-      "category": "terrain",
-      "lot_count": null,
-      "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:50:33.498727"
+      "scanned_at": "2026-04-02T08:56:29.694726"
     },
     {
       "id": "5fd503d11d4c",
@@ -430,23 +382,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire succession",
-      "scanned_at": "2026-04-02T08:50:33.498964"
-    },
-    {
-      "id": "883287bf3353",
-      "title": "Terrain departemental 3000m2 - Zone amenagement",
-      "description": "Parcelle departementale en zone d'amenagement, 3000m2, plat, viabilisable. Zonage PLU permettant habitat collectif R+4. Etude de sol disponible.",
-      "price_estimate": 380000,
-      "date_vente": "2026-04-30",
-      "ville": "Vitrolles",
-      "address": "CD13, Direction de l'Amenagement",
-      "url": "https://www.departement13.fr/les-ventes-immobilieres",
-      "image_url": "",
-      "source": "CD13 - Conseil Departemental",
-      "category": "terrain",
-      "lot_count": null,
-      "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:50:33.498618"
+      "scanned_at": "2026-04-02T08:56:29.695220"
     },
     {
       "id": "969dddc9da90",
@@ -462,23 +398,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:50:33.498466"
-    },
-    {
-      "id": "4954257bb64a",
-      "title": "Parcelle constructible 900m2 - Lotissement communal",
-      "description": "Lot n 3 du lotissement communal Les Oliviers. 900m2, plat, viabilise, CES 0.30. Vue degagee sur la Sainte-Victoire. Cahier des charges disponible.",
-      "price_estimate": 125000,
-      "date_vente": "2026-05-02",
-      "ville": "Chateaurenard",
-      "address": "Mairie de Chateaurenard, Service Urbanisme",
-      "url": "https://www.chateaurenard.com/",
-      "image_url": "",
-      "source": "Mairie Chateaurenard",
-      "category": "terrain",
-      "lot_count": null,
-      "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:50:33.498761"
+      "scanned_at": "2026-04-02T08:56:29.694787"
     },
     {
       "id": "03034ec3ba7c",
@@ -494,23 +414,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:50:33.498815"
-    },
-    {
-      "id": "4555dad2c82d",
-      "title": "Ancien college departemental - Batiment 2500m2",
-      "description": "Ancien college desaffecte, batiment principal 2500m2 sur terrain 5000m2. Possibilite reconversion en logements, bureaux ou equipement. Proche centre-ville, desserte bus.",
-      "price_estimate": 850000,
-      "date_vente": "2026-05-07",
-      "ville": "Aubagne",
-      "address": "Conseil Departemental des Bouches-du-Rhone, Direction du Patrimoine",
-      "url": "https://www.departement13.fr/les-ventes-immobilieres",
-      "image_url": "",
-      "source": "CD13 - Conseil Departemental",
-      "category": "terrain",
-      "lot_count": null,
-      "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:50:33.498600"
+      "scanned_at": "2026-04-02T08:56:29.695090"
     },
     {
       "id": "5b8e2a1426e4",
@@ -526,7 +430,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:50:33.498838"
+      "scanned_at": "2026-04-02T08:56:29.695106"
     },
     {
       "id": "1b830b3c8db2",
@@ -542,50 +446,173 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:50:33.498873"
+      "scanned_at": "2026-04-02T08:56:29.695139"
+    },
+    {
+      "id": "028d5f6db5c1",
+      "title": "2 appartements et 2 caves en copropriete - 10 Rue de la Bastille, Arles",
+      "description": "RDC: 1 appartement 98.79m2 (6 pieces). 1er etage: 1 appartement 126.83m2 (5 pieces). Sous-sol: 2 caves (34m2 et 23m2). Section AE n.51, zone UA. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Arles",
+      "address": "10 Rue de la Bastille, 13200 Arles",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694906"
+    },
+    {
+      "id": "4bf64f4f4a5b",
+      "title": "Maison plain-pied a renover - 1 residence les Madets, Plan-de-Cuques",
+      "description": "Maison de plain-pied necessitant renovation complete. Parcelle AA 63, terrain 597m2, zone UP3. Entree de la residence les Madets. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Plan-de-Cuques",
+      "address": "1 residence les Madets, 13380 Plan-de-Cuques",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694922"
+    },
+    {
+      "id": "67fce2222f5f",
+      "title": "Maison R+1 a renover - 20 residence les Madets, Plan-de-Cuques",
+      "description": "Maison R+1 a renover, parcelle plate. Section AA n.53, terrain 602m2, zone UP3. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Plan-de-Cuques",
+      "address": "20 residence les Madets, 13380 Plan-de-Cuques",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694934"
+    },
+    {
+      "id": "2066a3026e5b",
+      "title": "Maison R+1 a renover - 3 residence les Madets, Plan-de-Cuques",
+      "description": "Maison R+1, renovation complete a prevoir. Terrain plat 654m2, zone UP3. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Plan-de-Cuques",
+      "address": "3 residence les Madets, 13380 Plan-de-Cuques",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694947"
+    },
+    {
+      "id": "1cc048675e57",
+      "title": "Maison 3 appartements - 87 av. Louis Enjolras, Plan-de-Cuques",
+      "description": "Maison R+1 composee de 3 appartements, renovation complete a prevoir. Section AA n.64, terrain 854m2, zone UP3. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Plan-de-Cuques",
+      "address": "87 avenue Louis Enjolras, 13380 Plan-de-Cuques",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694961"
+    },
+    {
+      "id": "7509c9ac3392",
+      "title": "Maison de village a renover - 90 av. Louis Enjolras, Plan-de-Cuques",
+      "description": "Maison de village, renovation complete necessaire. Section AR n.2, terrain 201m2, zone UP3. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Plan-de-Cuques",
+      "address": "90 avenue Louis Enjolras, 13380 Plan-de-Cuques",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694974"
+    },
+    {
+      "id": "878ec7054e89",
+      "title": "Terrain 2928m2 - Lieu-dit Bompertuis, Gardanne",
+      "description": "Terrain non bati avec arbres, a l'abandon. Proximite voie ferree et voie rapide D6. Section CL n.417, 2928m2, zone UEa du PLUi. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Gardanne",
+      "address": "Impasse de la Plaine, 13120 Gardanne",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.694988"
+    },
+    {
+      "id": "583ced8417c2",
+      "title": "Mas de Faramen - Domaine 8 hectares - Saintes-Maries-de-la-Mer",
+      "description": "Ancien mas R+1 avec sous-sol. RDC: cuisine, hall, WC, buanderie, chambre. Etage: 4 pieces, SDB, mezzanine. Jardin, cave semi-enterree. Terrain 81590m2 (8.16 ha). NON raccorde eau/electricite. Zone A. Faire offre.",
+      "price_estimate": null,
+      "date_vente": "2026-05-29",
+      "ville": "Les Saintes-Maries-de-la-Mer",
+      "address": "Lieu-dit Chateau d'Avignon, 13460 Les Saintes-Maries-de-la-Mer",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
+      "image_url": "",
+      "source": "CD13 - Conseil Departemental",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Appel a candidature - Limite 29/05/2026",
+      "scanned_at": "2026-04-02T08:56:29.695006"
     }
   ],
   "stats": {
-    "total": 34,
+    "total": 36,
     "by_category": {
-      "appartement": 15,
-      "parking": 2,
-      "local": 5,
-      "maison": 3,
-      "terrain": 8,
+      "appartement": 16,
+      "maison": 9,
+      "parking": 1,
+      "local": 4,
+      "terrain": 5,
       "autre": 1
     },
     "by_ville": {
-      "Marseille": 10,
+      "Marseille": 13,
       "Arles": 2,
-      "Martigues": 2,
-      "Aubagne": 2,
+      "Martigues": 1,
+      "Aubagne": 1,
       "Tarascon": 2,
       "Les Pennes-Mirabeau": 1,
       "Istres": 1,
-      "Aix-en-Provence": 4,
-      "Miramas": 1,
-      "Salon-de-Provence": 2,
+      "Aix-en-Provence": 3,
       "Marignane": 1,
       "La Ciotat": 2,
-      "Vitrolles": 2,
+      "Vitrolles": 1,
+      "Salon-de-Provence": 1,
+      "Plan-de-Cuques": 5,
       "Gardanne": 1,
-      "Chateaurenard": 1
+      "Les Saintes-Maries-de-la-Mer": 1
     },
     "by_source": {
+      "Mairie Marseille": 4,
       "Interencheres": 5,
       "Encheres Publiques": 6,
       "Agorastore": 4,
       "Licitor": 5,
-      "Mairie Marseille": 1,
-      "Mairie Miramas": 1,
-      "CD13 - Conseil Departemental": 4,
       "France Domaine": 4,
-      "Mairie Arles": 1,
-      "Mairie Aix-en-Provence": 1,
-      "Mairie Gardanne": 1,
-      "Mairie Chateaurenard": 1
+      "CD13 - Conseil Departemental": 8
     }
   },
-  "generated_at": "2026-04-02T08:50:33.498987"
+  "generated_at": "2026-04-02T08:56:29.695241"
 }
