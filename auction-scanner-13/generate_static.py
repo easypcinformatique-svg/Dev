@@ -16,6 +16,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scrapers.interencheres import InterencheresScraper
 from scrapers.encheres_publiques import EncheresPubliquesScraper
 from scrapers.agorastore import AgorastoreScraper
+from scrapers.cd13 import CD13Scraper
+from scrapers.mairies import MairiesScraper
+from scrapers.france_domaine import FranceDomaineScraper
+from scrapers.licitor import LicitorScraper
 
 
 def generate():
@@ -28,6 +32,10 @@ def generate():
         InterencheresScraper(),
         EncheresPubliquesScraper(),
         AgorastoreScraper(),
+        CD13Scraper(),
+        MairiesScraper(),
+        FranceDomaineScraper(),
+        LicitorScraper(),
     ]
 
     for scraper in scrapers:

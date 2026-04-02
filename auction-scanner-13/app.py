@@ -1,6 +1,6 @@
 """
-Scanner d'encheres - Departement 13 (Bouches-du-Rhone)
-Application web Flask pour scanner et agreger les ventes aux encheres
+Scanner Immobilier Encheres 13 - Departement 13 (Bouches-du-Rhone)
+Application web Flask pour scanner les ventes immobilieres aux encheres
 dans le departement 13 (Marseille, Aix-en-Provence, etc.)
 """
 
@@ -13,6 +13,10 @@ from flask import Flask, render_template, jsonify, request
 from scrapers.interencheres import InterencheresScraper
 from scrapers.encheres_publiques import EncheresPubliquesScraper
 from scrapers.agorastore import AgorastoreScraper
+from scrapers.cd13 import CD13Scraper
+from scrapers.mairies import MairiesScraper
+from scrapers.france_domaine import FranceDomaineScraper
+from scrapers.licitor import LicitorScraper
 
 app = Flask(__name__)
 
@@ -25,13 +29,13 @@ auction_cache = {
 }
 
 CATEGORIES = {
-    "all": "Toutes categories",
-    "immobilier": "Immobilier",
-    "vehicules": "Vehicules",
-    "mobilier": "Mobilier & Objets",
-    "art": "Art & Antiquites",
-    "bijoux": "Bijoux & Montres",
-    "electronique": "Electronique",
+    "all": "Tous types de biens",
+    "appartement": "Appartements",
+    "maison": "Maisons & Villas",
+    "terrain": "Terrains",
+    "local": "Locaux commerciaux",
+    "parking": "Parkings & Garages",
+    "immeuble": "Immeubles de rapport",
     "autre": "Autre"
 }
 
@@ -52,6 +56,10 @@ def get_all_scrapers():
         InterencheresScraper(),
         EncheresPubliquesScraper(),
         AgorastoreScraper(),
+        CD13Scraper(),
+        MairiesScraper(),
+        FranceDomaineScraper(),
+        LicitorScraper(),
     ]
 
 
