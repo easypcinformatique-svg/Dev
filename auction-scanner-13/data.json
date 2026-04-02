@@ -8,13 +8,13 @@
       "date_vente": "2026-04-07",
       "ville": "Marseille",
       "address": "Hotel des ventes de Marseille",
-      "url": "https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
+      "url": "https://www.interencheres.com/carte-des-encheres",
       "image_url": "",
       "source": "Interencheres",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:48:19.331505"
+      "scanned_at": "2026-04-02T08:50:33.498331"
     },
     {
       "id": "a96330a69e83",
@@ -24,13 +24,13 @@
       "date_vente": "2026-04-09",
       "ville": "Marseille",
       "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "parking",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:48:19.331637"
+      "scanned_at": "2026-04-02T08:50:33.498450"
     },
     {
       "id": "c121cdc2a17a",
@@ -40,13 +40,13 @@
       "date_vente": "2026-04-10",
       "ville": "Marseille",
       "address": "Tribunal Judiciaire de Marseille, 6 rue Joseph Autran",
-      "url": "https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
+      "url": "https://www.interencheres.com/carte-des-encheres",
       "image_url": "",
       "source": "Interencheres",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:48:19.331453"
+      "scanned_at": "2026-04-02T08:50:33.498281"
     },
     {
       "id": "6fb1925dd1b5",
@@ -56,13 +56,13 @@
       "date_vente": "2026-04-11",
       "ville": "Arles",
       "address": "Direction des Domaines, Prefecture des Bouches-du-Rhone",
-      "url": "https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
+      "url": "https://www.agorastore.fr/ventes-occasions/immobilier",
       "image_url": "",
       "source": "Agorastore",
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:48:19.331697"
+      "scanned_at": "2026-04-02T08:50:33.498508"
     },
     {
       "id": "546e13d30c82",
@@ -72,13 +72,13 @@
       "date_vente": "2026-04-12",
       "ville": "Marseille",
       "address": "Tribunal Judiciaire de Marseille, 6 rue Joseph Autran",
-      "url": "https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:48:19.331568"
+      "scanned_at": "2026-04-02T08:50:33.498394"
     },
     {
       "id": "6b6aa6390b9f",
@@ -88,13 +88,13 @@
       "date_vente": "2026-04-13",
       "ville": "Martigues",
       "address": "Mairie de Martigues, Direction de l'immobilier",
-      "url": "https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
+      "url": "https://www.agorastore.fr/ventes-occasions/immobilier",
       "image_url": "",
       "source": "Agorastore",
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:48:19.331748"
+      "scanned_at": "2026-04-02T08:50:33.498562"
     },
     {
       "id": "78bee0ef5444",
@@ -104,13 +104,13 @@
       "date_vente": "2026-04-13",
       "ville": "Marseille",
       "address": "Tribunal Judiciaire de Marseille, Salle des criees",
-      "url": "https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
       "image_url": "",
       "source": "Licitor",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:48:19.332059"
+      "scanned_at": "2026-04-02T08:50:33.498897"
     },
     {
       "id": "60be7745e230",
@@ -120,13 +120,13 @@
       "date_vente": "2026-04-14",
       "ville": "Aubagne",
       "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:48:19.331669"
+      "scanned_at": "2026-04-02T08:50:33.498482"
     },
     {
       "id": "dbc69dda58a2",
@@ -136,13 +136,13 @@
       "date_vente": "2026-04-15",
       "ville": "Marseille",
       "address": "Mairie de Marseille, Direction du Patrimoine municipal",
-      "url": "https://www.marseille.fr/urbanisme",
+      "url": "https://www.marseille.fr/offres-de-biens-communaux",
       "image_url": "",
       "source": "Mairie Marseille",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:48:19.331886"
+      "scanned_at": "2026-04-02T08:50:33.498675"
     },
     {
       "id": "978241057ab0",
@@ -152,13 +152,13 @@
       "date_vente": "2026-04-16",
       "ville": "Tarascon",
       "address": "Tribunal Judiciaire de Tarascon",
-      "url": "https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
+      "url": "https://www.interencheres.com/carte-des-encheres",
       "image_url": "",
       "source": "Interencheres",
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:48:19.331485"
+      "scanned_at": "2026-04-02T08:50:33.498311"
     },
     {
       "id": "fe368f956bb0",
@@ -168,13 +168,13 @@
       "date_vente": "2026-04-16",
       "ville": "Les Pennes-Mirabeau",
       "address": "TJ Aix-en-Provence, Chambre des saisies immobilieres",
-      "url": "https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
       "image_url": "",
       "source": "Licitor",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente forcee",
-      "scanned_at": "2026-04-02T08:48:19.332075"
+      "scanned_at": "2026-04-02T08:50:33.498914"
     },
     {
       "id": "f5f533973364",
@@ -184,13 +184,13 @@
       "date_vente": "2026-04-17",
       "ville": "Istres",
       "address": "Mairie d'Istres, Service du patrimoine",
-      "url": "https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
+      "url": "https://www.agorastore.fr/ventes-occasions/immobilier",
       "image_url": "",
       "source": "Agorastore",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:48:19.331714"
+      "scanned_at": "2026-04-02T08:50:33.498525"
     },
     {
       "id": "18ff449519f4",
@@ -200,13 +200,13 @@
       "date_vente": "2026-04-18",
       "ville": "Aix-en-Provence",
       "address": "Tribunal Judiciaire d'Aix-en-Provence",
-      "url": "https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "local",
       "lot_count": null,
       "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:48:19.331598"
+      "scanned_at": "2026-04-02T08:50:33.498413"
     },
     {
       "id": "73ec90eb6001",
@@ -222,7 +222,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:48:19.331952"
+      "scanned_at": "2026-04-02T08:50:33.498744"
     },
     {
       "id": "e62050168bbf",
@@ -232,13 +232,13 @@
       "date_vente": "2026-04-19",
       "ville": "Salon-de-Provence",
       "address": "CD13, Direction du Patrimoine",
-      "url": "https://www.departement13.fr/les-actions/amenagement-du-territoire/",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
       "image_url": "",
       "source": "CD13 - Conseil Departemental",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:48:19.331859"
+      "scanned_at": "2026-04-02T08:50:33.498652"
     },
     {
       "id": "9dd39c445a19",
@@ -248,13 +248,13 @@
       "date_vente": "2026-04-20",
       "ville": "Marignane",
       "address": "Etude notariale Me Blanc, Marignane",
-      "url": "https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
+      "url": "https://www.interencheres.com/carte-des-encheres",
       "image_url": "",
       "source": "Interencheres",
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:48:19.331523"
+      "scanned_at": "2026-04-02T08:50:33.498348"
     },
     {
       "id": "8965e4ce0518",
@@ -264,13 +264,13 @@
       "date_vente": "2026-04-20",
       "ville": "Aix-en-Provence",
       "address": "DGFIP, Service France Domaine PACA",
-      "url": "https://cessions.immobilier-etat.gouv.fr",
+      "url": "https://cessions.immobilier-etat.gouv.fr/recherche",
       "image_url": "",
       "source": "France Domaine",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:48:19.332022"
+      "scanned_at": "2026-04-02T08:50:33.498855"
     },
     {
       "id": "81c08bf8d6d4",
@@ -280,13 +280,13 @@
       "date_vente": "2026-04-21",
       "ville": "Arles",
       "address": "Mairie d'Arles, Direction des Affaires Foncieres",
-      "url": "https://www.arles.fr/urbanisme/",
+      "url": "https://www.arles.fr/",
       "image_url": "",
       "source": "Mairie Arles",
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:48:19.331920"
+      "scanned_at": "2026-04-02T08:50:33.498710"
     },
     {
       "id": "4b0f3cbea872",
@@ -296,13 +296,13 @@
       "date_vente": "2026-04-21",
       "ville": "La Ciotat",
       "address": "Tribunal de Commerce de Marseille",
-      "url": "https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
       "image_url": "",
       "source": "Licitor",
       "category": "local",
       "lot_count": null,
       "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:48:19.332092"
+      "scanned_at": "2026-04-02T08:50:33.498930"
     },
     {
       "id": "64ce5f3a76e7",
@@ -312,13 +312,13 @@
       "date_vente": "2026-04-22",
       "ville": "Vitrolles",
       "address": "Mairie de Vitrolles",
-      "url": "https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
+      "url": "https://www.agorastore.fr/ventes-occasions/immobilier",
       "image_url": "",
       "source": "Agorastore",
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:48:19.331731"
+      "scanned_at": "2026-04-02T08:50:33.498545"
     },
     {
       "id": "0776d953e7e5",
@@ -328,13 +328,13 @@
       "date_vente": "2026-04-22",
       "ville": "Martigues",
       "address": "CD13, Service des Domaines",
-      "url": "https://www.departement13.fr/les-actions/amenagement-du-territoire/",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
       "image_url": "",
       "source": "CD13 - Conseil Departemental",
       "category": "parking",
       "lot_count": null,
       "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:48:19.331838"
+      "scanned_at": "2026-04-02T08:50:33.498636"
     },
     {
       "id": "bad2eaa150fd",
@@ -344,13 +344,13 @@
       "date_vente": "2026-04-24",
       "ville": "La Ciotat",
       "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
+      "url": "https://www.interencheres.com/carte-des-encheres",
       "image_url": "",
       "source": "Interencheres",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:48:19.331539"
+      "scanned_at": "2026-04-02T08:50:33.498366"
     },
     {
       "id": "3864691558e7",
@@ -360,13 +360,13 @@
       "date_vente": "2026-04-24",
       "ville": "Aix-en-Provence",
       "address": "Mairie d'Aix-en-Provence, Service Urbanisme",
-      "url": "https://www.aixenprovence.fr/Urbanisme",
+      "url": "https://www.aixenprovence.fr/",
       "image_url": "",
       "source": "Mairie Aix-en-Provence",
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:48:19.331903"
+      "scanned_at": "2026-04-02T08:50:33.498692"
     },
     {
       "id": "09ab926f33da",
@@ -376,13 +376,13 @@
       "date_vente": "2026-04-25",
       "ville": "Marseille",
       "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
       "image_url": "",
       "source": "Licitor",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:48:19.332108"
+      "scanned_at": "2026-04-02T08:50:33.498947"
     },
     {
       "id": "53204a617327",
@@ -392,13 +392,13 @@
       "date_vente": "2026-04-27",
       "ville": "Salon-de-Provence",
       "address": "Tribunal Judiciaire de Salon-de-Provence",
-      "url": "https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:48:19.331618"
+      "scanned_at": "2026-04-02T08:50:33.498433"
     },
     {
       "id": "4db602943309",
@@ -414,7 +414,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:48:19.331936"
+      "scanned_at": "2026-04-02T08:50:33.498727"
     },
     {
       "id": "5fd503d11d4c",
@@ -424,13 +424,13 @@
       "date_vente": "2026-04-29",
       "ville": "Aix-en-Provence",
       "address": "TJ Aix-en-Provence",
-      "url": "https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
       "image_url": "",
       "source": "Licitor",
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire succession",
-      "scanned_at": "2026-04-02T08:48:19.332125"
+      "scanned_at": "2026-04-02T08:50:33.498964"
     },
     {
       "id": "883287bf3353",
@@ -440,13 +440,13 @@
       "date_vente": "2026-04-30",
       "ville": "Vitrolles",
       "address": "CD13, Direction de l'Amenagement",
-      "url": "https://www.departement13.fr/les-actions/amenagement-du-territoire/",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
       "image_url": "",
       "source": "CD13 - Conseil Departemental",
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:48:19.331792"
+      "scanned_at": "2026-04-02T08:50:33.498618"
     },
     {
       "id": "969dddc9da90",
@@ -456,13 +456,13 @@
       "date_vente": "2026-05-02",
       "ville": "Marseille",
       "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:48:19.331653"
+      "scanned_at": "2026-04-02T08:50:33.498466"
     },
     {
       "id": "4954257bb64a",
@@ -478,7 +478,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession communale",
-      "scanned_at": "2026-04-02T08:48:19.331968"
+      "scanned_at": "2026-04-02T08:50:33.498761"
     },
     {
       "id": "03034ec3ba7c",
@@ -488,13 +488,13 @@
       "date_vente": "2026-05-04",
       "ville": "Marseille",
       "address": "Direction Departementale des Finances Publiques, Marseille",
-      "url": "https://cessions.immobilier-etat.gouv.fr",
+      "url": "https://cessions.immobilier-etat.gouv.fr/recherche",
       "image_url": "",
       "source": "France Domaine",
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:48:19.331991"
+      "scanned_at": "2026-04-02T08:50:33.498815"
     },
     {
       "id": "4555dad2c82d",
@@ -504,13 +504,13 @@
       "date_vente": "2026-05-07",
       "ville": "Aubagne",
       "address": "Conseil Departemental des Bouches-du-Rhone, Direction du Patrimoine",
-      "url": "https://www.departement13.fr/les-actions/amenagement-du-territoire/",
+      "url": "https://www.departement13.fr/les-ventes-immobilieres",
       "image_url": "",
       "source": "CD13 - Conseil Departemental",
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession departementale",
-      "scanned_at": "2026-04-02T08:48:19.331775"
+      "scanned_at": "2026-04-02T08:50:33.498600"
     },
     {
       "id": "5b8e2a1426e4",
@@ -520,13 +520,13 @@
       "date_vente": "2026-05-12",
       "ville": "Tarascon",
       "address": "Direction Departementale des Finances Publiques",
-      "url": "https://cessions.immobilier-etat.gouv.fr",
+      "url": "https://cessions.immobilier-etat.gouv.fr/recherche",
       "image_url": "",
       "source": "France Domaine",
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:48:19.332007"
+      "scanned_at": "2026-04-02T08:50:33.498838"
     },
     {
       "id": "1b830b3c8db2",
@@ -536,13 +536,13 @@
       "date_vente": "2026-05-17",
       "ville": "Marseille",
       "address": "Direction de l'Immobilier de l'Etat, Marseille",
-      "url": "https://cessions.immobilier-etat.gouv.fr",
+      "url": "https://cessions.immobilier-etat.gouv.fr/recherche",
       "image_url": "",
       "source": "France Domaine",
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:48:19.332039"
+      "scanned_at": "2026-04-02T08:50:33.498873"
     }
   ],
   "stats": {
@@ -587,5 +587,5 @@
       "Mairie Chateaurenard": 1
     }
   },
-  "generated_at": "2026-04-02T08:48:19.332148"
+  "generated_at": "2026-04-02T08:50:33.498987"
 }
