@@ -1,233 +1,94 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Immobilier Encheres 13 - Bouches-du-Rhone</title>
-    <meta name="description" content="Scanner de ventes immobilieres aux encheres dans le departement 13 - Bouches-du-Rhone. Adjudications, saisies, ventes judiciaires.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-:root { --primary:#1e3a5f; --primary-light:#2c5282; --accent:#e8912d; --accent-hover:#d47d1e; --bg:#f0f4f8; --card-bg:#fff; --text:#2d3748; --text-light:#718096; --border:#e2e8f0; --success:#38a169; --warning:#d69e2e; --danger:#e53e3e; --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06); --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06); --shadow-lg:0 10px 15px rgba(0,0,0,.1),0 4px 6px rgba(0,0,0,.05); --radius:10px; }
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; min-height:100vh; }
-.header { background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%); color:#fff; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-lg); }
-.header-content { max-width:1400px; margin:0 auto; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; }
-.logo { display:flex; align-items:center; gap:14px; }
-.logo-icon { font-size:36px; }
-.logo h1 { font-size:22px; font-weight:700; }
-.subtitle { font-size:13px; opacity:.8; font-weight:300; }
-.header-actions { display:flex; align-items:center; gap:16px; }
-.last-update { font-size:12px; opacity:.7; }
-.stats-bar { max-width:1400px; margin:20px auto; padding:0 24px; display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:14px; }
-.stat-card { background:var(--card-bg); border-radius:var(--radius); padding:16px; text-align:center; box-shadow:var(--shadow); transition:transform .2s; }
-.stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
-.stat-number { font-size:26px; font-weight:700; color:var(--primary); }
-.stat-label { font-size:11px; color:var(--text-light); margin-top:4px; font-weight:500; text-transform:uppercase; letter-spacing:.5px; }
-/* Top Adjudications */
-.adj-section { max-width:1400px; margin:0 auto 20px; padding:0 24px; }
-.adj-title { font-size:16px; font-weight:700; color:var(--primary); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.adj-scroll { display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; scroll-snap-type:x mandatory; }
-.adj-scroll::-webkit-scrollbar { height:6px; }
-.adj-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-.adj-card { min-width:280px; max-width:320px; background:var(--card-bg); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--danger); scroll-snap-align:start; flex-shrink:0; }
-.adj-card:hover { box-shadow:var(--shadow-md); }
-.adj-bien { font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; line-height:1.3; }
-.adj-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-.adj-map { font-size:12px; color:var(--text-light); text-decoration:line-through; }
-.adj-prix { font-size:18px; font-weight:700; color:var(--danger); }
-.adj-multi { display:inline-block; background:#fff5f5; color:var(--danger); font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px; }
-.adj-date { font-size:11px; color:var(--text-light); }
-.adj-ville { font-size:11px; color:var(--text-light); }
-/* Filters */
-.filters-section { max-width:1400px; margin:0 auto 20px; padding:0 24px; }
-.filters-row { background:var(--card-bg); border-radius:var(--radius); padding:20px; display:flex; flex-wrap:wrap; gap:14px; box-shadow:var(--shadow); }
-.filter-group { flex:1; min-width:140px; }
-.filter-group label { display:block; font-size:11px; font-weight:600; color:var(--text-light); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
-.filter-group input,.filter-group select { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:7px; font-size:14px; font-family:inherit; color:var(--text); background:#fff; transition:border-color .2s; }
-.filter-group input:focus,.filter-group select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(30,58,95,.1); }
-.auctions-container { max-width:1400px; margin:0 auto; padding:0 24px 40px; }
-.auctions-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:18px; }
-.auction-card { background:var(--card-bg); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:all .25s; display:flex; flex-direction:column; border-left:4px solid transparent; animation:fadeInUp .3s ease forwards; opacity:0; }
-.auction-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
-.auction-card.cat-appartement { border-left-color:#3182ce; }
-.auction-card.cat-maison { border-left-color:#38a169; }
-.auction-card.cat-terrain { border-left-color:#d69e2e; }
-.auction-card.cat-local { border-left-color:#805ad5; }
-.auction-card.cat-parking { border-left-color:#a0aec0; }
-.auction-card.cat-immeuble { border-left-color:#e53e3e; }
-.auction-card.cat-autre { border-left-color:#718096; }
-.card-header { padding:16px 18px 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-.card-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; flex-shrink:0; }
-.badge-appartement { background:#ebf8ff; color:#2b6cb0; } .badge-maison { background:#f0fff4; color:#276749; } .badge-terrain { background:#fffff0; color:#975a16; } .badge-local { background:#faf5ff; color:#6b46c1; } .badge-parking { background:#f7fafc; color:#4a5568; } .badge-immeuble { background:#fff5f5; color:#c53030; } .badge-autre { background:#f7fafc; color:#4a5568; }
-.card-title { font-size:15px; font-weight:600; color:var(--text); line-height:1.4; flex:1; }
-.card-body { padding:0 18px; flex:1; }
-.card-description { font-size:13px; color:var(--text-light); line-height:1.5; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-.card-details { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
-.detail-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-light); }
-.card-footer { padding:12px 18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:#fafbfc; }
-.card-price { font-size:18px; font-weight:700; color:var(--accent); }
-.card-price.no-price { font-size:13px; color:var(--text-light); font-weight:500; }
-.card-source { font-size:11px; color:var(--text-light); background:var(--bg); padding:3px 8px; border-radius:4px; }
-.card-link { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--primary); text-decoration:none; font-weight:600; padding:5px 10px; border-radius:5px; transition:background .2s; }
-.card-link:hover { background:rgba(30,58,95,.08); }
-.date-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:5px; font-size:12px; font-weight:600; }
-.date-soon { background:#fff5f5; color:var(--danger); } .date-upcoming { background:#fffff0; color:var(--warning); } .date-later { background:#f0fff4; color:var(--success); }
-.no-results { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-light); }
-.loading { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-light); }
-.spinner { width:22px; height:22px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; display:inline-block; }
-@keyframes spin { to { transform:rotate(360deg); } }
-@keyframes fadeInUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-.footer { text-align:center; padding:30px 24px; color:var(--text-light); font-size:12px; border-top:1px solid var(--border); margin-top:40px; }
-.footer p+p { margin-top:4px; }
-.auto-update-badge { background:#f0fff4; color:var(--success); padding:4px 12px; border-radius:6px; font-size:11px; font-weight:600; }
-@media (max-width:768px) { .header-content { flex-direction:column; gap:12px; text-align:center; } .stats-bar { grid-template-columns:repeat(3,1fr); } .filters-row { flex-direction:column; } .filter-group { min-width:100%; } .auctions-grid { grid-template-columns:1fr; } .logo h1 { font-size:18px; } .adj-card { min-width:250px; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immobilier Encheres 13 - Bouches-du-Rhone</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--p:#1a365d;--pl:#2b6cb0;--ac:#dd6b20;--bg:#edf2f7;--c:#fff;--t:#1a202c;--m:#718096;--bd:#e2e8f0;--g:#38a169;--y:#d69e2e;--r:#e53e3e;--b:#3182ce;--v:#805ad5;--sh:0 1px 3px rgba(0,0,0,.1);--shm:0 4px 6px rgba(0,0,0,.08);--shl:0 10px 25px rgba(0,0,0,.12);--rd:12px}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t);line-height:1.6}a{color:var(--pl);text-decoration:none}a:hover{text-decoration:underline}
+.hd{background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;padding:20px 0;box-shadow:var(--shl);position:sticky;top:0;z-index:100}
+.w{max-width:1400px;margin:0 auto;padding:0 24px}.hd .w{display:flex;justify-content:space-between;align-items:center}
+.hd h1{font-size:24px;font-weight:800}.hd .su{font-size:13px;opacity:.75;margin-top:2px}.hd .ri{text-align:right}.hd .up{font-size:12px;opacity:.6}
+.bl{background:rgba(255,255,255,.15);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;display:inline-block;margin-bottom:4px}
+.sts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:20px 0}
+.st{background:var(--c);border-radius:var(--rd);padding:16px;text-align:center;box-shadow:var(--sh)}.st .n{font-size:28px;font-weight:800;color:var(--p)}.st .l{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;font-weight:600}
+.sb{margin:16px 0;display:flex;flex-wrap:wrap;gap:8px}
+.sl{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--c);border-radius:8px;font-size:12px;font-weight:600;color:var(--p);box-shadow:var(--sh);transition:all .15s;border:1.5px solid transparent}
+.sl:hover{border-color:var(--pl);box-shadow:var(--shm);text-decoration:none;transform:translateY(-1px)}.sl .d{width:8px;height:8px;border-radius:50%;flex-shrink:0}.sl .cn{color:var(--m);font-weight:400}
+.as{margin:24px 0}.as h2{font-size:18px;font-weight:700;color:var(--p);margin-bottom:14px}
+.ag{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}.ag::-webkit-scrollbar{height:5px}.ag::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:3px}
+.ac{min-width:300px;background:var(--c);border-radius:var(--rd);padding:18px;box-shadow:var(--sh);border-top:4px solid var(--r);scroll-snap-align:start;flex-shrink:0;display:flex;flex-direction:column;gap:8px;transition:box-shadow .2s}.ac:hover{box-shadow:var(--shl)}
+.ac .bi{font-size:14px;font-weight:600;line-height:1.3}.ac .pr{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ac .mp{font-size:13px;color:var(--m);text-decoration:line-through}.ac .ar{color:var(--m);font-size:16px}.ac .px{font-size:22px;font-weight:800;color:var(--r)}
+.ac .mu{background:#fed7d7;color:var(--r);font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.ac .me{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--m);gap:8px;flex-wrap:wrap}.ac .me a{color:var(--pl);font-weight:600}
+.fi{background:var(--c);border-radius:var(--rd);padding:18px;display:flex;flex-wrap:wrap;gap:12px;box-shadow:var(--sh);margin:20px 0}
+.fg{flex:1;min-width:130px}.fg label{display:block;font-size:10px;font-weight:700;color:var(--m);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select{width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:inherit;color:var(--t);background:#fff}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--b);box-shadow:0 0 0 3px rgba(49,130,206,.1)}
+.gr{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;margin-top:20px}
+.cd{background:var(--c);border-radius:var(--rd);overflow:hidden;box-shadow:var(--sh);transition:all .2s;display:flex;flex-direction:column;border-left:4px solid #cbd5e0;animation:fi .3s ease forwards;opacity:0}
+.cd:hover{box-shadow:var(--shl);transform:translateY(-2px)}.cd.ia{border-left-color:var(--r);background:linear-gradient(135deg,#fff 90%,#fff5f5)}
+.cd.ca{border-left-color:var(--b)}.cd.cm{border-left-color:var(--g)}.cd.ct{border-left-color:var(--y)}.cd.cl{border-left-color:var(--v)}.cd.ci{border-left-color:var(--r)}.cd.cp{border-left-color:#a0aec0}
+.cd .tp{padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.cd .ti{font-size:14px;font-weight:600;line-height:1.4;flex:1}
+.cd .ct2{font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;flex-shrink:0;background:#f7fafc;color:#4a5568}
+.cd.ca .ct2{background:#ebf8ff;color:#2b6cb0}.cd.cm .ct2{background:#f0fff4;color:#276749}.cd.ct .ct2{background:#fffff0;color:#975a16}.cd.cl .ct2{background:#faf5ff;color:#6b46c1}.cd.ci .ct2{background:#fff5f5;color:#c53030}
+.cd .bo{padding:0 18px 12px;flex:1}
+.cd .de{font-size:12px;color:var(--m);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cd .tg{display:flex;flex-wrap:wrap;gap:5px}.cd .ta{font-size:11px;color:var(--m);display:inline-flex;align-items:center;gap:3px;background:var(--bg);padding:3px 8px;border-radius:5px}
+.cd .fo{padding:12px 18px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;background:#fafbfc;gap:8px}
+.cd .pi{font-size:18px;font-weight:700;color:var(--ac)}.cd .pi.ap{color:var(--r)}.cd .pi.np{font-size:12px;color:var(--m);font-weight:500}
+.cd .sr{font-size:10px;color:var(--m);background:var(--bg);padding:3px 8px;border-radius:4px;white-space:nowrap}
+.cd .lk{font-size:12px;color:var(--pl);font-weight:600;padding:5px 10px;border-radius:5px;white-space:nowrap}.cd .lk:hover{background:rgba(49,130,206,.08);text-decoration:none}
+.em{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--m)}.lo{grid-column:1/-1;text-align:center;padding:50px}
+.sp{width:24px;height:24px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:sn .7s linear infinite;display:inline-block}
+@keyframes sn{to{transform:rotate(360deg)}}@keyframes fi{to{opacity:1}}
+.ft{text-align:center;padding:30px 24px;color:var(--m);font-size:11px;border-top:1px solid var(--bd);margin-top:40px}.ft p+p{margin-top:3px}
+@media(max-width:768px){.hd .w{flex-direction:column;text-align:center;gap:8px}.sts{grid-template-columns:repeat(3,1fr)}.fi{flex-direction:column}.fg{min-width:100%}.gr{grid-template-columns:1fr}.ac{min-width:260px}}
+</style>
 </head>
 <body>
-<header class="header"><div class="header-content"><div class="logo"><span class="logo-icon">&#127968;</span><div><h1>Immobilier Encheres 13</h1><p class="subtitle">Ventes immobilieres aux encheres &bull; Bouches-du-Rhone</p></div></div><div class="header-actions"><span class="auto-update-badge">&#9889; Mise a jour auto</span><span id="last-update" class="last-update"></span></div></div></header>
-
-<div class="stats-bar">
-    <div class="stat-card"><div class="stat-number" id="stat-total">0</div><div class="stat-label">Biens total</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-ventes">0</div><div class="stat-label">Ventes a venir</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-adj">0</div><div class="stat-label">Adjudications</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-sources">0</div><div class="stat-label">Sources</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-villes">0</div><div class="stat-label">Villes</div></div>
+<header class="hd"><div class="w"><div><h1>&#127968; Immobilier Encheres 13</h1><div class="su">Ventes aux encheres immobilieres &mdash; Bouches-du-Rhone</div></div><div class="ri"><span class="bl">&#9889; 8 sources actives</span><div class="up" id="upd"></div></div></div></header>
+<div class="w">
+<div class="sts"><div class="st"><div class="n" id="s1">-</div><div class="l">Biens total</div></div><div class="st"><div class="n" id="s2">-</div><div class="l">Ventes a venir</div></div><div class="st"><div class="n" id="s3">-</div><div class="l">Adjudications</div></div><div class="st"><div class="n" id="s4">-</div><div class="l">Sources</div></div><div class="st"><div class="n" id="s5">-</div><div class="l">Villes</div></div></div>
+<div class="sb" id="sb"></div>
+<div class="as"><h2>&#9878; Top Adjudications &mdash; Prix confirmes</h2><div class="ag" id="al"></div></div>
+<div class="fi">
+<div class="fg"><label>Recherche</label><input type="text" id="fq" placeholder="Adresse, mot-cle..." oninput="db()"></div>
+<div class="fg"><label>Type</label><select id="fc" onchange="go()"><option value="all">Tous</option><option value="appartement">Appartements</option><option value="maison">Maisons</option><option value="terrain">Terrains</option><option value="local">Locaux</option><option value="parking">Parkings</option><option value="immeuble">Immeubles</option></select></div>
+<div class="fg"><label>Ville</label><select id="fv" onchange="go()"><option value="all">Toutes</option><option value="marseille">Marseille</option><option value="aix-en-provence">Aix-en-Provence</option><option value="arles">Arles</option><option value="aubagne">Aubagne</option><option value="cassis">Cassis</option><option value="salon-de-provence">Salon-de-Provence</option><option value="vitrolles">Vitrolles</option><option value="plan-de-cuques">Plan-de-Cuques</option><option value="gardanne">Gardanne</option><option value="martigues">Martigues</option><option value="istres">Istres</option><option value="la ciotat">La Ciotat</option><option value="port-de-bouc">Port-de-Bouc</option><option value="tarascon">Tarascon</option></select></div>
+<div class="fg"><label>Source</label><select id="fs" onchange="go()"><option value="all">Toutes</option></select></div>
+<div class="fg"><label>Budget min</label><input type="number" id="fn" placeholder="0" onchange="go()"></div>
+<div class="fg"><label>Budget max</label><input type="number" id="fx" placeholder="Max" onchange="go()"></div>
+<div class="fg"><label>Trier</label><select id="ft" onchange="go()"><option value="date">Date</option><option value="pa">Prix croissant</option><option value="pd">Prix decroissant</option></select></div>
 </div>
-
-<!-- TOP ADJUDICATIONS -->
-<div class="adj-section">
-    <div class="adj-title">&#9878; Top Adjudications - Prix confirmes</div>
-    <div class="adj-scroll" id="adj-list"></div>
+<div class="gr" id="ls"><div class="lo"><div class="sp"></div><p style="margin-top:10px;color:var(--m)">Chargement...</p></div></div>
 </div>
-
-<div class="filters-section">
-    <div class="filters-row">
-        <div class="filter-group"><label>Recherche</label><input type="text" id="filter-search" placeholder="Mot-cle, adresse..." oninput="debounceFilter()"></div>
-        <div class="filter-group"><label>Type de bien</label><select id="filter-category" onchange="applyFilters()"><option value="all">Tous types</option><option value="appartement">Appartements</option><option value="maison">Maisons & Villas</option><option value="terrain">Terrains</option><option value="local">Locaux commerciaux</option><option value="parking">Parkings</option><option value="immeuble">Immeubles</option></select></div>
-        <div class="filter-group"><label>Ville</label><select id="filter-ville" onchange="applyFilters()"><option value="all">Toutes les villes</option><option value="marseille">Marseille</option><option value="aix-en-provence">Aix-en-Provence</option><option value="arles">Arles</option><option value="aubagne">Aubagne</option><option value="cassis">Cassis</option><option value="salon-de-provence">Salon-de-Provence</option><option value="vitrolles">Vitrolles</option><option value="plan-de-cuques">Plan-de-Cuques</option><option value="gardanne">Gardanne</option><option value="martigues">Martigues</option><option value="istres">Istres</option><option value="tarascon">Tarascon</option><option value="la ciotat">La Ciotat</option><option value="port-de-bouc">Port-de-Bouc</option></select></div>
-        <div class="filter-group"><label>Budget min</label><input type="number" id="filter-price-min" placeholder="0 EUR" onchange="applyFilters()"></div>
-        <div class="filter-group"><label>Budget max</label><input type="number" id="filter-price-max" placeholder="Illimite" onchange="applyFilters()"></div>
-        <div class="filter-group"><label>Source</label><select id="filter-source" onchange="applyFilters()"><option value="all">Toutes les sources</option></select></div>
-        <div class="filter-group"><label>Trier par</label><select id="filter-sort" onchange="applyFilters()"><option value="date">Date (plus proche)</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix decroissant</option></select></div>
-    </div>
-</div>
-
-<main class="auctions-container"><div id="auctions-list" class="auctions-grid"><div class="loading"><div class="spinner"></div><p style="margin-top:12px">Chargement...</p></div></div></main>
-
-<footer class="footer"><p>Immobilier Encheres 13 - Ventes immobilieres aux encheres - Bouches-du-Rhone (13)</p><p>Sources : Encheres Publiques, Licitor, CD13, Mairie Marseille, Interencheres, Agorastore, France Domaine, Adjudications TJ</p></footer>
-
+<footer class="ft"><p>Immobilier Encheres 13 &mdash; Bouches-du-Rhone (13)</p><p>Encheres Publiques &bull; Licitor &bull; CD13 &bull; Mairie Marseille &bull; Interencheres &bull; Agorastore &bull; France Domaine &bull; Adjudications TJ</p></footer>
 <script>
-let allAuctions=[],siteData=null,debounceTimer=null;
-document.addEventListener("DOMContentLoaded",()=>loadData());
-
-function loadData(){
-    fetch("data.json").then(r=>r.json()).then(data=>{
-        siteData=data; allAuctions=data.auctions||[];
-        updateStats(data.stats);
-        updateLastUpdate(data.generated_at);
-        populateSourceFilter(data.stats.by_source);
-        renderTopAdjudications();
-        applyFilters();
-    }).catch(()=>{document.getElementById("auctions-list").innerHTML='<div class="no-results"><h3>Donnees non disponibles</h3></div>';});
-}
-
-function updateStats(s){
-    if(!s) return;
-    document.getElementById("stat-total").textContent=s.total||0;
-    // Count adjudications vs upcoming
-    const adjCount=allAuctions.filter(a=>(a.source||"").includes("Adjudication")).length;
-    document.getElementById("stat-adj").textContent=adjCount;
-    document.getElementById("stat-ventes").textContent=(s.total||0)-adjCount;
-    document.getElementById("stat-sources").textContent=Object.keys(s.by_source||{}).length||0;
-    document.getElementById("stat-villes").textContent=Object.keys(s.by_ville||{}).length||0;
-}
-
-function renderTopAdjudications(){
-    const container=document.getElementById("adj-list");
-    // Filter adjudications and extract MAP from description
-    const adjs=allAuctions.filter(a=>(a.title||"").startsWith("ADJUGE")).map(a=>{
-        const mapMatch=(a.description||"").match(/[Mm]ise a prix (\d[\d\s]*)/);
-        const map=mapMatch?parseInt(mapMatch[1].replace(/\s/g,"")):null;
-        const prix=a.price_estimate||0;
-        const multi=map&&map>0?Math.round(prix/map*10)/10:null;
-        return {...a,map,multi};
-    }).filter(a=>a.multi&&a.multi>1).sort((a,b)=>(b.multi||0)-(a.multi||0)).slice(0,12);
-
-    if(!adjs.length){container.innerHTML='<p style="color:var(--text-light);font-size:13px;">Aucune adjudication disponible</p>';return;}
-
-    container.innerHTML=adjs.map(a=>`
-        <div class="adj-card">
-            <div class="adj-bien">${esc(a.title.replace(/^ADJUGE \d[\d\s]*EUR - /,""))}</div>
-            <div class="adj-row">
-                <span class="adj-map">MAP: ${a.map?formatPrice(a.map):"-"}</span>
-                <span class="adj-multi">x${a.multi}</span>
-            </div>
-            <div class="adj-row">
-                <span class="adj-prix">${formatPrice(a.price_estimate)}</span>
-            </div>
-            <div class="adj-row">
-                <span class="adj-ville">${esc(a.ville)}</span>
-                <span class="adj-date">${a.date_vente?formatDate(a.date_vente):""}</span>
-            </div>
-        </div>
-    `).join("");
-}
-
-function populateSourceFilter(bySrc){
-    const sel=document.getElementById("filter-source");
-    if(!bySrc) return;
-    Object.entries(bySrc).sort((a,b)=>b[1]-a[1]).forEach(([src,count])=>{
-        const opt=document.createElement("option");
-        opt.value=src;
-        opt.textContent=`${src} (${count})`;
-        sel.appendChild(opt);
-    });
-}
-
-function updateLastUpdate(ts){const el=document.getElementById("last-update");if(!ts){el.textContent="";return;}try{const d=new Date(ts);el.textContent="Maj: "+d.toLocaleDateString("fr-FR")+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});}catch{el.textContent="";}}
-
-function applyFilters(){
-    const category=document.getElementById("filter-category").value,search=document.getElementById("filter-search").value.toLowerCase(),ville=document.getElementById("filter-ville").value.toLowerCase(),source=document.getElementById("filter-source").value,priceMin=parseFloat(document.getElementById("filter-price-min").value)||0,priceMax=parseFloat(document.getElementById("filter-price-max").value)||Infinity,sortBy=document.getElementById("filter-sort").value;
-    let filtered=allAuctions.filter(a=>{
-        if(category!=="all"&&a.category!==category) return false;
-        if(source!=="all"&&a.source!==source) return false;
-        if(search&&!(a.title||"").toLowerCase().includes(search)&&!(a.description||"").toLowerCase().includes(search)) return false;
-        if(ville!=="all"&&!(a.ville||"").toLowerCase().includes(ville)) return false;
-        const price=a.price_estimate||0;
-        if(price<priceMin) return false;
-        if(priceMax!==Infinity&&price>priceMax) return false;
-        return true;
-    });
-    if(sortBy==="price_asc") filtered.sort((a,b)=>(a.price_estimate||0)-(b.price_estimate||0));
-    else if(sortBy==="price_desc") filtered.sort((a,b)=>(b.price_estimate||0)-(a.price_estimate||0));
-    else filtered.sort((a,b)=>(a.date_vente||"9999").localeCompare(b.date_vente||"9999"));
-    renderAuctions(filtered);
-}
-
-function renderAuctions(auctions){
-    const container=document.getElementById("auctions-list");
-    if(!auctions.length){container.innerHTML='<div class="no-results"><h3>Aucun bien trouve</h3><p>Modifiez vos filtres</p></div>';return;}
-    container.innerHTML=auctions.map((a,i)=>createCard(a,i)).join("");
-}
-
-function createCard(a,i){
-    const cat=a.category||"autre",labels={appartement:"Appartement",maison:"Maison",terrain:"Terrain",local:"Local",parking:"Parking",immeuble:"Immeuble",autre:"Autre"};
-    const isAdj=(a.title||"").startsWith("ADJUGE");
-    const price=a.price_estimate?formatPrice(a.price_estimate):'<span class="card-price no-price">Faire offre</span>';
-    const priceHtml=a.price_estimate?`<span class="card-price" ${isAdj?'style="color:var(--danger)"':''}>${price}</span>`:price;
-    const days=getDaysUntil(a.date_vente);
-    const dateClass=days<=3?"date-soon":days<=10?"date-upcoming":"date-later";
-    const dateIcon=days<=3?"&#128308;":days<=7?"&#128992;":"&#128994;";
-    const dateHtml=a.date_vente?`<span class="date-badge ${dateClass}">${dateIcon} ${formatDate(a.date_vente)}</span>`:"";
-    return `<div class="auction-card cat-${cat}" style="animation-delay:${Math.min(i*.04,.5)}s;${isAdj?"border-left-color:var(--danger)":""}"><div class="card-header"><h3 class="card-title">${esc(a.title)}</h3><span class="card-badge badge-${cat}">${labels[cat]||cat}</span></div><div class="card-body">${a.description?`<p class="card-description">${esc(a.description)}</p>`:""}<div class="card-details">${dateHtml}${a.ville?`<div class="detail-item">&#128205; ${esc(a.ville)}</div>`:""}${a.address?`<div class="detail-item">&#127968; ${esc(a.address)}</div>`:""}${a.auction_type?`<div class="detail-item">&#9878; ${esc(a.auction_type)}</div>`:""}</div></div><div class="card-footer">${priceHtml}<span class="card-source">${esc(a.source)}</span>${a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener" class="card-link">Voir &#8599;</a>`:""}</div></div>`;
-}
-
-function formatPrice(p){return new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",minimumFractionDigits:0,maximumFractionDigits:0}).format(p);}
-function formatDate(d){try{return new Date(d+"T00:00:00").toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}catch{return d;}}
-function getDaysUntil(d){try{const t=new Date(d+"T00:00:00"),n=new Date();n.setHours(0,0,0,0);return Math.ceil((t-n)/(864e5));}catch{return 999;}}
-function debounceFilter(){clearTimeout(debounceTimer);debounceTimer=setTimeout(applyFilters,300);}
-function esc(s){if(!s)return "";const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+const SU={"Encheres Publiques":"https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone","Licitor":"https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html","CD13 - Conseil Departemental":"https://www.departement13.fr/les-ventes-immobilieres","Mairie Marseille":"https://www.marseille.fr/offres-de-biens-communaux","Interencheres":"https://www.interencheres.com/carte-des-encheres","Agorastore":"https://www.agorastore.fr/ventes-occasions/immobilier","France Domaine":"https://cessions.immobilier-etat.gouv.fr/recherche","Adjudications TJ Marseille":"https://www.jurisbelair.com/encheres-publiques-marseille/","Adjudications TJ Aix":"https://www.ctcavocats.fr/encheres-immobilieres-w1","Adjudications Eklar":"https://www.eklar.com/vente"};
+const SC={"Encheres Publiques":"#3182ce","Licitor":"#e53e3e","CD13 - Conseil Departemental":"#38a169","Mairie Marseille":"#dd6b20","Adjudications TJ Marseille":"#e53e3e","Adjudications TJ Aix":"#c53030","Adjudications Eklar":"#9b2c2c","Interencheres":"#805ad5","Agorastore":"#d69e2e","France Domaine":"#2b6cb0"};
+let A=[],D=null,dt;
+document.addEventListener("DOMContentLoaded",()=>fetch("data.json").then(r=>r.json()).then(d=>{A=d.auctions||[];D=d;st();sb();ta();go();ud(d.generated_at)}).catch(()=>{$("ls").innerHTML='<div class="em"><h3>Donnees non disponibles</h3></div>'}));
+function $(i){return document.getElementById(i)}
+function st(){const aj=A.filter(a=>(a.title||"").startsWith("ADJUGE")).length;$("s1").textContent=A.length;$("s2").textContent=A.length-aj;$("s3").textContent=aj;$("s4").textContent=Object.keys(D.stats.by_source||{}).length;$("s5").textContent=Object.keys(D.stats.by_ville||{}).length}
+function sb(){const b=$("sb"),s=$("fs");Object.entries(D.stats.by_source||{}).sort((a,b)=>b[1]-a[1]).forEach(([n,c])=>{const u=SU[n]||"#",co=SC[n]||"#718096";b.innerHTML+=`<a href="${u}" target="_blank" rel="noopener" class="sl"><span class="d" style="background:${co}"></span>${n} <span class="cn">(${c})</span></a>`;const o=document.createElement("option");o.value=n;o.textContent=n+" ("+c+")";s.appendChild(o)})}
+function ta(){const c=$("al"),ad=A.filter(a=>(a.title||"").startsWith("ADJUGE")).map(a=>{const d=(a.description||"")+" "+(a.auction_type||"");let m=null;const r=d.match(/[Mm]ise a prix[:\s]+(\d[\d\s]*)/)||d.match(/MAP[:\s]+(\d[\d\s]*)/);if(r)m=parseInt(r[1].replace(/\s/g,""));const p=a.price_estimate||0,x=m&&m>0&&p>m?Math.round(p/m*10)/10:null;return{...a,m,x}}).sort((a,b)=>{if(a.x&&b.x)return b.x-a.x;if(a.x)return -1;if(b.x)return 1;return(b.price_estimate||0)-(a.price_estimate||0)}).slice(0,15);
+if(!ad.length){c.innerHTML='<p style="color:var(--m)">Aucune adjudication</p>';return}
+c.innerHTML=ad.map(a=>{const lb=a.title.replace(/^ADJUGE [\d\s]+EUR - /,""),su=a.url||SU[a.source]||"#";return`<div class="ac"><div class="bi">${e(lb)}</div><div class="pr">${a.m?`<span class="mp">${fp(a.m)}</span><span class="ar">&#8594;</span>`:""}<span class="px">${fp(a.price_estimate)}</span>${a.x?`<span class="mu">x${a.x}</span>`:""}</div><div class="me"><span>&#128205; ${e(a.ville)}</span><span>${a.date_vente?fd(a.date_vente):""}</span><a href="${e(su)}" target="_blank" rel="noopener">${e(a.source)} &#8599;</a></div></div>`}).join("")}
+function go(){const c=$("fc").value,q=$("fq").value.toLowerCase(),v=$("fv").value.toLowerCase(),s=$("fs").value,mn=parseFloat($("fn").value)||0,mx=parseFloat($("fx").value)||Infinity,so=$("ft").value;let f=A.filter(a=>{if(c!=="all"&&a.category!==c)return!1;if(s!=="all"&&a.source!==s)return!1;if(q&&!(a.title||"").toLowerCase().includes(q)&&!(a.description||"").toLowerCase().includes(q)&&!(a.address||"").toLowerCase().includes(q))return!1;if(v!=="all"&&!(a.ville||"").toLowerCase().includes(v))return!1;const p=a.price_estimate||0;if(p<mn)return!1;if(mx!==Infinity&&p>mx)return!1;return!0});if(so==="pa")f.sort((a,b)=>(a.price_estimate||0)-(b.price_estimate||0));else if(so==="pd")f.sort((a,b)=>(b.price_estimate||0)-(a.price_estimate||0));else f.sort((a,b)=>(a.date_vente||"9999").localeCompare(b.date_vente||"9999"));re(f)}
+function re(it){const c=$("ls");if(!it.length){c.innerHTML='<div class="em"><h3>Aucun bien</h3><p>Modifiez vos filtres</p></div>';return}c.innerHTML=it.map((a,i)=>cd(a,i)).join("")}
+function cd(a,i){const ct=a.category||"autre",lb={appartement:"Appart.",maison:"Maison",terrain:"Terrain",local:"Local",parking:"Parking",immeuble:"Immeuble",autre:"Autre"},ia=(a.title||"").startsWith("ADJUGE"),cc={appartement:"ca",maison:"cm",terrain:"ct",local:"cl",parking:"cp",immeuble:"ci"},cls=cc[ct]||"",p=a.price_estimate?`<span class="pi${ia?" ap":""}">${fp(a.price_estimate)}</span>`:'<span class="pi np">Faire offre</span>',dy=dys(a.date_vente),dc=dy<=3?"color:var(--r)":dy<=10?"color:var(--y)":"color:var(--g)",dt2=a.date_vente?`<span class="ta" style="${dc};font-weight:600">${fd(a.date_vente)}</span>`:"",su=a.url||SU[a.source]||"";
+return`<div class="cd ${cls}${ia?" ia":""}" style="animation-delay:${Math.min(i*.03,.4)}s"><div class="tp"><div class="ti">${e(a.title)}</div><span class="ct2">${lb[ct]||ct}</span></div><div class="bo">${a.description?`<div class="de">${e(a.description)}</div>`:""}<div class="tg">${dt2}${a.ville?`<span class="ta">&#128205; ${e(a.ville)}</span>`:""}${a.address?`<span class="ta">&#127968; ${e(a.address)}</span>`:""}${a.auction_type?`<span class="ta">&#9878; ${e(a.auction_type)}</span>`:""}</div></div><div class="fo">${p}<span class="sr">${e(a.source)}</span>${su?`<a href="${e(su)}" target="_blank" rel="noopener" class="lk">Voir &#8599;</a>`:""}</div></div>`}
+function ud(ts){const el=$("upd");if(!ts)return;try{const d=new Date(ts);el.textContent="Maj: "+d.toLocaleDateString("fr-FR")+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}catch{}}
+function fp(p){return new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",minimumFractionDigits:0,maximumFractionDigits:0}).format(p)}
+function fd(d){try{return new Date(d+"T00:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"})}catch{return d}}
+function dys(d){try{const t=new Date(d+"T00:00:00"),n=new Date;n.setHours(0,0,0,0);return Math.ceil((t-n)/864e5)}catch{return 999}}
+function db(){clearTimeout(dt);dt=setTimeout(go,300)}
+function e(s){if(!s)return"";const d=document.createElement("div");d.textContent=s;return d.innerHTML}
 </script>
 </body>
 </html>
