@@ -14,7 +14,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:56:29.695025"
+      "scanned_at": "2026-04-02T08:58:12.848293"
     },
     {
       "id": "47cfb4e11267",
@@ -30,7 +30,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:56:29.695039"
+      "scanned_at": "2026-04-02T08:58:12.848308"
     },
     {
       "id": "0e0f89224555",
@@ -46,7 +46,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:56:29.695052"
+      "scanned_at": "2026-04-02T08:58:12.848323"
     },
     {
       "id": "8f347928c716",
@@ -62,7 +62,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:56:29.695067"
+      "scanned_at": "2026-04-02T08:58:12.848339"
     },
     {
       "id": "25c2c69775fe",
@@ -78,7 +78,55 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:56:29.694628"
+      "scanned_at": "2026-04-02T08:58:12.847916"
+    },
+    {
+      "id": "e185097db45c",
+      "title": "Appartement 88m2 - 48 rue Chevalier Pau, Marseille 2e",
+      "description": "88.08m2, RDC: hall, cuisine, salle d'eau/wc, sejour, 2 chambres dont une obscure. Jouissance privative de la cour. 2 caves. Occupe. Visite: 31/03/2026.",
+      "price_estimate": 75000,
+      "date_vente": "2026-04-08",
+      "ville": "Marseille",
+      "address": "48 rue Chevalier Pau, Marseille 2e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848433"
+    },
+    {
+      "id": "c0b2ddd0b34e",
+      "title": "Appartement T5 83m2 - Residence La Simiane, Marseille 14e",
+      "description": "82.80m2 Carrez, bat. B, immeuble B3, 2e etage gauche, type 5PA. Residence La Simiane, Quartier Saint-Joseph. Occupe. Visite: 31/03/2026.",
+      "price_estimate": 32000,
+      "date_vente": "2026-04-08",
+      "ville": "Marseille",
+      "address": "Residence La Simiane, Chemin de Saint-Joseph, Marseille 14e",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848449"
+    },
+    {
+      "id": "fe24eb775e51",
+      "title": "Appartement T2 35m2 - 34 rue Alfred Curtel, Marseille 10e",
+      "description": "35.47m2, 1er etage bat. A: entree, salon, cuisine, chambre, SDB, wc, terrasse. Loue. Visite: 24/03/2026.",
+      "price_estimate": 39000,
+      "date_vente": "2026-04-08",
+      "ville": "Marseille",
+      "address": "34 rue Alfred Curtel, Marseille 10e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848462"
     },
     {
       "id": "a96330a69e83",
@@ -94,7 +142,7 @@
       "category": "parking",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:56:29.694743"
+      "scanned_at": "2026-04-02T08:58:12.848036"
     },
     {
       "id": "c121cdc2a17a",
@@ -110,7 +158,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:56:29.694567"
+      "scanned_at": "2026-04-02T08:58:12.847859"
     },
     {
       "id": "6fb1925dd1b5",
@@ -126,7 +174,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:56:29.694835"
+      "scanned_at": "2026-04-02T08:58:12.848094"
     },
     {
       "id": "546e13d30c82",
@@ -142,7 +190,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:56:29.694689"
+      "scanned_at": "2026-04-02T08:58:12.847981"
     },
     {
       "id": "6b6aa6390b9f",
@@ -158,23 +206,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:56:29.694885"
-    },
-    {
-      "id": "78bee0ef5444",
-      "title": "Appartement T2 50m2 - Saisie - Quartier du Prado",
-      "description": "Saisie immobiliere. T2, 50m2, 4eme etage, balcon sud, cave. Quartier Prado, proche plages et metro. Copropriete bien entretenue. Charges 150 EUR/mois.",
-      "price_estimate": 85000,
-      "date_vente": "2026-04-13",
-      "ville": "Marseille",
-      "address": "Tribunal Judiciaire de Marseille, Salle des criees",
-      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
-      "image_url": "",
-      "source": "Licitor",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:56:29.695157"
+      "scanned_at": "2026-04-02T08:58:12.848145"
     },
     {
       "id": "60be7745e230",
@@ -190,7 +222,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:56:29.694807"
+      "scanned_at": "2026-04-02T08:58:12.848068"
     },
     {
       "id": "978241057ab0",
@@ -206,23 +238,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:56:29.694596"
-    },
-    {
-      "id": "fe368f956bb0",
-      "title": "Maison T4 100m2 - Vente forcee - Les Pennes-Mirabeau",
-      "description": "Maison individuelle T4, 100m2, terrain 500m2, garage. Quartier residentiel calme. Travaux de mise aux normes electriques a prevoir. DPE classe E.",
-      "price_estimate": 210000,
-      "date_vente": "2026-04-16",
-      "ville": "Les Pennes-Mirabeau",
-      "address": "TJ Aix-en-Provence, Chambre des saisies immobilieres",
-      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
-      "image_url": "",
-      "source": "Licitor",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Vente forcee",
-      "scanned_at": "2026-04-02T08:56:29.695173"
+      "scanned_at": "2026-04-02T08:58:12.847896"
     },
     {
       "id": "f5f533973364",
@@ -238,7 +254,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:56:29.694852"
+      "scanned_at": "2026-04-02T08:58:12.848112"
     },
     {
       "id": "18ff449519f4",
@@ -254,7 +270,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:56:29.694707"
+      "scanned_at": "2026-04-02T08:58:12.848000"
     },
     {
       "id": "9dd39c445a19",
@@ -270,7 +286,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:56:29.694646"
+      "scanned_at": "2026-04-02T08:58:12.847934"
     },
     {
       "id": "8965e4ce0518",
@@ -286,23 +302,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:56:29.695122"
-    },
-    {
-      "id": "4b0f3cbea872",
-      "title": "Local d'activite 250m2 - Liquidation - Zone Athelia",
-      "description": "Local d'activite dans zone Athelia, 250m2, hauteur 5m, quai de dechargement. Bureau 40m2 attenant. 8 places parking. Libre immediatement.",
-      "price_estimate": 175000,
-      "date_vente": "2026-04-21",
-      "ville": "La Ciotat",
-      "address": "Tribunal de Commerce de Marseille",
-      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
-      "image_url": "",
-      "source": "Licitor",
-      "category": "local",
-      "lot_count": null,
-      "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:56:29.695188"
+      "scanned_at": "2026-04-02T08:58:12.848397"
     },
     {
       "id": "64ce5f3a76e7",
@@ -318,7 +318,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:56:29.694868"
+      "scanned_at": "2026-04-02T08:58:12.848127"
     },
     {
       "id": "bad2eaa150fd",
@@ -334,23 +334,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:56:29.694663"
-    },
-    {
-      "id": "09ab926f33da",
-      "title": "Appartement T5 110m2 - Indivision - Vue Calanques",
-      "description": "Vente sur licitation pour sortie d'indivision. T5, 110m2, dernier etage, terrasse 30m2, vue Calanques. Residence standing avec gardien. 2 parkings.",
-      "price_estimate": 295000,
-      "date_vente": "2026-04-25",
-      "ville": "Marseille",
-      "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
-      "image_url": "",
-      "source": "Licitor",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:56:29.695204"
+      "scanned_at": "2026-04-02T08:58:12.847952"
     },
     {
       "id": "53204a617327",
@@ -366,23 +350,103 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:56:29.694726"
+      "scanned_at": "2026-04-02T08:58:12.848018"
     },
     {
-      "id": "5fd503d11d4c",
-      "title": "Mas provencal 180m2 - Succession - Campagne aixoise",
-      "description": "Vente judiciaire succession. Mas en pierre, 180m2, terrain 3500m2, oliviers. Dependances 60m2. A restaurer partiellement. Cadre exceptionnel.",
-      "price_estimate": 350000,
-      "date_vente": "2026-04-29",
+      "id": "6ca6c7737182",
+      "title": "Terrain 2500m2 + Maison 189m2 - Aix-en-Provence (2 lots)",
+      "description": "Lot 1: Terrain a batir 2500m2, cloture, libre (MAP 210000 EUR). Lot 2: Maison 189m2 R+1, 5 chambres, ancien garage, terrain attenant, occupee (MAP 400000 EUR). Visite: 21/04/2026.",
+      "price_estimate": 610000,
+      "date_vente": "2026-04-27",
       "ville": "Aix-en-Provence",
-      "address": "TJ Aix-en-Provence",
+      "address": "Lieudit La Grande Bastide, 975 chemin de la Souque - TJ Aix 9h",
       "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
       "image_url": "",
       "source": "Licitor",
       "category": "maison",
       "lot_count": null,
-      "auction_type": "Vente judiciaire succession",
-      "scanned_at": "2026-04-02T08:56:29.695220"
+      "auction_type": "Vente aux encheres publiques - 2 lots",
+      "scanned_at": "2026-04-02T08:58:12.848478"
+    },
+    {
+      "id": "719aa6c2eaee",
+      "title": "Batiment/Moulin oleicole - Domaine des Plans, Velaux",
+      "description": "Entrepots et atelier agricole bati pour usage de moulin oleicole. Domaine des Plans, avenue Jean Pallet. Visite: 09/04/2026.",
+      "price_estimate": 300000,
+      "date_vente": "2026-04-27",
+      "ville": "Velaux",
+      "address": "Domaine des Plans, Av. Jean Pallet, Velaux - TJ Aix 9h",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "local",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848493"
+    },
+    {
+      "id": "4892208b73db",
+      "title": "Appartement 80m2 - 41 rue des Petites Maries, Marseille 1er",
+      "description": "80.21m2, 3e etage: hall, degagement, cuisine/sejour, chambre avec mezzanine, chambre avec mezzanine et SDE, SDE, wc. Occupe. Visite: 16/04/2026.",
+      "price_estimate": 37000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "41 rue des Petites Maries, Marseille 1er - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848508"
+    },
+    {
+      "id": "2e21d24c786c",
+      "title": "Appartement F2 42m2 - 20 rue Rigord, Marseille 7e (Saint-Victor)",
+      "description": "42.19m2 Carrez, RDC, type F2. Cave au 1er sous-sol. Quartier Saint-Victor. Libre. Visite: 20/04/2026.",
+      "price_estimate": 47000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "20 rue Rigord, Marseille 7e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848522"
+    },
+    {
+      "id": "1a08634e0526",
+      "title": "Maison 168m2 avec piscine - 63 traverse des Romans, Marseille 12e",
+      "description": "168.43m2, RDC + rez-de-jardin, abri voiture, abri jardin, pool house, cabanon, citerne, piscine (vide/fissuree), terrain. Vide et inoccupee. Visite: 21/04/2026.",
+      "price_estimate": 800000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "63 traverse des Romans, Marseille 12e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848539"
+    },
+    {
+      "id": "885dedf80e23",
+      "title": "Appartement 79m2 avec jardin - 5/7 av. Emmanuel Allard, Marseille 11e",
+      "description": "79.47m2, RDC bat. B: wc, SDE, piece de vie cuisine ouverte, buanderie, 2 chambres, veranda. Jardin et cave. Libre. Visite: 20/04/2026.",
+      "price_estimate": 29000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "5/7 av. Emmanuel Allard, Marseille 11e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848554"
     },
     {
       "id": "969dddc9da90",
@@ -398,7 +462,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:56:29.694787"
+      "scanned_at": "2026-04-02T08:58:12.848052"
     },
     {
       "id": "03034ec3ba7c",
@@ -414,7 +478,71 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:56:29.695090"
+      "scanned_at": "2026-04-02T08:58:12.848363"
+    },
+    {
+      "id": "254f81f4d895",
+      "title": "Appartement 65m2 + box - Colline Stella, Marseille 13e",
+      "description": "65.18m2, RDC entree B: sejour/cuisine, 2 chambres, SDB, wc. Jouissance terrasse et jardin. Parking + box garage sous-sol. Libres. Visite: 27/04/2026.",
+      "price_estimate": 72000,
+      "date_vente": "2026-05-06",
+      "ville": "Marseille",
+      "address": "93 traverse Susini, Quartier Saint-Jerome, Marseille 13e",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "parking",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848569"
+    },
+    {
+      "id": "af5ee2732b1f",
+      "title": "Appartement 32m2 - 21 quai des Baux, Cassis",
+      "description": "31.78m2, 1er etage: SDE/wc, 3 pieces, entree/palier, placard. Actuellement locaux techniques d'un restaurant. Libre. Visite: 27/04/2026.",
+      "price_estimate": 100000,
+      "date_vente": "2026-05-06",
+      "ville": "Cassis",
+      "address": "21 quai des Baux, Cassis - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848584"
+    },
+    {
+      "id": "0fe54c299a7a",
+      "title": "3 locaux RDC - 135 allee Georges Gonet, Saint-Victoret",
+      "description": "Trois locaux au rez-de-chaussee. Visite: 29/04/2026.",
+      "price_estimate": 90000,
+      "date_vente": "2026-05-11",
+      "ville": "Saint-Victoret",
+      "address": "135 allee Georges Gonet, Saint-Victoret - TJ Aix 9h",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "autre",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848596"
+    },
+    {
+      "id": "c49fb2cc0d0b",
+      "title": "Maison 2 appartements - 4 rue Denis Papin, Port-de-Bouc",
+      "description": "Maison composee de 2 appartements. Appt 1 (RDC+1er): entree, SDD, wc, 2 chambres, garage, cuisine, sejour, SDE/wc, bureau, chambre. Appt 2 (2e): sejour, cuisine, SDE/wc, 3 chambres, combles. Occupee. Visite: 27/04/2026.",
+      "price_estimate": 95000,
+      "date_vente": "2026-05-11",
+      "ville": "Port-de-Bouc",
+      "address": "4 rue Denis Papin, Port-de-Bouc - TJ Aix 9h",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848614"
     },
     {
       "id": "5b8e2a1426e4",
@@ -430,7 +558,55 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:56:29.695106"
+      "scanned_at": "2026-04-02T08:58:12.848380"
+    },
+    {
+      "id": "9e2b24666ab9",
+      "title": "Appartement F4 59m2 - Parc Corot, Marseille 13e (SQUATTE)",
+      "description": "59.08m2, bat. H, immeuble 27, 4e etage, F4: entree, cuisine, sejour, 3 chambres, SDE, wc, placards. Cave. SQUATTE. Visite: 30/04/2026.",
+      "price_estimate": 15000,
+      "date_vente": "2026-05-13",
+      "ville": "Marseille",
+      "address": "112 av. Corot, Parc Corot, Marseille 13e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848628"
+    },
+    {
+      "id": "a3c701760ea3",
+      "title": "Appartement 8e etage - 86-88 bd Pont de Vivaux, Marseille 10e",
+      "description": "8e etage bloc 4: degagement, chambre, sejour, 2e chambre, cuisine, wc, SDE, balcon, coursive. Cave. Visite: 28/04/2026.",
+      "price_estimate": 20000,
+      "date_vente": "2026-05-13",
+      "ville": "Marseille",
+      "address": "86-88 bd Pont de Vivaux, Marseille 10e - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848642"
+    },
+    {
+      "id": "4a23be5e8398",
+      "title": "Appartement 109m2 - 23 allee Leon Gambetta, Marseille 1er",
+      "description": "108.79m2, 3e etage, T3: hall, salon, salle a manger, 2 chambres, vestibule, cuisine, SDB, wc. Cave. Occupe. Visite: 30/04/2026.",
+      "price_estimate": 80000,
+      "date_vente": "2026-05-13",
+      "ville": "Marseille",
+      "address": "23 allee Leon Gambetta, Marseille 1er - TJ Marseille 9h30",
+      "url": "https://www.licitor.com/ventes-aux-encheres-immobilieres/provence-alpes-cote-d-azur.html",
+      "image_url": "",
+      "source": "Licitor",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Vente aux encheres publiques",
+      "scanned_at": "2026-04-02T08:58:12.848656"
     },
     {
       "id": "1b830b3c8db2",
@@ -446,7 +622,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:56:29.695139"
+      "scanned_at": "2026-04-02T08:58:12.848415"
     },
     {
       "id": "028d5f6db5c1",
@@ -462,7 +638,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694906"
+      "scanned_at": "2026-04-02T08:58:12.848166"
     },
     {
       "id": "4bf64f4f4a5b",
@@ -478,7 +654,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694922"
+      "scanned_at": "2026-04-02T08:58:12.848183"
     },
     {
       "id": "67fce2222f5f",
@@ -494,7 +670,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694934"
+      "scanned_at": "2026-04-02T08:58:12.848196"
     },
     {
       "id": "2066a3026e5b",
@@ -510,7 +686,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694947"
+      "scanned_at": "2026-04-02T08:58:12.848210"
     },
     {
       "id": "1cc048675e57",
@@ -526,7 +702,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694961"
+      "scanned_at": "2026-04-02T08:58:12.848224"
     },
     {
       "id": "7509c9ac3392",
@@ -542,7 +718,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694974"
+      "scanned_at": "2026-04-02T08:58:12.848239"
     },
     {
       "id": "878ec7054e89",
@@ -558,7 +734,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.694988"
+      "scanned_at": "2026-04-02T08:58:12.848254"
     },
     {
       "id": "583ced8417c2",
@@ -574,32 +750,35 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:56:29.695006"
+      "scanned_at": "2026-04-02T08:58:12.848273"
     }
   ],
   "stats": {
-    "total": 36,
+    "total": 47,
     "by_category": {
-      "appartement": 16,
-      "maison": 9,
-      "parking": 1,
+      "appartement": 22,
+      "maison": 12,
+      "parking": 2,
       "local": 4,
       "terrain": 5,
-      "autre": 1
+      "autre": 2
     },
     "by_ville": {
-      "Marseille": 13,
+      "Marseille": 22,
       "Arles": 2,
       "Martigues": 1,
       "Aubagne": 1,
       "Tarascon": 2,
-      "Les Pennes-Mirabeau": 1,
       "Istres": 1,
       "Aix-en-Provence": 3,
       "Marignane": 1,
-      "La Ciotat": 2,
       "Vitrolles": 1,
+      "La Ciotat": 1,
       "Salon-de-Provence": 1,
+      "Velaux": 1,
+      "Cassis": 1,
+      "Saint-Victoret": 1,
+      "Port-de-Bouc": 1,
       "Plan-de-Cuques": 5,
       "Gardanne": 1,
       "Les Saintes-Maries-de-la-Mer": 1
@@ -607,12 +786,12 @@
     "by_source": {
       "Mairie Marseille": 4,
       "Interencheres": 5,
+      "Licitor": 16,
       "Encheres Publiques": 6,
       "Agorastore": 4,
-      "Licitor": 5,
       "France Domaine": 4,
       "CD13 - Conseil Departemental": 8
     }
   },
-  "generated_at": "2026-04-02T08:56:29.695241"
+  "generated_at": "2026-04-02T08:58:12.848682"
 }
