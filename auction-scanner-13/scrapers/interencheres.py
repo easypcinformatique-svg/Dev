@@ -127,7 +127,7 @@ class InterencheresScraper(BaseScraper):
                 date_vente=(today + timedelta(days=8)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille, 6 rue Joseph Autran",
-                url="https://www.interencheres.com/immobilier/",
+                url="https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
                 image_url="",
                 auction_type="Vente sur licitation"
             ),
@@ -138,7 +138,7 @@ class InterencheresScraper(BaseScraper):
                 date_vente=(today + timedelta(days=14)).strftime("%Y-%m-%d"),
                 ville="Tarascon",
                 address="Tribunal Judiciaire de Tarascon",
-                url="https://www.interencheres.com/immobilier/",
+                url="https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
                 image_url="",
                 auction_type="Vente judiciaire"
             ),
@@ -149,7 +149,7 @@ class InterencheresScraper(BaseScraper):
                 date_vente=(today + timedelta(days=5)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Hotel des ventes de Marseille",
-                url="https://www.interencheres.com/immobilier/",
+                url="https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
                 image_url="",
                 auction_type="Encheres volontaires"
             ),
@@ -160,7 +160,7 @@ class InterencheresScraper(BaseScraper):
                 date_vente=(today + timedelta(days=18)).strftime("%Y-%m-%d"),
                 ville="Marignane",
                 address="Etude notariale Me Blanc, Marignane",
-                url="https://www.interencheres.com/immobilier/",
+                url="https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
                 image_url="",
                 auction_type="Encheres volontaires"
             ),
@@ -171,7 +171,7 @@ class InterencheresScraper(BaseScraper):
                 date_vente=(today + timedelta(days=22)).strftime("%Y-%m-%d"),
                 ville="La Ciotat",
                 address="Tribunal Judiciaire de Marseille",
-                url="https://www.interencheres.com/immobilier/",
+                url="https://www.interencheres.com/recherche/lots?search=immobilier+bouches+du+rhone+13",
                 image_url="",
                 auction_type="Vente sur licitation"
             ),

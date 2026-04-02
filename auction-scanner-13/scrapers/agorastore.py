@@ -128,7 +128,7 @@ class AgorastoreScraper(BaseScraper):
                 date_vente=(today + timedelta(days=9)).strftime("%Y-%m-%d"),
                 ville="Arles",
                 address="Direction des Domaines, Prefecture des Bouches-du-Rhone",
-                url="https://www.agorastore.fr/",
+                url="https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
                 image_url="",
                 source_name="Agorastore",
                 auction_type="Cession bien public"
@@ -140,7 +140,7 @@ class AgorastoreScraper(BaseScraper):
                 date_vente=(today + timedelta(days=15)).strftime("%Y-%m-%d"),
                 ville="Istres",
                 address="Mairie d'Istres, Service du patrimoine",
-                url="https://www.agorastore.fr/",
+                url="https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
                 image_url="",
                 source_name="Agorastore",
                 auction_type="Cession bien public"
@@ -152,7 +152,7 @@ class AgorastoreScraper(BaseScraper):
                 date_vente=(today + timedelta(days=20)).strftime("%Y-%m-%d"),
                 ville="Vitrolles",
                 address="Mairie de Vitrolles",
-                url="https://www.agorastore.fr/",
+                url="https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
                 image_url="",
                 source_name="Agorastore",
                 auction_type="Cession bien public"
@@ -164,7 +164,7 @@ class AgorastoreScraper(BaseScraper):
                 date_vente=(today + timedelta(days=11)).strftime("%Y-%m-%d"),
                 ville="Martigues",
                 address="Mairie de Martigues, Direction de l'immobilier",
-                url="https://www.agorastore.fr/",
+                url="https://www.agorastore.fr/recherche?q=immobilier+bouches+du+rhone",
                 image_url="",
                 source_name="Agorastore",
                 auction_type="Cession bien public"

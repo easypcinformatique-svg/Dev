@@ -99,7 +99,7 @@ class LicitorScraper(BaseScraper):
                 date_vente=(today + timedelta(days=11)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille, Salle des criees",
-                url="https://www.licitor.com/",
+                url="https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
                 source_name="Licitor",
                 auction_type="Saisie immobiliere"
             ),
@@ -110,7 +110,7 @@ class LicitorScraper(BaseScraper):
                 date_vente=(today + timedelta(days=14)).strftime("%Y-%m-%d"),
                 ville="Les Pennes-Mirabeau",
                 address="TJ Aix-en-Provence, Chambre des saisies immobilieres",
-                url="https://www.licitor.com/",
+                url="https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
                 source_name="Licitor",
                 auction_type="Vente forcee"
             ),
@@ -121,7 +121,7 @@ class LicitorScraper(BaseScraper):
                 date_vente=(today + timedelta(days=19)).strftime("%Y-%m-%d"),
                 ville="La Ciotat",
                 address="Tribunal de Commerce de Marseille",
-                url="https://www.licitor.com/",
+                url="https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
                 source_name="Licitor",
                 auction_type="Liquidation judiciaire"
             ),
@@ -132,7 +132,7 @@ class LicitorScraper(BaseScraper):
                 date_vente=(today + timedelta(days=23)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille",
-                url="https://www.licitor.com/",
+                url="https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
                 source_name="Licitor",
                 auction_type="Vente sur licitation"
             ),
@@ -143,7 +143,7 @@ class LicitorScraper(BaseScraper):
                 date_vente=(today + timedelta(days=27)).strftime("%Y-%m-%d"),
                 ville="Aix-en-Provence",
                 address="TJ Aix-en-Provence",
-                url="https://www.licitor.com/",
+                url="https://www.licitor.com/ventes-judiciaires-immobilieres/tj-marseille/",
                 source_name="Licitor",
                 auction_type="Vente judiciaire succession"
             ),
