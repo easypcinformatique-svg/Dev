@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Immobilier Encheres 13 - Bouches-du-Rhone</title>
-    <meta name="description" content="Scanner de ventes immobilieres aux encheres dans le departement 13 - Bouches-du-Rhone. Marseille, Aix-en-Provence, Arles, Martigues et plus.">
+    <title>Scanner Encheres 13 - Bouches-du-Rhone</title>
+    <meta name="description" content="Scanner de ventes aux encheres dans le departement 13 - Bouches-du-Rhone. Marseille, Aix-en-Provence, Arles, Martigues et plus.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -59,22 +59,22 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
 
 .auction-card { background:var(--card-bg); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:all .25s; display:flex; flex-direction:column; border-left:4px solid transparent; animation:fadeInUp .3s ease forwards; opacity:0; }
 .auction-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
-.auction-card.cat-appartement { border-left-color:#3182ce; }
-.auction-card.cat-maison { border-left-color:#e53e3e; }
-.auction-card.cat-terrain { border-left-color:#38a169; }
-.auction-card.cat-local { border-left-color:#805ad5; }
-.auction-card.cat-parking { border-left-color:#d69e2e; }
-.auction-card.cat-immeuble { border-left-color:#00b5d8; }
+.auction-card.cat-immobilier { border-left-color:#3182ce; }
+.auction-card.cat-vehicules { border-left-color:#e53e3e; }
+.auction-card.cat-mobilier { border-left-color:#38a169; }
+.auction-card.cat-art { border-left-color:#805ad5; }
+.auction-card.cat-bijoux { border-left-color:#d69e2e; }
+.auction-card.cat-electronique { border-left-color:#00b5d8; }
 .auction-card.cat-autre { border-left-color:#a0aec0; }
 
 .card-header { padding:16px 18px 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
 .card-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; flex-shrink:0; }
-.badge-appartement { background:#ebf8ff; color:#2b6cb0; }
-.badge-maison { background:#fff5f5; color:#c53030; }
-.badge-terrain { background:#f0fff4; color:#276749; }
-.badge-local { background:#faf5ff; color:#6b46c1; }
-.badge-parking { background:#fffff0; color:#975a16; }
-.badge-immeuble { background:#e6fffa; color:#00838f; }
+.badge-immobilier { background:#ebf8ff; color:#2b6cb0; }
+.badge-vehicules { background:#fff5f5; color:#c53030; }
+.badge-mobilier { background:#f0fff4; color:#276749; }
+.badge-art { background:#faf5ff; color:#6b46c1; }
+.badge-bijoux { background:#fffff0; color:#975a16; }
+.badge-electronique { background:#e6fffa; color:#00838f; }
 .badge-autre { background:#f7fafc; color:#4a5568; }
 
 .card-title { font-size:15px; font-weight:600; color:var(--text); line-height:1.4; flex:1; }
@@ -122,10 +122,10 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
 <header class="header">
     <div class="header-content">
         <div class="logo">
-            <span class="logo-icon">&#127968;</span>
+            <span class="logo-icon">&#9878;</span>
             <div>
-                <h1>Immobilier Encheres 13</h1>
-                <p class="subtitle">Ventes immobilieres aux encheres &bull; Bouches-du-Rhone</p>
+                <h1>Scanner Encheres 13</h1>
+                <p class="subtitle">Bouches-du-Rhone &bull; Marseille &bull; Aix-en-Provence</p>
             </div>
         </div>
         <div class="header-actions">
@@ -136,10 +136,10 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
 </header>
 
 <div class="stats-bar">
-    <div class="stat-card"><div class="stat-number" id="stat-total">0</div><div class="stat-label">Biens trouves</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-appart">0</div><div class="stat-label">Appartements</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-maison">0</div><div class="stat-label">Maisons</div></div>
-    <div class="stat-card"><div class="stat-number" id="stat-terrain">0</div><div class="stat-label">Objets & Mobilier</div></div>
+    <div class="stat-card"><div class="stat-number" id="stat-total">0</div><div class="stat-label">Encheres trouvees</div></div>
+    <div class="stat-card"><div class="stat-number" id="stat-immo">0</div><div class="stat-label">Immobilier</div></div>
+    <div class="stat-card"><div class="stat-number" id="stat-vehicules">0</div><div class="stat-label">Vehicules</div></div>
+    <div class="stat-card"><div class="stat-number" id="stat-objets">0</div><div class="stat-label">Objets & Mobilier</div></div>
     <div class="stat-card"><div class="stat-number" id="stat-sources">3</div><div class="stat-label">Sources actives</div></div>
 </div>
 
@@ -150,16 +150,16 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
             <input type="text" id="filter-search" placeholder="Mot-cle..." oninput="debounceFilter()">
         </div>
         <div class="filter-group">
-            <label>Type de bien</label>
+            <label>Categorie</label>
             <select id="filter-category" onchange="applyFilters()">
-                <option value="all">Tous types</option>
-                <option value="appartement">Appartements</option>
-                <option value="maison">Maisons &amp; Villas</option>
+                <option value="all">Toutes categories</option>
+                <option value="immobilier">Immobilier</option>
+                <option value="vehicules">Vehicules</option>
                 <option value="mobilier">Mobilier & Objets</option>
                 <option value="art">Art & Antiquites</option>
                 <option value="bijoux">Bijoux & Montres</option>
-                <option value="immeuble">Immeubles de rapport</option>
-                
+                <option value="electronique">Electronique</option>
+                <option value="autre">Autre</option>
             </select>
         </div>
         <div class="filter-group">
@@ -197,13 +197,13 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
 
 <main class="auctions-container">
     <div id="auctions-list" class="auctions-grid">
-        <div class="loading"><div class="spinner"></div><p style="margin-top:12px">Chargement des biens immobiliers...</p></div>
+        <div class="loading"><div class="spinner"></div><p style="margin-top:12px">Chargement des encheres...</p></div>
     </div>
 </main>
 
 <footer class="footer">
-    <p>Immobilier Encheres 13 - Ventes immobilieres aux encheres dans les Bouches-du-Rhone (13)</p>
-    <p>Sources : Interencheres, Encheres Publiques, Agorastore, CD13, Mairies, France Domaine, Licitor</p>
+    <p>Scanner Encheres 13 &mdash; Donnees issues de sources publiques (Interencheres, Encheres Publiques, Agorastore)</p>
+    <p>Departement 13 - Bouches-du-Rhone &bull; Mis a jour automatiquement via GitHub Actions</p>
 </footer>
 
 <script>
@@ -232,10 +232,10 @@ function loadData() {
 function updateStats(stats) {
     if (!stats) return;
     document.getElementById("stat-total").textContent = stats.total || 0;
-    document.getElementById("stat-appart").textContent = stats.by_category?.appartement || 0;
-    document.getElementById("stat-maison").textContent = stats.by_category?.maison || 0;
+    document.getElementById("stat-immo").textContent = stats.by_category?.immobilier || 0;
+    document.getElementById("stat-vehicules").textContent = stats.by_category?.vehicules || 0;
     const objets = (stats.by_category?.mobilier || 0) + (stats.by_category?.art || 0) + (stats.by_category?.autre || 0);
-    document.getElementById("stat-terrain").textContent = objets;
+    document.getElementById("stat-objets").textContent = objets;
     document.getElementById("stat-sources").textContent = Object.keys(stats.by_source || {}).length || 3;
 }
 
@@ -276,7 +276,7 @@ function applyFilters() {
 function renderAuctions(auctions) {
     const container = document.getElementById("auctions-list");
     if (!auctions.length) {
-        container.innerHTML = '<div class="no-results"><div class="no-results-icon">&#128269;</div><h3>Aucun bien trouve</h3><p>Modifiez vos filtres pour voir plus de resultats</p></div>';
+        container.innerHTML = '<div class="no-results"><div class="no-results-icon">&#128269;</div><h3>Aucune enchere trouvee</h3><p>Modifiez vos filtres pour voir plus de resultats</p></div>';
         return;
     }
     container.innerHTML = auctions.map((a,i) => createCard(a,i)).join("");
@@ -284,8 +284,8 @@ function renderAuctions(auctions) {
 
 function createCard(a, i) {
     const cat = a.category || "autre";
-    const labels = {appartement:"Appartement",maison:"Maison",terrain:"Terrain",local:"Local commercial",parking:"Parking",immeuble:"Immeuble",autre:"Autre"};
-    const price = a.price_estimate ? formatPrice(a.price_estimate) : '<span class="card-price no-price">Mise a prix sur demande</span>';
+    const labels = {immobilier:"Immobilier",vehicules:"Vehicules",mobilier:"Mobilier",art:"Art",bijoux:"Bijoux",electronique:"Electronique",autre:"Autre"};
+    const price = a.price_estimate ? formatPrice(a.price_estimate) : '<span class="card-price no-price">Prix non communique</span>';
     const priceHtml = a.price_estimate ? `<span class="card-price">${price}</span>` : price;
 
     const days = getDaysUntil(a.date_vente);
