@@ -17,6 +17,7 @@ from scrapers.cd13 import CD13Scraper
 from scrapers.mairies import MairiesScraper
 from scrapers.france_domaine import FranceDomaineScraper
 from scrapers.licitor import LicitorScraper
+from scrapers.adjudications import AdjudicationsScraper
 
 app = Flask(__name__)
 
@@ -60,6 +61,7 @@ def get_all_scrapers():
         MairiesScraper(),
         FranceDomaineScraper(),
         LicitorScraper(),
+        AdjudicationsScraper(),
     ]
 
 
