@@ -127,7 +127,7 @@ class EncheresPubliquesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=10)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille, 6 rue Joseph Autran",
-                url="https://www.encheres-publiques.com/",
+                url="https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Saisie immobiliere"
@@ -139,7 +139,7 @@ class EncheresPubliquesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=16)).strftime("%Y-%m-%d"),
                 ville="Aix-en-Provence",
                 address="Tribunal Judiciaire d'Aix-en-Provence",
-                url="https://www.encheres-publiques.com/",
+                url="https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Liquidation judiciaire"
@@ -151,7 +151,7 @@ class EncheresPubliquesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=25)).strftime("%Y-%m-%d"),
                 ville="Salon-de-Provence",
                 address="Tribunal Judiciaire de Salon-de-Provence",
-                url="https://www.encheres-publiques.com/",
+                url="https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Vente sur licitation"
@@ -163,7 +163,7 @@ class EncheresPubliquesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=7)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille",
-                url="https://www.encheres-publiques.com/",
+                url="https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Vente judiciaire"
@@ -175,7 +175,7 @@ class EncheresPubliquesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=30)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Tribunal Judiciaire de Marseille",
-                url="https://www.encheres-publiques.com/",
+                url="https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Vente judiciaire"
@@ -187,7 +187,7 @@ class EncheresPubliquesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=12)).strftime("%Y-%m-%d"),
                 ville="Aubagne",
                 address="Tribunal Judiciaire de Marseille",
-                url="https://www.encheres-publiques.com/",
+                url="https://www.encheres-publiques.com/immobilier/bouches-du-rhone-13",
                 image_url="",
                 source_name="Encheres Publiques",
                 auction_type="Saisie immobiliere"

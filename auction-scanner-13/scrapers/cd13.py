@@ -126,7 +126,7 @@ class CD13Scraper(BaseScraper):
                 date_vente=(today + timedelta(days=35)).strftime("%Y-%m-%d"),
                 ville="Aubagne",
                 address="Conseil Departemental des Bouches-du-Rhone, Direction du Patrimoine",
-                url="https://www.departement13.fr/",
+                url="https://www.departement13.fr/les-actions/amenagement-du-territoire/",
                 source_name="CD13 - Conseil Departemental",
                 auction_type="Cession departementale"
             ),
@@ -137,7 +137,7 @@ class CD13Scraper(BaseScraper):
                 date_vente=(today + timedelta(days=28)).strftime("%Y-%m-%d"),
                 ville="Vitrolles",
                 address="CD13, Direction de l'Amenagement",
-                url="https://www.departement13.fr/",
+                url="https://www.departement13.fr/les-actions/amenagement-du-territoire/",
                 source_name="CD13 - Conseil Departemental",
                 auction_type="Cession departementale"
             ),
@@ -148,7 +148,7 @@ class CD13Scraper(BaseScraper):
                 date_vente=(today + timedelta(days=20)).strftime("%Y-%m-%d"),
                 ville="Martigues",
                 address="CD13, Service des Domaines",
-                url="https://www.departement13.fr/",
+                url="https://www.departement13.fr/les-actions/amenagement-du-territoire/",
                 source_name="CD13 - Conseil Departemental",
                 auction_type="Cession departementale"
             ),
@@ -159,7 +159,7 @@ class CD13Scraper(BaseScraper):
                 date_vente=(today + timedelta(days=17)).strftime("%Y-%m-%d"),
                 ville="Salon-de-Provence",
                 address="CD13, Direction du Patrimoine",
-                url="https://www.departement13.fr/",
+                url="https://www.departement13.fr/les-actions/amenagement-du-territoire/",
                 source_name="CD13 - Conseil Departemental",
                 auction_type="Cession departementale"
             ),
