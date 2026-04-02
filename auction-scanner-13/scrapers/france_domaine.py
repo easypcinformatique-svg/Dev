@@ -17,7 +17,7 @@ class FranceDomaineScraper(BaseScraper):
     """Scraper pour les ventes immobilieres de l'Etat (France Domaine / DGFIP)."""
 
     name = "France Domaine"
-    base_url = "https://cessions.immobilier-etat.gouv.fr"
+    base_url = "https://cessions.immobilier-etat.gouv.fr/recherche"
 
     def scan(self, department="13", cities=None):
         """Scan les ventes domaniales dans le 13."""
@@ -123,7 +123,7 @@ class FranceDomaineScraper(BaseScraper):
                 date_vente=(today + timedelta(days=32)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Direction Departementale des Finances Publiques, Marseille",
-                url="https://cessions.immobilier-etat.gouv.fr",
+                url="https://cessions.immobilier-etat.gouv.fr/recherche",
                 source_name="France Domaine",
                 auction_type="Vente domaniale"
             ),
@@ -134,7 +134,7 @@ class FranceDomaineScraper(BaseScraper):
                 date_vente=(today + timedelta(days=40)).strftime("%Y-%m-%d"),
                 ville="Tarascon",
                 address="Direction Departementale des Finances Publiques",
-                url="https://cessions.immobilier-etat.gouv.fr",
+                url="https://cessions.immobilier-etat.gouv.fr/recherche",
                 source_name="France Domaine",
                 auction_type="Vente domaniale"
             ),
@@ -145,7 +145,7 @@ class FranceDomaineScraper(BaseScraper):
                 date_vente=(today + timedelta(days=18)).strftime("%Y-%m-%d"),
                 ville="Aix-en-Provence",
                 address="DGFIP, Service France Domaine PACA",
-                url="https://cessions.immobilier-etat.gouv.fr",
+                url="https://cessions.immobilier-etat.gouv.fr/recherche",
                 source_name="France Domaine",
                 auction_type="Vente domaniale"
             ),
@@ -156,7 +156,7 @@ class FranceDomaineScraper(BaseScraper):
                 date_vente=(today + timedelta(days=45)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Direction de l'Immobilier de l'Etat, Marseille",
-                url="https://cessions.immobilier-etat.gouv.fr",
+                url="https://cessions.immobilier-etat.gouv.fr/recherche",
                 source_name="France Domaine",
                 auction_type="Vente domaniale"
             ),
