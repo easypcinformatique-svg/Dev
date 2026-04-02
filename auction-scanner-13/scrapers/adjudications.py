@@ -67,6 +67,7 @@ class AdjudicationsScraper(BaseScraper):
         """Adjudications reelles TJ Marseille - sources: jurisbelair.com, avoventes.fr"""
         url_jb = "https://www.jurisbelair.com/encheres-publiques-marseille/"
         url_av = "https://avoventes.fr/recherche/toutes"
+        url_ctc = "https://www.ctcavocats.fr/encheres-immobilieres-w1"
         return [
             # === 2026 ===
             self.format_auction(
@@ -245,5 +246,116 @@ class AdjudicationsScraper(BaseScraper):
                 url=url_jb,
                 source_name="Adjudications TJ Marseille",
                 auction_type="ADJUGE le 06/11/2024"
+            ),
+            # === TJ AIX-EN-PROVENCE ===
+            self.format_auction(
+                title="ADJUGE 263 000 EUR - Appart T6 + cave, 8 rue Achille Emperaire, Aix",
+                description="Appart T6 avec cave, Residence Villa Sextia, Bat. B. Mise a prix 21 500 EUR, adjuge 263 000 EUR (x12.2 !). Record de multiplication.",
+                price_estimate=263000,
+                date_vente="2025-02-10",
+                ville="Aix-en-Provence",
+                address="8 rue Achille Emperaire, 13090 Aix-en-Provence",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 10/02/2025 - MAP 21 500 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 186 000 EUR - Appart 45m2, 34 rue Gustave Desplaces, Aix",
+                description="Appart 44.92m2, Residence Les Fontaines, bat. 1, 3e etage + cave. Libre. Liquidation judiciaire. Mise a prix 100 000 EUR, adjuge 186 000 EUR (x1.86).",
+                price_estimate=186000,
+                date_vente="2025-10-20",
+                ville="Aix-en-Provence",
+                address="34 rue Gustave Desplaces, 13100 Aix-en-Provence",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 20/10/2025 - MAP 100 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 192 000 EUR - Appart T3, 2 rue Albert Camus, Aix",
+                description="Appartement T3, immeuble Le Romarin. Adjuge 192 000 EUR.",
+                price_estimate=192000,
+                date_vente="2025-07-07",
+                ville="Aix-en-Provence",
+                address="2 rue Albert Camus, 13090 Aix-en-Provence",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 07/07/2025"
+            ),
+            self.format_auction(
+                title="ADJUGE 118 000 EUR - Studio 24m2 + parking, Domaine de Grassie, Aix",
+                description="Studio 23.52m2 Carrez, RDC bat. D + parking n.112 sous-sol. Saisie immobiliere. Adjuge 118 000 EUR.",
+                price_estimate=118000,
+                date_vente="2025-06-02",
+                ville="Aix-en-Provence",
+                address="350 route des Milles, Domaine de Grassie, 13100 Aix-en-Provence",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 02/06/2025"
+            ),
+            self.format_auction(
+                title="ADJUGE 21 000 EUR - Studio 24m2 tres mauvais etat, Aix (en dessous MAP)",
+                description="Studio 23.64m2, Res. Les Facultes, 5e etage. Tres mauvais etat. MAP 53 000 EUR reduite a 20 000 EUR. Adjuge 21 000 EUR. Retablissement personnel.",
+                price_estimate=21000,
+                date_vente="2024-10-14",
+                ville="Aix-en-Provence",
+                address="13 avenue de l'Europe, Res. Les Facultes, 13100 Aix-en-Provence",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 14/10/2024 - MAP 53 000 EUR (reduite)"
+            ),
+            self.format_auction(
+                title="ADJUGE 115 000 EUR - Local commercial, 17-19 rue Grande, Lambesc",
+                description="Local commercial rue Grande et impasse Chapeau Rouge. Mise a prix 75 000 EUR, adjuge 115 000 EUR (x1.5).",
+                price_estimate=115000,
+                date_vente="2025-02-10",
+                ville="Lambesc",
+                address="17-19 rue Grande, 13410 Lambesc",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 10/02/2025 - MAP 75 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 179 000 EUR - Maison, 35 av. du 8 Mai 1945, Vitrolles",
+                description="Maison a usage d'habitation. Saisie immobiliere. Adjuge 179 000 EUR.",
+                price_estimate=179000,
+                date_vente="2025-06-02",
+                ville="Vitrolles",
+                address="35 avenue du 8 Mai 1945, 13127 Vitrolles",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 02/06/2025"
+            ),
+            self.format_auction(
+                title="ADJUGE 326 000 EUR - Appart Pointe Rouge, 120 traverse Prat, Marseille 8e",
+                description="Appartement residence Sainte Catherine, La Pointe Rouge. Licitation. Mise a prix 200 000 EUR, adjuge 326 000 EUR (x1.63).",
+                price_estimate=326000,
+                date_vente="2025-04-30",
+                ville="Marseille",
+                address="120 traverse Prat, La Pointe Rouge, 13008 Marseille",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 30/04/2025 - MAP 200 000 EUR"
+            ),
+            self.format_auction(
+                title="ADJUGE 150 000 EUR - Maison 55m2, 5 bd Meissel, Marseille 10e",
+                description="Maison 54.50m2 Carrez, R+1 avec terrain attenant. Adjuge 150 000 EUR.",
+                price_estimate=150000,
+                date_vente="2026-03-01",
+                ville="Marseille",
+                address="5 boulevard Meissel, 13010 Marseille",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE mars 2026"
+            ),
+            self.format_auction(
+                title="ADJUGE 99 000 EUR - Appart T3 65m2 + parking, Marseille 14e",
+                description="Appart T3 64.68m2 Carrez, 2e etage bat. B, 2 balcons + parking couvert. Les Lavandins, Quartier Saint-Barthelemy. Adjuge au prix de la MAP.",
+                price_estimate=99000,
+                date_vente="2024-06-26",
+                ville="Marseille",
+                address="24 avenue Claude Monnet, 14e arr., Marseille",
+                url=url_ctc,
+                source_name="Adjudications TJ Aix",
+                auction_type="ADJUGE le 26/06/2024 - MAP 99 000 EUR"
             ),
         ]
