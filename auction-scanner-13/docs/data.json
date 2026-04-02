@@ -14,7 +14,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:58:12.848293"
+      "scanned_at": "2026-04-02T08:59:40.666355"
     },
     {
       "id": "47cfb4e11267",
@@ -30,7 +30,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:58:12.848308"
+      "scanned_at": "2026-04-02T08:59:40.666372"
     },
     {
       "id": "0e0f89224555",
@@ -46,7 +46,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:58:12.848323"
+      "scanned_at": "2026-04-02T08:59:40.666389"
     },
     {
       "id": "8f347928c716",
@@ -62,7 +62,103 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore",
-      "scanned_at": "2026-04-02T08:58:12.848339"
+      "scanned_at": "2026-04-02T08:59:40.666408"
+    },
+    {
+      "id": "b90bb49ecca5",
+      "title": "Pavillon 75m2 - Allee des Fourmis, Marseille",
+      "description": "Pavillon 75.24m2. Saisie immobiliere, TJ Marseille.",
+      "price_estimate": 30000,
+      "date_vente": "2026-04-01",
+      "ville": "Marseille",
+      "address": "Allee des Fourmis, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665903"
+    },
+    {
+      "id": "c6653110be9f",
+      "title": "Local commercial 33m2 - Cours Voltaire, Aubagne",
+      "description": "Local commercial 33.38m2. Saisie immobiliere, TJ Marseille.",
+      "price_estimate": 15000,
+      "date_vente": "2026-04-01",
+      "ville": "Aubagne",
+      "address": "Cours Voltaire, Aubagne - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "local",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665915"
+    },
+    {
+      "id": "04849a0e16ce",
+      "title": "Appartement 61m2 - Bd de la Corderie, Marseille",
+      "description": "Appartement 61.36m2. Boulevard de la Corderie. Saisie, TJ Marseille.",
+      "price_estimate": 50000,
+      "date_vente": "2026-04-01",
+      "ville": "Marseille",
+      "address": "Bd de la Corderie, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665930"
+    },
+    {
+      "id": "ab57200df463",
+      "title": "Appartement 49m2 - Square National, Marseille",
+      "description": "Appartement 49.25m2 square National. Saisie, TJ Marseille.",
+      "price_estimate": 15000,
+      "date_vente": "2026-04-01",
+      "ville": "Marseille",
+      "address": "Square National, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665942"
+    },
+    {
+      "id": "3618df92af6b",
+      "title": "Appartement 61m2 - Rue Gabriel Audisio, Marseille",
+      "description": "Appartement 61.47m2. Saisie, TJ Marseille.",
+      "price_estimate": 100000,
+      "date_vente": "2026-04-01",
+      "ville": "Marseille",
+      "address": "Rue Gabriel Audisio, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665953"
+    },
+    {
+      "id": "995c49fdcb1e",
+      "title": "Deux cuisines 17+16m2 - Rue Pautrier, Marseille",
+      "description": "Deux cuisines de 16.88m2 et 16.32m2. Saisie, TJ Marseille.",
+      "price_estimate": 10000,
+      "date_vente": "2026-04-01",
+      "ville": "Marseille",
+      "address": "Rue Pautrier, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "autre",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665965"
     },
     {
       "id": "25c2c69775fe",
@@ -78,7 +174,39 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:58:12.847916"
+      "scanned_at": "2026-04-02T08:59:40.665846"
+    },
+    {
+      "id": "13f2f12e3ca8",
+      "title": "Appartement 88m2 - Rue Chevalier Pau, Marseille",
+      "description": "Appartement 88.08m2. Saisie, TJ Marseille.",
+      "price_estimate": 75000,
+      "date_vente": "2026-04-08",
+      "ville": "Marseille",
+      "address": "Rue Chevalier Pau, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665978"
+    },
+    {
+      "id": "45391d80b62e",
+      "title": "Appartement 83m2 - Chemin de Saint-Joseph, Marseille",
+      "description": "Appartement 82.80m2, Sainte-Marthe. Saisie, TJ Marseille.",
+      "price_estimate": 32000,
+      "date_vente": "2026-04-08",
+      "ville": "Marseille",
+      "address": "Chemin de Saint-Joseph a Sainte-Marthe, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.665990"
     },
     {
       "id": "e185097db45c",
@@ -94,7 +222,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848433"
+      "scanned_at": "2026-04-02T08:59:40.666524"
     },
     {
       "id": "c0b2ddd0b34e",
@@ -110,7 +238,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848449"
+      "scanned_at": "2026-04-02T08:59:40.666539"
     },
     {
       "id": "fe24eb775e51",
@@ -126,23 +254,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848462"
-    },
-    {
-      "id": "a96330a69e83",
-      "title": "Parking souterrain - Vieux Port - Investissement",
-      "description": "Place de parking en sous-sol securise, residence recente, acces badge 24h/24. A 200m du Vieux-Port. Rendement locatif 5%.",
-      "price_estimate": 18000,
-      "date_vente": "2026-04-09",
-      "ville": "Marseille",
-      "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
-      "image_url": "",
-      "source": "Encheres Publiques",
-      "category": "parking",
-      "lot_count": null,
-      "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:58:12.848036"
+      "scanned_at": "2026-04-02T08:59:40.666552"
     },
     {
       "id": "c121cdc2a17a",
@@ -158,7 +270,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:58:12.847859"
+      "scanned_at": "2026-04-02T08:59:40.665784"
     },
     {
       "id": "6fb1925dd1b5",
@@ -174,23 +286,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:58:12.848094"
-    },
-    {
-      "id": "546e13d30c82",
-      "title": "Appartement T2 45m2 - Saisie immobiliere - Castellane",
-      "description": "Vente sur saisie immobiliere. Appartement T2, 45m2, 3eme etage, cave. Mise a prix fixee par le juge. Quartier en pleine renovation.",
-      "price_estimate": 65000,
-      "date_vente": "2026-04-12",
-      "ville": "Marseille",
-      "address": "Tribunal Judiciaire de Marseille, 6 rue Joseph Autran",
-      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
-      "image_url": "",
-      "source": "Encheres Publiques",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:58:12.847981"
+      "scanned_at": "2026-04-02T08:59:40.666152"
     },
     {
       "id": "6b6aa6390b9f",
@@ -206,23 +302,23 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:58:12.848145"
+      "scanned_at": "2026-04-02T08:59:40.666203"
     },
     {
-      "id": "60be7745e230",
-      "title": "Appartement T3 70m2 - Dernier etage - Aubagne",
-      "description": "Appartement T3 lumineux, 70m2, dernier etage, terrasse 20m2, vue collines. 2 places parking. Residence avec piscine.",
-      "price_estimate": 145000,
+      "id": "2616c7e2f29e",
+      "title": "Appartement 84m2 - Bd Clemenceau, Marseille - Vente notariale",
+      "description": "Appartement 84.39m2, bd Georges Clemenceau. Vente notariale en ligne, ATHENA NOTAIRES.",
+      "price_estimate": 170000,
       "date_vente": "2026-04-14",
-      "ville": "Aubagne",
-      "address": "Tribunal Judiciaire de Marseille",
+      "ville": "Marseille",
+      "address": "Bd Georges Clemenceau, Marseille",
       "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "appartement",
       "lot_count": null,
-      "auction_type": "Saisie immobiliere",
-      "scanned_at": "2026-04-02T08:58:12.848068"
+      "auction_type": "Vente notariale en ligne",
+      "scanned_at": "2026-04-02T08:59:40.666003"
     },
     {
       "id": "978241057ab0",
@@ -238,7 +334,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:58:12.847896"
+      "scanned_at": "2026-04-02T08:59:40.665825"
     },
     {
       "id": "f5f533973364",
@@ -254,23 +350,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:58:12.848112"
-    },
-    {
-      "id": "18ff449519f4",
-      "title": "Local commercial 80m2 - Liquidation judiciaire - Centre Aix",
-      "description": "Local commercial en rez-de-chaussee, vitrine 6m sur rue passante, excellent emplacement centre-ville. Possibilite transformation habitation.",
-      "price_estimate": 95000,
-      "date_vente": "2026-04-18",
-      "ville": "Aix-en-Provence",
-      "address": "Tribunal Judiciaire d'Aix-en-Provence",
-      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
-      "image_url": "",
-      "source": "Encheres Publiques",
-      "category": "local",
-      "lot_count": null,
-      "auction_type": "Liquidation judiciaire",
-      "scanned_at": "2026-04-02T08:58:12.848000"
+      "scanned_at": "2026-04-02T08:59:40.666170"
     },
     {
       "id": "9dd39c445a19",
@@ -286,7 +366,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-04-02T08:58:12.847934"
+      "scanned_at": "2026-04-02T08:59:40.665863"
     },
     {
       "id": "8965e4ce0518",
@@ -302,7 +382,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:58:12.848397"
+      "scanned_at": "2026-04-02T08:59:40.666482"
     },
     {
       "id": "64ce5f3a76e7",
@@ -318,7 +398,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-04-02T08:58:12.848127"
+      "scanned_at": "2026-04-02T08:59:40.666186"
     },
     {
       "id": "bad2eaa150fd",
@@ -334,23 +414,39 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:58:12.847952"
+      "scanned_at": "2026-04-02T08:59:40.665881"
     },
     {
-      "id": "53204a617327",
-      "title": "Villa T5 150m2 avec piscine - Les Alpilles",
-      "description": "Villa provencale, 5 pieces, 150m2 habitables, terrain 2000m2, piscine 10x5, garage double. Vue Alpilles. DPE classe C.",
-      "price_estimate": 320000,
+      "id": "b7a78b22ed98",
+      "title": "Terrain 2500m2 - Chemin de la Souque, Aix-en-Provence",
+      "description": "Terrain a batir 2500m2. Saisie, TJ Aix-en-Provence.",
+      "price_estimate": 210000,
       "date_vente": "2026-04-27",
-      "ville": "Salon-de-Provence",
-      "address": "Tribunal Judiciaire de Salon-de-Provence",
+      "ville": "Aix-en-Provence",
+      "address": "Chemin de la Souque, Aix-en-Provence - TJ Aix",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "terrain",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Aix-en-Provence",
+      "scanned_at": "2026-04-02T08:59:40.666014"
+    },
+    {
+      "id": "45371e1d6930",
+      "title": "Maison 189m2 - Chemin de la Souque, Aix-en-Provence",
+      "description": "Maison 189m2. Saisie, TJ Aix-en-Provence.",
+      "price_estimate": 400000,
+      "date_vente": "2026-04-27",
+      "ville": "Aix-en-Provence",
+      "address": "Chemin de la Souque, Aix-en-Provence - TJ Aix",
       "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
       "image_url": "",
       "source": "Encheres Publiques",
       "category": "maison",
       "lot_count": null,
-      "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-04-02T08:58:12.848018"
+      "auction_type": "Saisie - TJ Aix-en-Provence",
+      "scanned_at": "2026-04-02T08:59:40.666025"
     },
     {
       "id": "6ca6c7737182",
@@ -366,7 +462,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques - 2 lots",
-      "scanned_at": "2026-04-02T08:58:12.848478"
+      "scanned_at": "2026-04-02T08:59:40.666568"
     },
     {
       "id": "719aa6c2eaee",
@@ -382,7 +478,103 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848493"
+      "scanned_at": "2026-04-02T08:59:40.666582"
+    },
+    {
+      "id": "4ff12bc1f6a1",
+      "title": "Maison 120m2 - Av. Roquefavour, Marseille",
+      "description": "Maison 119.65m2, avenue de Roquefavour. Saisie, TJ Marseille.",
+      "price_estimate": 60000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "Avenue Roquefavour, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666035"
+    },
+    {
+      "id": "a3c7dcc9c3af",
+      "title": "Local 31m2 - Rue de Crimee, Marseille",
+      "description": "Local 30.84m2, rue de Crimee. Saisie, TJ Marseille.",
+      "price_estimate": 16000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "Rue de Crimee, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "local",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666045"
+    },
+    {
+      "id": "7ef538ee6f41",
+      "title": "Appartement 80m2 - Rue des Petites Maries, Marseille",
+      "description": "Appartement 80.21m2. Saisie, TJ Marseille.",
+      "price_estimate": 37000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "Rue des Petites Maries, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666055"
+    },
+    {
+      "id": "80a84574a37a",
+      "title": "Appartement 32m2 - Rue de Lyon, Marseille",
+      "description": "Appartement 31.77m2, rue de Lyon. Saisie, TJ Marseille.",
+      "price_estimate": 11000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "Rue de Lyon, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666066"
+    },
+    {
+      "id": "d3b2ed646a5a",
+      "title": "Maison 168m2 avec piscine - Traverse des Romans, Marseille",
+      "description": "Maison 168.43m2 avec piscine. Saisie, TJ Marseille.",
+      "price_estimate": 800000,
+      "date_vente": "2026-04-29",
+      "ville": "Marseille",
+      "address": "Traverse des Romans, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "maison",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666077"
+    },
+    {
+      "id": "ea8f464319ce",
+      "title": "Appartement 35m2 - Rue de la Ciotat, Cassis",
+      "description": "Appartement 35.05m2. Saisie, TJ Marseille.",
+      "price_estimate": 140000,
+      "date_vente": "2026-04-29",
+      "ville": "Cassis",
+      "address": "Rue de la Ciotat, Cassis - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666087"
     },
     {
       "id": "4892208b73db",
@@ -398,7 +590,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848508"
+      "scanned_at": "2026-04-02T08:59:40.666597"
     },
     {
       "id": "2e21d24c786c",
@@ -414,7 +606,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848522"
+      "scanned_at": "2026-04-02T08:59:40.666610"
     },
     {
       "id": "1a08634e0526",
@@ -430,7 +622,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848539"
+      "scanned_at": "2026-04-02T08:59:40.666625"
     },
     {
       "id": "885dedf80e23",
@@ -446,23 +638,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848554"
-    },
-    {
-      "id": "969dddc9da90",
-      "title": "Immeuble de rapport 6 lots - Quartier Noailles",
-      "description": "Immeuble R+3, 6 appartements (2xT1 + 3xT2 + 1xT3), 280m2 total. Loyers actuels 3200 EUR/mois. Ravalement recente.",
-      "price_estimate": 420000,
-      "date_vente": "2026-05-02",
-      "ville": "Marseille",
-      "address": "Tribunal Judiciaire de Marseille",
-      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
-      "image_url": "",
-      "source": "Encheres Publiques",
-      "category": "appartement",
-      "lot_count": null,
-      "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-04-02T08:58:12.848052"
+      "scanned_at": "2026-04-02T08:59:40.666640"
     },
     {
       "id": "03034ec3ba7c",
@@ -478,7 +654,39 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:58:12.848363"
+      "scanned_at": "2026-04-02T08:59:40.666440"
+    },
+    {
+      "id": "4c816fa36669",
+      "title": "Appartement 55m2 - Bd Trupheme, Marseille",
+      "description": "Appartement 54.62m2. Saisie, TJ Marseille.",
+      "price_estimate": 21000,
+      "date_vente": "2026-05-06",
+      "ville": "Marseille",
+      "address": "Bd Trupheme, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666097"
+    },
+    {
+      "id": "e1c8fa296777",
+      "title": "Appartement 71m2 - Bd National, Marseille",
+      "description": "Appartement 71.19m2. Saisie, TJ Marseille.",
+      "price_estimate": 35000,
+      "date_vente": "2026-05-06",
+      "ville": "Marseille",
+      "address": "Bd National, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666107"
     },
     {
       "id": "254f81f4d895",
@@ -494,7 +702,7 @@
       "category": "parking",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848569"
+      "scanned_at": "2026-04-02T08:59:40.666654"
     },
     {
       "id": "af5ee2732b1f",
@@ -510,7 +718,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848584"
+      "scanned_at": "2026-04-02T08:59:40.666669"
     },
     {
       "id": "0fe54c299a7a",
@@ -526,7 +734,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848596"
+      "scanned_at": "2026-04-02T08:59:40.666680"
     },
     {
       "id": "c49fb2cc0d0b",
@@ -542,7 +750,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848614"
+      "scanned_at": "2026-04-02T08:59:40.666697"
     },
     {
       "id": "5b8e2a1426e4",
@@ -558,7 +766,39 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:58:12.848380"
+      "scanned_at": "2026-04-02T08:59:40.666462"
+    },
+    {
+      "id": "2c21b7855c81",
+      "title": "Ensemble immobilier - Av. Roger Salengro, Marseille",
+      "description": "Ensemble immobilier. Saisie, TJ Marseille.",
+      "price_estimate": 25642,
+      "date_vente": "2026-05-13",
+      "ville": "Marseille",
+      "address": "Avenue Roger Salengro, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "autre",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666117"
+    },
+    {
+      "id": "f0b50fac0e66",
+      "title": "Appartement 59m2 - Av. Corot, Marseille",
+      "description": "Appartement 59.08m2. Saisie, TJ Marseille.",
+      "price_estimate": 15000,
+      "date_vente": "2026-05-13",
+      "ville": "Marseille",
+      "address": "Avenue Corot, Marseille - TJ Marseille",
+      "url": "https://www.encheres-publiques.com/ventes/immobilier/v/bouches-du-rhone",
+      "image_url": "",
+      "source": "Encheres Publiques",
+      "category": "appartement",
+      "lot_count": null,
+      "auction_type": "Saisie - TJ Marseille",
+      "scanned_at": "2026-04-02T08:59:40.666127"
     },
     {
       "id": "9e2b24666ab9",
@@ -574,7 +814,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848628"
+      "scanned_at": "2026-04-02T08:59:40.666711"
     },
     {
       "id": "a3c701760ea3",
@@ -590,7 +830,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848642"
+      "scanned_at": "2026-04-02T08:59:40.666745"
     },
     {
       "id": "4a23be5e8398",
@@ -606,7 +846,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-04-02T08:58:12.848656"
+      "scanned_at": "2026-04-02T08:59:40.666764"
     },
     {
       "id": "1b830b3c8db2",
@@ -622,7 +862,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-04-02T08:58:12.848415"
+      "scanned_at": "2026-04-02T08:59:40.666504"
     },
     {
       "id": "028d5f6db5c1",
@@ -638,7 +878,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848166"
+      "scanned_at": "2026-04-02T08:59:40.666225"
     },
     {
       "id": "4bf64f4f4a5b",
@@ -654,7 +894,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848183"
+      "scanned_at": "2026-04-02T08:59:40.666242"
     },
     {
       "id": "67fce2222f5f",
@@ -670,7 +910,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848196"
+      "scanned_at": "2026-04-02T08:59:40.666255"
     },
     {
       "id": "2066a3026e5b",
@@ -686,7 +926,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848210"
+      "scanned_at": "2026-04-02T08:59:40.666268"
     },
     {
       "id": "1cc048675e57",
@@ -702,7 +942,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848224"
+      "scanned_at": "2026-04-02T08:59:40.666283"
     },
     {
       "id": "7509c9ac3392",
@@ -718,7 +958,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848239"
+      "scanned_at": "2026-04-02T08:59:40.666297"
     },
     {
       "id": "878ec7054e89",
@@ -734,7 +974,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848254"
+      "scanned_at": "2026-04-02T08:59:40.666311"
     },
     {
       "id": "583ced8417c2",
@@ -750,33 +990,32 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-04-02T08:58:12.848273"
+      "scanned_at": "2026-04-02T08:59:40.666331"
     }
   ],
   "stats": {
-    "total": 47,
+    "total": 62,
     "by_category": {
-      "appartement": 22,
-      "maison": 12,
-      "parking": 2,
-      "local": 4,
-      "terrain": 5,
-      "autre": 2
+      "appartement": 31,
+      "maison": 15,
+      "local": 5,
+      "autre": 4,
+      "terrain": 6,
+      "parking": 1
     },
     "by_ville": {
-      "Marseille": 22,
+      "Marseille": 36,
+      "Aubagne": 1,
       "Arles": 2,
       "Martigues": 1,
-      "Aubagne": 1,
       "Tarascon": 2,
       "Istres": 1,
-      "Aix-en-Provence": 3,
       "Marignane": 1,
+      "Aix-en-Provence": 4,
       "Vitrolles": 1,
       "La Ciotat": 1,
-      "Salon-de-Provence": 1,
       "Velaux": 1,
-      "Cassis": 1,
+      "Cassis": 2,
       "Saint-Victoret": 1,
       "Port-de-Bouc": 1,
       "Plan-de-Cuques": 5,
@@ -785,13 +1024,13 @@
     },
     "by_source": {
       "Mairie Marseille": 4,
+      "Encheres Publiques": 21,
       "Interencheres": 5,
       "Licitor": 16,
-      "Encheres Publiques": 6,
       "Agorastore": 4,
       "France Domaine": 4,
       "CD13 - Conseil Departemental": 8
     }
   },
-  "generated_at": "2026-04-02T08:58:12.848682"
+  "generated_at": "2026-04-02T08:59:40.666798"
 }
