@@ -127,7 +127,7 @@ class MairiesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=13)).strftime("%Y-%m-%d"),
                 ville="Marseille",
                 address="Mairie de Marseille, Direction du Patrimoine municipal",
-                url="https://www.marseille.fr/urbanisme",
+                url="https://www.marseille.fr/offres-de-biens-communaux",
                 source_name="Mairie Marseille",
                 auction_type="Cession communale"
             ),
@@ -138,7 +138,7 @@ class MairiesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=22)).strftime("%Y-%m-%d"),
                 ville="Aix-en-Provence",
                 address="Mairie d'Aix-en-Provence, Service Urbanisme",
-                url="https://www.aixenprovence.fr/Urbanisme",
+                url="https://www.aixenprovence.fr/",
                 source_name="Mairie Aix-en-Provence",
                 auction_type="Cession communale"
             ),
@@ -149,7 +149,7 @@ class MairiesScraper(BaseScraper):
                 date_vente=(today + timedelta(days=19)).strftime("%Y-%m-%d"),
                 ville="Arles",
                 address="Mairie d'Arles, Direction des Affaires Foncieres",
-                url="https://www.arles.fr/urbanisme/",
+                url="https://www.arles.fr/",
                 source_name="Mairie Arles",
                 auction_type="Cession communale"
             ),
