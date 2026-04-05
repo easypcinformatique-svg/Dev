@@ -675,7 +675,7 @@ export default function ConstructionCostCalculator() {
             {/* CES et emprise autorisée */}
             <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
               <SliderInput label="CES max (PLU de votre commune)" value={cesMax} onChange={setCesMax}
-                min={10} max={80} step={1} suffix="%"
+                min={1} max={80} step={1} suffix="%"
                 tooltip="Coefficient d'Emprise au Sol maximum autorisé par le Plan Local d'Urbanisme. Consultez le PLU de votre commune." />
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-700/40 rounded px-3 py-2 text-center">
