@@ -3,7 +3,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import {
   ChevronDown, ChevronUp, HelpCircle, AlertTriangle, CheckCircle,
   XCircle, Home, Landmark, Wrench, Shield, Plug, Sofa, PiggyBank,
-  Copy, RotateCcw, TrendingUp, Info, Save, Download, Upload, Trash2
+  Copy, RotateCcw, TrendingUp, Info, Save, Download, Upload, Trash2,
+  ThumbsUp, ThumbsDown, Scale, Building2
 } from 'lucide-react';
 
 const formatEuro = (n) => {
@@ -160,6 +161,15 @@ const PTZ_LABELS = {
   'B1': 'Zone B1 (villes moyennes)',
   'B2': 'Zone B2 (périurbain)',
   'C': 'Zone C (rural)',
+};
+
+// Prix moyen m² ancien par zone (source: notaires de France, moyennes 2024-2025)
+const PRIX_ANCIEN_M2 = {
+  'Abis': { min: 7000, max: 12000, moy: 9500, label: 'Île-de-France centre' },
+  'A': { min: 3500, max: 6500, moy: 4800, label: 'Grandes métropoles' },
+  'B1': { min: 2200, max: 3800, moy: 2900, label: 'Villes moyennes' },
+  'B2': { min: 1500, max: 2800, moy: 2100, label: 'Périurbain' },
+  'C': { min: 800, max: 2000, moy: 1400, label: 'Zone rurale' },
 };
 
 function TooltipIcon({ text }) {
@@ -578,6 +588,87 @@ export default function ConstructionCostCalculator() {
 
   const coherenceColors = { red: 'text-red-400 bg-red-900/30 border-red-500/50', orange: 'text-orange-400 bg-orange-900/30 border-orange-500/50', green: 'text-green-400 bg-green-900/30 border-green-500/50' };
 
+  // === AVIS PROJET : construire vs acheter ===
+  const [prixAncienM2Custom, setPrixAncienM2Custom] = useState(0);
+  const avisProjet = useMemo(() => {
+    const zone = deptInfo?.zone || 'C';
+    const marche = PRIX_ANCIEN_M2[zone];
+    const prixM2Ancien = prixAncienM2Custom > 0 ? prixAncienM2Custom : marche.moy;
+    const prixAchatAncien = prixM2Ancien * shab;
+    const fraisNotaireAncien = prixAchatAncien * 0.08;
+    const travauxRenovation = shab * 400;
+    const totalAncien = prixAchatAncien + fraisNotaireAncien + travauxRenovation;
+    const totalNeuf = calculations.totalTTC;
+    const delta = totalNeuf - totalAncien;
+    const deltaPct = totalAncien > 0 ? (delta / totalAncien) * 100 : 0;
+    const coutM2Neuf = shab > 0 ? totalNeuf / shab : 0;
+
+    // Valeur estimée du bien neuf (décote/surcote par rapport à l'ancien)
+    // Un bien neuf vaut en moyenne 15-25% de plus qu'un ancien comparable
+    const primeNeuf = 0.20;
+    const valeurEstimeeNeuf = prixM2Ancien * (1 + primeNeuf) * shab;
+    const plusValue = valeurEstimeeNeuf - totalNeuf;
+    const plusValuePct = totalNeuf > 0 ? (plusValue / totalNeuf) * 100 : 0;
+
+    // Score global
+    let score = 50;
+    // Plus-value positive = bon signe
+    if (plusValuePct > 10) score += 20;
+    else if (plusValuePct > 0) score += 10;
+    else if (plusValuePct > -10) score -= 5;
+    else score -= 20;
+    // Coût vs ancien
+    if (deltaPct < -10) score += 15; // Construire moins cher
+    else if (deltaPct < 5) score += 5;
+    else if (deltaPct < 20) score -= 5;
+    else score -= 15;
+    // Taux effort
+    if (financement.tauxEffort < 28) score += 10;
+    else if (financement.tauxEffort < 33) score += 5;
+    else if (financement.tauxEffort > 35) score -= 15;
+    // Imprévus
+    if (imprevusPct >= 10) score += 5;
+    else if (imprevusPct < 8) score -= 10;
+    // Emprise
+    if (empriseDepasse) score -= 15;
+
+    score = clamp(score, 0, 100);
+
+    let verdict, verdictColor, verdictIcon;
+    if (score >= 70) { verdict = 'Projet pertinent'; verdictColor = 'green'; verdictIcon = ThumbsUp; }
+    else if (score >= 45) { verdict = 'Projet à étudier'; verdictColor = 'orange'; verdictIcon = Scale; }
+    else { verdict = 'Projet risqué'; verdictColor = 'red'; verdictIcon = ThumbsDown; }
+
+    const avantages = [];
+    const inconvenients = [];
+
+    if (delta < 0) avantages.push(`Construire revient ${formatEuroShort(Math.abs(delta))} moins cher qu'acheter dans l'ancien`);
+    else inconvenients.push(`Construire coûte ${formatEuroShort(delta)} de plus qu'un achat ancien comparable`);
+
+    if (plusValue > 0) avantages.push(`Plus-value potentielle estimée à ${formatEuroShort(plusValue)} (prime neuf +20%)`);
+    else inconvenients.push(`Le coût de construction dépasse la valeur de marché de ${formatEuroShort(Math.abs(plusValue))}`);
+
+    if (re2020) avantages.push('RE2020 : faibles charges énergétiques, meilleur DPE (A ou B), valorisation à la revente');
+    else inconvenients.push('Sans RE2020 : DPE potentiellement moins favorable, risque de décote future');
+
+    avantages.push('Neuf : garantie décennale, pas de travaux pendant 10 ans, aux dernières normes');
+    avantages.push('Personnalisation totale : plans, matériaux, agencement sur mesure');
+
+    if (financement.tauxEffort > 35) inconvenients.push(`Taux d'effort ${financement.tauxEffort.toFixed(1)}% supérieur au seuil HCSF de 35%`);
+    if (empriseDepasse) inconvenients.push('Emprise au sol dépasse le CES autorisé : permis de construire compromis');
+    if (imprevusPct < 8) inconvenients.push('Provision imprévus insuffisante : risque de surcoût non couvert');
+
+    inconvenients.push('Délai construction 12-18 mois, double loyer/crédit pendant les travaux');
+    inconvenients.push('Risques chantier : retards, malfaçons, faillite artisan');
+
+    return {
+      zone, marche, prixM2Ancien, prixAchatAncien, fraisNotaireAncien, travauxRenovation,
+      totalAncien, totalNeuf, delta, deltaPct, coutM2Neuf, valeurEstimeeNeuf,
+      plusValue, plusValuePct, score, verdict, verdictColor, verdictIcon,
+      avantages, inconvenients,
+    };
+  }, [calculations, shab, deptInfo, re2020, financement, imprevusPct, empriseDepasse, prixAncienM2Custom]);
+
   // === CHART DATA ===
   const chartData = useMemo(() => [
     { name: 'Terrain', value: calculations.terrainTotal, color: CHART_COLORS[0] },
@@ -607,7 +698,7 @@ export default function ConstructionCostCalculator() {
     setPiscineMontant(40000); setTerrasse(5000); setCloture(3000); setGarage('aucun'); setGarageM2(20);
     setDomotique(false); setDomotiqueMontant(5000); setImprevusPct(10); setAmeublement(15000);
     setFraisDossier(1500); setGarantiePct(1.5); setApport(30000); setPtz(false); setPtzMontant(0); setTauxNominal(3.5); setDuree(25);
-    setRevenuMensuel(4000); setShowTVA(false);
+    setRevenuMensuel(4000); setShowTVA(false); setPrixAncienM2Custom(0);
     setOpenModules(new Set(['terrain', 'construction']));
   }, []);
 
@@ -649,7 +740,7 @@ export default function ConstructionCostCalculator() {
     cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine,
     piscineMontant, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
     imprevusPct, ameublement, fraisDossier, garantiePct, apport, ptz, ptzMontant,
-    tauxNominal, duree, revenuMensuel, showTVA,
+    tauxNominal, duree, revenuMensuel, showTVA, prixAncienM2Custom,
     _savedAt: new Date().toISOString(),
   }), [codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
@@ -731,6 +822,7 @@ export default function ConstructionCostCalculator() {
     if (data.duree != null) setDuree(data.duree);
     if (data.revenuMensuel != null) setRevenuMensuel(data.revenuMensuel);
     if (data.showTVA != null) setShowTVA(data.showTVA);
+    if (data.prixAncienM2Custom != null) setPrixAncienM2Custom(data.prixAncienM2Custom);
   }, []);
 
   const handleSave = useCallback(() => {
@@ -1287,6 +1379,117 @@ export default function ConstructionCostCalculator() {
                 {coherence.color === 'red' && imprevusPct < 8 && (
                   <span className="text-xs ml-auto opacity-75">Provision imprévus trop faible</span>
                 )}
+              </div>
+            </div>
+
+            {/* AVIS PROJET */}
+            <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-5 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Scale size={18} className="text-amber-400" />
+                  <h3 className="font-display text-lg font-semibold text-amber-100">Avis projet : Construire vs Acheter</h3>
+                </div>
+              </div>
+
+              {/* Verdict principal */}
+              <div className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${coherenceColors[avisProjet.verdictColor]}`}>
+                <avisProjet.verdictIcon size={24} />
+                <div>
+                  <div className="text-lg font-bold">{avisProjet.verdict}</div>
+                  <div className="text-xs opacity-75">Score : {avisProjet.score}/100</div>
+                </div>
+                <div className="ml-auto">
+                  <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center font-mono text-xl font-bold"
+                    style={{
+                      borderColor: avisProjet.verdictColor === 'green' ? '#4ade80' : avisProjet.verdictColor === 'orange' ? '#fb923c' : '#f87171',
+                      color: avisProjet.verdictColor === 'green' ? '#4ade80' : avisProjet.verdictColor === 'orange' ? '#fb923c' : '#f87171',
+                    }}>
+                    {avisProjet.score}
+                  </div>
+                </div>
+              </div>
+
+              {/* Comparatif chiffré */}
+              <div className="space-y-1">
+                <div className="text-xs text-gray-500 mb-2">
+                  Comparaison avec l'achat dans l'ancien — {avisProjet.marche.label} (zone {avisProjet.zone})
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3 text-center">
+                    <Building2 size={16} className="text-amber-400 mx-auto mb-1" />
+                    <div className="text-xs text-gray-400">Construire (neuf)</div>
+                    <div className="font-mono text-lg text-amber-300 font-bold">{formatEuroShort(avisProjet.totalNeuf)}</div>
+                    <div className="text-xs text-gray-500">{formatEuroShort(avisProjet.coutM2Neuf)}/m²</div>
+                  </div>
+                  <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3 text-center">
+                    <Home size={16} className="text-blue-400 mx-auto mb-1" />
+                    <div className="text-xs text-gray-400">Acheter (ancien)</div>
+                    <div className="font-mono text-lg text-blue-300 font-bold">{formatEuroShort(avisProjet.totalAncien)}</div>
+                    <div className="text-xs text-gray-500">{formatEuroShort(avisProjet.prixM2Ancien)}/m² + frais + réno</div>
+                  </div>
+                </div>
+                <div className={`text-center text-sm font-mono font-bold mt-1 ${avisProjet.delta < 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {avisProjet.delta < 0 ? 'Économie' : 'Surcoût'} construire : {formatEuroShort(Math.abs(avisProjet.delta))} ({avisProjet.deltaPct > 0 ? '+' : ''}{avisProjet.deltaPct.toFixed(1)}%)
+                </div>
+              </div>
+
+              {/* Prix ancien personnalisable */}
+              <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
+                <div className="text-xs text-gray-400">
+                  Ajustez le prix/m² ancien de votre secteur
+                  <TooltipIcon text="Par défaut, moyenne de la zone. Consultez meilleursagents.com ou les notaires pour votre commune exacte." />
+                </div>
+                <div className="flex items-center gap-3">
+                  <SliderInput label="" value={prixAncienM2Custom || avisProjet.marche.moy} onChange={setPrixAncienM2Custom}
+                    min={avisProjet.marche.min} max={avisProjet.marche.max} step={50}
+                    suffix=" €/m²" />
+                </div>
+              </div>
+
+              {/* Plus-value */}
+              <div className={`rounded-lg p-3 ${avisProjet.plusValue >= 0 ? 'bg-green-900/20 border border-green-600/30' : 'bg-red-900/20 border border-red-600/30'}`}>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-xs text-gray-400">Valeur de marché estimée du bien neuf</div>
+                    <div className="text-xs text-gray-500">(prix ancien +20% prime neuf)</div>
+                  </div>
+                  <div className="font-mono text-lg font-bold text-gray-200">{formatEuroShort(avisProjet.valeurEstimeeNeuf)}</div>
+                </div>
+                <div className={`flex justify-between items-center mt-2 pt-2 border-t ${avisProjet.plusValue >= 0 ? 'border-green-700/30' : 'border-red-700/30'}`}>
+                  <span className="text-sm">{avisProjet.plusValue >= 0 ? 'Plus-value latente' : 'Moins-value latente'}</span>
+                  <span className={`font-mono font-bold ${avisProjet.plusValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {avisProjet.plusValue >= 0 ? '+' : ''}{formatEuroShort(avisProjet.plusValue)} ({avisProjet.plusValuePct >= 0 ? '+' : ''}{avisProjet.plusValuePct.toFixed(1)}%)
+                  </span>
+                </div>
+              </div>
+
+              {/* Détail ancien */}
+              <div className="text-xs text-gray-600 space-y-0.5">
+                <div>Estimation ancien : {shab} m² × {formatEuroShort(avisProjet.prixM2Ancien)}/m² = {formatEuroShort(avisProjet.prixAchatAncien)}</div>
+                <div>+ Frais notaire ancien 8% = {formatEuroShort(avisProjet.fraisNotaireAncien)}</div>
+                <div>+ Travaux rafraîchissement ~400 €/m² = {formatEuroShort(avisProjet.travauxRenovation)}</div>
+              </div>
+
+              {/* Avantages / Inconvénients */}
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <div className="text-xs text-green-400 font-semibold mb-1">Avantages de construire</div>
+                  {avisProjet.avantages.map((a, i) => (
+                    <div key={i} className="flex items-start gap-1.5 text-xs text-gray-400 mb-1">
+                      <CheckCircle size={12} className="text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>{a}</span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="text-xs text-red-400 font-semibold mb-1">Points de vigilance</div>
+                  {avisProjet.inconvenients.map((i, idx) => (
+                    <div key={idx} className="flex items-start gap-1.5 text-xs text-gray-400 mb-1">
+                      <AlertTriangle size={12} className="text-orange-500 mt-0.5 flex-shrink-0" />
+                      <span>{i}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
