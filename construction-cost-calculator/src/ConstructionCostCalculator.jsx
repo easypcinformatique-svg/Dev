@@ -536,7 +536,11 @@ export default function ConstructionCostCalculator() {
     const fraisNotaire = prixTerrain * fraisNotairePct / 100;
     const etudeSolCost = etudeSol ? etudeSolMontant : 0;
     const viabTotal = terrainViabilise ? 0 : (viabEau + viabElec + viabGaz + viabAssainissement + viabTelecom);
-    const taxeAmenagement = 914 * sdp * tauxCommunal / 100;
+    // Base forfaitaire TA 2026 : 1036 €/m² (hors IDF) — mise à jour annuelle
+    const baseForfaitaireTA = 1036;
+    const tauxDept = deptInfo?.tauxDept || 2.5;
+    const surfaceTaxable = sdp + (garage !== 'aucun' ? garageM2 : 0);
+    const taxeAmenagement = baseForfaitaireTA * surfaceTaxable * (tauxCommunal + tauxDept) / 100;
     const terrainTotal = prixTerrain + fraisNotaire + fraisGeometre + etudeSolCost + viabTotal + taxeAmenagement;
 
     const prestCoeff = PRESTATIONS_COEFF[prestations];
@@ -670,7 +674,9 @@ export default function ConstructionCostCalculator() {
     const totalHT = terrainTotal + constructionEffective + honorairesTotal + assurancesTotal +
       raccordementsTotal + equipementsTotal + imprevusTotal + ameublement;
 
-    const tva = showTVA ? totalHT * 0.055 : 0;
+    // TVA 5,5% applicable uniquement sur la construction (pas le terrain)
+    const assietteTVA = constructionEffective + honorairesTotal + assurancesTotal + equipementsTotal;
+    const tva = showTVA ? assietteTVA * 0.055 : 0;
     const totalTTC = totalHT + tva;
     const coutM2SHAB = shab > 0 ? totalTTC / shab : 0;
     const coutM2SDP = sdp > 0 ? totalTTC / sdp : 0;
@@ -681,7 +687,7 @@ export default function ConstructionCostCalculator() {
       tva, totalTTC, coutM2SHAB, coutM2SDP, taxeAmenagement, detailConstruction,
     };
   }, [prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
-    terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
+    terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom, deptInfo,
     tauxCommunal, sdp, shab, coutM2, prestations, fondation, niveaux, re2020,
     architecte, architectePct, architecteFixe, architecteMontant, maitreOeuvre, maitreOeuvrePct, maitreOeuvreFixe, maitreOeuvreMontant, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, dommagesOuvrage, dommagesOuvragePct, dommagesOuvrageFixe, dommagesOuvrageMontant,
@@ -1357,9 +1363,9 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                 </div>
               )}
             </div>
-            <SliderInput label="Frais de notaire" value={fraisNotairePct} onChange={setFraisNotairePct}
-              min={2} max={9} step={0.1} suffix="%" displayValue={fraisNotairePct.toFixed(1)}
-              tooltip="Frais de notaire pour l'acquisition du terrain (7,5% en moyenne)" />
+            <SliderInput label="Frais de notaire terrain" value={fraisNotairePct} onChange={setFraisNotairePct}
+              min={7} max={9} step={0.1} suffix="%" displayValue={fraisNotairePct.toFixed(1)}
+              tooltip="Frais de notaire pour terrain nu : 7-8% (droits de mutation 5,8% + emoluments + debours). Neuf en VEFA : 2-3%." />
             <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(prixTerrain * fraisNotairePct / 100)}</div>
             <NumberInput label="Frais de géomètre" value={fraisGeometre} onChange={setFraisGeometre} suffix="€" />
             <div className="flex items-center gap-4">
@@ -1382,9 +1388,10 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
             )}
             <SliderInput label="Taux communal (taxe d'aménagement)" value={tauxCommunal} onChange={setTauxCommunal}
               min={1} max={5} step={0.1} suffix="%" displayValue={tauxCommunal.toFixed(1)}
-              tooltip="Taux voté par la commune. Base forfaitaire : 914 €/m² × SDP × taux" />
-            <div className="text-xs text-gray-500 -mt-2">
-              Taxe d'aménagement estimée : <span className="text-amber-400 font-mono">{formatEuroShort(calculations.taxeAmenagement)}</span>
+              tooltip="Taux vote par la commune. Base 2026 : 1 036 €/m² × surface taxable × (taux communal + taux departemental)" />
+            <div className="text-xs text-gray-500 -mt-2 space-y-0.5">
+              <div>Taxe d'amenagement : <span className="text-amber-400 font-mono">{formatEuroShort(calculations.taxeAmenagement)}</span></div>
+              <div className="text-gray-600">1 036 €/m² × {sdp + (garage !== 'aucun' ? garageM2 : 0)} m² taxable × ({tauxCommunal.toFixed(1)}% comm. + {deptInfo?.tauxDept || 2.5}% dept.)</div>
             </div>
           </AccordionModule>
 
@@ -1576,7 +1583,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                       className={`text-xs px-2 py-0.5 rounded ${architecteFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>Montant</button>
                   </div>
                   {architecteFixe ? (
-                    <NumberInput label="Honoraires architecte" value={architecteMontant} onChange={setArchitecteMontant} suffix="EUR" />
+                    <NumberInput label="Honoraires architecte" value={architecteMontant} onChange={setArchitecteMontant} suffix="€" />
                   ) : (
                     <>
                       <SliderInput label="Honoraires architecte" value={architectePct} onChange={setArchitectePct}
@@ -1599,7 +1606,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                       className={`text-xs px-2 py-0.5 rounded ${maitreOeuvreFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>Montant</button>
                   </div>
                   {maitreOeuvreFixe ? (
-                    <NumberInput label="Honoraires MOE" value={maitreOeuvreMontant} onChange={setMaitreOeuvreMontant} suffix="EUR" />
+                    <NumberInput label="Honoraires MOE" value={maitreOeuvreMontant} onChange={setMaitreOeuvreMontant} suffix="€" />
                   ) : (
                     <>
                       <SliderInput label="Honoraires MOE" value={maitreOeuvrePct} onChange={setMaitreOeuvrePct}
@@ -1622,7 +1629,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                       className={`text-xs px-2 py-0.5 rounded ${dommagesOuvrageFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>Montant</button>
                   </div>
                   {dommagesOuvrageFixe ? (
-                    <NumberInput label="Prime DO" value={dommagesOuvrageMontant} onChange={setDommagesOuvrageMontant} suffix="EUR" />
+                    <NumberInput label="Prime DO" value={dommagesOuvrageMontant} onChange={setDommagesOuvrageMontant} suffix="€" />
                   ) : (
                     <>
                       <SliderInput label="Taux DO" value={dommagesOuvragePct} onChange={setDommagesOuvragePct}
@@ -1929,7 +1936,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <CheckboxInput label="TVA 5,5% (construction neuve)" checked={showTVA} onChange={setShowTVA}
+                  <CheckboxInput label="TVA 5,5% (sur construction uniquement)" checked={showTVA} onChange={setShowTVA}
                     tooltip="TVA à taux réduit sous conditions (accession sociale, zone ANRU...)" />
                 </div>
                 {showTVA && (
@@ -2189,9 +2196,22 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                     {financement.tauxEffort > 35 && (
                       <div className="flex items-center gap-2 text-red-400 text-xs mt-1">
                         <AlertTriangle size={14} />
-                        Taux d'effort supérieur à 35% — risque de refus bancaire
+                        Taux d'effort superieur a 35% — risque de refus bancaire (HCSF)
                       </div>
                     )}
+                    {financement.tauxEffort > 33 && financement.tauxEffort <= 35 && (
+                      <div className="flex items-center gap-2 text-orange-400 text-xs mt-1">
+                        <AlertTriangle size={14} />
+                        Taux d'effort proche du seuil HCSF de 35%
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-300">Cout total projet avec financement</span>
+                      <span className="font-mono text-lg text-amber-400 font-bold">{formatEuroShort(calculations.totalTTC + financement.coutTotalCredit)}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">= Projet ({formatEuroShort(calculations.totalTTC)}) + Interets et frais ({formatEuroShort(financement.coutTotalCredit)})</div>
                   </div>
                 </div>
               )}
@@ -2372,7 +2392,7 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
 
             <div className="grid grid-cols-3 gap-2">
               <NumberInput label="Nb personnes foyer" value={nbPersonnes} onChange={(v) => setNbPersonnes(clamp(v, 1, 8))} min={1} max={8} />
-              <NumberInput label="Revenu fiscal ref (N-2)" value={revenuFiscalRef} onChange={setRevenuFiscalRef} suffix="EUR" tooltip="Revenu fiscal de reference de l'avis d'imposition N-2" />
+              <NumberInput label="Revenu fiscal ref (N-2)" value={revenuFiscalRef} onChange={setRevenuFiscalRef} suffix="€" tooltip="Revenu fiscal de reference de l'avis d'imposition N-2" />
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Statut</label>
                 <CheckboxInput label="Primo-accedant" checked={primoAccedant} onChange={setPrimoAccedant}
