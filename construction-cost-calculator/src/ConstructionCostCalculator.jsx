@@ -33,6 +33,12 @@ const FONDATION_COEFF = { dalle: 1.0, videsan: 1.05, soussol: 1.2 };
 const NIVEAUX_COEFF = { 1: 1.0, 2: 0.95 };
 const CHAUFFAGE_SURCOUT = { pac_air: 0, pac_geo: 8000, poele: 3000, chaudiere_gaz: 5000 };
 const GARAGE_COUT_M2 = { aucun: 0, integre: 800, attenant: 700, carport: 300 };
+const ANC_TYPES = {
+  fosse: { label: 'Fosse toutes eaux + épandage', default: 6000, min: 4000, max: 12000 },
+  microstation: { label: 'Micro-station', default: 8000, min: 6000, max: 15000 },
+  filtre_compact: { label: 'Filtre compact', default: 9000, min: 7000, max: 14000 },
+  filtre_plante: { label: 'Filtre planté (phytoépuration)', default: 10000, min: 8000, max: 18000 },
+};
 
 const CHART_COLORS = ['#d4a853', '#e8c778', '#2dd4bf', '#818cf8', '#f472b6', '#a78bfa', '#fb923c', '#34d399'];
 
@@ -74,6 +80,27 @@ function AccordionModule({ id, title, icon: Icon, isOpen, onToggle, children }) 
 }
 
 function NumberInput({ label, value, onChange, min = 0, max, step = 1, suffix, tooltip }) {
+  const [rawValue, setRawValue] = useState(String(value));
+  const handleChange = (e) => {
+    const raw = e.target.value;
+    setRawValue(raw);
+    if (raw === '' || raw === '-') return;
+    const num = Number(raw);
+    if (!isNaN(num)) onChange(Math.max(min, max != null ? Math.min(max, num) : num));
+  };
+  const handleBlur = () => {
+    if (rawValue === '' || rawValue === '-' || isNaN(Number(rawValue))) {
+      setRawValue(String(min));
+      onChange(min);
+    } else {
+      const clamped = Math.max(min, max != null ? Math.min(max, Number(rawValue)) : Number(rawValue));
+      setRawValue(String(clamped));
+      onChange(clamped);
+    }
+  };
+  if (String(value) !== rawValue && document.activeElement?.dataset?.inputFor !== label) {
+    if (rawValue !== '' && rawValue !== '-') setRawValue(String(value));
+  }
   return (
     <div>
       <label className="block text-sm text-gray-400 mb-1">
@@ -82,11 +109,14 @@ function NumberInput({ label, value, onChange, min = 0, max, step = 1, suffix, t
       <div className="flex items-center gap-2">
         <input
           type="number"
-          value={value}
+          data-input-for={label}
+          value={rawValue}
           min={min}
           max={max}
           step={step}
-          onChange={(e) => onChange(Math.max(min, Number(e.target.value) || 0))}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={() => setRawValue(String(value))}
           className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white font-mono text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         />
         {suffix && <span className="text-gray-500 text-sm whitespace-nowrap">{suffix}</span>}
@@ -164,6 +194,7 @@ export default function ConstructionCostCalculator() {
   const [viabAssainissement, setViabAssainissement] = useState(6000);
   const [viabTelecom, setViabTelecom] = useState(1500);
   const [tauxCommunal, setTauxCommunal] = useState(1.7);
+  const [surfaceTerrain, setSurfaceTerrain] = useState(500);
 
   // === MODULE 2 - CONSTRUCTION ===
   const [shab, setShab] = useState(100);
@@ -194,6 +225,7 @@ export default function ConstructionCostCalculator() {
   const [assainissementType, setAssainissementType] = useState('collectif');
   const [raccAssCollectif, setRaccAssCollectif] = useState(3000);
   const [raccANC, setRaccANC] = useState(8000);
+  const [ancType, setAncType] = useState('fosse');
   const [redevanceArcheo, setRedevanceArcheo] = useState(false);
 
   // === MODULE 5 - EQUIPEMENTS ===
@@ -217,6 +249,8 @@ export default function ConstructionCostCalculator() {
   const [ameublement, setAmeublement] = useState(15000);
 
   // === FINANCEMENT ===
+  const [fraisDossier, setFraisDossier] = useState(1500);
+  const [garantiePct, setGarantiePct] = useState(1.5);
   const [apport, setApport] = useState(30000);
   const [ptz, setPtz] = useState(false);
   const [ptzMontant, setPtzMontant] = useState(0);
@@ -244,6 +278,11 @@ export default function ConstructionCostCalculator() {
 
   // === CALCULATIONS ===
   const sdp = useMemo(() => sdpAuto ? Math.round(shab * 1.1) : sdpManuel, [sdpAuto, shab, sdpManuel]);
+  const empriseAuSol = useMemo(() => {
+    const shabParNiveau = niveaux === 2 ? Math.ceil(shab / 2) : shab;
+    return Math.round(shabParNiveau * 1.15);
+  }, [shab, niveaux]);
+  const ces = useMemo(() => surfaceTerrain > 0 ? (empriseAuSol / surfaceTerrain * 100) : 0, [empriseAuSol, surfaceTerrain]);
 
   const calculations = useMemo(() => {
     const fraisNotaire = prixTerrain * fraisNotairePct / 100;
@@ -255,7 +294,7 @@ export default function ConstructionCostCalculator() {
     const prestCoeff = PRESTATIONS_COEFF[prestations];
     const fondCoeff = FONDATION_COEFF[fondation];
     const nivCoeff = NIVEAUX_COEFF[niveaux];
-    const re2020Coeff = re2020 ? 1.08 : 1;
+    const re2020Coeff = re2020 ? 1.10 : 1;
     const constructionBase = shab * coutM2 * prestCoeff * re2020Coeff * fondCoeff * nivCoeff;
 
     const honorairesTotal =
@@ -266,8 +305,8 @@ export default function ConstructionCostCalculator() {
 
     const assurancesTotal = dommagesOuvrage ? constructionBase * dommagesOuvragePct / 100 : 0;
 
-    const raccordementsTotal = raccElec + raccEau +
-      (assainissementType === 'collectif' ? raccAssCollectif : raccANC) +
+    const ancCost = assainissementType === 'collectif' ? raccAssCollectif : raccANC;
+    const raccordementsTotal = raccElec + raccEau + ancCost +
       (redevanceArcheo ? constructionBase * 0.004 : 0);
 
     const chauffSurcout = CHAUFFAGE_SURCOUT[chauffage] || 0;
@@ -302,6 +341,8 @@ export default function ConstructionCostCalculator() {
 
   const financement = useMemo(() => {
     const montantEmprunt = Math.max(0, calculations.totalTTC - apport - (ptz ? ptzMontant : 0));
+    const garantie = montantEmprunt * garantiePct / 100;
+    const fraisBancairesTotal = fraisDossier + garantie;
     const tauxMensuel = tauxNominal / 100 / 12;
     const nbMensualites = duree * 12;
     let mensualite = 0;
@@ -311,9 +352,10 @@ export default function ConstructionCostCalculator() {
       mensualite = montantEmprunt / nbMensualites;
     }
     const coutInterets = mensualite * nbMensualites - montantEmprunt;
+    const coutTotalCredit = coutInterets + fraisBancairesTotal;
     const tauxEffort = revenuMensuel > 0 ? (mensualite / revenuMensuel) * 100 : 0;
-    return { montantEmprunt, mensualite, coutInterets, tauxEffort };
-  }, [calculations.totalTTC, apport, ptz, ptzMontant, tauxNominal, duree, revenuMensuel]);
+    return { montantEmprunt, mensualite, coutInterets, coutTotalCredit, fraisBancairesTotal, garantie, tauxEffort };
+  }, [calculations.totalTTC, apport, ptz, ptzMontant, tauxNominal, duree, revenuMensuel, fraisDossier, garantiePct]);
 
   // === COHERENCE BADGE ===
   const coherence = useMemo(() => {
@@ -345,17 +387,17 @@ export default function ConstructionCostCalculator() {
     setPrixTerrain(80000); setFraisNotairePct(7.5); setFraisGeometre(1500);
     setEtudeSol(true); setEtudeSolMontant(2500); setTerrainViabilise(true);
     setViabEau(3000); setViabElec(3500); setViabGaz(4000); setViabAssainissement(6000); setViabTelecom(1500);
-    setTauxCommunal(1.7); setShab(100); setSdpAuto(true); setSdpManuel(110);
+    setTauxCommunal(1.7); setSurfaceTerrain(500); setShab(100); setSdpAuto(true); setSdpManuel(110);
     setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle');
     setPrestations('moyen'); setRe2020(false); setArchitecte(false); setArchitectePct(12);
     setMaitreOeuvre(true); setMaitreOeuvrePct(6); setDommagesOuvrage(true); setDommagesOuvragePct(3.5);
     setBureauControle(false); setBureauControleMontant(2500); setCoordSPS(false); setCoordSPSMontant(1500);
     setRaccElec(2500); setRaccEau(1500); setAssainissementType('collectif'); setRaccAssCollectif(3000);
-    setRaccANC(8000); setRedevanceArcheo(false); setCuisine(8000); setNbSDB(1); setCoutSDB(6000);
+    setRaccANC(8000); setAncType('fosse'); setRedevanceArcheo(false); setCuisine(8000); setNbSDB(1); setCoutSDB(6000);
     setChauffage('pac_air'); setClimatisation(false); setClimMontant(6000); setPiscine(false);
     setPiscineMontant(40000); setTerrasse(5000); setCloture(3000); setGarage('aucun'); setGarageM2(20);
     setDomotique(false); setDomotiqueMontant(5000); setImprevusPct(10); setAmeublement(15000);
-    setApport(30000); setPtz(false); setPtzMontant(0); setTauxNominal(3.5); setDuree(25);
+    setFraisDossier(1500); setGarantiePct(1.5); setApport(30000); setPtz(false); setPtzMontant(0); setTauxNominal(3.5); setDuree(25);
     setRevenuMensuel(4000); setShowTVA(false);
     setOpenModules(new Set(['terrain', 'construction']));
   }, []);
@@ -406,7 +448,11 @@ export default function ConstructionCostCalculator() {
 
           {/* MODULE 1 - TERRAIN */}
           <AccordionModule id="terrain" title="Terrain" icon={Home} isOpen={openModules.has('terrain')} onToggle={toggleModule}>
-            <NumberInput label="Prix d'achat du terrain" value={prixTerrain} onChange={setPrixTerrain} suffix="€" />
+            <div className="grid grid-cols-2 gap-3">
+              <NumberInput label="Prix d'achat du terrain" value={prixTerrain} onChange={setPrixTerrain} suffix="€" />
+              <NumberInput label="Surface du terrain" value={surfaceTerrain} onChange={setSurfaceTerrain} min={1} suffix="m²"
+                tooltip="Surface cadastrale de la parcelle" />
+            </div>
             <SliderInput label="Frais de notaire" value={fraisNotairePct} onChange={setFraisNotairePct}
               min={2} max={9} step={0.1} suffix="%" displayValue={fraisNotairePct.toFixed(1)}
               tooltip="Frais de notaire pour l'acquisition du terrain (7,5% en moyenne)" />
@@ -417,7 +463,8 @@ export default function ConstructionCostCalculator() {
                 tooltip="Étude géotechnique obligatoire dans certaines zones (loi ELAN)" />
               {etudeSol && (
                 <input type="number" value={etudeSolMontant} min={0}
-                  onChange={(e) => setEtudeSolMontant(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => { const v = e.target.value; if (v === '') return; setEtudeSolMontant(Math.max(0, Number(v) || 0)); }}
+                  onBlur={(e) => { if (e.target.value === '') setEtudeSolMontant(0); }}
                   className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
               )}
             </div>
@@ -498,8 +545,49 @@ export default function ConstructionCostCalculator() {
                 value={prestations} onChange={setPrestations} />
             </div>
 
-            <CheckboxInput label="RE2020 (+8%)" checked={re2020} onChange={setRe2020}
-              tooltip="Surcoût lié à la réglementation environnementale RE2020" />
+            <div className="bg-gray-800/50 rounded-lg p-3 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Emprise au sol estimée</span>
+                <span className="font-mono text-amber-300">{empriseAuSol} m²</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">
+                  CES (Coeff. Emprise au Sol)
+                  <TooltipIcon text="Rapport entre l'emprise au sol et la surface du terrain. Le PLU impose souvent un CES max (ex : 0,40 = 40%)" />
+                </span>
+                <span className={`font-mono font-bold ${ces > 50 ? 'text-red-400' : ces > 40 ? 'text-orange-400' : 'text-green-400'}`}>
+                  {ces.toFixed(1)} %
+                </span>
+              </div>
+              {ces > 40 && (
+                <div className="flex items-center gap-2 text-xs mt-1">
+                  <AlertTriangle size={14} className={ces > 50 ? 'text-red-400' : 'text-orange-400'} />
+                  <span className={ces > 50 ? 'text-red-300' : 'text-orange-300'}>
+                    {ces > 50 ? 'CES très élevé — vérifiez le PLU de votre commune' : 'CES élevé — vérifiez la limite du PLU'}
+                  </span>
+                </div>
+              )}
+              <div className="text-xs text-gray-600 mt-1">
+                {niveaux === 1 ? 'Plain-pied : emprise = SHAB + 15% (murs)' : 'R+1 : emprise = (SHAB/2) + 15% (murs)'}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <CheckboxInput label="RE2020" checked={re2020} onChange={(v) => {
+                setRe2020(v);
+                if (v && chauffage === 'chaudiere_gaz') setChauffage('pac_air');
+              }}
+                tooltip="Obligatoire depuis 2022. Surcoût ~10% (isolation renforcée, VMC double flux, ENR). Interdit la chaudière gaz en chauffage principal." />
+              {re2020 && (
+                <div className="ml-6 space-y-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1"><CheckCircle size={12} className="text-green-500" /> Isolation renforcée (Bbio optimisé)</div>
+                  <div className="flex items-center gap-1"><CheckCircle size={12} className="text-green-500" /> VMC double flux recommandée</div>
+                  <div className="flex items-center gap-1"><CheckCircle size={12} className="text-green-500" /> Énergie renouvelable obligatoire</div>
+                  <div className="flex items-center gap-1"><XCircle size={12} className="text-red-500" /> Chaudière gaz seule interdite</div>
+                  <div className="flex items-center gap-1"><Info size={12} className="text-blue-400" /> Surcoût estimé : +10% sur le coût construction</div>
+                </div>
+              )}
+            </div>
 
             {shab > 150 && (
               <div className="flex items-center gap-2 bg-orange-900/30 border border-orange-500/50 rounded px-3 py-2">
@@ -545,7 +633,8 @@ export default function ConstructionCostCalculator() {
               <CheckboxInput label="Bureau de contrôle" checked={bureauControle} onChange={setBureauControle} />
               {bureauControle && (
                 <input type="number" value={bureauControleMontant} min={0}
-                  onChange={(e) => setBureauControleMontant(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => { const v = e.target.value; if (v === '') return; setBureauControleMontant(Math.max(0, Number(v) || 0)); }}
+                  onBlur={(e) => { if (e.target.value === '') setBureauControleMontant(0); }}
                   className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
               )}
             </div>
@@ -554,7 +643,8 @@ export default function ConstructionCostCalculator() {
                 tooltip="Sécurité et Protection de la Santé sur chantier" />
               {coordSPS && (
                 <input type="number" value={coordSPSMontant} min={0}
-                  onChange={(e) => setCoordSPSMontant(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => { const v = e.target.value; if (v === '') return; setCoordSPSMontant(Math.max(0, Number(v) || 0)); }}
+                  onBlur={(e) => { if (e.target.value === '') setCoordSPSMontant(0); }}
                   className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
               )}
             </div>
@@ -575,10 +665,28 @@ export default function ConstructionCostCalculator() {
                 value={assainissementType} onChange={setAssainissementType} />
             </div>
             {assainissementType === 'collectif' ? (
-              <NumberInput label="Raccordement assainissement collectif" value={raccAssCollectif} onChange={setRaccAssCollectif} suffix="€" />
+              <NumberInput label="Raccordement assainissement collectif" value={raccAssCollectif} onChange={setRaccAssCollectif} suffix="€"
+                tooltip="Participation au raccordement au réseau collectif (PRE)" />
             ) : (
-              <NumberInput label="Assainissement autonome (ANC)" value={raccANC} onChange={setRaccANC} suffix="€"
-                tooltip="Filière d'assainissement non collectif (fosse, micro-station...)" />
+              <div className="space-y-3 ml-2 border-l-2 border-gray-700 pl-3">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Type de filière ANC</label>
+                  <select value={ancType} onChange={(e) => { setAncType(e.target.value); setRaccANC(ANC_TYPES[e.target.value].default); }}
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-amber-500 focus:outline-none">
+                    {Object.entries(ANC_TYPES).map(([k, v]) => (
+                      <option key={k} value={k}>{v.label} ({formatEuroShort(v.default)})</option>
+                    ))}
+                  </select>
+                </div>
+                <SliderInput label="Coût installation ANC" value={raccANC} onChange={setRaccANC}
+                  min={ANC_TYPES[ancType].min} max={ANC_TYPES[ancType].max} step={500}
+                  displayValue={formatEuroShort(raccANC)}
+                  tooltip="Inclut fourniture, pose, étude de filière et contrôle SPANC" />
+                <div className="text-xs text-gray-500">
+                  <Info size={12} className="inline text-blue-400 mr-1" />
+                  Étude de filière ANC (~500 €) et contrôle SPANC (~200 €) inclus dans l'estimation
+                </div>
+              </div>
             )}
             <CheckboxInput label="Redevance d'archéologie préventive (0,40%)" checked={redevanceArcheo} onChange={setRedevanceArcheo}
               tooltip="0,40% du coût de construction, due pour les permis de construire" />
@@ -599,14 +707,21 @@ export default function ConstructionCostCalculator() {
                 <option value="pac_air">PAC air/eau (+0 €)</option>
                 <option value="pac_geo">PAC géothermique (+8 000 €)</option>
                 <option value="poele">Poêle à granulés (+3 000 €)</option>
-                <option value="chaudiere_gaz">Chaudière gaz (+5 000 €)</option>
+                <option value="chaudiere_gaz" disabled={re2020}>Chaudière gaz (+5 000 €){re2020 ? ' — interdit RE2020' : ''}</option>
               </select>
+              {re2020 && chauffage === 'chaudiere_gaz' && (
+                <div className="flex items-center gap-2 bg-red-900/30 border border-red-500/50 rounded px-3 py-1.5 mt-1">
+                  <XCircle size={14} className="text-red-400" />
+                  <span className="text-xs text-red-300">La chaudière gaz seule est interdite en RE2020</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <CheckboxInput label="Climatisation réversible" checked={climatisation} onChange={setClimatisation} />
               {climatisation && (
                 <input type="number" value={climMontant} min={0}
-                  onChange={(e) => setClimMontant(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => { const v = e.target.value; if (v === '') return; setClimMontant(Math.max(0, Number(v) || 0)); }}
+                  onBlur={(e) => { if (e.target.value === '') setClimMontant(0); }}
                   className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
               )}
             </div>
@@ -639,7 +754,8 @@ export default function ConstructionCostCalculator() {
               <CheckboxInput label="Domotique" checked={domotique} onChange={setDomotique} />
               {domotique && (
                 <input type="number" value={domotiqueMontant} min={0}
-                  onChange={(e) => setDomotiqueMontant(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => { const v = e.target.value; if (v === '') return; setDomotiqueMontant(Math.max(0, Number(v) || 0)); }}
+                  onBlur={(e) => { if (e.target.value === '') setDomotiqueMontant(0); }}
                   className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
               )}
             </div>
@@ -804,6 +920,14 @@ export default function ConstructionCostCalculator() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberInput label="Frais de dossier" value={fraisDossier} onChange={setFraisDossier} suffix="€"
+                      tooltip="Frais facturés par la banque pour le montage du dossier" />
+                    <SliderInput label="Garantie hypothécaire" value={garantiePct} onChange={setGarantiePct}
+                      min={0.5} max={2.5} step={0.1} suffix="%" displayValue={garantiePct.toFixed(1)}
+                      tooltip="Caution ou hypothèque, environ 1 à 2% du montant emprunté" />
+                  </div>
+
                   <SliderInput label="Taux nominal" value={tauxNominal} onChange={setTauxNominal}
                     min={2.5} max={6} step={0.1} suffix="%" displayValue={tauxNominal.toFixed(1)} />
                   <SliderInput label="Durée du prêt" value={duree} onChange={setDuree}
@@ -818,6 +942,14 @@ export default function ConstructionCostCalculator() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Coût total des intérêts</span>
                       <span className="font-mono text-gray-300">{formatEuro(financement.coutInterets)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Frais bancaires (dossier + garantie)</span>
+                      <span className="font-mono text-gray-300">{formatEuro(financement.fraisBancairesTotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm border-t border-gray-700 pt-1">
+                      <span className="text-gray-300 font-medium">Coût total du crédit</span>
+                      <span className="font-mono text-amber-300 font-bold">{formatEuro(financement.coutTotalCredit)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Taux d'effort</span>
