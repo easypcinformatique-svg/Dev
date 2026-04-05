@@ -531,41 +531,94 @@ export default function ConstructionCostCalculator() {
 
     // Décomposition construction nette par lots
     const coutBrut = shab * coutM2;
-    const lotTerrassement = coutBrut * 0.04;
-    const lotFondations = coutBrut * (fondation === 'soussol' ? 0.15 : fondation === 'videsan' ? 0.08 : 0.06);
-    const lotMaconnerie = coutBrut * (fondation === 'soussol' ? 0.14 : 0.16);
-    const lotCharpenteCouverture = coutBrut * 0.12;
-    const lotMenuiseriesExt = coutBrut * 0.10;
-    const lotIsolation = coutBrut * (re2020 ? 0.10 : 0.07);
-    const lotPlomberie = coutBrut * 0.08;
-    const lotElectricite = coutBrut * 0.07;
-    const lotPlatrerie = coutBrut * 0.06;
-    const lotRevetementsSols = coutBrut * 0.07;
-    const lotPeinture = coutBrut * 0.04;
-    const lotMenuiseriesInt = coutBrut * 0.05;
-    const lotFacade = coutBrut * 0.04;
-    const sousTotal = lotTerrassement + lotFondations + lotMaconnerie + lotCharpenteCouverture
-      + lotMenuiseriesExt + lotIsolation + lotPlomberie + lotElectricite + lotPlatrerie
-      + lotRevetementsSols + lotPeinture + lotMenuiseriesInt + lotFacade;
-    const lotDivers = constructionBase - sousTotal;
+    const emprise = niveaux === 2 ? Math.ceil(shab / 2) : shab;
+    const perimetre = Math.round(2 * (Math.sqrt(emprise * 1.5) + Math.sqrt(emprise / 1.5)));
+    const surfaceMurs = perimetre * (niveaux === 2 ? 5.5 : 2.8);
+    const surfaceToiture = Math.round(emprise * 1.15);
+    const nbFenetres = Math.max(4, Math.round(shab / 12));
+    const nbPortesInt = Math.max(4, Math.round(shab / 14));
+    const nbPiecesHumides = 1 + nbSDB;
+    const nbPointsElec = Math.round(shab * 1.2);
+    const pC = prestCoeff;
+
+    const lots = [
+      { nom: 'Gros oeuvre', sousLots: [
+        { nom: 'Terrassement / Nivellement', qte: emprise, unite: 'm2', pu: Math.round(25 * pC) },
+        { nom: 'Fouilles fondations', qte: perimetre, unite: 'ml', pu: Math.round(45 * pC) },
+        { nom: fondation === 'soussol' ? 'Sous-sol complet' : fondation === 'videsan' ? 'Vide sanitaire' : 'Dalle beton',
+          qte: emprise, unite: 'm2', pu: Math.round((fondation === 'soussol' ? 280 : fondation === 'videsan' ? 120 : 85) * pC) },
+        { nom: 'Murs exterieurs', qte: surfaceMurs, unite: 'm2', pu: Math.round((typeConstruction === 'bois' ? 95 : 110) * pC) },
+        ...(niveaux === 2 ? [{ nom: 'Plancher intermediaire R+1', qte: emprise, unite: 'm2', pu: Math.round(90 * pC) }] : []),
+        ...(niveaux === 2 ? [{ nom: 'Escalier', qte: 1, unite: 'u', pu: Math.round(3500 * pC) }] : []),
+      ]},
+      { nom: 'Charpente / Couverture', sousLots: [
+        { nom: 'Charpente', qte: surfaceToiture, unite: 'm2', pu: Math.round(55 * pC) },
+        { nom: 'Couverture tuiles', qte: surfaceToiture, unite: 'm2', pu: Math.round(45 * pC) },
+        { nom: 'Zinguerie / Gouttieres', qte: perimetre, unite: 'ml', pu: Math.round(35 * pC) },
+        { nom: 'Ecran sous-toiture HPV', qte: surfaceToiture, unite: 'm2', pu: Math.round(8 * pC) },
+      ]},
+      { nom: 'Menuiseries exterieures', sousLots: [
+        { nom: 'Fenetres double/triple vitrage', qte: nbFenetres, unite: 'u', pu: Math.round((re2020 ? 650 : 500) * pC) },
+        { nom: 'Baie vitree / Porte-fenetre', qte: Math.max(1, Math.round(nbFenetres / 4)), unite: 'u', pu: Math.round((re2020 ? 1800 : 1400) * pC) },
+        { nom: 'Porte entree blindee', qte: 1, unite: 'u', pu: Math.round(2200 * pC) },
+        { nom: 'Volets roulants motorises', qte: nbFenetres + Math.max(1, Math.round(nbFenetres / 4)), unite: 'u', pu: Math.round(450 * pC) },
+      ]},
+      { nom: 'Isolation / Ventilation', sousLots: [
+        { nom: re2020 ? 'Isolation murs R>=4.0' : 'Isolation murs R>=3.7', qte: surfaceMurs, unite: 'm2', pu: Math.round((re2020 ? 55 : 35) * pC) },
+        { nom: re2020 ? 'Isolation combles R>=8.0' : 'Isolation combles R>=6.0', qte: surfaceToiture, unite: 'm2', pu: Math.round((re2020 ? 45 : 30) * pC) },
+        { nom: 'Isolation sol sous dalle', qte: emprise, unite: 'm2', pu: Math.round((re2020 ? 30 : 20) * pC) },
+        re2020
+          ? { nom: 'VMC double flux haut rendement', qte: 1, unite: 'u', pu: Math.round(4500 * pC) }
+          : { nom: 'VMC simple flux hygro B', qte: 1, unite: 'u', pu: Math.round(800 * pC) },
+        { nom: 'Ponts thermiques (rupteurs)', qte: perimetre, unite: 'ml', pu: Math.round(15 * pC) },
+      ]},
+      { nom: 'Plomberie / Sanitaire', sousLots: [
+        { nom: 'Reseau eau chaude/froide PER', qte: nbPiecesHumides, unite: 'pieces', pu: Math.round(1200 * pC) },
+        { nom: 'Evacuations EU/EV PVC', qte: nbPiecesHumides, unite: 'pieces', pu: Math.round(600 * pC) },
+        { nom: re2020 ? 'Ballon thermodynamique' : 'Cumulus electrique 200L', qte: 1, unite: 'u', pu: Math.round((re2020 ? 3500 : 1800) * pC) },
+        { nom: 'Appareils sanitaires', qte: nbPiecesHumides, unite: 'pieces', pu: Math.round(1500 * pC) },
+      ]},
+      { nom: 'Electricite', sousLots: [
+        { nom: 'Tableau electrique TGBT', qte: 1, unite: 'u', pu: Math.round(1800 * pC) },
+        { nom: 'Points lumineux + prises', qte: nbPointsElec, unite: 'pts', pu: Math.round(65 * pC) },
+        { nom: 'Cablage courants forts', qte: shab, unite: 'm2', pu: Math.round(12 * pC) },
+        { nom: 'Reseau courants faibles', qte: 1, unite: 'u', pu: Math.round(1200 * pC) },
+      ]},
+      { nom: 'Platrerie / Cloisons', sousLots: [
+        { nom: 'Doublage murs placo BA13', qte: surfaceMurs, unite: 'm2', pu: Math.round(25 * pC) },
+        { nom: 'Cloisons de distribution', qte: Math.round(shab * 0.6), unite: 'm2', pu: Math.round(35 * pC) },
+        { nom: 'Faux plafonds BA13', qte: shab, unite: 'm2', pu: Math.round(22 * pC) },
+      ]},
+      { nom: 'Revetements de sols', sousLots: [
+        { nom: 'Chape fluide / traditionnelle', qte: shab, unite: 'm2', pu: Math.round(20 * pC) },
+        { nom: 'Carrelage pieces humides', qte: Math.round(shab * 0.3), unite: 'm2', pu: Math.round(55 * pC) },
+        { nom: 'Parquet sejour/chambres', qte: Math.round(shab * 0.7), unite: 'm2', pu: Math.round(40 * pC) },
+      ]},
+      { nom: 'Peinture / Finitions', sousLots: [
+        { nom: 'Peinture murs (2 couches)', qte: Math.round(shab * 2.8), unite: 'm2', pu: Math.round(8 * pC) },
+        { nom: 'Peinture plafonds', qte: shab, unite: 'm2', pu: Math.round(10 * pC) },
+        { nom: 'Faience SDB/cuisine', qte: Math.round(nbPiecesHumides * 8), unite: 'm2', pu: Math.round(55 * pC) },
+      ]},
+      { nom: 'Menuiseries interieures', sousLots: [
+        { nom: 'Portes interieures + huisseries', qte: nbPortesInt, unite: 'u', pu: Math.round(350 * pC) },
+        { nom: 'Placards / rangements', qte: Math.max(2, Math.round(shab / 35)), unite: 'u', pu: Math.round(800 * pC) },
+      ]},
+      { nom: 'Ravalement / Facade', sousLots: [
+        { nom: 'Enduit de facade', qte: surfaceMurs, unite: 'm2', pu: Math.round(35 * pC) },
+        ...(typeConstruction === 'contemporaine' ? [{ nom: 'Bardage decoratif partiel', qte: Math.round(surfaceMurs * 0.2), unite: 'm2', pu: Math.round(85 * pC) }] : []),
+      ]},
+    ];
+
+    const lotsAvecTotaux = lots.map(lot => {
+      const total = lot.sousLots.reduce((s, sl) => s + sl.qte * sl.pu, 0);
+      return { ...lot, total };
+    });
+    const totalLots = lotsAvecTotaux.reduce((s, l) => s + l.total, 0);
+    const ajustement = constructionBase - totalLots;
 
     const detailConstruction = {
-      lots: [
-        { nom: 'Terrassement / VRD', montant: lotTerrassement, pct: 4 },
-        { nom: `Fondations (${fondation === 'soussol' ? 'sous-sol' : fondation === 'videsan' ? 'vide sanitaire' : 'dalle'})`, montant: lotFondations, pct: fondation === 'soussol' ? 15 : fondation === 'videsan' ? 8 : 6 },
-        { nom: 'Maçonnerie / Élévation', montant: lotMaconnerie, pct: fondation === 'soussol' ? 14 : 16 },
-        { nom: 'Charpente / Couverture', montant: lotCharpenteCouverture, pct: 12 },
-        { nom: 'Menuiseries extérieures', montant: lotMenuiseriesExt, pct: 10 },
-        { nom: `Isolation ${re2020 ? '(RE2020 renforcée)' : ''}`, montant: lotIsolation, pct: re2020 ? 10 : 7 },
-        { nom: 'Plomberie / Sanitaire', montant: lotPlomberie, pct: 8 },
-        { nom: 'Électricité', montant: lotElectricite, pct: 7 },
-        { nom: 'Plâtrerie / Cloisons', montant: lotPlatrerie, pct: 6 },
-        { nom: 'Revêtements de sols', montant: lotRevetementsSols, pct: 7 },
-        { nom: 'Peinture / Finitions', montant: lotPeinture, pct: 4 },
-        { nom: 'Menuiseries intérieures', montant: lotMenuiseriesInt, pct: 5 },
-        { nom: 'Ravalement / Façade', montant: lotFacade, pct: 4 },
-        { nom: 'Ajustements (prestations, niveaux)', montant: lotDivers, pct: null },
-      ],
+      lots: lotsAvecTotaux,
+      ajustement,
       coutBrut,
       coutM2Reel: shab > 0 ? constructionBase / shab : 0,
     };
@@ -1455,25 +1508,44 @@ export default function ConstructionCostCalculator() {
                     <span className="font-mono text-gray-200">{formatEuroShort(calculations.constructionBase)}</span>
                   </button>
                   {openModules.has('detail_construction') && (
-                    <div className="ml-5 mt-1 mb-2 space-y-0.5 border-l-2 border-amber-600/30 pl-3 fade-in">
+                    <div className="ml-3 mt-1 mb-2 border-l-2 border-amber-600/30 pl-3 fade-in space-y-2">
                       <div className="flex justify-between text-xs text-gray-500 pb-1 border-b border-gray-800">
-                        <span>Base : {shab} m² × {formatEuroShort(coutM2)}/m² = {formatEuroShort(calculations.detailConstruction.coutBrut)}</span>
-                        <span className="text-amber-400 font-mono">{formatEuroShort(calculations.detailConstruction.coutM2Reel)}/m² réel</span>
+                        <span>Base : {shab} m2 x {formatEuroShort(coutM2)}/m2</span>
+                        <span className="text-amber-400 font-mono">{formatEuroShort(calculations.detailConstruction.coutM2Reel)}/m2 reel</span>
                       </div>
+
                       {calculations.detailConstruction.lots.map((lot) => (
-                        <div key={lot.nom} className="flex justify-between items-center text-xs">
-                          <span className="text-gray-500">{lot.nom} {lot.pct != null && <span className="text-gray-700">({lot.pct}%)</span>}</span>
-                          <span className="font-mono text-gray-400">{formatEuroShort(lot.montant)}</span>
+                        <div key={lot.nom}>
+                          <div className="flex justify-between items-center text-xs font-medium border-b border-gray-800/50 pb-0.5 mb-0.5">
+                            <span className="text-gray-300">{lot.nom}</span>
+                            <span className="font-mono text-amber-300">{formatEuroShort(lot.total)}</span>
+                          </div>
+                          <div className="space-y-0">
+                            {lot.sousLots.map((sl) => (
+                              <div key={sl.nom} className="flex justify-between items-center text-xs pl-2">
+                                <span className="text-gray-600">{sl.nom}</span>
+                                <span className="font-mono text-gray-500 whitespace-nowrap">
+                                  {sl.qte} {sl.unite} x {formatEuroShort(sl.pu)} = {formatEuroShort(sl.qte * sl.pu)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
-                      <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-800">
-                        <span className="text-gray-400">Coefficients appliqués :</span>
-                      </div>
-                      <div className="text-xs text-gray-600 space-y-0.5">
-                        <div>Prestations ({prestations}) : ×{PRESTATIONS_COEFF[prestations].toFixed(2)}</div>
-                        <div>Fondation ({fondation === 'videsan' ? 'vide sanitaire' : fondation === 'soussol' ? 'sous-sol' : 'dalle'}) : ×{FONDATION_COEFF[fondation].toFixed(2)}</div>
-                        <div>Niveaux ({niveaux === 1 ? 'plain-pied' : 'R+1'}) : ×{NIVEAUX_COEFF[niveaux].toFixed(2)}</div>
-                        {re2020 && <div>RE2020 : ×1.10</div>}
+
+                      {calculations.detailConstruction.ajustement !== 0 && (
+                        <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-800">
+                          <span className="text-gray-500">Ajustement coefficients</span>
+                          <span className="font-mono text-gray-400">{formatEuroShort(calculations.detailConstruction.ajustement)}</span>
+                        </div>
+                      )}
+
+                      <div className="text-xs text-gray-600 pt-1 border-t border-gray-800 space-y-0.5">
+                        <div className="text-gray-500 font-medium mb-0.5">Coefficients :</div>
+                        <div>Prestations ({prestations}) : x{PRESTATIONS_COEFF[prestations].toFixed(2)}</div>
+                        <div>Fondation ({fondation === 'videsan' ? 'vide sanitaire' : fondation === 'soussol' ? 'sous-sol' : 'dalle'}) : x{FONDATION_COEFF[fondation].toFixed(2)}</div>
+                        <div>Niveaux ({niveaux === 1 ? 'plain-pied' : 'R+1'}) : x{NIVEAUX_COEFF[niveaux].toFixed(2)}</div>
+                        {re2020 && <div>RE2020 : x1.10</div>}
                       </div>
                     </div>
                   )}
