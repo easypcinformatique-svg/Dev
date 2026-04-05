@@ -42,6 +42,126 @@ const ANC_TYPES = {
 
 const CHART_COLORS = ['#d4a853', '#e8c778', '#2dd4bf', '#818cf8', '#f472b6', '#a78bfa', '#fb923c', '#34d399'];
 
+// Données par département : taux communal moyen, zone PTZ, taux départemental TA
+const DEPT_DATA = {
+  '01': { nom: 'Ain', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '02': { nom: 'Aisne', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '03': { nom: 'Allier', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '04': { nom: 'Alpes-de-Haute-Provence', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '05': { nom: 'Hautes-Alpes', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '06': { nom: 'Alpes-Maritimes', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '07': { nom: 'Ardèche', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '08': { nom: 'Ardennes', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '09': { nom: 'Ariège', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '10': { nom: 'Aube', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '11': { nom: 'Aude', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '12': { nom: 'Aveyron', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '13': { nom: 'Bouches-du-Rhône', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '14': { nom: 'Calvados', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '15': { nom: 'Cantal', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '16': { nom: 'Charente', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '17': { nom: 'Charente-Maritime', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '18': { nom: 'Cher', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '19': { nom: 'Corrèze', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '21': { nom: 'Côte-d\'Or', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '22': { nom: 'Côtes-d\'Armor', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '23': { nom: 'Creuse', taux: 1.5, tauxDept: 2.5, zone: 'C' },
+  '24': { nom: 'Dordogne', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '25': { nom: 'Doubs', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '26': { nom: 'Drôme', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '27': { nom: 'Eure', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '28': { nom: 'Eure-et-Loir', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '29': { nom: 'Finistère', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '2A': { nom: 'Corse-du-Sud', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '2B': { nom: 'Haute-Corse', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '30': { nom: 'Gard', taux: 3.5, tauxDept: 2.5, zone: 'B2' },
+  '31': { nom: 'Haute-Garonne', taux: 5.0, tauxDept: 2.5, zone: 'B1' },
+  '32': { nom: 'Gers', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '33': { nom: 'Gironde', taux: 5.0, tauxDept: 2.5, zone: 'B1' },
+  '34': { nom: 'Hérault', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '35': { nom: 'Ille-et-Vilaine', taux: 4.0, tauxDept: 2.5, zone: 'B1' },
+  '36': { nom: 'Indre', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '37': { nom: 'Indre-et-Loire', taux: 3.0, tauxDept: 2.5, zone: 'B1' },
+  '38': { nom: 'Isère', taux: 4.0, tauxDept: 2.5, zone: 'B1' },
+  '39': { nom: 'Jura', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '40': { nom: 'Landes', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '41': { nom: 'Loir-et-Cher', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '42': { nom: 'Loire', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '43': { nom: 'Haute-Loire', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '44': { nom: 'Loire-Atlantique', taux: 5.0, tauxDept: 2.5, zone: 'B1' },
+  '45': { nom: 'Loiret', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '46': { nom: 'Lot', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '47': { nom: 'Lot-et-Garonne', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '48': { nom: 'Lozère', taux: 1.5, tauxDept: 2.5, zone: 'C' },
+  '49': { nom: 'Maine-et-Loire', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '50': { nom: 'Manche', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '51': { nom: 'Marne', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '52': { nom: 'Haute-Marne', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '53': { nom: 'Mayenne', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '54': { nom: 'Meurthe-et-Moselle', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '55': { nom: 'Meuse', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '56': { nom: 'Morbihan', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '57': { nom: 'Moselle', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '58': { nom: 'Nièvre', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '59': { nom: 'Nord', taux: 5.0, tauxDept: 2.5, zone: 'B1' },
+  '60': { nom: 'Oise', taux: 3.5, tauxDept: 2.5, zone: 'B1' },
+  '61': { nom: 'Orne', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '62': { nom: 'Pas-de-Calais', taux: 3.5, tauxDept: 2.5, zone: 'B2' },
+  '63': { nom: 'Puy-de-Dôme', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '64': { nom: 'Pyrénées-Atlantiques', taux: 3.5, tauxDept: 2.5, zone: 'B2' },
+  '65': { nom: 'Hautes-Pyrénées', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '66': { nom: 'Pyrénées-Orientales', taux: 3.5, tauxDept: 2.5, zone: 'B2' },
+  '67': { nom: 'Bas-Rhin', taux: 4.0, tauxDept: 2.5, zone: 'B1' },
+  '68': { nom: 'Haut-Rhin', taux: 3.5, tauxDept: 2.5, zone: 'B2' },
+  '69': { nom: 'Rhône', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '70': { nom: 'Haute-Saône', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '71': { nom: 'Saône-et-Loire', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '72': { nom: 'Sarthe', taux: 2.5, tauxDept: 2.5, zone: 'B2' },
+  '73': { nom: 'Savoie', taux: 3.5, tauxDept: 2.5, zone: 'B1' },
+  '74': { nom: 'Haute-Savoie', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '75': { nom: 'Paris', taux: 5.0, tauxDept: 2.5, zone: 'Abis' },
+  '76': { nom: 'Seine-Maritime', taux: 3.5, tauxDept: 2.5, zone: 'B1' },
+  '77': { nom: 'Seine-et-Marne', taux: 4.0, tauxDept: 2.5, zone: 'A' },
+  '78': { nom: 'Yvelines', taux: 5.0, tauxDept: 2.5, zone: 'Abis' },
+  '79': { nom: 'Deux-Sèvres', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '80': { nom: 'Somme', taux: 3.0, tauxDept: 2.5, zone: 'B2' },
+  '81': { nom: 'Tarn', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '82': { nom: 'Tarn-et-Garonne', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '83': { nom: 'Var', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '84': { nom: 'Vaucluse', taux: 3.5, tauxDept: 2.5, zone: 'B1' },
+  '85': { nom: 'Vendée', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '86': { nom: 'Vienne', taux: 2.5, tauxDept: 2.5, zone: 'B2' },
+  '87': { nom: 'Haute-Vienne', taux: 2.5, tauxDept: 2.5, zone: 'B2' },
+  '88': { nom: 'Vosges', taux: 2.0, tauxDept: 2.5, zone: 'C' },
+  '89': { nom: 'Yonne', taux: 2.5, tauxDept: 2.5, zone: 'C' },
+  '90': { nom: 'Territoire de Belfort', taux: 2.5, tauxDept: 2.5, zone: 'B2' },
+  '91': { nom: 'Essonne', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '92': { nom: 'Hauts-de-Seine', taux: 5.0, tauxDept: 2.5, zone: 'Abis' },
+  '93': { nom: 'Seine-Saint-Denis', taux: 5.0, tauxDept: 2.5, zone: 'Abis' },
+  '94': { nom: 'Val-de-Marne', taux: 5.0, tauxDept: 2.5, zone: 'Abis' },
+  '95': { nom: 'Val-d\'Oise', taux: 5.0, tauxDept: 2.5, zone: 'A' },
+  '971': { nom: 'Guadeloupe', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '972': { nom: 'Martinique', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '973': { nom: 'Guyane', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+  '974': { nom: 'La Réunion', taux: 3.0, tauxDept: 2.5, zone: 'B1' },
+  '976': { nom: 'Mayotte', taux: 3.0, tauxDept: 2.5, zone: 'C' },
+};
+
+const getDeptFromCP = (cp) => {
+  if (!cp || cp.length < 2) return null;
+  if (cp.startsWith('97') && cp.length >= 3) return cp.substring(0, 3);
+  if (cp.startsWith('20')) return cp[2] <= '1' ? '2A' : '2B';
+  return cp.substring(0, 2);
+};
+
+const PTZ_LABELS = {
+  'Abis': 'Zone A bis (Île-de-France)',
+  'A': 'Zone A (grandes agglos)',
+  'B1': 'Zone B1 (villes moyennes)',
+  'B2': 'Zone B2 (périurbain)',
+  'C': 'Zone C (rural)',
+};
+
 function TooltipIcon({ text }) {
   const [show, setShow] = useState(false);
   return (
@@ -212,6 +332,10 @@ function ToggleGroup({ options, value, onChange }) {
 
 
 export default function ConstructionCostCalculator() {
+  // === LOCALISATION ===
+  const [codePostal, setCodePostal] = useState('');
+  const [deptInfo, setDeptInfo] = useState(null);
+
   // === MODULE 1 - TERRAIN ===
   const [prixTerrain, setPrixTerrain] = useState(80000);
   const [fraisNotairePct, setFraisNotairePct] = useState(7.5);
@@ -226,6 +350,7 @@ export default function ConstructionCostCalculator() {
   const [viabTelecom, setViabTelecom] = useState(1500);
   const [tauxCommunal, setTauxCommunal] = useState(1.7);
   const [surfaceTerrain, setSurfaceTerrain] = useState(500);
+  const [cesMax, setCesMax] = useState(40);
 
   // === MODULE 2 - CONSTRUCTION ===
   const [shab, setShab] = useState(100);
@@ -307,6 +432,21 @@ export default function ConstructionCostCalculator() {
     setCoutM2(CONSTRUCTION_RANGES[type].default);
   }, []);
 
+  const handleCodePostalChange = useCallback((cp) => {
+    const cleaned = cp.replace(/\D/g, '').slice(0, 5);
+    setCodePostal(cleaned);
+    if (cleaned.length >= 2) {
+      const dept = getDeptFromCP(cleaned);
+      const info = dept ? DEPT_DATA[dept] : null;
+      setDeptInfo(info);
+      if (info && cleaned.length === 5) {
+        setTauxCommunal(info.taux);
+      }
+    } else {
+      setDeptInfo(null);
+    }
+  }, []);
+
   // === CALCULATIONS ===
   const sdp = useMemo(() => sdpAuto ? Math.round(shab * 1.1) : sdpManuel, [sdpAuto, shab, sdpManuel]);
   const empriseAuSol = useMemo(() => {
@@ -314,6 +454,8 @@ export default function ConstructionCostCalculator() {
     return Math.round(shabParNiveau * 1.15);
   }, [shab, niveaux]);
   const ces = useMemo(() => surfaceTerrain > 0 ? (empriseAuSol / surfaceTerrain * 100) : 0, [empriseAuSol, surfaceTerrain]);
+  const empriseMaxAutorisee = useMemo(() => Math.round(surfaceTerrain * cesMax / 100), [surfaceTerrain, cesMax]);
+  const empriseDepasse = empriseAuSol > empriseMaxAutorisee;
 
   const calculations = useMemo(() => {
     const fraisNotaire = prixTerrain * fraisNotairePct / 100;
@@ -415,10 +557,11 @@ export default function ConstructionCostCalculator() {
 
   // === RESET ===
   const handleReset = useCallback(() => {
+    setCodePostal(''); setDeptInfo(null);
     setPrixTerrain(80000); setFraisNotairePct(7.5); setFraisGeometre(1500);
     setEtudeSol(true); setEtudeSolMontant(2500); setTerrainViabilise(true);
     setViabEau(3000); setViabElec(3500); setViabGaz(4000); setViabAssainissement(6000); setViabTelecom(1500);
-    setTauxCommunal(1.7); setSurfaceTerrain(500); setShab(100); setSdpAuto(true); setSdpManuel(110);
+    setTauxCommunal(1.7); setSurfaceTerrain(500); setCesMax(40); setShab(100); setSdpAuto(true); setSdpManuel(110);
     setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle');
     setPrestations('moyen'); setRe2020(false); setArchitecte(false); setArchitectePct(12);
     setMaitreOeuvre(true); setMaitreOeuvrePct(6); setDommagesOuvrage(true); setDommagesOuvragePct(3.5);
@@ -477,12 +620,86 @@ export default function ConstructionCostCalculator() {
         {/* LEFT COLUMN - FORM */}
         <div className="lg:w-[55%] space-y-0">
 
+          {/* CODE POSTAL - LOCALISATION */}
+          <div className="mb-3 rounded-lg border border-amber-600/40 bg-gray-900/90 shadow-lg p-4 border-l-4 border-l-amber-500">
+            <div className="flex items-center gap-2 mb-3">
+              <Landmark size={18} className="text-amber-400" />
+              <span className="font-display text-lg font-semibold text-amber-100">Localisation du projet</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Code postal
+                  <TooltipIcon text="Permet de pré-remplir le taux communal de taxe d'aménagement et la zone PTZ" />
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={5}
+                  value={codePostal}
+                  onChange={(e) => handleCodePostalChange(e.target.value)}
+                  placeholder="Ex : 33000"
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white font-mono text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder-gray-600"
+                />
+              </div>
+              <div className="flex flex-col justify-end">
+                {deptInfo ? (
+                  <div className="space-y-1">
+                    <div className="text-sm text-amber-300 font-medium">{deptInfo.nom}</div>
+                    <div className="text-xs text-gray-400">
+                      Zone PTZ : <span className="text-amber-200 font-mono">{deptInfo.zone}</span>
+                      <span className="text-gray-600 ml-1">({PTZ_LABELS[deptInfo.zone]})</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-600">Saisissez un code postal pour auto-remplir les données locales</div>
+                )}
+              </div>
+            </div>
+            {deptInfo && codePostal.length === 5 && (
+              <div className="mt-2 flex items-center gap-2 bg-green-900/20 border border-green-700/30 rounded px-3 py-1.5">
+                <CheckCircle size={14} className="text-green-400" />
+                <span className="text-xs text-green-300">Taux communal TA mis à jour : {deptInfo.taux}% (moyenne départementale)</span>
+              </div>
+            )}
+          </div>
+
           {/* MODULE 1 - TERRAIN */}
           <AccordionModule id="terrain" title="Terrain" icon={Home} isOpen={openModules.has('terrain')} onToggle={toggleModule}>
             <div className="grid grid-cols-2 gap-3">
               <NumberInput label="Prix d'achat du terrain" value={prixTerrain} onChange={setPrixTerrain} suffix="€" />
               <NumberInput label="Surface du terrain" value={surfaceTerrain} onChange={setSurfaceTerrain} min={1} suffix="m²"
                 tooltip="Surface cadastrale de la parcelle" />
+            </div>
+
+            {/* CES et emprise autorisée */}
+            <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
+              <SliderInput label="CES max (PLU de votre commune)" value={cesMax} onChange={setCesMax}
+                min={10} max={80} step={1} suffix="%"
+                tooltip="Coefficient d'Emprise au Sol maximum autorisé par le Plan Local d'Urbanisme. Consultez le PLU de votre commune." />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-700/40 rounded px-3 py-2 text-center">
+                  <div className="text-xs text-gray-500">Emprise max autorisée</div>
+                  <div className="font-mono text-lg text-green-400 font-bold">{empriseMaxAutorisee} m²</div>
+                  <div className="text-xs text-gray-600">{surfaceTerrain} m² × {cesMax}%</div>
+                </div>
+                <div className={`rounded px-3 py-2 text-center ${empriseDepasse ? 'bg-red-900/30 border border-red-500/40' : 'bg-gray-700/40'}`}>
+                  <div className="text-xs text-gray-500">Emprise projetée</div>
+                  <div className={`font-mono text-lg font-bold ${empriseDepasse ? 'text-red-400' : 'text-amber-300'}`}>{empriseAuSol} m²</div>
+                  <div className={`text-xs ${empriseDepasse ? 'text-red-400' : 'text-gray-600'}`}>
+                    CES réel : {ces.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+              {empriseDepasse && (
+                <div className="flex items-center gap-2 bg-red-900/30 border border-red-500/50 rounded px-3 py-2">
+                  <AlertTriangle size={16} className="text-red-400 flex-shrink-0" />
+                  <span className="text-sm text-red-300">
+                    Emprise au sol ({empriseAuSol} m²) dépasse le maximum autorisé ({empriseMaxAutorisee} m²).
+                    {niveaux === 1 ? ' Passez en R+1 pour réduire l\'emprise.' : ' Réduisez la SHAB ou augmentez la surface du terrain.'}
+                  </span>
+                </div>
+              )}
             </div>
             <SliderInput label="Frais de notaire" value={fraisNotairePct} onChange={setFraisNotairePct}
               min={2} max={9} step={0.1} suffix="%" displayValue={fraisNotairePct.toFixed(1)}
@@ -574,33 +791,6 @@ export default function ConstructionCostCalculator() {
                   { value: 'haut', label: 'Haut de gamme (×1,25)' },
                 ]}
                 value={prestations} onChange={setPrestations} />
-            </div>
-
-            <div className="bg-gray-800/50 rounded-lg p-3 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Emprise au sol estimée</span>
-                <span className="font-mono text-amber-300">{empriseAuSol} m²</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">
-                  CES (Coeff. Emprise au Sol)
-                  <TooltipIcon text="Rapport entre l'emprise au sol et la surface du terrain. Le PLU impose souvent un CES max (ex : 0,40 = 40%)" />
-                </span>
-                <span className={`font-mono font-bold ${ces > 50 ? 'text-red-400' : ces > 40 ? 'text-orange-400' : 'text-green-400'}`}>
-                  {ces.toFixed(1)} %
-                </span>
-              </div>
-              {ces > 40 && (
-                <div className="flex items-center gap-2 text-xs mt-1">
-                  <AlertTriangle size={14} className={ces > 50 ? 'text-red-400' : 'text-orange-400'} />
-                  <span className={ces > 50 ? 'text-red-300' : 'text-orange-300'}>
-                    {ces > 50 ? 'CES très élevé — vérifiez le PLU de votre commune' : 'CES élevé — vérifiez la limite du PLU'}
-                  </span>
-                </div>
-              )}
-              <div className="text-xs text-gray-600 mt-1">
-                {niveaux === 1 ? 'Plain-pied : emprise = SHAB + 15% (murs)' : 'R+1 : emprise = (SHAB/2) + 15% (murs)'}
-              </div>
             </div>
 
             <div className="space-y-2">
