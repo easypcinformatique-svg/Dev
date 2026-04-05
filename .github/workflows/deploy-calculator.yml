@@ -2,7 +2,7 @@ name: Deploy Construction Calculator to GitHub Pages
 
 on:
   push:
-    branches: [main, claude/construction-cost-calculator-inOz5]
+    branches: [master]
     paths:
       - 'construction-cost-calculator/**'
       - '.github/workflows/deploy-calculator.yml'
