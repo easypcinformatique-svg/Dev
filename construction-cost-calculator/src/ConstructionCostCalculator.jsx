@@ -300,13 +300,17 @@ function SliderInput({ label, value, onChange, min, max, step = 1, suffix = '', 
 
 function CheckboxInput({ label, checked, onChange, tooltip }) {
   return (
-    <label className="flex items-center gap-2 cursor-pointer group">
-      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${checked ? 'bg-amber-600 border-amber-500' : 'border-gray-600 bg-gray-800'}`}>
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="flex items-center gap-2 cursor-pointer group text-left"
+    >
+      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${checked ? 'bg-amber-600 border-amber-500' : 'border-gray-600 bg-gray-800'}`}>
         {checked && <CheckCircle size={14} className="text-white" />}
       </div>
       <span className="text-sm text-gray-300 group-hover:text-gray-100">{label}</span>
       {tooltip && <TooltipIcon text={tooltip} />}
-    </label>
+    </button>
   );
 }
 
@@ -939,6 +943,15 @@ export default function ConstructionCostCalculator() {
               <ToggleGroup
                 options={[{ value: 1, label: 'Plain-pied' }, { value: 2, label: 'R+1 (étage)' }]}
                 value={niveaux} onChange={setNiveaux} />
+              <div className="mt-1 text-xs text-gray-500">
+                {niveaux === 1
+                  ? 'Plain-pied : coût fondations plus élevé (emprise totale au sol)'
+                  : 'R+1 : économie de -5% sur le coût/m² (emprise réduite, fondations plus petites)'}
+                {' — '}
+                <span className={`font-mono ${niveaux === 2 ? 'text-green-400' : 'text-gray-400'}`}>
+                  coeff. ×{NIVEAUX_COEFF[niveaux].toFixed(2)}
+                </span>
+              </div>
             </div>
 
             <div>
@@ -950,6 +963,20 @@ export default function ConstructionCostCalculator() {
                   { value: 'soussol', label: 'Sous-sol' },
                 ]}
                 value={fondation} onChange={setFondation} />
+              <div className="mt-1 text-xs text-gray-500">
+                {fondation === 'dalle' && 'Dalle sur terre-plein : solution la plus économique'}
+                {fondation === 'videsan' && 'Vide sanitaire : surcoût +5% (protection humidité, passage réseaux)'}
+                {fondation === 'soussol' && 'Sous-sol : surcoût +20% (terrassement, murs enterrés, étanchéité)'}
+                {' — '}
+                <span className={`font-mono ${FONDATION_COEFF[fondation] > 1 ? 'text-orange-400' : 'text-gray-400'}`}>
+                  coeff. ×{FONDATION_COEFF[fondation].toFixed(2)}
+                </span>
+                {FONDATION_COEFF[fondation] > 1 && (
+                  <span className="text-orange-400 font-mono ml-1">
+                    (+{formatEuroShort(Math.round(shab * coutM2 * PRESTATIONS_COEFF[prestations] * (FONDATION_COEFF[fondation] - 1)))})
+                  </span>
+                )}
+              </div>
             </div>
 
             <div>
