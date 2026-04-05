@@ -529,6 +529,47 @@ export default function ConstructionCostCalculator() {
     const re2020Coeff = re2020 ? 1.10 : 1;
     const constructionBase = shab * coutM2 * prestCoeff * re2020Coeff * fondCoeff * nivCoeff;
 
+    // Décomposition construction nette par lots
+    const coutBrut = shab * coutM2;
+    const lotTerrassement = coutBrut * 0.04;
+    const lotFondations = coutBrut * (fondation === 'soussol' ? 0.15 : fondation === 'videsan' ? 0.08 : 0.06);
+    const lotMaconnerie = coutBrut * (fondation === 'soussol' ? 0.14 : 0.16);
+    const lotCharpenteCouverture = coutBrut * 0.12;
+    const lotMenuiseriesExt = coutBrut * 0.10;
+    const lotIsolation = coutBrut * (re2020 ? 0.10 : 0.07);
+    const lotPlomberie = coutBrut * 0.08;
+    const lotElectricite = coutBrut * 0.07;
+    const lotPlatrerie = coutBrut * 0.06;
+    const lotRevetementsSols = coutBrut * 0.07;
+    const lotPeinture = coutBrut * 0.04;
+    const lotMenuiseriesInt = coutBrut * 0.05;
+    const lotFacade = coutBrut * 0.04;
+    const sousTotal = lotTerrassement + lotFondations + lotMaconnerie + lotCharpenteCouverture
+      + lotMenuiseriesExt + lotIsolation + lotPlomberie + lotElectricite + lotPlatrerie
+      + lotRevetementsSols + lotPeinture + lotMenuiseriesInt + lotFacade;
+    const lotDivers = constructionBase - sousTotal;
+
+    const detailConstruction = {
+      lots: [
+        { nom: 'Terrassement / VRD', montant: lotTerrassement, pct: 4 },
+        { nom: `Fondations (${fondation === 'soussol' ? 'sous-sol' : fondation === 'videsan' ? 'vide sanitaire' : 'dalle'})`, montant: lotFondations, pct: fondation === 'soussol' ? 15 : fondation === 'videsan' ? 8 : 6 },
+        { nom: 'Maçonnerie / Élévation', montant: lotMaconnerie, pct: fondation === 'soussol' ? 14 : 16 },
+        { nom: 'Charpente / Couverture', montant: lotCharpenteCouverture, pct: 12 },
+        { nom: 'Menuiseries extérieures', montant: lotMenuiseriesExt, pct: 10 },
+        { nom: `Isolation ${re2020 ? '(RE2020 renforcée)' : ''}`, montant: lotIsolation, pct: re2020 ? 10 : 7 },
+        { nom: 'Plomberie / Sanitaire', montant: lotPlomberie, pct: 8 },
+        { nom: 'Électricité', montant: lotElectricite, pct: 7 },
+        { nom: 'Plâtrerie / Cloisons', montant: lotPlatrerie, pct: 6 },
+        { nom: 'Revêtements de sols', montant: lotRevetementsSols, pct: 7 },
+        { nom: 'Peinture / Finitions', montant: lotPeinture, pct: 4 },
+        { nom: 'Menuiseries intérieures', montant: lotMenuiseriesInt, pct: 5 },
+        { nom: 'Ravalement / Façade', montant: lotFacade, pct: 4 },
+        { nom: 'Ajustements (prestations, niveaux)', montant: lotDivers, pct: null },
+      ],
+      coutBrut,
+      coutM2Reel: shab > 0 ? constructionBase / shab : 0,
+    };
+
     const honorairesTotal =
       (architecte ? constructionBase * architectePct / 100 : 0) +
       (maitreOeuvre ? constructionBase * maitreOeuvrePct / 100 : 0) +
@@ -560,7 +601,7 @@ export default function ConstructionCostCalculator() {
     return {
       terrainTotal, constructionBase, honorairesTotal, assurancesTotal,
       raccordementsTotal, equipementsTotal, imprevusTotal, totalHT,
-      tva, totalTTC, coutM2SHAB, coutM2SDP, taxeAmenagement,
+      tva, totalTTC, coutM2SHAB, coutM2SDP, taxeAmenagement, detailConstruction,
     };
   }, [prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
@@ -1385,10 +1426,61 @@ export default function ConstructionCostCalculator() {
             <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-5 shadow-2xl">
               <h2 className="font-display text-2xl font-bold text-amber-100 mb-4">Récapitulatif</h2>
 
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 text-sm">
+                {/* Terrain */}
+                <div className="flex justify-between items-center py-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[0] }} />
+                    <span className="text-gray-400">Terrain (achat + frais)</span>
+                  </div>
+                  <span className="font-mono text-gray-200">{formatEuroShort(calculations.terrainTotal)}</span>
+                </div>
+
+                {/* Construction nette - détaillable */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenModules(prev => {
+                      const next = new Set(prev);
+                      next.has('detail_construction') ? next.delete('detail_construction') : next.add('detail_construction');
+                      return next;
+                    })}
+                    className="w-full flex justify-between items-center py-1 hover:bg-gray-800/30 rounded px-1 -mx-1 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[1] }} />
+                      <span className="text-gray-400">Construction nette</span>
+                      <ChevronDown size={14} className={`text-gray-600 transition-transform ${openModules.has('detail_construction') ? 'rotate-180' : ''}`} />
+                    </div>
+                    <span className="font-mono text-gray-200">{formatEuroShort(calculations.constructionBase)}</span>
+                  </button>
+                  {openModules.has('detail_construction') && (
+                    <div className="ml-5 mt-1 mb-2 space-y-0.5 border-l-2 border-amber-600/30 pl-3 fade-in">
+                      <div className="flex justify-between text-xs text-gray-500 pb-1 border-b border-gray-800">
+                        <span>Base : {shab} m² × {formatEuroShort(coutM2)}/m² = {formatEuroShort(calculations.detailConstruction.coutBrut)}</span>
+                        <span className="text-amber-400 font-mono">{formatEuroShort(calculations.detailConstruction.coutM2Reel)}/m² réel</span>
+                      </div>
+                      {calculations.detailConstruction.lots.map((lot) => (
+                        <div key={lot.nom} className="flex justify-between items-center text-xs">
+                          <span className="text-gray-500">{lot.nom} {lot.pct != null && <span className="text-gray-700">({lot.pct}%)</span>}</span>
+                          <span className="font-mono text-gray-400">{formatEuroShort(lot.montant)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-800">
+                        <span className="text-gray-400">Coefficients appliqués :</span>
+                      </div>
+                      <div className="text-xs text-gray-600 space-y-0.5">
+                        <div>Prestations ({prestations}) : ×{PRESTATIONS_COEFF[prestations].toFixed(2)}</div>
+                        <div>Fondation ({fondation === 'videsan' ? 'vide sanitaire' : fondation === 'soussol' ? 'sous-sol' : 'dalle'}) : ×{FONDATION_COEFF[fondation].toFixed(2)}</div>
+                        <div>Niveaux ({niveaux === 1 ? 'plain-pied' : 'R+1'}) : ×{NIVEAUX_COEFF[niveaux].toFixed(2)}</div>
+                        {re2020 && <div>RE2020 : ×1.10</div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Reste des lignes */}
                 {[
-                  { label: 'Terrain (achat + frais)', value: calculations.terrainTotal, color: CHART_COLORS[0] },
-                  { label: 'Construction nette', value: calculations.constructionBase, color: CHART_COLORS[1] },
                   { label: 'Honoraires', value: calculations.honorairesTotal, color: CHART_COLORS[2] },
                   { label: 'Assurances', value: calculations.assurancesTotal, color: CHART_COLORS[3] },
                   { label: 'Raccordements & Taxes', value: calculations.raccordementsTotal, color: CHART_COLORS[4] },
