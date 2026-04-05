@@ -412,6 +412,7 @@ export default function ConstructionCostCalculator() {
   const [shab, setShab] = useState(100);
   const [sdpAuto, setSdpAuto] = useState(true);
   const [sdpManuel, setSdpManuel] = useState(110);
+  const [lotOverrides, setLotOverrides] = useState({});
   const [typeConstruction, setTypeConstruction] = useState('traditionnelle');
   const [coutM2, setCoutM2] = useState(1600);
   const [niveaux, setNiveaux] = useState(1);
@@ -610,30 +611,37 @@ export default function ConstructionCostCalculator() {
     ];
 
     const lotsAvecTotaux = lots.map(lot => {
-      const total = lot.sousLots.reduce((s, sl) => s + sl.qte * sl.pu, 0);
-      return { ...lot, total };
+      const autoTotal = lot.sousLots.reduce((s, sl) => s + sl.qte * sl.pu, 0);
+      const override = lotOverrides[lot.nom];
+      const total = override != null ? override : autoTotal;
+      const isOverridden = override != null;
+      return { ...lot, total, autoTotal, isOverridden };
     });
-    const totalLots = lotsAvecTotaux.reduce((s, l) => s + l.total, 0);
-    const ajustement = constructionBase - totalLots;
+    const totalLotsEffectif = lotsAvecTotaux.reduce((s, l) => s + l.total, 0);
+
+    // Si des lots sont overridés, on recalcule constructionBase
+    const hasOverrides = Object.keys(lotOverrides).length > 0;
+    const constructionEffective = hasOverrides ? totalLotsEffectif : constructionBase;
 
     const detailConstruction = {
       lots: lotsAvecTotaux,
-      ajustement,
       coutBrut,
-      coutM2Reel: shab > 0 ? constructionBase / shab : 0,
+      constructionEffective,
+      coutM2Reel: shab > 0 ? constructionEffective / shab : 0,
+      hasOverrides,
     };
 
     const honorairesTotal =
-      (architecte ? constructionBase * architectePct / 100 : 0) +
-      (maitreOeuvre ? constructionBase * maitreOeuvrePct / 100 : 0) +
+      (architecte ? constructionEffective * architectePct / 100 : 0) +
+      (maitreOeuvre ? constructionEffective * maitreOeuvrePct / 100 : 0) +
       (bureauControle ? bureauControleMontant : 0) +
       (coordSPS ? coordSPSMontant : 0);
 
-    const assurancesTotal = dommagesOuvrage ? constructionBase * dommagesOuvragePct / 100 : 0;
+    const assurancesTotal = dommagesOuvrage ? constructionEffective * dommagesOuvragePct / 100 : 0;
 
     const ancCost = assainissementType === 'collectif' ? raccAssCollectif : raccANC;
     const raccordementsTotal = raccElec + raccEau + ancCost +
-      (redevanceArcheo ? constructionBase * 0.004 : 0);
+      (redevanceArcheo ? constructionEffective * 0.004 : 0);
 
     const chauffSurcout = CHAUFFAGE_SURCOUT[chauffage] || 0;
     const garageCost = garage === 'aucun' ? 0 : garageM2 * (GARAGE_COUT_M2[garage] || 0);
@@ -641,9 +649,9 @@ export default function ConstructionCostCalculator() {
       (climatisation ? climMontant : 0) + (piscine ? piscineMontant : 0) +
       terrasse + cloture + garageCost + (domotique ? domotiqueMontant : 0);
 
-    const imprevusTotal = (constructionBase + equipementsTotal) * imprevusPct / 100;
+    const imprevusTotal = (constructionEffective + equipementsTotal) * imprevusPct / 100;
 
-    const totalHT = terrainTotal + constructionBase + honorairesTotal + assurancesTotal +
+    const totalHT = terrainTotal + constructionEffective + honorairesTotal + assurancesTotal +
       raccordementsTotal + equipementsTotal + imprevusTotal + ameublement;
 
     const tva = showTVA ? totalHT * 0.055 : 0;
@@ -652,7 +660,7 @@ export default function ConstructionCostCalculator() {
     const coutM2SDP = sdp > 0 ? totalTTC / sdp : 0;
 
     return {
-      terrainTotal, constructionBase, honorairesTotal, assurancesTotal,
+      terrainTotal, constructionBase: constructionEffective, honorairesTotal, assurancesTotal,
       raccordementsTotal, equipementsTotal, imprevusTotal, totalHT,
       tva, totalTTC, coutM2SHAB, coutM2SDP, taxeAmenagement, detailConstruction,
     };
@@ -663,7 +671,7 @@ export default function ConstructionCostCalculator() {
     bureauControleMontant, coordSPS, coordSPSMontant, dommagesOuvrage, dommagesOuvragePct,
     raccElec, raccEau, assainissementType, raccAssCollectif, raccANC, redevanceArcheo,
     cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine, piscineMontant,
-    terrasse, cloture, garage, garageM2, domotique, domotiqueMontant, imprevusPct, ameublement, showTVA]);
+    terrasse, cloture, garage, garageM2, domotique, domotiqueMontant, imprevusPct, ameublement, showTVA, lotOverrides]);
 
   const financement = useMemo(() => {
     const montantEmprunt = Math.max(0, calculations.totalTTC - apport - (ptz ? ptzMontant : 0));
@@ -796,7 +804,7 @@ export default function ConstructionCostCalculator() {
     setEtudeSol(true); setEtudeSolMontant(2500); setTerrainViabilise(true);
     setViabEau(3000); setViabElec(3500); setViabGaz(4000); setViabAssainissement(6000); setViabTelecom(1500);
     setTauxCommunal(1.7); setSurfaceTerrain(500); setCesMax(40); setShab(100); setSdpAuto(true); setSdpManuel(110);
-    setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle');
+    setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle'); setLotOverrides({});
     setPrestations('moyen'); setRe2020(false); setArchitecte(false); setArchitectePct(12);
     setMaitreOeuvre(true); setMaitreOeuvrePct(6); setDommagesOuvrage(true); setDommagesOuvragePct(3.5);
     setBureauControle(false); setBureauControleMontant(2500); setCoordSPS(false); setCoordSPSMontant(1500);
@@ -841,7 +849,7 @@ export default function ConstructionCostCalculator() {
     codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
     tauxCommunal, surfaceTerrain, cesMax, shab, sdpAuto, sdpManuel, typeConstruction,
-    coutM2, niveaux, fondation, prestations, re2020, architecte, architectePct,
+    coutM2, niveaux, fondation, prestations, re2020, lotOverrides, architecte, architectePct,
     maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
     assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
@@ -853,7 +861,7 @@ export default function ConstructionCostCalculator() {
   }), [codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
     tauxCommunal, surfaceTerrain, cesMax, shab, sdpAuto, sdpManuel, typeConstruction,
-    coutM2, niveaux, fondation, prestations, re2020, architecte, architectePct,
+    coutM2, niveaux, fondation, prestations, re2020, lotOverrides, architecte, architectePct,
     maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
     assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
@@ -888,6 +896,7 @@ export default function ConstructionCostCalculator() {
     if (data.fondation != null) setFondation(data.fondation);
     if (data.prestations != null) setPrestations(data.prestations);
     if (data.re2020 != null) setRe2020(data.re2020);
+    if (data.lotOverrides != null) setLotOverrides(data.lotOverrides);
     if (data.architecte != null) setArchitecte(data.architecte);
     if (data.architectePct != null) setArchitectePct(data.architectePct);
     if (data.maitreOeuvre != null) setMaitreOeuvre(data.maitreOeuvre);
@@ -1244,6 +1253,74 @@ export default function ConstructionCostCalculator() {
                 <span className="text-sm text-orange-300">Surface {'>'} 150 m² : recours à un architecte obligatoire (loi du 3 janvier 1977)</span>
               </div>
             )}
+
+            {/* DETAIL PAR LOTS */}
+            <div className="mt-3 pt-3 border-t border-gray-700/50">
+              <button
+                type="button"
+                onClick={() => toggleModule('lots_detail')}
+                className="flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 transition-colors mb-2"
+              >
+                <Wrench size={14} />
+                <span>Ajuster les montants par lot</span>
+                <ChevronDown size={14} className={`transition-transform ${openModules.has('lots_detail') ? 'rotate-180' : ''}`} />
+              </button>
+              {openModules.has('lots_detail') && calculations.detailConstruction && (
+                <div className="space-y-3 fade-in">
+                  <div className="text-xs text-gray-500 mb-2">
+                    Chaque lot est pré-calculé automatiquement. Ajustez les montants si vous avez des devis ou des estimations plus précises.
+                  </div>
+                  {calculations.detailConstruction.lots.map((lot) => (
+                    <div key={lot.nom} className={`rounded-lg p-3 space-y-1 ${lot.isOverridden ? 'bg-amber-900/15 border border-amber-600/30' : 'bg-gray-800/40'}`}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-300 font-medium">{lot.nom}</span>
+                        {lot.isOverridden && (
+                          <button
+                            type="button"
+                            onClick={() => setLotOverrides(prev => { const n = {...prev}; delete n[lot.nom]; return n; })}
+                            className="text-xs text-gray-500 hover:text-amber-400 transition-colors"
+                          >
+                            auto
+                          </button>
+                        )}
+                      </div>
+                      <SliderInput
+                        label=""
+                        value={lot.total}
+                        onChange={(v) => setLotOverrides(prev => ({...prev, [lot.nom]: v}))}
+                        min={0}
+                        max={Math.round(lot.autoTotal * 3)}
+                        step={100}
+                        displayValue={formatEuroShort(lot.total)}
+                      />
+                      {lot.isOverridden && (
+                        <div className="text-xs text-gray-600">
+                          Auto : {formatEuroShort(lot.autoTotal)} | Ecart : <span className={lot.total > lot.autoTotal ? 'text-red-400' : 'text-green-400'}>
+                            {lot.total > lot.autoTotal ? '+' : ''}{formatEuroShort(lot.total - lot.autoTotal)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-600">
+                        {lot.sousLots.map(sl => `${sl.nom} (${sl.qte} ${sl.unite})`).join(' | ')}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-700">
+                    <span className="text-sm text-gray-400">Total construction lots</span>
+                    <span className="font-mono text-amber-300 font-bold">{formatEuroShort(calculations.detailConstruction.constructionEffective)}</span>
+                  </div>
+                  {Object.keys(lotOverrides).length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setLotOverrides({})}
+                      className="w-full text-center text-xs text-gray-500 hover:text-amber-400 py-1 transition-colors"
+                    >
+                      Remettre tous les lots en automatique
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </AccordionModule>
 
           {/* MODULE 3 - HONORAIRES ET ASSURANCES */}
