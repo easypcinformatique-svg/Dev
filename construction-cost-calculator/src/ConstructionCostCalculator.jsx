@@ -474,6 +474,9 @@ export default function ConstructionCostCalculator() {
   const [tauxNominal, setTauxNominal] = useState(3.5);
   const [duree, setDuree] = useState(25);
   const [revenuMensuel, setRevenuMensuel] = useState(4000);
+  const [nbPersonnes, setNbPersonnes] = useState(2);
+  const [primoAccedant, setPrimoAccedant] = useState(true);
+  const [revenuFiscalRef, setRevenuFiscalRef] = useState(45000);
 
   // === UI STATE ===
   const [openModules, setOpenModules] = useState(new Set(['terrain', 'construction']));
@@ -820,7 +823,8 @@ export default function ConstructionCostCalculator() {
     setPiscineMontant(40000); setTerrasse(5000); setCloture(3000); setGarage('aucun'); setGarageM2(20);
     setDomotique(false); setDomotiqueMontant(5000); setImprevusPct(10); setAmeublement(15000);
     setFraisDossier(1500); setGarantiePct(1.5); setApport(30000); setPtz(false); setPtzMontant(0); setTauxNominal(3.5); setDuree(25);
-    setRevenuMensuel(4000); setShowTVA(false); setPrixAncienM2Custom(0);
+    setRevenuMensuel(4000); setNbPersonnes(2); setPrimoAccedant(true); setRevenuFiscalRef(45000);
+    setShowTVA(false); setPrixAncienM2Custom(0);
     setOpenModules(new Set(['terrain', 'construction']));
   }, []);
 
@@ -1056,29 +1060,81 @@ export default function ConstructionCostCalculator() {
   }, [dateDebut, niveaux]);
   const dureeTotal = timeline.length > 0 ? timeline[timeline.length - 1].moisFin : 0;
 
-  // === AIDES FINANCIERES ===
+  // === AIDES FINANCIERES + PTZ DETAILLE ===
+  const ptzDetail = useMemo(() => {
+    const zone = deptInfo?.zone || 'C';
+    // Plafonds de ressources PTZ 2024 (revenu fiscal ref N-2)
+    const plafonds = {
+      'Abis': [49000, 73500, 88200, 102900, 117600, 132300, 147000, 161700],
+      'A':    [49000, 73500, 88200, 102900, 117600, 132300, 147000, 161700],
+      'B1':   [34500, 51750, 62100, 72450, 82800, 93150, 103500, 113850],
+      'B2':   [31500, 47250, 56700, 66150, 75600, 85050, 94500, 103950],
+      'C':    [28500, 42750, 51300, 59850, 68400, 76950, 85500, 94050],
+    };
+    const plafondZone = plafonds[zone] || plafonds['C'];
+    const idx = Math.min(nbPersonnes - 1, 7);
+    const plafondRevenu = plafondZone[idx];
+    const sousPlafond = revenuFiscalRef <= plafondRevenu;
+
+    // Quotite finançable par zone (% du coût total)
+    const quotites = { 'Abis': 0.50, 'A': 0.50, 'B1': 0.40, 'B2': 0.20, 'C': 0.20 };
+    const quotite = quotites[zone] || 0.20;
+
+    // Plafond de l'opération retenu pour le calcul
+    const plafondsOperation = {
+      'Abis': [150000, 210000, 255000, 300000, 345000],
+      'A':    [150000, 210000, 255000, 300000, 345000],
+      'B1':   [135000, 189000, 230000, 270000, 311000],
+      'B2':   [110000, 154000, 187000, 220000, 253000],
+      'C':    [100000, 140000, 170000, 200000, 230000],
+    };
+    const plafOp = (plafondsOperation[zone] || plafondsOperation['C'])[Math.min(nbPersonnes - 1, 4)];
+    const assiette = Math.min(calculations.totalTTC, plafOp);
+    const montantPTZ = Math.round(assiette * quotite);
+
+    // Tranches de revenus pour le différé
+    const tranche = revenuFiscalRef <= plafondRevenu * 0.5 ? 1
+      : revenuFiscalRef <= plafondRevenu * 0.75 ? 2
+      : revenuFiscalRef <= plafondRevenu ? 3 : 4;
+    const differes = { 1: 15, 2: 10, 3: 5, 4: 0 };
+    const dureesRemb = { 1: 10, 2: 12, 3: 15, 4: 0 };
+    const differe = differes[tranche];
+    const dureeRemb = dureesRemb[tranche];
+    const mensualitePTZ = dureeRemb > 0 ? Math.round(montantPTZ / (dureeRemb * 12)) : 0;
+
+    const eligible = primoAccedant && sousPlafond;
+    const criteres = [
+      { label: 'Primo-accedant', ok: primoAccedant, detail: 'Ne pas avoir ete proprietaire de sa residence principale les 2 dernieres annees' },
+      { label: `Revenu fiscal ref <= ${formatEuroShort(plafondRevenu)}`, ok: sousPlafond, detail: `Votre RFR : ${formatEuroShort(revenuFiscalRef)} (${nbPersonnes} pers. en zone ${zone})` },
+      { label: 'Construction neuve', ok: true, detail: 'Le PTZ finance les constructions neuves en toutes zones' },
+      { label: 'Residence principale', ok: true, detail: 'Le logement doit devenir votre residence principale sous 1 an' },
+      { label: 'Performance energetique', ok: re2020, detail: re2020 ? 'RE2020 respectee' : 'RE2020 recommandee pour maximiser le PTZ' },
+    ];
+
+    return { zone, eligible, montantPTZ, plafondRevenu, sousPlafond, quotite, plafOp, assiette, tranche, differe, dureeRemb, mensualitePTZ, criteres };
+  }, [deptInfo, nbPersonnes, revenuFiscalRef, primoAccedant, re2020, calculations.totalTTC]);
+
   const aides = useMemo(() => {
     const zone = deptInfo?.zone || 'C';
     const result = [];
-    // PTZ 2024+
-    const ptzMax = { 'Abis': 150000, 'A': 150000, 'B1': 135000, 'B2': 110000, 'C': 100000 };
-    result.push({ nom: 'PTZ (Pret a Taux Zero)', eligible: true, montant: ptzMax[zone] || 100000, conditions: `Zone ${zone}, primo-accedant, sous plafonds de ressources`, lien: '' });
-    // MaPrimeRenov
-    if (re2020) {
-      result.push({ nom: 'Bonus RE2020 / Label E+C-', eligible: true, montant: 0, conditions: 'Performance energetique superieure au minimum RE2020', lien: '' });
-    }
+    // PTZ
+    result.push({ nom: 'PTZ (Pret a Taux Zero)', eligible: ptzDetail.eligible, montant: ptzDetail.montantPTZ,
+      conditions: ptzDetail.eligible ? `Zone ${zone}, ${ptzDetail.quotite*100}% de ${formatEuroShort(ptzDetail.assiette)}, differe ${ptzDetail.differe} ans` : 'Conditions non remplies (voir detail ci-dessous)' });
     // Exo taxe fonciere
-    result.push({ nom: 'Exoneration taxe fonciere 2 ans', eligible: true, montant: Math.round(shab * 8), conditions: 'Construction neuve, declaration H1 sous 90 jours apres achevement', lien: '' });
+    result.push({ nom: 'Exoneration taxe fonciere 2 ans', eligible: true, montant: Math.round(shab * 8), conditions: 'Declaration H1 sous 90 jours apres achevement' });
     // CEE
     if (re2020) {
-      result.push({ nom: 'CEE (Certificats Economie Energie)', eligible: true, montant: Math.round(shab * 15), conditions: 'Via fournisseur energie, pour equipements performants (PAC, isolation)', lien: '' });
+      result.push({ nom: 'CEE (Certificats Economie Energie)', eligible: true, montant: Math.round(shab * 15), conditions: 'PAC, isolation performante, via fournisseur energie' });
     }
     // TVA reduite
-    result.push({ nom: 'TVA 5,5% (accession sociale)', eligible: zone === 'Abis' || zone === 'A', montant: zone === 'Abis' || zone === 'A' ? Math.round(calculations.totalTTC * 0.055) : 0, conditions: 'Zone ANRU ou QPV, sous plafonds de ressources PLS', lien: '' });
+    const tvaEligible = zone === 'Abis' || zone === 'A';
+    result.push({ nom: 'TVA 5,5% (zone ANRU/QPV)', eligible: tvaEligible, montant: tvaEligible ? Math.round(calculations.totalTTC * 0.055) : 0, conditions: 'Zone ANRU ou QPV, sous plafonds PLS' });
     // Action Logement
-    result.push({ nom: 'Pret Action Logement', eligible: true, montant: 40000, conditions: 'Salarie secteur prive, entreprise > 10 salaries, 0.5%', lien: '' });
+    result.push({ nom: 'Pret Action Logement (0,5%)', eligible: true, montant: 40000, conditions: 'Salarie secteur prive, entreprise > 10 salaries' });
+    // Pret accession sociale
+    result.push({ nom: 'PAS (Pret Accession Sociale)', eligible: ptzDetail.sousPlafond, montant: 0, conditions: 'Sous plafonds de ressources, taux prefertentiel, APL possible' });
     return result;
-  }, [deptInfo, re2020, shab, calculations.totalTTC]);
+  }, [deptInfo, re2020, shab, calculations.totalTTC, ptzDetail]);
   const totalAides = aides.reduce((s, a) => s + (a.eligible ? a.montant : 0), 0);
 
   // === PDF EXPORT ===
@@ -2251,17 +2307,90 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
         </div>
 
         {/* AIDES FINANCIERES */}
-        <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-5 shadow-2xl">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="flex items-center gap-2">
             <Award size={18} className="text-amber-400" />
-            <h3 className="font-display text-lg font-semibold text-amber-100">Aides financieres potentielles</h3>
+            <h3 className="font-display text-lg font-semibold text-amber-100">Aides financieres et PTZ</h3>
           </div>
+
+          {/* PTZ - CRITERES DETAILLES */}
+          <div className="bg-gray-800/40 rounded-xl p-4 space-y-3 border border-amber-600/20">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={16} className="text-amber-400" />
+              <span className="font-display text-base font-semibold text-amber-200">Simulateur PTZ detaille</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <NumberInput label="Nb personnes foyer" value={nbPersonnes} onChange={(v) => setNbPersonnes(clamp(v, 1, 8))} min={1} max={8} />
+              <NumberInput label="Revenu fiscal ref (N-2)" value={revenuFiscalRef} onChange={setRevenuFiscalRef} suffix="EUR" tooltip="Revenu fiscal de reference de l'avis d'imposition N-2" />
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Statut</label>
+                <CheckboxInput label="Primo-accedant" checked={primoAccedant} onChange={setPrimoAccedant}
+                  tooltip="Pas proprietaire de sa residence principale depuis 2 ans" />
+              </div>
+            </div>
+
+            {/* Critères d'éligibilité */}
+            <div className="space-y-1.5">
+              <div className="text-xs text-gray-500 font-medium">Criteres d'eligibilite :</div>
+              {ptzDetail.criteres.map((c, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  {c.ok
+                    ? <CheckCircle size={14} className="text-green-500 mt-0.5 flex-shrink-0" />
+                    : <XCircle size={14} className="text-red-500 mt-0.5 flex-shrink-0" />}
+                  <div>
+                    <div className={`text-xs ${c.ok ? 'text-green-300' : 'text-red-300'}`}>{c.label}</div>
+                    <div className="text-xs text-gray-600">{c.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Résultat PTZ */}
+            {ptzDetail.eligible ? (
+              <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-green-300 font-medium">PTZ accorde</span>
+                  <span className="font-mono text-xl text-green-400 font-bold">{formatEuroShort(ptzDetail.montantPTZ)}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+                  <div>Zone : <span className="text-amber-300 font-mono">{ptzDetail.zone}</span></div>
+                  <div>Quotite : <span className="text-amber-300 font-mono">{ptzDetail.quotite * 100}%</span></div>
+                  <div>Plafond operation : <span className="font-mono">{formatEuroShort(ptzDetail.plafOp)}</span></div>
+                  <div>Assiette retenue : <span className="font-mono">{formatEuroShort(ptzDetail.assiette)}</span></div>
+                  <div>Differe de remboursement : <span className="text-amber-300 font-mono">{ptzDetail.differe} ans</span></div>
+                  <div>Duree remboursement : <span className="text-amber-300 font-mono">{ptzDetail.dureeRemb} ans</span></div>
+                  <div>Tranche : <span className="font-mono">{ptzDetail.tranche}/4</span></div>
+                  <div>Mensualite PTZ : <span className="font-mono text-green-400">{formatEuroShort(ptzDetail.mensualitePTZ)}/mois</span></div>
+                </div>
+                <div className="text-xs text-gray-500 border-t border-green-700/30 pt-2">
+                  Pas de remboursement pendant {ptzDetail.differe} ans, puis {formatEuroShort(ptzDetail.mensualitePTZ)}/mois sur {ptzDetail.dureeRemb} ans.
+                  Duree totale : {ptzDetail.differe + ptzDetail.dureeRemb} ans.
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm text-red-300">
+                  <XCircle size={16} /> PTZ non eligible
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {!primoAccedant ? 'Vous devez etre primo-accedant.' : `Votre RFR (${formatEuroShort(revenuFiscalRef)}) depasse le plafond (${formatEuroShort(ptzDetail.plafondRevenu)}) pour ${nbPersonnes} pers. en zone ${ptzDetail.zone}.`}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* AUTRES AIDES */}
           <div className="space-y-2">
-            {aides.map((aide, i) => (
+            <div className="text-xs text-gray-500 font-medium">Autres aides :</div>
+            {aides.filter(a => a.nom !== 'PTZ (Pret a Taux Zero)').map((aide, i) => (
               <div key={i} className={`flex justify-between items-start rounded-lg px-3 py-2 ${aide.eligible ? 'bg-green-900/15 border border-green-700/30' : 'bg-gray-800/30 opacity-50'}`}>
                 <div className="flex-1">
-                  <div className="text-sm text-gray-300 font-medium">{aide.nom}</div>
-                  <div className="text-xs text-gray-500">{aide.conditions}</div>
+                  <div className="text-sm text-gray-300 font-medium flex items-center gap-1">
+                    {aide.eligible ? <CheckCircle size={12} className="text-green-500" /> : <XCircle size={12} className="text-red-500" />}
+                    {aide.nom}
+                  </div>
+                  <div className="text-xs text-gray-500 ml-4">{aide.conditions}</div>
                 </div>
                 <div className="font-mono text-sm text-green-400 font-bold ml-3 flex-shrink-0">
                   {aide.montant > 0 ? formatEuroShort(aide.montant) : 'Selon dossier'}
@@ -2269,13 +2398,14 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
               </div>
             ))}
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
+
+          <div className="pt-3 border-t border-gray-700 flex justify-between">
             <span className="text-sm text-gray-400">Total aides potentielles</span>
             <span className="font-mono text-lg text-green-400 font-bold">{formatEuroShort(totalAides)}</span>
           </div>
-          <div className="mt-2 text-xs text-gray-600">
+          <div className="text-xs text-gray-600">
             <AlertTriangle size={12} className="inline text-orange-500 mr-1" />
-            Montants indicatifs, sous conditions d'eligibilite. Consultez les organismes concernes.
+            Montants indicatifs, sous conditions. Consultez votre banque et les organismes concernes.
           </div>
         </div>
       </div>
