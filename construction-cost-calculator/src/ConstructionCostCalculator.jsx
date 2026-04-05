@@ -126,13 +126,44 @@ function NumberInput({ label, value, onChange, min = 0, max, step = 1, suffix, t
 }
 
 function SliderInput({ label, value, onChange, min, max, step = 1, suffix = '', displayValue, tooltip }) {
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState('');
+  const handleEditStart = () => {
+    setEditing(true);
+    setEditVal(String(value));
+  };
+  const handleEditEnd = () => {
+    setEditing(false);
+    const num = Number(editVal);
+    if (!isNaN(num)) onChange(Math.max(min, Math.min(max, num)));
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-1">
         <label className="text-sm text-gray-400">
           {label}{tooltip && <TooltipIcon text={tooltip} />}
         </label>
-        <span className="text-sm font-mono text-amber-300">{displayValue || value}{suffix}</span>
+        {editing ? (
+          <input
+            type="number"
+            autoFocus
+            value={editVal}
+            min={min}
+            max={max}
+            step={step}
+            onChange={(e) => setEditVal(e.target.value)}
+            onBlur={handleEditEnd}
+            onKeyDown={(e) => e.key === 'Enter' && handleEditEnd()}
+            className="w-28 bg-gray-700 border border-amber-500 rounded px-2 py-0.5 text-amber-200 font-mono text-sm text-right focus:outline-none"
+          />
+        ) : (
+          <button
+            onClick={handleEditStart}
+            className="bg-gray-800 border border-gray-600 rounded px-3 py-0.5 text-sm font-mono text-amber-300 hover:border-amber-500 hover:text-amber-200 transition-colors cursor-text min-w-[80px] text-right"
+          >
+            {displayValue || value}{suffix}
+          </button>
+        )}
       </div>
       <input
         type="range"
