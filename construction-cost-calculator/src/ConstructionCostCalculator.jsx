@@ -199,28 +199,38 @@ function AccordionModule({ id, title, icon: Icon, isOpen, onToggle, children }) 
   );
 }
 
+const formatThousands = (n) => {
+  if (n == null || isNaN(n)) return '0';
+  const s = String(Math.round(n * 100) / 100);
+  const [int, dec] = s.split('.');
+  const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+  return dec ? `${formatted},${dec}` : formatted;
+};
+
 function NumberInput({ label, value, onChange, min = 0, max, step = 1, suffix, tooltip }) {
+  const [focused, setFocused] = useState(false);
   const [rawValue, setRawValue] = useState(String(value));
   const handleChange = (e) => {
     const raw = e.target.value;
     setRawValue(raw);
-    if (raw === '' || raw === '-') return;
-    const num = Number(raw);
+    const cleaned = raw.replace(/\s/g, '').replace(',', '.');
+    if (cleaned === '' || cleaned === '-') return;
+    const num = Number(cleaned);
     if (!isNaN(num)) onChange(Math.max(min, max != null ? Math.min(max, num) : num));
   };
   const handleBlur = () => {
-    if (rawValue === '' || rawValue === '-' || isNaN(Number(rawValue))) {
+    setFocused(false);
+    const cleaned = rawValue.replace(/\s/g, '').replace(',', '.');
+    if (cleaned === '' || cleaned === '-' || isNaN(Number(cleaned))) {
       setRawValue(String(min));
       onChange(min);
     } else {
-      const clamped = Math.max(min, max != null ? Math.min(max, Number(rawValue)) : Number(rawValue));
+      const clamped = Math.max(min, max != null ? Math.min(max, Number(cleaned)) : Number(cleaned));
       setRawValue(String(clamped));
       onChange(clamped);
     }
   };
-  if (String(value) !== rawValue && document.activeElement?.dataset?.inputFor !== label) {
-    if (rawValue !== '' && rawValue !== '-') setRawValue(String(value));
-  }
+  const displayValue = focused ? rawValue : formatThousands(value);
   return (
     <div>
       <label className="block text-sm text-gray-400 mb-1">
@@ -228,15 +238,13 @@ function NumberInput({ label, value, onChange, min = 0, max, step = 1, suffix, t
       </label>
       <div className="flex items-center gap-2">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           data-input-for={label}
-          value={rawValue}
-          min={min}
-          max={max}
-          step={step}
+          value={displayValue}
           onChange={handleChange}
           onBlur={handleBlur}
-          onFocus={() => setRawValue(String(value))}
+          onFocus={() => { setFocused(true); setRawValue(String(value)); }}
           className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white font-mono text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         />
         {suffix && <span className="text-gray-500 text-sm whitespace-nowrap">{suffix}</span>}
@@ -295,6 +303,29 @@ function SliderInput({ label, value, onChange, min, max, step = 1, suffix = '', 
         className="w-full"
       />
     </div>
+  );
+}
+
+function InlineNumberInput({ value, onChange }) {
+  const [focused, setFocused] = useState(false);
+  const [raw, setRaw] = useState(String(value));
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={focused ? raw : formatThousands(value)}
+      onChange={(e) => {
+        const v = e.target.value;
+        setRaw(v);
+        const cleaned = v.replace(/\s/g, '').replace(',', '.');
+        if (cleaned === '') return;
+        const num = Number(cleaned);
+        if (!isNaN(num)) onChange(Math.max(0, num));
+      }}
+      onFocus={() => { setFocused(true); setRaw(String(value)); }}
+      onBlur={() => { setFocused(false); if (raw.replace(/\s/g, '') === '') onChange(0); }}
+      className="w-32 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm text-right focus:border-amber-500 focus:outline-none"
+    />
   );
 }
 
@@ -884,10 +915,7 @@ export default function ConstructionCostCalculator() {
               <CheckboxInput label="Étude de sol G1/G2" checked={etudeSol} onChange={setEtudeSol}
                 tooltip="Étude géotechnique obligatoire dans certaines zones (loi ELAN)" />
               {etudeSol && (
-                <input type="number" value={etudeSolMontant} min={0}
-                  onChange={(e) => { const v = e.target.value; if (v === '') return; setEtudeSolMontant(Math.max(0, Number(v) || 0)); }}
-                  onBlur={(e) => { if (e.target.value === '') setEtudeSolMontant(0); }}
-                  className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
+                <InlineNumberInput value={etudeSolMontant} onChange={setEtudeSolMontant} />
               )}
             </div>
             <CheckboxInput label="Terrain viabilisé" checked={terrainViabilise} onChange={setTerrainViabilise}
@@ -1021,16 +1049,22 @@ export default function ConstructionCostCalculator() {
               <CheckboxInput label="Architecte" checked={architecte} onChange={setArchitecte}
                 tooltip={shab > 150 ? 'Obligatoire au-delà de 150 m² SHAB' : 'Facultatif en dessous de 150 m² SHAB'} />
               {architecte && (
-                <SliderInput label="Honoraires architecte" value={architectePct} onChange={setArchitectePct}
-                  min={6} max={18} step={0.5} suffix="%" displayValue={architectePct.toFixed(1)} />
+                <>
+                  <SliderInput label="Honoraires architecte" value={architectePct} onChange={setArchitectePct}
+                    min={6} max={18} step={0.5} suffix="%" displayValue={architectePct.toFixed(1)} />
+                  <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * architectePct / 100)}</div>
+                </>
               )}
             </div>
             <div className="space-y-3">
               <CheckboxInput label="Maître d'œuvre" checked={maitreOeuvre} onChange={setMaitreOeuvre}
                 tooltip="Pilotage du chantier si pas d'architecte" />
               {maitreOeuvre && (
-                <SliderInput label="Honoraires MOE" value={maitreOeuvrePct} onChange={setMaitreOeuvrePct}
-                  min={3} max={12} step={0.5} suffix="%" displayValue={maitreOeuvrePct.toFixed(1)} />
+                <>
+                  <SliderInput label="Honoraires MOE" value={maitreOeuvrePct} onChange={setMaitreOeuvrePct}
+                    min={3} max={12} step={0.5} suffix="%" displayValue={maitreOeuvrePct.toFixed(1)} />
+                  <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * maitreOeuvrePct / 100)}</div>
+                </>
               )}
             </div>
             <div className="space-y-3">
@@ -1040,6 +1074,7 @@ export default function ConstructionCostCalculator() {
                 <>
                   <SliderInput label="Taux DO" value={dommagesOuvragePct} onChange={setDommagesOuvragePct}
                     min={1} max={8} step={0.1} suffix="%" displayValue={dommagesOuvragePct.toFixed(1)} />
+                  <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * dommagesOuvragePct / 100)}</div>
                   <div className="flex items-center gap-2 bg-blue-900/20 border border-blue-500/30 rounded px-3 py-2">
                     <Info size={14} className="text-blue-400 flex-shrink-0" />
                     <span className="text-xs text-blue-300">L'assurance DO est légalement obligatoire (art. L242-1 Code des assurances)</span>
@@ -1050,20 +1085,14 @@ export default function ConstructionCostCalculator() {
             <div className="flex items-center gap-4">
               <CheckboxInput label="Bureau de contrôle" checked={bureauControle} onChange={setBureauControle} />
               {bureauControle && (
-                <input type="number" value={bureauControleMontant} min={0}
-                  onChange={(e) => { const v = e.target.value; if (v === '') return; setBureauControleMontant(Math.max(0, Number(v) || 0)); }}
-                  onBlur={(e) => { if (e.target.value === '') setBureauControleMontant(0); }}
-                  className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
+                <InlineNumberInput value={bureauControleMontant} onChange={setBureauControleMontant} />
               )}
             </div>
             <div className="flex items-center gap-4">
               <CheckboxInput label="Coordinateur SPS" checked={coordSPS} onChange={setCoordSPS}
                 tooltip="Sécurité et Protection de la Santé sur chantier" />
               {coordSPS && (
-                <input type="number" value={coordSPSMontant} min={0}
-                  onChange={(e) => { const v = e.target.value; if (v === '') return; setCoordSPSMontant(Math.max(0, Number(v) || 0)); }}
-                  onBlur={(e) => { if (e.target.value === '') setCoordSPSMontant(0); }}
-                  className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
+                <InlineNumberInput value={coordSPSMontant} onChange={setCoordSPSMontant} />
               )}
             </div>
           </AccordionModule>
@@ -1137,10 +1166,7 @@ export default function ConstructionCostCalculator() {
             <div className="flex items-center gap-4">
               <CheckboxInput label="Climatisation réversible" checked={climatisation} onChange={setClimatisation} />
               {climatisation && (
-                <input type="number" value={climMontant} min={0}
-                  onChange={(e) => { const v = e.target.value; if (v === '') return; setClimMontant(Math.max(0, Number(v) || 0)); }}
-                  onBlur={(e) => { if (e.target.value === '') setClimMontant(0); }}
-                  className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
+                <InlineNumberInput value={climMontant} onChange={setClimMontant} />
               )}
             </div>
             <div className="space-y-2">
@@ -1171,10 +1197,7 @@ export default function ConstructionCostCalculator() {
             <div className="flex items-center gap-4">
               <CheckboxInput label="Domotique" checked={domotique} onChange={setDomotique} />
               {domotique && (
-                <input type="number" value={domotiqueMontant} min={0}
-                  onChange={(e) => { const v = e.target.value; if (v === '') return; setDomotiqueMontant(Math.max(0, Number(v) || 0)); }}
-                  onBlur={(e) => { if (e.target.value === '') setDomotiqueMontant(0); }}
-                  className="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white font-mono text-sm" />
+                <InlineNumberInput value={domotiqueMontant} onChange={setDomotiqueMontant} />
               )}
             </div>
           </AccordionModule>
@@ -1344,6 +1367,7 @@ export default function ConstructionCostCalculator() {
                     <SliderInput label="Garantie hypothécaire" value={garantiePct} onChange={setGarantiePct}
                       min={0.5} max={2.5} step={0.1} suffix="%" displayValue={garantiePct.toFixed(1)}
                       tooltip="Caution ou hypothèque, environ 1 à 2% du montant emprunté" />
+                    <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(financement.garantie)}</div>
                   </div>
 
                   <SliderInput label="Taux nominal" value={tauxNominal} onChange={setTauxNominal}
