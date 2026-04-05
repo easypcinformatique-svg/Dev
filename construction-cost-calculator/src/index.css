@@ -91,3 +91,16 @@ input[type="range"]:hover::-moz-range-thumb {
 .fade-in {
   animation: fadeIn 0.3s ease-out;
 }
+
+@media print {
+  body { background: white !important; color: black !important; font-size: 10px !important; }
+  * { color: black !important; background: white !important; border-color: #ccc !important; box-shadow: none !important; }
+  button, input[type="range"], .no-print { display: none !important; }
+  .lg\:sticky { position: relative !important; }
+  .lg\:flex-row { flex-direction: column !important; }
+  .lg\:w-\[55\%\], .lg\:w-\[45\%\] { width: 100% !important; }
+  .font-mono { font-family: 'Courier New', monospace !important; }
+  .rounded-xl, .rounded-lg { border: 1px solid #ddd !important; margin-bottom: 8px; padding: 8px !important; }
+  header { padding: 10px !important; }
+  h1 { font-size: 20px !important; }
+}

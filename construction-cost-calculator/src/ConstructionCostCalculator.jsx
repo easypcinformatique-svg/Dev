@@ -4,7 +4,8 @@ import {
   ChevronDown, ChevronUp, HelpCircle, AlertTriangle, CheckCircle,
   XCircle, Home, Landmark, Wrench, Shield, Plug, Sofa, PiggyBank,
   Copy, RotateCcw, TrendingUp, Info, Save, Download, Upload, Trash2,
-  ThumbsUp, ThumbsDown, Scale, Building2
+  ThumbsUp, ThumbsDown, Scale, Building2, Calendar, FileText, Layers,
+  Printer, Award, ExternalLink
 } from 'lucide-react';
 
 const formatEuro = (n) => {
@@ -478,6 +479,11 @@ export default function ConstructionCostCalculator() {
   const [openModules, setOpenModules] = useState(new Set(['terrain', 'construction']));
   const [showTVA, setShowTVA] = useState(false);
   const [financementOpen, setFinancementOpen] = useState(false);
+  const [scenarios, setScenarios] = useState([]);
+  const [dateDebut, setDateDebut] = useState(() => {
+    const d = new Date(); d.setMonth(d.getMonth() + 3);
+    return d.toISOString().slice(0, 7);
+  });
 
   const toggleModule = useCallback((id) => {
     setOpenModules((prev) => {
@@ -1017,8 +1023,171 @@ export default function ConstructionCostCalculator() {
     } catch { return null; }
   }, [saveMsg]);
 
-  const cRange = CONSTRUCTION_RANGES[typeConstruction];
+  // === SCENARIOS ===
+  const handleSaveScenario = useCallback(() => {
+    const data = getAllState();
+    const name = `${typeConstruction === 'traditionnelle' ? 'Trad' : typeConstruction === 'bois' ? 'Bois' : 'Contemp'} ${shab}m² ${fondation === 'soussol' ? 'SS' : fondation === 'videsan' ? 'VS' : 'Dalle'} ${niveaux === 1 ? 'PP' : 'R+1'}`;
+    setScenarios(prev => [...prev.slice(-2), { name, data, total: calculations.totalTTC, coutM2: calculations.coutM2SHAB, date: new Date().toLocaleString('fr-FR') }]);
+  }, [getAllState, typeConstruction, shab, fondation, niveaux, calculations]);
 
+  // === TIMELINE ===
+  const timeline = useMemo(() => {
+    const start = new Date(dateDebut + '-01');
+    const phases = [
+      { nom: 'Permis de construire', duree: 3, color: '#818cf8' },
+      { nom: 'Purge recours tiers', duree: 2, color: '#a78bfa' },
+      { nom: 'Terrassement / Fondations', duree: 1, color: '#d4a853' },
+      { nom: 'Gros oeuvre / Elevation', duree: niveaux === 2 ? 3 : 2, color: '#e8c778' },
+      { nom: 'Hors d\'eau (charpente/couverture)', duree: 1, color: '#fb923c' },
+      { nom: 'Hors d\'air (menuiseries ext)', duree: 1, color: '#f472b6' },
+      { nom: 'Second oeuvre (isolation, plomberie, elec)', duree: 3, color: '#2dd4bf' },
+      { nom: 'Finitions (platrerie, sols, peinture)', duree: 2, color: '#34d399' },
+      { nom: 'Reception / Reserve', duree: 1, color: '#4ade80' },
+    ];
+    let cumul = 0;
+    return phases.map(p => {
+      const debut = new Date(start);
+      debut.setMonth(debut.getMonth() + cumul);
+      cumul += p.duree;
+      const fin = new Date(start);
+      fin.setMonth(fin.getMonth() + cumul);
+      return { ...p, debut, fin, moisDebut: cumul - p.duree, moisFin: cumul };
+    });
+  }, [dateDebut, niveaux]);
+  const dureeTotal = timeline.length > 0 ? timeline[timeline.length - 1].moisFin : 0;
+
+  // === AIDES FINANCIERES ===
+  const aides = useMemo(() => {
+    const zone = deptInfo?.zone || 'C';
+    const result = [];
+    // PTZ 2024+
+    const ptzMax = { 'Abis': 150000, 'A': 150000, 'B1': 135000, 'B2': 110000, 'C': 100000 };
+    result.push({ nom: 'PTZ (Pret a Taux Zero)', eligible: true, montant: ptzMax[zone] || 100000, conditions: `Zone ${zone}, primo-accedant, sous plafonds de ressources`, lien: '' });
+    // MaPrimeRenov
+    if (re2020) {
+      result.push({ nom: 'Bonus RE2020 / Label E+C-', eligible: true, montant: 0, conditions: 'Performance energetique superieure au minimum RE2020', lien: '' });
+    }
+    // Exo taxe fonciere
+    result.push({ nom: 'Exoneration taxe fonciere 2 ans', eligible: true, montant: Math.round(shab * 8), conditions: 'Construction neuve, declaration H1 sous 90 jours apres achevement', lien: '' });
+    // CEE
+    if (re2020) {
+      result.push({ nom: 'CEE (Certificats Economie Energie)', eligible: true, montant: Math.round(shab * 15), conditions: 'Via fournisseur energie, pour equipements performants (PAC, isolation)', lien: '' });
+    }
+    // TVA reduite
+    result.push({ nom: 'TVA 5,5% (accession sociale)', eligible: zone === 'Abis' || zone === 'A', montant: zone === 'Abis' || zone === 'A' ? Math.round(calculations.totalTTC * 0.055) : 0, conditions: 'Zone ANRU ou QPV, sous plafonds de ressources PLS', lien: '' });
+    // Action Logement
+    result.push({ nom: 'Pret Action Logement', eligible: true, montant: 40000, conditions: 'Salarie secteur prive, entreprise > 10 salaries, 0.5%', lien: '' });
+    return result;
+  }, [deptInfo, re2020, shab, calculations.totalTTC]);
+  const totalAides = aides.reduce((s, a) => s + (a.eligible ? a.montant : 0), 0);
+
+  // === PDF EXPORT ===
+  const generateRecapText = useCallback(() => {
+    const sep = '─'.repeat(50);
+    const lines = [
+      'ESTIMATION COUT CONSTRUCTION - MAISON INDIVIDUELLE',
+      `Date : ${new Date().toLocaleDateString('fr-FR')}`,
+      codePostal ? `Localisation : ${codePostal} ${deptInfo?.nom || ''}` : '',
+      sep,
+      '',
+      'SYNTHESE',
+      `Surface habitable (SHAB) : ${shab} m2`,
+      `Surface de plancher (SDP) : ${sdp} m2`,
+      `Type : ${typeConstruction} | ${niveaux === 1 ? 'Plain-pied' : 'R+1'} | ${fondation === 'soussol' ? 'Sous-sol' : fondation === 'videsan' ? 'Vide sanitaire' : 'Dalle'}`,
+      `Prestations : ${prestations} | RE2020 : ${re2020 ? 'Oui' : 'Non'}`,
+      '',
+      sep,
+      'DETAIL DES COUTS',
+      sep,
+      `Terrain total ............... ${formatEuro(calculations.terrainTotal)}`,
+      `  Prix terrain : ${formatEuro(prixTerrain)}`,
+      `  Frais notaire ${fraisNotairePct}% : ${formatEuro(prixTerrain * fraisNotairePct / 100)}`,
+      `  Taxe amenagement : ${formatEuro(calculations.taxeAmenagement)}`,
+      '',
+      `Construction nette ......... ${formatEuro(calculations.constructionBase)}`,
+    ];
+    if (calculations.detailConstruction) {
+      calculations.detailConstruction.lots.forEach(lot => {
+        lines.push(`  ${lot.nom} : ${formatEuro(lot.total)}${lot.isOverridden ? ' (ajuste)' : ''}`);
+      });
+    }
+    lines.push('', `Honoraires ................. ${formatEuro(calculations.honorairesTotal)}`);
+    if (architecte) lines.push(`  Architecte ${architectePct}% : ${formatEuro(calculations.constructionBase * architectePct / 100)}`);
+    if (maitreOeuvre) lines.push(`  MOE ${maitreOeuvrePct}% : ${formatEuro(calculations.constructionBase * maitreOeuvrePct / 100)}`);
+    lines.push(
+      `Assurances ................. ${formatEuro(calculations.assurancesTotal)}`,
+      `Raccordements & Taxes ...... ${formatEuro(calculations.raccordementsTotal)}`,
+      `Equipements ................ ${formatEuro(calculations.equipementsTotal)}`,
+      `Imprevus (${imprevusPct}%) ............ ${formatEuro(calculations.imprevusTotal)}`,
+      `Ameublement ................ ${formatEuro(ameublement)}`,
+      '',
+      sep,
+      `TOTAL HT ................... ${formatEuro(calculations.totalHT)}`,
+      showTVA ? `TVA 5,5% .................. ${formatEuro(calculations.tva)}` : '',
+      `TOTAL TTC .................. ${formatEuro(calculations.totalTTC)}`,
+      '',
+      `Cout/m2 SHAB : ${formatEuro(calculations.coutM2SHAB)}`,
+      `Cout/m2 SDP  : ${formatEuro(calculations.coutM2SDP)}`,
+      '',
+      sep,
+      'FINANCEMENT',
+      sep,
+      `Apport personnel : ${formatEuro(apport)}`,
+      `Montant a emprunter : ${formatEuro(financement.montantEmprunt)}`,
+      `Taux : ${tauxNominal}% sur ${duree} ans`,
+      `Mensualite : ${formatEuro(financement.mensualite)}`,
+      `Cout total credit : ${formatEuro(financement.coutTotalCredit)}`,
+      `Taux d'effort : ${financement.tauxEffort.toFixed(1)}%`,
+      '',
+      sep,
+      'AVIS PROJET',
+      `Score : ${avisProjet.score}/100 - ${avisProjet.verdict}`,
+      `Construire : ${formatEuro(avisProjet.totalNeuf)} vs Acheter ancien : ${formatEuro(avisProjet.totalAncien)}`,
+      '',
+      sep,
+      'PLANNING PREVISIONNEL',
+    );
+    timeline.forEach(p => {
+      lines.push(`  ${p.debut.toLocaleDateString('fr-FR', {month:'short', year:'numeric'})} - ${p.fin.toLocaleDateString('fr-FR', {month:'short', year:'numeric'})} : ${p.nom} (${p.duree} mois)`);
+    });
+    lines.push(`  Duree totale estimee : ${dureeTotal} mois`);
+    lines.push('', sep, 'AIDES POTENTIELLES');
+    aides.filter(a => a.eligible).forEach(a => {
+      lines.push(`  ${a.nom} : ${a.montant > 0 ? formatEuro(a.montant) : 'Selon dossier'}`);
+    });
+    lines.push('', '', 'Document genere par Calculette Cout Construction');
+    lines.push(`${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR')}`);
+    return lines.filter(l => l !== undefined).join('\n');
+  }, [calculations, shab, sdp, typeConstruction, niveaux, fondation, prestations, re2020, codePostal, deptInfo, prixTerrain, fraisNotairePct, architecte, architectePct, maitreOeuvre, maitreOeuvrePct, imprevusPct, ameublement, showTVA, apport, financement, tauxNominal, duree, avisProjet, timeline, dureeTotal, aides]);
+
+  const handleExportPDF = useCallback(() => {
+    const text = generateRecapText();
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Estimation Construction</title>
+<style>@page{size:A4;margin:15mm}body{font-family:'Courier New',monospace;font-size:11px;line-height:1.6;color:#222;max-width:180mm;margin:auto;padding:20px}
+pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}</pre></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if (w) setTimeout(() => { w.print(); }, 500);
+    else { const a = document.createElement('a'); a.href = url; a.download = `estimation-construction-${codePostal || 'projet'}.html`; a.click(); }
+    URL.revokeObjectURL(url);
+  }, [generateRecapText, codePostal]);
+
+  const handleExportGoogleDocs = useCallback(() => {
+    const text = generateRecapText();
+    const encoded = encodeURIComponent(text);
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `estimation-construction-${codePostal || 'projet'}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setSaveMsg('Fichier .txt telecharge - Importez-le dans Google Docs via Fichier > Ouvrir');
+    setTimeout(() => setSaveMsg(''), 4000);
+  }, [generateRecapText, codePostal]);
+
+  const cRange = CONSTRUCTION_RANGES[typeConstruction];
 
   // === RENDER ===
   return (
@@ -1966,24 +2135,147 @@ export default function ConstructionCostCalculator() {
               )}
             </div>
 
-            {/* OTHER BUTTONS */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-2 bg-amber-600/20 border border-amber-600/50 rounded-lg px-4 py-2.5 text-sm text-amber-300 hover:bg-amber-600/30 hover:text-amber-200 transition-colors"
-              >
-                <Copy size={16} />
-                Copier le récapitulatif
+            {/* EXPORT BUTTONS */}
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={handleExportPDF}
+                className="flex items-center justify-center gap-2 bg-red-600/20 border border-red-600/40 rounded-lg px-3 py-2.5 text-sm text-red-300 hover:bg-red-600/30 transition-colors">
+                <FileText size={15} /> Export PDF
               </button>
-              <button
-                onClick={handleReset}
-                className="flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-400 hover:bg-red-900/30 hover:border-red-500/50 hover:text-red-300 transition-colors"
-              >
-                <Trash2 size={16} />
-                Réinitialiser
+              <button onClick={handleExportGoogleDocs}
+                className="flex items-center justify-center gap-2 bg-blue-600/20 border border-blue-600/40 rounded-lg px-3 py-2.5 text-sm text-blue-300 hover:bg-blue-600/30 transition-colors">
+                <ExternalLink size={15} /> Google Docs
+              </button>
+              <button onClick={handleCopy}
+                className="flex items-center justify-center gap-2 bg-amber-600/20 border border-amber-600/50 rounded-lg px-3 py-2.5 text-sm text-amber-300 hover:bg-amber-600/30 transition-colors">
+                <Copy size={15} /> Copier
+              </button>
+              <button onClick={() => window.print()}
+                className="flex items-center justify-center gap-2 bg-gray-700/40 border border-gray-600/50 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-600/40 transition-colors">
+                <Printer size={15} /> Imprimer
               </button>
             </div>
 
+            {/* SCENARIOS */}
+            <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-4 shadow-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Layers size={16} className="text-amber-400" />
+                  <span className="font-display text-sm font-semibold text-amber-100">Comparateur de scenarios</span>
+                </div>
+                <button onClick={handleSaveScenario}
+                  className="text-xs bg-amber-600/20 border border-amber-600/40 rounded px-3 py-1 text-amber-300 hover:bg-amber-600/30 transition-colors">
+                  + Sauvegarder ce scenario
+                </button>
+              </div>
+              {scenarios.length === 0 ? (
+                <div className="text-xs text-gray-600 text-center py-2">Sauvegardez 2-3 variantes pour les comparer (max 3)</div>
+              ) : (
+                <div className="space-y-2">
+                  {scenarios.map((sc, i) => (
+                    <div key={i} className="flex justify-between items-center bg-gray-800/50 rounded-lg px-3 py-2">
+                      <div>
+                        <div className="text-sm text-gray-300">{sc.name}</div>
+                        <div className="text-xs text-gray-600">{sc.date}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-sm text-amber-300 font-bold">{formatEuroShort(sc.total)}</div>
+                        <div className="text-xs text-gray-500">{formatEuroShort(sc.coutM2)}/m2</div>
+                      </div>
+                      <button onClick={() => { restoreState(sc.data); setSaveMsg('Scenario charge'); setTimeout(() => setSaveMsg(''), 2000); }}
+                        className="ml-2 text-xs text-gray-500 hover:text-amber-400">Charger</button>
+                    </div>
+                  ))}
+                  {scenarios.length > 1 && (
+                    <div className="text-xs text-gray-500 text-center border-t border-gray-800 pt-2">
+                      Ecart : {formatEuroShort(Math.abs(scenarios[scenarios.length-1].total - scenarios[0].total))} entre {scenarios[0].name} et {scenarios[scenarios.length-1].name}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* RESET */}
+            <button onClick={handleReset}
+              className="w-full flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-red-900/30 hover:border-red-500/50 hover:text-red-300 transition-colors">
+              <Trash2 size={14} /> Reinitialiser tout
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      {/* TIMELINE */}
+      <div className="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+        <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-5 shadow-2xl">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Calendar size={18} className="text-amber-400" />
+              <h3 className="font-display text-lg font-semibold text-amber-100">Planning previsionnel</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Debut :</span>
+              <input type="month" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)}
+                className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-amber-300 font-mono text-xs focus:border-amber-500 focus:outline-none" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {timeline.map((phase, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm">
+                <div className="w-24 text-xs text-gray-500 text-right flex-shrink-0">
+                  {phase.debut.toLocaleDateString('fr-FR', {month:'short', year:'2-digit'})}
+                </div>
+                <div className="flex-1 flex items-center">
+                  <div
+                    className="h-7 rounded flex items-center px-2 text-xs text-white font-medium truncate"
+                    style={{
+                      backgroundColor: phase.color + '33',
+                      borderLeft: `3px solid ${phase.color}`,
+                      width: `${(phase.duree / dureeTotal) * 100}%`,
+                      minWidth: '60px',
+                    }}
+                  >
+                    {phase.nom}
+                  </div>
+                </div>
+                <div className="w-16 text-xs text-gray-600 flex-shrink-0">{phase.duree} mois</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between text-sm">
+            <span className="text-gray-400">Duree totale estimee</span>
+            <span className="font-mono text-amber-300 font-bold">{dureeTotal} mois</span>
+          </div>
+          <div className="mt-1 flex justify-between text-xs text-gray-500">
+            <span>Livraison estimee : {timeline.length > 0 ? timeline[timeline.length-1].fin.toLocaleDateString('fr-FR', {month:'long', year:'numeric'}) : '-'}</span>
+          </div>
+        </div>
+
+        {/* AIDES FINANCIERES */}
+        <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-5 shadow-2xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Award size={18} className="text-amber-400" />
+            <h3 className="font-display text-lg font-semibold text-amber-100">Aides financieres potentielles</h3>
+          </div>
+          <div className="space-y-2">
+            {aides.map((aide, i) => (
+              <div key={i} className={`flex justify-between items-start rounded-lg px-3 py-2 ${aide.eligible ? 'bg-green-900/15 border border-green-700/30' : 'bg-gray-800/30 opacity-50'}`}>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-300 font-medium">{aide.nom}</div>
+                  <div className="text-xs text-gray-500">{aide.conditions}</div>
+                </div>
+                <div className="font-mono text-sm text-green-400 font-bold ml-3 flex-shrink-0">
+                  {aide.montant > 0 ? formatEuroShort(aide.montant) : 'Selon dossier'}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
+            <span className="text-sm text-gray-400">Total aides potentielles</span>
+            <span className="font-mono text-lg text-green-400 font-bold">{formatEuroShort(totalAides)}</span>
+          </div>
+          <div className="mt-2 text-xs text-gray-600">
+            <AlertTriangle size={12} className="inline text-orange-500 mr-1" />
+            Montants indicatifs, sous conditions d'eligibilite. Consultez les organismes concernes.
           </div>
         </div>
       </div>
