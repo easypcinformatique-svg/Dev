@@ -175,7 +175,7 @@ const PRIX_ANCIEN_M2 = {
 function TooltipIcon({ text }) {
   const [show, setShow] = useState(false);
   return (
-    <span className="relative inline-block ml-1">
+    <span className="relative inline-block ml-1" onClick={(e) => { e.stopPropagation(); setShow(!show); }}>
       <HelpCircle
         size={14}
         className="text-gray-500 hover:text-amber-400 cursor-help inline"
@@ -183,7 +183,8 @@ function TooltipIcon({ text }) {
         onMouseLeave={() => setShow(false)}
       />
       {show && (
-        <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 bg-gray-800 border border-gray-600 text-xs text-gray-300 rounded px-3 py-2 w-56 shadow-lg">
+        <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 bg-gray-800 border border-gray-600 text-xs text-gray-300 rounded px-3 py-2 w-56 shadow-lg"
+          onClick={(e) => e.stopPropagation()}>
           {text}
         </span>
       )}
@@ -341,17 +342,19 @@ function InlineNumberInput({ value, onChange }) {
 
 function CheckboxInput({ label, checked, onChange, tooltip }) {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className="flex items-center gap-2 cursor-pointer group text-left"
-    >
-      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${checked ? 'bg-amber-600 border-amber-500' : 'border-gray-600 bg-gray-800'}`}>
-        {checked && <CheckCircle size={14} className="text-white" />}
-      </div>
-      <span className="text-sm text-gray-300 group-hover:text-gray-100">{label}</span>
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange(!checked); }}
+        className="flex items-center gap-2 cursor-pointer group text-left min-h-[36px] py-1"
+      >
+        <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${checked ? 'bg-amber-600 border-amber-500' : 'border-gray-600 bg-gray-800 group-hover:border-gray-500'}`}>
+          {checked && <CheckCircle size={15} className="text-white" />}
+        </div>
+        <span className="text-sm text-gray-300 group-hover:text-gray-100 select-none">{label}</span>
+      </button>
       {tooltip && <TooltipIcon text={tooltip} />}
-    </button>
+    </div>
   );
 }
 
