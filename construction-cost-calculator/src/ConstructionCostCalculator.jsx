@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import {
   ChevronDown, ChevronUp, HelpCircle, AlertTriangle, CheckCircle,
   XCircle, Home, Landmark, Wrench, Shield, Plug, Sofa, PiggyBank,
-  Copy, RotateCcw, TrendingUp, Info
+  Copy, RotateCcw, TrendingUp, Info, Save, Download, Upload, Trash2
 } from 'lucide-react';
 
 const formatEuro = (n) => {
@@ -600,6 +600,176 @@ export default function ConstructionCostCalculator() {
     navigator.clipboard.writeText(lines);
   }, [calculations, ameublement, showTVA]);
 
+  // === SAVE / LOAD ===
+  const [saveMsg, setSaveMsg] = useState('');
+
+  const getAllState = useCallback(() => ({
+    codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
+    terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
+    tauxCommunal, surfaceTerrain, cesMax, shab, sdpAuto, sdpManuel, typeConstruction,
+    coutM2, niveaux, fondation, prestations, re2020, architecte, architectePct,
+    maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
+    bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
+    assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
+    cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine,
+    piscineMontant, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
+    imprevusPct, ameublement, fraisDossier, garantiePct, apport, ptz, ptzMontant,
+    tauxNominal, duree, revenuMensuel, showTVA,
+    _savedAt: new Date().toISOString(),
+  }), [codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
+    terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
+    tauxCommunal, surfaceTerrain, cesMax, shab, sdpAuto, sdpManuel, typeConstruction,
+    coutM2, niveaux, fondation, prestations, re2020, architecte, architectePct,
+    maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
+    bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
+    assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
+    cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine,
+    piscineMontant, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
+    imprevusPct, ameublement, fraisDossier, garantiePct, apport, ptz, ptzMontant,
+    tauxNominal, duree, revenuMensuel, showTVA]);
+
+  const restoreState = useCallback((data) => {
+    if (!data) return;
+    if (data.codePostal != null) { setCodePostal(data.codePostal); const d = getDeptFromCP(data.codePostal); setDeptInfo(d ? DEPT_DATA[d] : null); }
+    if (data.prixTerrain != null) setPrixTerrain(data.prixTerrain);
+    if (data.fraisNotairePct != null) setFraisNotairePct(data.fraisNotairePct);
+    if (data.fraisGeometre != null) setFraisGeometre(data.fraisGeometre);
+    if (data.etudeSol != null) setEtudeSol(data.etudeSol);
+    if (data.etudeSolMontant != null) setEtudeSolMontant(data.etudeSolMontant);
+    if (data.terrainViabilise != null) setTerrainViabilise(data.terrainViabilise);
+    if (data.viabEau != null) setViabEau(data.viabEau);
+    if (data.viabElec != null) setViabElec(data.viabElec);
+    if (data.viabGaz != null) setViabGaz(data.viabGaz);
+    if (data.viabAssainissement != null) setViabAssainissement(data.viabAssainissement);
+    if (data.viabTelecom != null) setViabTelecom(data.viabTelecom);
+    if (data.tauxCommunal != null) setTauxCommunal(data.tauxCommunal);
+    if (data.surfaceTerrain != null) setSurfaceTerrain(data.surfaceTerrain);
+    if (data.cesMax != null) setCesMax(data.cesMax);
+    if (data.shab != null) setShab(data.shab);
+    if (data.sdpAuto != null) setSdpAuto(data.sdpAuto);
+    if (data.sdpManuel != null) setSdpManuel(data.sdpManuel);
+    if (data.typeConstruction != null) setTypeConstruction(data.typeConstruction);
+    if (data.coutM2 != null) setCoutM2(data.coutM2);
+    if (data.niveaux != null) setNiveaux(data.niveaux);
+    if (data.fondation != null) setFondation(data.fondation);
+    if (data.prestations != null) setPrestations(data.prestations);
+    if (data.re2020 != null) setRe2020(data.re2020);
+    if (data.architecte != null) setArchitecte(data.architecte);
+    if (data.architectePct != null) setArchitectePct(data.architectePct);
+    if (data.maitreOeuvre != null) setMaitreOeuvre(data.maitreOeuvre);
+    if (data.maitreOeuvrePct != null) setMaitreOeuvrePct(data.maitreOeuvrePct);
+    if (data.dommagesOuvrage != null) setDommagesOuvrage(data.dommagesOuvrage);
+    if (data.dommagesOuvragePct != null) setDommagesOuvragePct(data.dommagesOuvragePct);
+    if (data.bureauControle != null) setBureauControle(data.bureauControle);
+    if (data.bureauControleMontant != null) setBureauControleMontant(data.bureauControleMontant);
+    if (data.coordSPS != null) setCoordSPS(data.coordSPS);
+    if (data.coordSPSMontant != null) setCoordSPSMontant(data.coordSPSMontant);
+    if (data.raccElec != null) setRaccElec(data.raccElec);
+    if (data.raccEau != null) setRaccEau(data.raccEau);
+    if (data.assainissementType != null) setAssainissementType(data.assainissementType);
+    if (data.raccAssCollectif != null) setRaccAssCollectif(data.raccAssCollectif);
+    if (data.raccANC != null) setRaccANC(data.raccANC);
+    if (data.ancType != null) setAncType(data.ancType);
+    if (data.redevanceArcheo != null) setRedevanceArcheo(data.redevanceArcheo);
+    if (data.cuisine != null) setCuisine(data.cuisine);
+    if (data.nbSDB != null) setNbSDB(data.nbSDB);
+    if (data.coutSDB != null) setCoutSDB(data.coutSDB);
+    if (data.chauffage != null) setChauffage(data.chauffage);
+    if (data.climatisation != null) setClimatisation(data.climatisation);
+    if (data.climMontant != null) setClimMontant(data.climMontant);
+    if (data.piscine != null) setPiscine(data.piscine);
+    if (data.piscineMontant != null) setPiscineMontant(data.piscineMontant);
+    if (data.terrasse != null) setTerrasse(data.terrasse);
+    if (data.cloture != null) setCloture(data.cloture);
+    if (data.garage != null) setGarage(data.garage);
+    if (data.garageM2 != null) setGarageM2(data.garageM2);
+    if (data.domotique != null) setDomotique(data.domotique);
+    if (data.domotiqueMontant != null) setDomotiqueMontant(data.domotiqueMontant);
+    if (data.imprevusPct != null) setImprevusPct(data.imprevusPct);
+    if (data.ameublement != null) setAmeublement(data.ameublement);
+    if (data.fraisDossier != null) setFraisDossier(data.fraisDossier);
+    if (data.garantiePct != null) setGarantiePct(data.garantiePct);
+    if (data.apport != null) setApport(data.apport);
+    if (data.ptz != null) setPtz(data.ptz);
+    if (data.ptzMontant != null) setPtzMontant(data.ptzMontant);
+    if (data.tauxNominal != null) setTauxNominal(data.tauxNominal);
+    if (data.duree != null) setDuree(data.duree);
+    if (data.revenuMensuel != null) setRevenuMensuel(data.revenuMensuel);
+    if (data.showTVA != null) setShowTVA(data.showTVA);
+  }, []);
+
+  const handleSave = useCallback(() => {
+    const data = getAllState();
+    localStorage.setItem('construction-calculator-save', JSON.stringify(data));
+    setSaveMsg('Sauvegardé');
+    setTimeout(() => setSaveMsg(''), 2500);
+  }, [getAllState]);
+
+  const handleLoad = useCallback(() => {
+    const raw = localStorage.getItem('construction-calculator-save');
+    if (!raw) { setSaveMsg('Aucune sauvegarde'); setTimeout(() => setSaveMsg(''), 2500); return; }
+    try {
+      restoreState(JSON.parse(raw));
+      setSaveMsg('Restauré');
+      setTimeout(() => setSaveMsg(''), 2500);
+    } catch { setSaveMsg('Erreur de lecture'); setTimeout(() => setSaveMsg(''), 2500); }
+  }, [restoreState]);
+
+  const handleExportJSON = useCallback(() => {
+    const data = getAllState();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `projet-construction-${codePostal || 'estimation'}-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [getAllState, codePostal]);
+
+  const handleImportJSON = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          restoreState(JSON.parse(ev.target.result));
+          setSaveMsg('Importé');
+          setTimeout(() => setSaveMsg(''), 2500);
+        } catch { setSaveMsg('Fichier invalide'); setTimeout(() => setSaveMsg(''), 2500); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [restoreState]);
+
+  const handleDeleteSave = useCallback(() => {
+    localStorage.removeItem('construction-calculator-save');
+    setSaveMsg('Sauvegarde supprimée');
+    setTimeout(() => setSaveMsg(''), 2500);
+  }, []);
+
+  // Auto-load on mount
+  useEffect(() => {
+    const raw = localStorage.getItem('construction-calculator-save');
+    if (raw) {
+      try { restoreState(JSON.parse(raw)); } catch { /* corrupted save */ }
+    }
+  }, [restoreState]);
+
+  const hasSavedData = typeof window !== 'undefined' && !!localStorage.getItem('construction-calculator-save');
+  const savedDate = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('construction-calculator-save');
+      if (!raw) return null;
+      const d = JSON.parse(raw)._savedAt;
+      return d ? new Date(d).toLocaleString('fr-FR') : null;
+    } catch { return null; }
+  }, [saveMsg]);
+
   const cRange = CONSTRUCTION_RANGES[typeConstruction];
 
 
@@ -1189,21 +1359,65 @@ export default function ConstructionCostCalculator() {
               )}
             </div>
 
-            {/* BUTTONS */}
+            {/* SAVE / LOAD */}
+            <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-4 shadow-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-display text-sm font-semibold text-amber-100">Sauvegarde du projet</span>
+                {savedDate && <span className="text-xs text-gray-500">Dernière : {savedDate}</span>}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleSave}
+                  className="flex items-center justify-center gap-2 bg-green-600/20 border border-green-600/50 rounded-lg px-3 py-2 text-sm text-green-300 hover:bg-green-600/30 transition-colors"
+                >
+                  <Save size={15} />
+                  Sauvegarder
+                </button>
+                <button
+                  onClick={handleLoad}
+                  className="flex items-center justify-center gap-2 bg-blue-600/20 border border-blue-600/50 rounded-lg px-3 py-2 text-sm text-blue-300 hover:bg-blue-600/30 transition-colors"
+                >
+                  <Download size={15} />
+                  Restaurer
+                </button>
+                <button
+                  onClick={handleExportJSON}
+                  className="flex items-center justify-center gap-2 bg-amber-600/20 border border-amber-600/50 rounded-lg px-3 py-2 text-sm text-amber-300 hover:bg-amber-600/30 transition-colors"
+                >
+                  <Upload size={15} />
+                  Exporter JSON
+                </button>
+                <button
+                  onClick={handleImportJSON}
+                  className="flex items-center justify-center gap-2 bg-purple-600/20 border border-purple-600/50 rounded-lg px-3 py-2 text-sm text-purple-300 hover:bg-purple-600/30 transition-colors"
+                >
+                  <Download size={15} />
+                  Importer JSON
+                </button>
+              </div>
+              {saveMsg && (
+                <div className="flex items-center justify-center gap-2 bg-gray-800 rounded py-1.5 text-sm text-amber-300 fade-in">
+                  <CheckCircle size={14} />
+                  {saveMsg}
+                </div>
+              )}
+            </div>
+
+            {/* OTHER BUTTONS */}
             <div className="flex gap-3">
-              <button
-                onClick={handleReset}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-              >
-                <RotateCcw size={16} />
-                Réinitialiser
-              </button>
               <button
                 onClick={handleCopy}
                 className="flex-1 flex items-center justify-center gap-2 bg-amber-600/20 border border-amber-600/50 rounded-lg px-4 py-2.5 text-sm text-amber-300 hover:bg-amber-600/30 hover:text-amber-200 transition-colors"
               >
                 <Copy size={16} />
                 Copier le récapitulatif
+              </button>
+              <button
+                onClick={handleReset}
+                className="flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-400 hover:bg-red-900/30 hover:border-red-500/50 hover:text-red-300 transition-colors"
+              >
+                <Trash2 size={16} />
+                Réinitialiser
               </button>
             </div>
 
