@@ -424,10 +424,16 @@ export default function ConstructionCostCalculator() {
   // === MODULE 3 - HONORAIRES ===
   const [architecte, setArchitecte] = useState(false);
   const [architectePct, setArchitectePct] = useState(12);
+  const [architecteFixe, setArchitecteFixe] = useState(false);
+  const [architecteMontant, setArchitecteMontant] = useState(0);
   const [maitreOeuvre, setMaitreOeuvre] = useState(true);
   const [maitreOeuvrePct, setMaitreOeuvrePct] = useState(6);
+  const [maitreOeuvreFixe, setMaitreOeuvreFixe] = useState(false);
+  const [maitreOeuvreMontant, setMaitreOeuvreMontant] = useState(0);
   const [dommagesOuvrage, setDommagesOuvrage] = useState(true);
   const [dommagesOuvragePct, setDommagesOuvragePct] = useState(3.5);
+  const [dommagesOuvrageFixe, setDommagesOuvrageFixe] = useState(false);
+  const [dommagesOuvrageMontant, setDommagesOuvrageMontant] = useState(0);
   const [bureauControle, setBureauControle] = useState(false);
   const [bureauControleMontant, setBureauControleMontant] = useState(2500);
   const [coordSPS, setCoordSPS] = useState(false);
@@ -640,13 +646,14 @@ export default function ConstructionCostCalculator() {
       hasOverrides,
     };
 
-    const honorairesTotal =
-      (architecte ? constructionEffective * architectePct / 100 : 0) +
-      (maitreOeuvre ? constructionEffective * maitreOeuvrePct / 100 : 0) +
+    const archiCost = architecte ? (architecteFixe ? architecteMontant : constructionEffective * architectePct / 100) : 0;
+    const moeCost = maitreOeuvre ? (maitreOeuvreFixe ? maitreOeuvreMontant : constructionEffective * maitreOeuvrePct / 100) : 0;
+    const honorairesTotal = archiCost + moeCost +
       (bureauControle ? bureauControleMontant : 0) +
       (coordSPS ? coordSPSMontant : 0);
 
-    const assurancesTotal = dommagesOuvrage ? constructionEffective * dommagesOuvragePct / 100 : 0;
+    const doCost = dommagesOuvrage ? (dommagesOuvrageFixe ? dommagesOuvrageMontant : constructionEffective * dommagesOuvragePct / 100) : 0;
+    const assurancesTotal = doCost;
 
     const ancCost = assainissementType === 'collectif' ? raccAssCollectif : raccANC;
     const raccordementsTotal = raccElec + raccEau + ancCost +
@@ -676,8 +683,8 @@ export default function ConstructionCostCalculator() {
   }, [prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
     tauxCommunal, sdp, shab, coutM2, prestations, fondation, niveaux, re2020,
-    architecte, architectePct, maitreOeuvre, maitreOeuvrePct, bureauControle,
-    bureauControleMontant, coordSPS, coordSPSMontant, dommagesOuvrage, dommagesOuvragePct,
+    architecte, architectePct, architecteFixe, architecteMontant, maitreOeuvre, maitreOeuvrePct, maitreOeuvreFixe, maitreOeuvreMontant, bureauControle,
+    bureauControleMontant, coordSPS, coordSPSMontant, dommagesOuvrage, dommagesOuvragePct, dommagesOuvrageFixe, dommagesOuvrageMontant,
     raccElec, raccEau, assainissementType, raccAssCollectif, raccANC, redevanceArcheo,
     cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine, piscineMontant,
     terrasse, cloture, garage, garageM2, domotique, domotiqueMontant, imprevusPct, ameublement, showTVA, lotOverrides]);
@@ -814,8 +821,9 @@ export default function ConstructionCostCalculator() {
     setViabEau(3000); setViabElec(3500); setViabGaz(4000); setViabAssainissement(6000); setViabTelecom(1500);
     setTauxCommunal(1.7); setSurfaceTerrain(500); setCesMax(40); setShab(100); setSdpAuto(true); setSdpManuel(110);
     setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle'); setLotOverrides({});
-    setPrestations('moyen'); setRe2020(false); setArchitecte(false); setArchitectePct(12);
-    setMaitreOeuvre(true); setMaitreOeuvrePct(6); setDommagesOuvrage(true); setDommagesOuvragePct(3.5);
+    setPrestations('moyen'); setRe2020(false); setArchitecte(false); setArchitectePct(12); setArchitecteFixe(false); setArchitecteMontant(0);
+    setMaitreOeuvre(true); setMaitreOeuvrePct(6); setMaitreOeuvreFixe(false); setMaitreOeuvreMontant(0);
+    setDommagesOuvrage(true); setDommagesOuvragePct(3.5); setDommagesOuvrageFixe(false); setDommagesOuvrageMontant(0);
     setBureauControle(false); setBureauControleMontant(2500); setCoordSPS(false); setCoordSPSMontant(1500);
     setRaccElec(2500); setRaccEau(1500); setAssainissementType('collectif'); setRaccAssCollectif(3000);
     setRaccANC(8000); setAncType('fosse'); setRedevanceArcheo(false); setCuisine(8000); setNbSDB(1); setCoutSDB(6000);
@@ -909,10 +917,16 @@ export default function ConstructionCostCalculator() {
     if (data.lotOverrides != null) setLotOverrides(data.lotOverrides);
     if (data.architecte != null) setArchitecte(data.architecte);
     if (data.architectePct != null) setArchitectePct(data.architectePct);
+    if (data.architecteFixe != null) setArchitecteFixe(data.architecteFixe);
+    if (data.architecteMontant != null) setArchitecteMontant(data.architecteMontant);
     if (data.maitreOeuvre != null) setMaitreOeuvre(data.maitreOeuvre);
     if (data.maitreOeuvrePct != null) setMaitreOeuvrePct(data.maitreOeuvrePct);
+    if (data.maitreOeuvreFixe != null) setMaitreOeuvreFixe(data.maitreOeuvreFixe);
+    if (data.maitreOeuvreMontant != null) setMaitreOeuvreMontant(data.maitreOeuvreMontant);
     if (data.dommagesOuvrage != null) setDommagesOuvrage(data.dommagesOuvrage);
     if (data.dommagesOuvragePct != null) setDommagesOuvragePct(data.dommagesOuvragePct);
+    if (data.dommagesOuvrageFixe != null) setDommagesOuvrageFixe(data.dommagesOuvrageFixe);
+    if (data.dommagesOuvrageMontant != null) setDommagesOuvrageMontant(data.dommagesOuvrageMontant);
     if (data.bureauControle != null) setBureauControle(data.bureauControle);
     if (data.bureauControleMontant != null) setBureauControleMontant(data.bureauControleMontant);
     if (data.coordSPS != null) setCoordSPS(data.coordSPS);
@@ -1554,37 +1568,73 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
               <CheckboxInput label="Architecte" checked={architecte} onChange={setArchitecte}
                 tooltip={shab > 150 ? 'Obligatoire au-delà de 150 m² SHAB' : 'Facultatif en dessous de 150 m² SHAB'} />
               {architecte && (
-                <>
-                  <SliderInput label="Honoraires architecte" value={architectePct} onChange={setArchitectePct}
-                    min={6} max={18} step={0.5} suffix="%" displayValue={architectePct.toFixed(1)} />
-                  <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * architectePct / 100)}</div>
-                </>
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => setArchitecteFixe(false)}
+                      className={`text-xs px-2 py-0.5 rounded ${!architecteFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>%</button>
+                    <button type="button" onClick={() => { setArchitecteFixe(true); setArchitecteMontant(Math.round(calculations.constructionBase * architectePct / 100)); }}
+                      className={`text-xs px-2 py-0.5 rounded ${architecteFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>Montant</button>
+                  </div>
+                  {architecteFixe ? (
+                    <NumberInput label="Honoraires architecte" value={architecteMontant} onChange={setArchitecteMontant} suffix="EUR" />
+                  ) : (
+                    <>
+                      <SliderInput label="Honoraires architecte" value={architectePct} onChange={setArchitectePct}
+                        min={6} max={18} step={0.5} suffix="%" displayValue={architectePct.toFixed(1)} />
+                      <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * architectePct / 100)}</div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
             <div className="space-y-3">
-              <CheckboxInput label="Maître d'œuvre" checked={maitreOeuvre} onChange={setMaitreOeuvre}
+              <CheckboxInput label="Maitre d'oeuvre" checked={maitreOeuvre} onChange={setMaitreOeuvre}
                 tooltip="Pilotage du chantier si pas d'architecte" />
               {maitreOeuvre && (
-                <>
-                  <SliderInput label="Honoraires MOE" value={maitreOeuvrePct} onChange={setMaitreOeuvrePct}
-                    min={3} max={12} step={0.5} suffix="%" displayValue={maitreOeuvrePct.toFixed(1)} />
-                  <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * maitreOeuvrePct / 100)}</div>
-                </>
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => setMaitreOeuvreFixe(false)}
+                      className={`text-xs px-2 py-0.5 rounded ${!maitreOeuvreFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>%</button>
+                    <button type="button" onClick={() => { setMaitreOeuvreFixe(true); setMaitreOeuvreMontant(Math.round(calculations.constructionBase * maitreOeuvrePct / 100)); }}
+                      className={`text-xs px-2 py-0.5 rounded ${maitreOeuvreFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>Montant</button>
+                  </div>
+                  {maitreOeuvreFixe ? (
+                    <NumberInput label="Honoraires MOE" value={maitreOeuvreMontant} onChange={setMaitreOeuvreMontant} suffix="EUR" />
+                  ) : (
+                    <>
+                      <SliderInput label="Honoraires MOE" value={maitreOeuvrePct} onChange={setMaitreOeuvrePct}
+                        min={3} max={12} step={0.5} suffix="%" displayValue={maitreOeuvrePct.toFixed(1)} />
+                      <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * maitreOeuvrePct / 100)}</div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
             <div className="space-y-3">
               <CheckboxInput label="Assurance Dommages-Ouvrage" checked={dommagesOuvrage} onChange={setDommagesOuvrage}
-                tooltip="Obligatoire pour le maître d'ouvrage (art. L242-1 Code des assurances)" />
+                tooltip="Obligatoire pour le maitre d'ouvrage (art. L242-1 Code des assurances)" />
               {dommagesOuvrage && (
-                <>
-                  <SliderInput label="Taux DO" value={dommagesOuvragePct} onChange={setDommagesOuvragePct}
-                    min={1} max={8} step={0.1} suffix="%" displayValue={dommagesOuvragePct.toFixed(1)} />
-                  <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * dommagesOuvragePct / 100)}</div>
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => setDommagesOuvrageFixe(false)}
+                      className={`text-xs px-2 py-0.5 rounded ${!dommagesOuvrageFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>%</button>
+                    <button type="button" onClick={() => { setDommagesOuvrageFixe(true); setDommagesOuvrageMontant(Math.round(calculations.constructionBase * dommagesOuvragePct / 100)); }}
+                      className={`text-xs px-2 py-0.5 rounded ${dommagesOuvrageFixe ? 'bg-amber-600 text-white' : 'bg-gray-700 text-gray-400'}`}>Montant</button>
+                  </div>
+                  {dommagesOuvrageFixe ? (
+                    <NumberInput label="Prime DO" value={dommagesOuvrageMontant} onChange={setDommagesOuvrageMontant} suffix="EUR" />
+                  ) : (
+                    <>
+                      <SliderInput label="Taux DO" value={dommagesOuvragePct} onChange={setDommagesOuvragePct}
+                        min={1} max={8} step={0.1} suffix="%" displayValue={dommagesOuvragePct.toFixed(1)} />
+                      <div className="text-xs text-gray-500 -mt-2">= {formatEuroShort(calculations.constructionBase * dommagesOuvragePct / 100)}</div>
+                    </>
+                  )}
                   <div className="flex items-center gap-2 bg-blue-900/20 border border-blue-500/30 rounded px-3 py-2">
                     <Info size={14} className="text-blue-400 flex-shrink-0" />
-                    <span className="text-xs text-blue-300">L'assurance DO est légalement obligatoire (art. L242-1 Code des assurances)</span>
+                    <span className="text-xs text-blue-300">L'assurance DO est legalement obligatoire (art. L242-1 Code des assurances)</span>
                   </div>
-                </>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-4">
