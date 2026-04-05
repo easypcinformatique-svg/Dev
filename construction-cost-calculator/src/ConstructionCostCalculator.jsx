@@ -655,19 +655,54 @@ export default function ConstructionCostCalculator() {
     const honorairesTotal = archiCost + moeCost +
       (bureauControle ? bureauControleMontant : 0) +
       (coordSPS ? coordSPSMontant : 0);
+    const detailHonoraires = [
+      architecte && { nom: `Architecte (${architecteFixe ? 'forfait' : architectePct + '%'})`, montant: archiCost },
+      maitreOeuvre && { nom: `Maitre d'oeuvre (${maitreOeuvreFixe ? 'forfait' : maitreOeuvrePct + '%'})`, montant: moeCost },
+      bureauControle && { nom: 'Bureau de controle', montant: bureauControleMontant },
+      coordSPS && { nom: 'Coordinateur SPS', montant: coordSPSMontant },
+    ].filter(Boolean);
 
     const doCost = dommagesOuvrage ? (dommagesOuvrageFixe ? dommagesOuvrageMontant : constructionEffective * dommagesOuvragePct / 100) : 0;
     const assurancesTotal = doCost;
+    const detailAssurances = [
+      dommagesOuvrage && { nom: `Dommages-Ouvrage (${dommagesOuvrageFixe ? 'forfait' : dommagesOuvragePct + '%'})`, montant: doCost },
+    ].filter(Boolean);
 
     const ancCost = assainissementType === 'collectif' ? raccAssCollectif : raccANC;
-    const raccordementsTotal = raccElec + raccEau + ancCost +
-      (redevanceArcheo ? constructionEffective * 0.004 : 0);
+    const archeoMontant = redevanceArcheo ? constructionEffective * 0.004 : 0;
+    const raccordementsTotal = raccElec + raccEau + ancCost + archeoMontant;
+    const detailRaccordements = [
+      { nom: 'Raccordement electrique (ENEDIS)', montant: raccElec },
+      { nom: 'Raccordement eau potable', montant: raccEau },
+      { nom: assainissementType === 'collectif' ? 'Assainissement collectif' : `ANC (${ANC_TYPES[ancType]?.label || 'fosse'})`, montant: ancCost },
+      redevanceArcheo && { nom: 'Redevance archeologie (0,40%)', montant: archeoMontant },
+    ].filter(Boolean);
 
     const chauffSurcout = CHAUFFAGE_SURCOUT[chauffage] || 0;
     const garageCost = garage === 'aucun' ? 0 : garageM2 * (GARAGE_COUT_M2[garage] || 0);
     const equipementsTotal = cuisine + (nbSDB * coutSDB) + chauffSurcout +
       (climatisation ? climMontant : 0) + (piscine ? piscineMontant : 0) +
       terrasse + cloture + garageCost + (domotique ? domotiqueMontant : 0);
+    const detailEquipements = [
+      { nom: 'Cuisine equipee', montant: cuisine },
+      { nom: `Salle(s) de bain (${nbSDB} x ${formatEuroShort(coutSDB)})`, montant: nbSDB * coutSDB },
+      chauffSurcout > 0 && { nom: `Chauffage (${chauffage === 'pac_geo' ? 'PAC geothermique' : chauffage === 'poele' ? 'Poele granules' : 'Chaudiere gaz'})`, montant: chauffSurcout },
+      climatisation && { nom: 'Climatisation reversible', montant: climMontant },
+      piscine && { nom: `Piscine (${PISCINE_TYPES[piscineType]?.label || ''})`, montant: piscineMontant },
+      terrasse > 0 && { nom: 'Terrasse / amenagements ext.', montant: terrasse },
+      cloture > 0 && { nom: 'Cloture / portail', montant: cloture },
+      garageCost > 0 && { nom: `Garage ${garage} (${garageM2} m2)`, montant: garageCost },
+      domotique && { nom: 'Domotique', montant: domotiqueMontant },
+    ].filter(Boolean);
+
+    const detailTerrain = [
+      { nom: 'Prix achat terrain', montant: prixTerrain },
+      { nom: `Frais notaire (${fraisNotairePct}%)`, montant: fraisNotaire },
+      { nom: 'Frais de geometre', montant: fraisGeometre },
+      etudeSol && { nom: 'Etude de sol G1/G2', montant: etudeSolMontant },
+      viabTotal > 0 && { nom: 'Viabilisation', montant: viabTotal },
+      { nom: `Taxe d'amenagement`, montant: taxeAmenagement },
+    ].filter(Boolean);
 
     const imprevusTotal = (constructionEffective + equipementsTotal) * imprevusPct / 100;
 
@@ -685,6 +720,7 @@ export default function ConstructionCostCalculator() {
       terrainTotal, constructionBase: constructionEffective, honorairesTotal, assurancesTotal,
       raccordementsTotal, equipementsTotal, imprevusTotal, totalHT,
       tva, totalTTC, coutM2SHAB, coutM2SDP, taxeAmenagement, detailConstruction,
+      detailTerrain, detailHonoraires, detailAssurances, detailRaccordements, detailEquipements,
     };
   }, [prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom, deptInfo,
@@ -1839,13 +1875,28 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
               <h2 className="font-display text-2xl font-bold text-amber-100 mb-4">Récapitulatif</h2>
 
               <div className="space-y-1 text-sm">
-                {/* Terrain */}
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[0] }} />
-                    <span className="text-gray-400">Terrain (achat + frais)</span>
-                  </div>
-                  <span className="font-mono text-gray-200">{formatEuroShort(calculations.terrainTotal)}</span>
+                {/* Terrain - détaillable */}
+                <div>
+                  <button type="button" onClick={() => setOpenModules(prev => {
+                    const next = new Set(prev); next.has('detail_terrain') ? next.delete('detail_terrain') : next.add('detail_terrain'); return next;
+                  })} className="w-full flex justify-between items-center py-1 hover:bg-gray-800/30 rounded px-1 -mx-1 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[0] }} />
+                      <span className="text-gray-400">Terrain (achat + frais)</span>
+                      <ChevronDown size={12} className={`text-gray-600 transition-transform ${openModules.has('detail_terrain') ? 'rotate-180' : ''}`} />
+                    </div>
+                    <span className="font-mono text-gray-200">{formatEuroShort(calculations.terrainTotal)}</span>
+                  </button>
+                  {openModules.has('detail_terrain') && (
+                    <div className="ml-5 mb-1 border-l-2 border-gray-700/50 pl-3 fade-in">
+                      {calculations.detailTerrain.map((d, i) => (
+                        <div key={i} className="flex justify-between text-xs py-0.5">
+                          <span className="text-gray-500">{d.nom}</span>
+                          <span className="font-mono text-gray-400">{formatEuroShort(d.montant)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Construction nette - détaillable */}
@@ -1910,21 +1961,48 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                   )}
                 </div>
 
-                {/* Reste des lignes */}
+                {/* Lignes détaillables */}
                 {[
-                  { label: 'Honoraires', value: calculations.honorairesTotal, color: CHART_COLORS[2] },
-                  { label: 'Assurances', value: calculations.assurancesTotal, color: CHART_COLORS[3] },
-                  { label: 'Raccordements & Taxes', value: calculations.raccordementsTotal, color: CHART_COLORS[4] },
-                  { label: 'Équipements', value: calculations.equipementsTotal, color: CHART_COLORS[5] },
-                  { label: 'Imprévus', value: calculations.imprevusTotal, color: CHART_COLORS[6] },
-                  { label: 'Ameublement', value: ameublement, color: CHART_COLORS[7] },
+                  { label: 'Honoraires', value: calculations.honorairesTotal, color: CHART_COLORS[2], key: 'detail_honoraires', detail: calculations.detailHonoraires },
+                  { label: 'Assurances', value: calculations.assurancesTotal, color: CHART_COLORS[3], key: 'detail_assurances', detail: calculations.detailAssurances },
+                  { label: 'Raccordements & Taxes', value: calculations.raccordementsTotal, color: CHART_COLORS[4], key: 'detail_raccordements', detail: calculations.detailRaccordements },
+                  { label: 'Equipements', value: calculations.equipementsTotal, color: CHART_COLORS[5], key: 'detail_equipements', detail: calculations.detailEquipements },
+                  { label: 'Imprevus', value: calculations.imprevusTotal, color: CHART_COLORS[6], key: null, detail: null },
+                  { label: 'Ameublement', value: ameublement, color: CHART_COLORS[7], key: null, detail: null },
                 ].map((item) => (
-                  <div key={item.label} className="flex justify-between items-center py-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-gray-400">{item.label}</span>
-                    </div>
-                    <span className="font-mono text-gray-200">{formatEuroShort(item.value)}</span>
+                  <div key={item.label}>
+                    {item.detail && item.detail.length > 0 ? (
+                      <>
+                        <button type="button" onClick={() => item.key && setOpenModules(prev => {
+                          const next = new Set(prev); next.has(item.key) ? next.delete(item.key) : next.add(item.key); return next;
+                        })} className="w-full flex justify-between items-center py-1 hover:bg-gray-800/30 rounded px-1 -mx-1 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span className="text-gray-400">{item.label}</span>
+                            <ChevronDown size={12} className={`text-gray-600 transition-transform ${openModules.has(item.key) ? 'rotate-180' : ''}`} />
+                          </div>
+                          <span className="font-mono text-gray-200">{formatEuroShort(item.value)}</span>
+                        </button>
+                        {openModules.has(item.key) && (
+                          <div className="ml-5 mb-1 border-l-2 border-gray-700/50 pl-3 fade-in">
+                            {item.detail.map((d, i) => (
+                              <div key={i} className="flex justify-between text-xs py-0.5">
+                                <span className="text-gray-500">{d.nom}</span>
+                                <span className="font-mono text-gray-400">{formatEuroShort(d.montant)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex justify-between items-center py-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-gray-400">{item.label}</span>
+                        </div>
+                        <span className="font-mono text-gray-200">{formatEuroShort(item.value)}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
