@@ -41,6 +41,14 @@ const ANC_TYPES = {
   filtre_plante: { label: 'Filtre planté (phytoépuration)', default: 10000, min: 8000, max: 18000 },
 };
 
+const PISCINE_TYPES = {
+  coque: { label: 'Coque polyester', prixM2: 600, extras: 5000, desc: 'Installation rapide (3-5 jours), formes prédéfinies' },
+  beton: { label: 'Béton (maçonnée)', prixM2: 900, extras: 8000, desc: 'Sur mesure, très durable, délai 2-3 mois' },
+  liner: { label: 'Panneaux + liner', prixM2: 500, extras: 4000, desc: 'Bon rapport qualité/prix, personnalisable' },
+  naturelle: { label: 'Piscine naturelle', prixM2: 1100, extras: 10000, desc: 'Filtration biologique, écologique, entretien réduit' },
+  horssol: { label: 'Hors-sol / semi-enterrée', prixM2: 200, extras: 2000, desc: 'Économique, pas de permis si < 10m², démontable' },
+};
+
 const CHART_COLORS = ['#d4a853', '#e8c778', '#2dd4bf', '#818cf8', '#f472b6', '#a78bfa', '#fb923c', '#34d399'];
 
 // Données par département : taux communal moyen, zone PTZ, taux départemental TA
@@ -440,7 +448,10 @@ export default function ConstructionCostCalculator() {
   const [climatisation, setClimatisation] = useState(false);
   const [climMontant, setClimMontant] = useState(6000);
   const [piscine, setPiscine] = useState(false);
+  const [piscineType, setPiscineType] = useState('coque');
+  const [piscineLongueur, setPiscineLongueur] = useState(8);
   const [piscineMontant, setPiscineMontant] = useState(40000);
+  const [piscinePrixManuel, setPiscinePrixManuel] = useState(false);
   const [terrasse, setTerrasse] = useState(5000);
   const [cloture, setCloture] = useState(3000);
   const [garage, setGarage] = useState('aucun');
@@ -697,7 +708,7 @@ export default function ConstructionCostCalculator() {
     setBureauControle(false); setBureauControleMontant(2500); setCoordSPS(false); setCoordSPSMontant(1500);
     setRaccElec(2500); setRaccEau(1500); setAssainissementType('collectif'); setRaccAssCollectif(3000);
     setRaccANC(8000); setAncType('fosse'); setRedevanceArcheo(false); setCuisine(8000); setNbSDB(1); setCoutSDB(6000);
-    setChauffage('pac_air'); setClimatisation(false); setClimMontant(6000); setPiscine(false);
+    setChauffage('pac_air'); setClimatisation(false); setClimMontant(6000); setPiscine(false); setPiscineType('coque'); setPiscineLongueur(8); setPiscinePrixManuel(false);
     setPiscineMontant(40000); setTerrasse(5000); setCloture(3000); setGarage('aucun'); setGarageM2(20);
     setDomotique(false); setDomotiqueMontant(5000); setImprevusPct(10); setAmeublement(15000);
     setFraisDossier(1500); setGarantiePct(1.5); setApport(30000); setPtz(false); setPtzMontant(0); setTauxNominal(3.5); setDuree(25);
@@ -740,8 +751,8 @@ export default function ConstructionCostCalculator() {
     maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
     assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
-    cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine,
-    piscineMontant, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
+    cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine, piscineType,
+    piscineLongueur, piscineMontant, piscinePrixManuel, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
     imprevusPct, ameublement, fraisDossier, garantiePct, apport, ptz, ptzMontant,
     tauxNominal, duree, revenuMensuel, showTVA, prixAncienM2Custom,
     _savedAt: new Date().toISOString(),
@@ -752,8 +763,8 @@ export default function ConstructionCostCalculator() {
     maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
     assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
-    cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine,
-    piscineMontant, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
+    cuisine, nbSDB, coutSDB, chauffage, climatisation, climMontant, piscine, piscineType,
+    piscineLongueur, piscineMontant, piscinePrixManuel, terrasse, cloture, garage, garageM2, domotique, domotiqueMontant,
     imprevusPct, ameublement, fraisDossier, garantiePct, apport, ptz, ptzMontant,
     tauxNominal, duree, revenuMensuel, showTVA]);
 
@@ -807,7 +818,10 @@ export default function ConstructionCostCalculator() {
     if (data.climatisation != null) setClimatisation(data.climatisation);
     if (data.climMontant != null) setClimMontant(data.climMontant);
     if (data.piscine != null) setPiscine(data.piscine);
+    if (data.piscineType != null) setPiscineType(data.piscineType);
+    if (data.piscineLongueur != null) setPiscineLongueur(data.piscineLongueur);
     if (data.piscineMontant != null) setPiscineMontant(data.piscineMontant);
+    if (data.piscinePrixManuel != null) setPiscinePrixManuel(data.piscinePrixManuel);
     if (data.terrasse != null) setTerrasse(data.terrasse);
     if (data.cloture != null) setCloture(data.cloture);
     if (data.garage != null) setGarage(data.garage);
@@ -1264,11 +1278,62 @@ export default function ConstructionCostCalculator() {
                 <InlineNumberInput value={climMontant} onChange={setClimMontant} />
               )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <CheckboxInput label="Piscine" checked={piscine} onChange={setPiscine} />
               {piscine && (
-                <SliderInput label="Budget piscine" value={piscineMontant} onChange={setPiscineMontant}
-                  min={25000} max={80000} step={1000} displayValue={formatEuroShort(piscineMontant)} />
+                <div className="ml-2 border-l-2 border-gray-700 pl-3 space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Type de piscine</label>
+                    <select value={piscineType} onChange={(e) => {
+                      setPiscineType(e.target.value);
+                      if (!piscinePrixManuel) {
+                        const t = PISCINE_TYPES[e.target.value];
+                        const surface = piscineLongueur * (piscineLongueur * 0.5);
+                        setPiscineMontant(Math.round(surface * t.prixM2 + t.extras));
+                      }
+                    }}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-amber-500 focus:outline-none">
+                      {Object.entries(PISCINE_TYPES).map(([k, v]) => (
+                        <option key={k} value={k}>{v.label}</option>
+                      ))}
+                    </select>
+                    <div className="text-xs text-gray-500 mt-1">{PISCINE_TYPES[piscineType].desc}</div>
+                  </div>
+
+                  <SliderInput label="Longueur du bassin" value={piscineLongueur} onChange={(v) => {
+                    setPiscineLongueur(v);
+                    if (!piscinePrixManuel) {
+                      const t = PISCINE_TYPES[piscineType];
+                      const surface = v * (v * 0.5);
+                      setPiscineMontant(Math.round(surface * t.prixM2 + t.extras));
+                    }
+                  }}
+                    min={3} max={15} step={0.5} suffix=" m"
+                    tooltip="Largeur estimée à 50% de la longueur" />
+                  <div className="text-xs text-gray-500 -mt-2">
+                    Surface bassin : ~{Math.round(piscineLongueur * piscineLongueur * 0.5)} m²
+                    ({piscineLongueur} × {(piscineLongueur * 0.5).toFixed(1)} m)
+                  </div>
+
+                  <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Budget estimé</span>
+                      <span className="font-mono text-lg text-amber-300 font-bold">{formatEuroShort(piscineMontant)}</span>
+                    </div>
+                    <div className="text-xs text-gray-600 space-y-0.5">
+                      <div>Bassin ({PISCINE_TYPES[piscineType].label}) : ~{formatEuroShort(Math.round(piscineLongueur * piscineLongueur * 0.5 * PISCINE_TYPES[piscineType].prixM2))}</div>
+                      <div>Équipements (filtration, margelles, terrassement) : ~{formatEuroShort(PISCINE_TYPES[piscineType].extras)}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <CheckboxInput label="Saisir un prix manuellement" checked={piscinePrixManuel} onChange={setPiscinePrixManuel} />
+                  </div>
+                  {piscinePrixManuel && (
+                    <NumberInput label="Budget piscine (prix libre)" value={piscineMontant} onChange={setPiscineMontant} suffix="€"
+                      tooltip="Saisissez votre propre estimation ou le devis reçu" />
+                  )}
+                </div>
               )}
             </div>
             <SliderInput label="Terrasse / aménagements extérieurs" value={terrasse} onChange={setTerrasse}
