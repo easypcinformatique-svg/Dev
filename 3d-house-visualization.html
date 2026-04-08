@@ -32,6 +32,11 @@ canvas{display:block}
 #tooltip{position:fixed;background:rgba(26,26,46,0.95);color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;pointer-events:none;display:none;z-index:200;border:1px solid #e94560;backdrop-filter:blur(10px)}
 .legend-item{display:flex;align-items:center;font-size:11px;padding:2px 0}
 .legend-color{width:16px;height:10px;border-radius:2px;margin-right:8px;border:1px solid rgba(255,255,255,0.2)}
+.slider-row{margin:6px 0;font-size:11px}
+.slider-row label{display:flex;justify-content:space-between;margin-bottom:3px;color:#ccc}
+.slider-row label span{color:#e94560;font-weight:600}
+.slider-row input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:#16213e;border-radius:2px;outline:none}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e94560;cursor:pointer;border:2px solid #1a1a2e}
 #altitude-bar{position:fixed;right:130px;bottom:20px;width:24px;height:200px;background:rgba(26,26,46,0.8);border-radius:12px;border:1px solid rgba(255,255,255,0.1);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;font-size:9px;color:#888}
 </style>
 </head>
@@ -90,6 +95,12 @@ canvas{display:block}
       <label for="tog-terrace">Terrasse</label>
       <span class="surface">—</span>
     </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-pool" checked onchange="toggleFloor('pool')">
+      <div class="color-dot" style="background:#2196F3"></div>
+      <label for="tog-pool">Piscine</label>
+      <span class="surface">32 m²</span>
+    </div>
   </div>
 
   <div class="section">
@@ -105,12 +116,37 @@ canvas{display:block}
   </div>
 
   <div class="section">
+    <div class="section-title">Dimensions Ajustables</div>
+    <div class="slider-row">
+      <label>Piscine Long. <span id="val-poolW">8.0</span>m</label>
+      <input type="range" min="4" max="12" step="0.5" value="8" id="sl-poolW" oninput="updatePool()">
+    </div>
+    <div class="slider-row">
+      <label>Piscine Larg. <span id="val-poolD">4.0</span>m</label>
+      <input type="range" min="2" max="6" step="0.5" value="4" id="sl-poolD" oninput="updatePool()">
+    </div>
+    <div class="slider-row">
+      <label>Piscine Prof. <span id="val-poolH">1.5</span>m</label>
+      <input type="range" min="1" max="2.5" step="0.1" value="1.5" id="sl-poolH" oninput="updatePool()">
+    </div>
+    <div class="slider-row">
+      <label>Balcon Prof. <span id="val-balcD">3.0</span>m</label>
+      <input type="range" min="1" max="5" step="0.5" value="3" id="sl-balcD" oninput="updateBalcony()">
+    </div>
+    <div class="slider-row">
+      <label>Terrasse Prof. <span id="val-terrD">5.0</span>m</label>
+      <input type="range" min="3" max="10" step="0.5" value="5" id="sl-terrD" oninput="updateTerrace()">
+    </div>
+  </div>
+
+  <div class="section">
     <div class="section-title">Dimensions Bâtiment</div>
     <div class="info-row"><span class="info-label">Sous-sol</span><span class="info-value">11.0 × 9.0 × 2.5m</span></div>
     <div class="info-row"><span class="info-label">RDC</span><span class="info-value">11.0 × 7.7 × 2.7m</span></div>
     <div class="info-row"><span class="info-label">R+1</span><span class="info-value">11.0 × 7.7 × 2.5m</span></div>
     <div class="info-row"><span class="info-label">Combles</span><span class="info-value">11.0 × 5.2 × ~4m</span></div>
-    <div class="info-row"><span class="info-label">Balcon R+1</span><span class="info-value">9.0 × 3.0m (porte-à-faux)</span></div>
+    <div class="info-row"><span class="info-label">Balcon R+1</span><span class="info-value" id="dim-balcon">9.0 × 3.0m</span></div>
+    <div class="info-row"><span class="info-label">Piscine</span><span class="info-value" id="dim-piscine">8.0 × 4.0m</span></div>
     <div class="info-row"><span class="info-label">Toit</span><span class="info-value">Mono-pente 30°</span></div>
     <div class="info-row"><span class="info-label">Surface totale</span><span class="info-value">~301 m²</span></div>
   </div>
@@ -120,6 +156,7 @@ canvas{display:block}
     <div class="legend-item"><div class="legend-color" style="background:#6B8E23"></div>Terrain</div>
     <div class="legend-item"><div class="legend-color" style="background:#555"></div>Voirie / Rampe</div>
     <div class="legend-item"><div class="legend-color" style="background:#88CCEE"></div>Vitrages</div>
+    <div class="legend-item"><div class="legend-color" style="background:#2196F3"></div>Piscine</div>
     <div class="legend-item"><div class="legend-color" style="background:#708090"></div>Réservoirs d'eau</div>
   </div>
 </div>
@@ -215,7 +252,7 @@ const mat = {
 
 // ============ GROUPS ============
 const groups = {};
-['basement','ground','first','attic','balcony','terrace'].forEach(k => {
+['basement','ground','first','attic','balcony','terrace','pool'].forEach(k => {
   groups[k] = new THREE.Group();
   groups[k].name = k;
   scene.add(groups[k]);
@@ -489,6 +526,45 @@ function addBox(group, w, h, d, matl, x, y, z) {
 })();
 
 
+// ============ PISCINE (sud, en contrebas de la terrasse) ============
+(function buildPool() {
+  const g = groups.pool;
+  const poolW = 8, poolD = 4, poolDepth = 1.5;
+  const baseY = 1.8; // slightly below terrace level (slope)
+  const poolZ = 10.5; // south of terrace
+
+  // Pool water surface
+  const waterGeo = new THREE.BoxGeometry(poolW - 0.4, 0.1, poolD - 0.4);
+  const waterMat = new THREE.MeshPhysicalMaterial({
+    color: 0x2196F3, transparent: true, opacity: 0.6,
+    roughness: 0.05, metalness: 0.1, transmission: 0.4
+  });
+  const water = new THREE.Mesh(waterGeo, waterMat);
+  water.position.set(0, baseY - 0.15, poolZ);
+  water.receiveShadow = true;
+  g.add(water);
+
+  // Pool basin (walls)
+  const basinMat = new THREE.MeshPhongMaterial({ color: 0x1565C0 });
+  // Bottom
+  addBox(g, poolW, 0.15, poolD, basinMat, 0, baseY - poolDepth, poolZ);
+  // North wall
+  addBox(g, poolW, poolDepth, 0.2, basinMat, 0, baseY - poolDepth/2, poolZ - poolD/2);
+  // South wall
+  addBox(g, poolW, poolDepth, 0.2, basinMat, 0, baseY - poolDepth/2, poolZ + poolD/2);
+  // East wall
+  addBox(g, 0.2, poolDepth, poolD, basinMat, poolW/2, baseY - poolDepth/2, poolZ);
+  // West wall
+  addBox(g, 0.2, poolDepth, poolD, basinMat, -poolW/2, baseY - poolDepth/2, poolZ);
+
+  // Pool coping / margelles (contour en pierre)
+  const copingMat = new THREE.MeshPhongMaterial({ color: 0xe0d8c8 });
+  addBox(g, poolW + 0.6, 0.12, 0.5, copingMat, 0, baseY + 0.05, poolZ - poolD/2 - 0.15);
+  addBox(g, poolW + 0.6, 0.12, 0.5, copingMat, 0, baseY + 0.05, poolZ + poolD/2 + 0.15);
+  addBox(g, 0.5, 0.12, poolD + 0.6, copingMat, -poolW/2 - 0.15, baseY + 0.05, poolZ);
+  addBox(g, 0.5, 0.12, poolD + 0.6, copingMat, poolW/2 + 0.15, baseY + 0.05, poolZ);
+})();
+
 // ============ ATTIC / ROOF (combles, mono-pente 30°) ============
 (function buildAttic() {
   const g = groups.attic;
@@ -679,6 +755,8 @@ function addBox(group, w, h, d, matl, x, y, z) {
   makeLabel('BALCON', 0, 6.0, 8, '#e94560', 180);
   makeLabel('9×3m', 0, 5.5, 8, '#888888', 140);
   makeLabel('TERRASSE', 0, 3.0, 9, '#C0B090', 180);
+  makeLabel('PISCINE', 0, 2.8, 12.5, '#2196F3', 200);
+  makeLabel('8×4m', 0, 2.2, 12.5, '#888888', 150);
   makeLabel('Garage', 0, 1.25, -5, '#aaaaaa', 160);
   makeLabel('Studio', 0, 1.25, 3, '#aaaaaa', 160);
   makeLabel('Réservoirs', 18, 8, 0.5, '#708090', 200);
@@ -713,6 +791,77 @@ grid.position.y = -0.4;
 grid.material.transparent = true;
 grid.material.opacity = 0.3;
 scene.add(grid);
+
+// ============ SLIDER REBUILD FUNCTIONS ============
+function clearGroup(g) {
+  while (g.children.length) { g.remove(g.children[0]); }
+}
+
+window.updatePool = function() {
+  const pw = parseFloat(document.getElementById('sl-poolW').value);
+  const pd = parseFloat(document.getElementById('sl-poolD').value);
+  const ph = parseFloat(document.getElementById('sl-poolH').value);
+  document.getElementById('val-poolW').textContent = pw.toFixed(1);
+  document.getElementById('val-poolD').textContent = pd.toFixed(1);
+  document.getElementById('val-poolH').textContent = ph.toFixed(1);
+  document.getElementById('dim-piscine').textContent = pw.toFixed(1) + ' × ' + pd.toFixed(1) + 'm';
+
+  const g = groups.pool;
+  clearGroup(g);
+  const baseY = 1.8, poolZ = 10.5;
+
+  const waterMat = new THREE.MeshPhysicalMaterial({ color:0x2196F3, transparent:true, opacity:0.6, roughness:0.05, metalness:0.1, transmission:0.4 });
+  const water = new THREE.Mesh(new THREE.BoxGeometry(pw-0.4, 0.1, pd-0.4), waterMat);
+  water.position.set(0, baseY-0.15, poolZ); water.receiveShadow=true; g.add(water);
+
+  const bm = new THREE.MeshPhongMaterial({color:0x1565C0});
+  addBox(g, pw, 0.15, pd, bm, 0, baseY-ph, poolZ);
+  addBox(g, pw, ph, 0.2, bm, 0, baseY-ph/2, poolZ-pd/2);
+  addBox(g, pw, ph, 0.2, bm, 0, baseY-ph/2, poolZ+pd/2);
+  addBox(g, 0.2, ph, pd, bm, pw/2, baseY-ph/2, poolZ);
+  addBox(g, 0.2, ph, pd, bm, -pw/2, baseY-ph/2, poolZ);
+
+  const cm = new THREE.MeshPhongMaterial({color:0xe0d8c8});
+  addBox(g, pw+0.6, 0.12, 0.5, cm, 0, baseY+0.05, poolZ-pd/2-0.15);
+  addBox(g, pw+0.6, 0.12, 0.5, cm, 0, baseY+0.05, poolZ+pd/2+0.15);
+  addBox(g, 0.5, 0.12, pd+0.6, cm, -pw/2-0.15, baseY+0.05, poolZ);
+  addBox(g, 0.5, 0.12, pd+0.6, cm, pw/2+0.15, baseY+0.05, poolZ);
+};
+
+window.updateBalcony = function() {
+  const bd = parseFloat(document.getElementById('sl-balcD').value);
+  document.getElementById('val-balcD').textContent = bd.toFixed(1);
+  document.getElementById('dim-balcon').textContent = '9.0 × ' + bd.toFixed(1) + 'm';
+
+  const g = groups.balcony;
+  clearGroup(g);
+  const baseY = 5.2, southFace = 7.7/2 - 0.65;
+
+  addBox(g, 9, 0.2, bd, mat.steel, 0, baseY, southFace + bd/2);
+  for (let bx = -3.5; bx <= 3.5; bx += 1.75) {
+    addBox(g, 0.12, 0.3, bd, mat.steel, bx, baseY-0.25, southFace + bd/2);
+  }
+  addBox(g, 9, 0.15, 0.12, mat.steel, 0, baseY-0.2, southFace + bd - 0.2);
+  addBox(g, 9, 1.1, 0.02, mat.glass, 0, baseY+0.55, southFace + bd - 0.05);
+  addBox(g, 0.02, 1.1, bd, mat.glass, -4.5, baseY+0.55, southFace + bd/2);
+  addBox(g, 0.02, 1.1, bd, mat.glass, 4.5, baseY+0.55, southFace + bd/2);
+  addBox(g, 9, 0.03, 0.05, new THREE.MeshPhongMaterial({color:0xcccccc,metalness:0.9}), 0, baseY+1.1, southFace+bd-0.05);
+};
+
+window.updateTerrace = function() {
+  const td = parseFloat(document.getElementById('sl-terrD').value);
+  document.getElementById('val-terrD').textContent = td.toFixed(1);
+
+  const g = groups.terrace;
+  clearGroup(g);
+  const baseY = 2.5, southFace = 7.7/2 - 0.65;
+
+  addBox(g, 12, 0.15, td, mat.terrace, 0, baseY-0.1, southFace + td/2);
+  const bm = new THREE.MeshPhongMaterial({color:0xa09070});
+  addBox(g, 12, 0.1, 0.1, bm, 0, baseY, southFace + td);
+  addBox(g, 0.1, 0.1, td, bm, -6, baseY, southFace + td/2);
+  addBox(g, 0.1, 0.1, td, bm, 6, baseY, southFace + td/2);
+};
 
 // ============ CONTROLS & INTERACTION ============
 
@@ -778,7 +927,8 @@ const floorNames = {
   first: 'R+1 — 11.0×7.7m — 84.7 m² (Chambres)',
   attic: 'Combles — ~11.0×5.2m — ~32 m² (Mono-pente 30°)',
   balcony: 'Balcon porte-à-faux — 9.0×3.0m — 27 m²',
-  terrace: 'Terrasse RDC — Plain-pied sud'
+  terrace: 'Terrasse RDC — Plain-pied sud',
+  pool: 'Piscine — 8.0×4.0m — 32 m² — Profondeur 1.5m'
 };
 
 window.addEventListener('mousemove', (e) => {
