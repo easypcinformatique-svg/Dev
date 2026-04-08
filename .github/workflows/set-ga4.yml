@@ -1,0 +1,29 @@
+name: Set GA4 measurement ID
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/set-ga4.yml'
+
+jobs:
+  set-ga4:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update GA4 ID
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          sed -i 's/G-XXXXXXXXXX/G-1DB4477857/g' index.html
+          echo "Replaced GA4 placeholder with G-1DB4477857"
+
+          git add index.html
+          git commit -m "Set Google Analytics 4 ID: G-1DB4477857"
+          git push origin main
+          echo "Done!"

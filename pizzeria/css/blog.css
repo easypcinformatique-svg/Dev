@@ -1,0 +1,434 @@
+/* ========================================
+   Pizza Napoli - Blog Pages Stylesheet
+   ======================================== */
+
+/* --- Blog Hero --- */
+.blog-hero {
+    background: linear-gradient(135deg, #1a0a00 0%, #3d1500 100%);
+    color: var(--white);
+    padding: 140px 0 60px;
+    text-align: center;
+}
+
+.blog-hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    max-width: 800px;
+    margin: 0 auto 15px;
+    line-height: 1.3;
+}
+
+.blog-hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* --- Breadcrumb --- */
+.breadcrumb {
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: rgba(255,255,255,0.7);
+    transition: color var(--transition);
+}
+
+.breadcrumb a:hover {
+    color: var(--secondary);
+}
+
+.breadcrumb span {
+    color: rgba(255,255,255,0.4);
+    margin: 0 8px;
+}
+
+.breadcrumb span:last-child {
+    color: var(--secondary);
+    margin: 0;
+}
+
+/* --- Blog Article --- */
+.blog-article {
+    padding: 60px 0;
+    background: var(--white);
+}
+
+.blog-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.blog-intro {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid var(--border);
+}
+
+/* --- Blog Sections --- */
+.blog-section {
+    margin-bottom: 50px;
+}
+
+.blog-section h2 {
+    font-size: 1.6rem;
+    color: var(--dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--light);
+}
+
+.blog-section h3 {
+    font-size: 1.2rem;
+    color: var(--dark);
+    margin-bottom: 12px;
+    margin-top: 20px;
+}
+
+.blog-section p {
+    color: var(--text-light);
+    line-height: 1.8;
+    margin-bottom: 15px;
+}
+
+/* --- Blog List --- */
+.blog-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.blog-list li {
+    padding: 12px 0 12px 25px;
+    position: relative;
+    color: var(--text-light);
+    line-height: 1.7;
+    border-bottom: 1px solid var(--light);
+}
+
+.blog-list li:last-child {
+    border-bottom: none;
+}
+
+.blog-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+}
+
+.blog-list li strong {
+    color: var(--dark);
+}
+
+/* --- Blog Links --- */
+.blog-link {
+    display: inline-block;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    transition: color var(--transition);
+}
+
+.blog-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* --- Blog Highlight Box --- */
+.blog-highlight {
+    display: flex;
+    gap: 20px;
+    background: var(--light);
+    border-radius: var(--radius);
+    padding: 25px;
+    margin: 25px 0;
+    border-left: 4px solid var(--primary);
+}
+
+.blog-highlight-gold {
+    border-left-color: var(--secondary);
+    background: #fffbf0;
+}
+
+.highlight-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.highlight-content {
+    flex: 1;
+}
+
+.highlight-content p {
+    margin-bottom: 10px;
+}
+
+.highlight-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.highlight-content ul li {
+    padding: 5px 0;
+    color: var(--text-light);
+}
+
+.highlight-content ul li strong {
+    color: var(--dark);
+}
+
+.highlight-content h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+
+/* --- Blog Image Grid --- */
+.blog-image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.blog-image-card {
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.blog-image-placeholder {
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+}
+
+.blog-image-placeholder p {
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+/* --- Blog Info Grid --- */
+.blog-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.blog-info-card {
+    background: var(--light);
+    padding: 25px;
+    border-radius: var(--radius);
+    text-align: center;
+}
+
+.blog-info-card h3 {
+    font-size: 1rem;
+    margin: 0 0 10px 0;
+    color: var(--dark);
+}
+
+.blog-info-card p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.blog-info-card a {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* --- Blog Cities Grid --- */
+.blog-cities-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 25px 0;
+}
+
+.blog-city-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 10px;
+    background: var(--light);
+    border-radius: var(--radius);
+    transition: transform var(--transition), box-shadow var(--transition);
+    border: 1px solid var(--border);
+}
+
+.blog-city-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+}
+
+.blog-city-card span {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.blog-city-card strong {
+    font-size: 0.9rem;
+    color: var(--dark);
+    margin-bottom: 4px;
+}
+
+.blog-city-card small {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* --- Blog CTA --- */
+.blog-cta {
+    text-align: center;
+    background: var(--light);
+    padding: 50px 30px;
+    border-radius: var(--radius);
+    margin-top: 50px;
+}
+
+.blog-cta h2 {
+    font-size: 1.8rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.blog-cta p {
+    color: var(--text-light);
+    margin-bottom: 25px;
+    font-size: 1.05rem;
+}
+
+.blog-cta-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* --- Blog Section on Main Page --- */
+.blog-preview {
+    background: var(--white);
+}
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.blog-card {
+    background: var(--light);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform var(--transition), box-shadow var(--transition);
+    border: 1px solid var(--border);
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.blog-card-image {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    background: linear-gradient(135deg, #3d1500, #6b2a00);
+    color: var(--white);
+}
+
+.blog-card-content {
+    padding: 20px;
+}
+
+.blog-card-content h3 {
+    font-size: 1.05rem;
+    color: var(--dark);
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.blog-card-content p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.blog-card-link {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: color var(--transition);
+}
+
+.blog-card-link:hover {
+    color: var(--primary-dark);
+}
+
+/* --- Responsive Blog --- */
+@media (max-width: 1024px) {
+    .blog-cities-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .blog-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .blog-hero {
+        padding: 120px 0 40px;
+    }
+    .blog-hero h1 {
+        font-size: 1.6rem;
+    }
+    .blog-highlight {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .blog-info-grid {
+        grid-template-columns: 1fr;
+    }
+    .blog-cities-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .blog-image-grid {
+        grid-template-columns: 1fr;
+    }
+    .blog-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .blog-cities-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .blog-cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}

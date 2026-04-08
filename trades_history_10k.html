@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokyMarket — Historique des 51 Trades (10 000 €)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 1500px; margin: 0 auto; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 35px 20px;
+            background: linear-gradient(135deg, #12122a 0%, #1a1a3a 100%);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 1px solid #2a2a4a;
+        }
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #00d4aa, #4a90d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .header .subtitle { color: #8888aa; font-size: 1rem; }
+
+        /* Summary Cards */
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: #12122a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); border-color: #00d4aa44; }
+        .card .val { font-size: 1.5rem; font-weight: 700; }
+        .card .lbl { color: #8888aa; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .green { color: #00d4aa; }
+        .red { color: #ff4757; }
+        .blue { color: #4a90d9; }
+        .yellow { color: #ffa502; }
+        .purple { color: #9b59b6; }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filters label { color: #8888aa; font-size: 0.85rem; }
+        .filters select, .filters input {
+            background: #1a1a3a;
+            color: #e0e0e0;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .filters select:focus, .filters input:focus { border-color: #4a90d9; }
+        .btn-reset {
+            background: #2a2a4a;
+            color: #8888aa;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .btn-reset:hover { background: #3a3a5a; color: #e0e0e0; }
+
+        /* Table */
+        .table-section {
+            background: #12122a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th {
+            background: #1a1a3a;
+            color: #4a90d9;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid #2a2a4a;
+            transition: background 0.2s;
+        }
+        th:hover { background: #222244; }
+        th .sort-arrow { font-size: 0.7rem; margin-left: 4px; color: #555; }
+        th .sort-arrow.active { color: #00d4aa; }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #1a1a3a;
+            transition: background 0.15s;
+        }
+        tr:hover td { background: #1a1a3a66; }
+        tr.win td { border-left: 3px solid transparent; }
+        tr.loss td { border-left: 3px solid transparent; }
+        tr.win td:first-child { border-left: 3px solid #00d4aa; }
+        tr.loss td:first-child { border-left: 3px solid #ff4757; }
+
+        .pnl-pos { color: #00d4aa; font-weight: 700; }
+        .pnl-neg { color: #ff4757; font-weight: 700; }
+        .rend-pos { color: #00d4aa; }
+        .rend-neg { color: #ff4757; }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .badge-pol { background: #4a90d922; color: #4a90d9; }
+        .badge-cry { background: #ffa50222; color: #ffa502; }
+        .badge-spo { background: #00d4aa22; color: #00d4aa; }
+        .badge-geo { background: #ff475722; color: #ff4757; }
+        .badge-eco { background: #9b59b622; color: #9b59b6; }
+        .badge-tec { background: #3498db22; color: #3498db; }
+
+        .reason {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.73rem;
+            font-weight: 600;
+        }
+        .reason-tp { background: #00d4aa18; color: #00d4aa; border: 1px solid #00d4aa33; }
+        .reason-sl { background: #ff475718; color: #ff4757; border: 1px solid #ff475733; }
+        .reason-res { background: #ffa50218; color: #ffa502; border: 1px solid #ffa50233; }
+
+        /* Cumul bar */
+        .cumul-bar {
+            display: inline-block;
+            height: 6px;
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #555;
+            font-size: 0.78rem;
+            margin-top: 16px;
+        }
+
+        /* Print */
+        @media print {
+            body { background: #fff; color: #000; }
+            .header { background: #f5f5f5; border-color: #ddd; }
+            .header h1 { -webkit-text-fill-color: #333; }
+            .card, .table-section { border-color: #ddd; background: #fff; }
+            th { background: #f0f0f0; color: #333; }
+            td { border-color: #eee; }
+            .filters { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>Historique des 51 Trades</h1>
+        <div class="subtitle">Portefeuille 10 000 € — Stratégie AlphaComposite Insurance Seller — Mars 2023 → Mai 2025</div>
+    </div>
+
+    <div class="summary">
+        <div class="card"><div class="val green">+4 574 €</div><div class="lbl">PnL Total</div></div>
+        <div class="card"><div class="val green">+45.7%</div><div class="lbl">Return</div></div>
+        <div class="card"><div class="val green">14 574 €</div><div class="lbl">Capital Final</div></div>
+        <div class="card"><div class="val blue">51</div><div class="lbl">Total Trades</div></div>
+        <div class="card"><div class="val green">28</div><div class="lbl">Gagnants</div></div>
+        <div class="card"><div class="val red">23</div><div class="lbl">Perdants</div></div>
+        <div class="card"><div class="val green">54.9%</div><div class="lbl">Win Rate</div></div>
+        <div class="card"><div class="val yellow">4.81x</div><div class="lbl">Profit Factor</div></div>
+        <div class="card"><div class="val red">-2.63%</div><div class="lbl">Max Drawdown</div></div>
+        <div class="card"><div class="val green">+90 €</div><div class="lbl">Espérance / Trade</div></div>
+    </div>
+
+    <div class="filters">
+        <label>Filtres :</label>
+        <select id="filterCat">
+            <option value="all">Toutes catégories</option>
+            <option value="POL">Politique</option>
+            <option value="CRY">Crypto</option>
+            <option value="SPO">Sport</option>
+            <option value="GEO">Géopolitique</option>
+            <option value="ECO">Économie</option>
+            <option value="TEC">Tech</option>
+        </select>
+        <select id="filterResult">
+            <option value="all">Tous résultats</option>
+            <option value="win">Gagnants</option>
+            <option value="loss">Perdants</option>
+        </select>
+        <select id="filterReason">
+            <option value="all">Toutes raisons</option>
+            <option value="take_profit">Take Profit</option>
+            <option value="stop_loss">Stop Loss</option>
+            <option value="resolution">Resolution</option>
+        </select>
+        <input type="text" id="filterSearch" placeholder="Rechercher marché..." style="width:160px">
+        <button class="btn-reset" onclick="resetFilters()">Reset</button>
+        <span id="filterCount" style="color:#8888aa;font-size:0.85rem;margin-left:auto;">51 trades</span>
+    </div>
+
+    <div class="table-section">
+        <div class="table-wrap">
+            <table id="tradesTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0,'num')"># <span class="sort-arrow active">▲</span></th>
+                        <th onclick="sortTable(1,'str')">Catégorie <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(2,'str')">Marché <span class="sort-arrow"></span></th>
+                        <th>Side</th>
+                        <th onclick="sortTable(4,'num')">Entrée <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(5,'num')">Sortie <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(6,'num')">Montant <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(7,'num')">PnL <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(8,'num')">Rend. <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(9,'str')">Raison <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(10,'str')">Date entrée <span class="sort-arrow"></span></th>
+                        <th onclick="sortTable(11,'num')">Capital <span class="sort-arrow"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="tradesBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        PokyMarket — Historique complet des trades | Portefeuille 10 000 € | Stratégie AlphaComposite<br>
+        Les performances passées ne préjugent pas des performances futures.
+    </div>
+</div>
+
+<script>
+const TRADES = [
+    {n:1,  cat:"TEC", market:"TEC-0028", side:"NO", entry:0.7433, exit:0.1337, montant:167, pnl:136.48,  rend:81.82,  reason:"take_profit", date:"2023-03-03", capital:10136},
+    {n:2,  cat:"TEC", market:"TEC-0028", side:"NO", entry:0.6598, exit:0.9900, montant:124, pnl:-62.34,  rend:-50.25, reason:"stop_loss",   date:"2023-03-08", capital:10074},
+    {n:3,  cat:"POL", market:"POL-0018", side:"NO", entry:0.6327, exit:0.1062, montant:211, pnl:175.46,  rend:83.01,  reason:"take_profit", date:"2023-03-07", capital:10250},
+    {n:4,  cat:"POL", market:"POL-0018", side:"NO", entry:0.6723, exit:0.1260, montant:195, pnl:158.16,  rend:81.06,  reason:"take_profit", date:"2023-03-21", capital:10408},
+    {n:5,  cat:"POL", market:"POL-0024", side:"NO", entry:0.6614, exit:0.0640, montant:185, pnl:167.02,  rend:90.12,  reason:"take_profit", date:"2023-03-27", capital:10575},
+    {n:6,  cat:"GEO", market:"GEO-0017", side:"NO", entry:0.7258, exit:0.9197, montant:151, pnl:-40.74,  rend:-26.91, reason:"stop_loss",   date:"2023-04-13", capital:10534},
+    {n:7,  cat:"GEO", market:"GEO-0017", side:"NO", entry:0.7592, exit:0.9900, montant:268, pnl:-82.12,  rend:-30.60, reason:"stop_loss",   date:"2023-04-17", capital:10452},
+    {n:8,  cat:"POL", market:"POL-0018", side:"NO", entry:0.6525, exit:0.8482, montant:303, pnl:-91.58,  rend:-30.19, reason:"stop_loss",   date:"2023-04-19", capital:10360},
+    {n:9,  cat:"TEC", market:"TEC-0028", side:"NO", entry:0.9705, exit:0.9900, montant:364, pnl:-8.06,   rend:-2.21,  reason:"resolution",  date:"2023-03-15", capital:10352},
+    {n:10, cat:"POL", market:"POL-0024", side:"NO", entry:0.6248, exit:0.7825, montant:221, pnl:-56.14,  rend:-25.45, reason:"stop_loss",   date:"2023-05-04", capital:10296},
+    {n:11, cat:"POL", market:"POL-0024", side:"NO", entry:0.7710, exit:0.0979, montant:303, pnl:263.58,  rend:87.10,  reason:"take_profit", date:"2023-05-06", capital:10560},
+    {n:12, cat:"ECO", market:"ECO-0009", side:"NO", entry:0.7932, exit:0.9900, montant:136, pnl:-34.00,  rend:-25.02, reason:"resolution",  date:"2023-03-11", capital:10526},
+    {n:13, cat:"ECO", market:"ECO-0027", side:"NO", entry:0.8658, exit:0.9900, montant:183, pnl:-26.68,  rend:-14.54, reason:"resolution",  date:"2023-05-03", capital:10499},
+    {n:14, cat:"POL", market:"POL-0006", side:"NO", entry:0.6281, exit:0.0100, montant:174, pnl:170.46,  rend:98.21,  reason:"take_profit", date:"2023-05-08", capital:10670},
+    {n:15, cat:"POL", market:"POL-0006", side:"NO", entry:0.6224, exit:0.9900, montant:195, pnl:-115.48, rend:-59.26, reason:"stop_loss",   date:"2023-06-18", capital:10554},
+    {n:16, cat:"CRY", market:"CRY-0013", side:"NO", entry:0.7141, exit:0.1354, montant:131, pnl:105.66,  rend:80.84,  reason:"take_profit", date:"2023-06-21", capital:10660},
+    {n:17, cat:"POL", market:"POL-0006", side:"NO", entry:0.9347, exit:0.1830, montant:453, pnl:363.20,  rend:80.22,  reason:"take_profit", date:"2023-06-20", capital:11023},
+    {n:18, cat:"GEO", market:"GEO-0017", side:"NO", entry:0.8078, exit:0.1314, montant:290, pnl:242.48,  rend:83.53,  reason:"take_profit", date:"2023-04-19", capital:11265},
+    {n:19, cat:"CRY", market:"CRY-0013", side:"NO", entry:0.8679, exit:0.1328, montant:201, pnl:169.94,  rend:84.50,  reason:"take_profit", date:"2023-08-01", capital:11435},
+    {n:20, cat:"GEO", market:"GEO-0005", side:"NO", entry:0.7023, exit:0.1391, montant:162, pnl:129.88,  rend:79.99,  reason:"take_profit", date:"2023-08-28", capital:11565},
+    {n:21, cat:"CRY", market:"CRY-0001", side:"NO", entry:0.8833, exit:0.1625, montant:312, pnl:254.00,  rend:81.40,  reason:"take_profit", date:"2023-08-19", capital:11819},
+    {n:22, cat:"GEO", market:"GEO-0005", side:"NO", entry:0.6965, exit:0.9228, montant:246, pnl:-80.38,  rend:-32.70, reason:"stop_loss",   date:"2023-09-19", capital:11739},
+    {n:23, cat:"CRY", market:"CRY-0025", side:"NO", entry:0.7823, exit:0.0609, montant:285, pnl:262.28,  rend:92.02,  reason:"take_profit", date:"2023-11-20", capital:12001},
+    {n:24, cat:"CRY", market:"CRY-0025", side:"NO", entry:0.7947, exit:0.1577, montant:186, pnl:148.74,  rend:79.95,  reason:"take_profit", date:"2023-12-10", capital:12150},
+    {n:25, cat:"GEO", market:"GEO-0011", side:"NO", entry:0.6159, exit:0.7802, montant:155, pnl:-41.62,  rend:-26.88, reason:"stop_loss",   date:"2024-02-10", capital:12108},
+    {n:26, cat:"GEO", market:"GEO-0011", side:"NO", entry:0.7317, exit:0.9259, montant:190, pnl:-50.84,  rend:-26.74, reason:"stop_loss",   date:"2024-03-19", capital:12057},
+    {n:27, cat:"SPO", market:"SPO-0020", side:"NO", entry:0.8281, exit:0.0100, montant:190, pnl:187.14,  rend:98.59,  reason:"take_profit", date:"2024-04-18", capital:12245},
+    {n:28, cat:"SPO", market:"SPO-0020", side:"NO", entry:0.8264, exit:0.0130, montant:252, pnl:247.12,  rend:98.23,  reason:"take_profit", date:"2024-06-09", capital:12492},
+    {n:29, cat:"SPO", market:"SPO-0014", side:"NO", entry:0.7414, exit:0.0100, montant:181, pnl:178.04,  rend:98.45,  reason:"take_profit", date:"2024-06-24", capital:12670},
+    {n:30, cat:"SPO", market:"SPO-0002", side:"NO", entry:0.6495, exit:0.1136, montant:166, pnl:136.84,  rend:82.31,  reason:"take_profit", date:"2024-08-22", capital:12807},
+    {n:31, cat:"TEC", market:"TEC-0022", side:"NO", entry:0.7873, exit:0.0100, montant:177, pnl:174.02,  rend:98.53,  reason:"take_profit", date:"2024-09-20", capital:12981},
+    {n:32, cat:"TEC", market:"TEC-0004", side:"NO", entry:0.6514, exit:0.8482, montant:163, pnl:-49.64,  rend:-30.43, reason:"stop_loss",   date:"2024-10-13", capital:12931},
+    {n:33, cat:"GEO", market:"GEO-0029", side:"NO", entry:0.7139, exit:0.1330, montant:166, pnl:134.92,  rend:81.17,  reason:"take_profit", date:"2024-11-13", capital:13066},
+    {n:34, cat:"SPO", market:"SPO-0002", side:"NO", entry:0.7655, exit:0.1447, montant:153, pnl:124.12,  rend:80.90,  reason:"take_profit", date:"2024-11-18", capital:13190},
+    {n:35, cat:"GEO", market:"GEO-0029", side:"NO", entry:0.6512, exit:0.8186, montant:217, pnl:-56.20,  rend:-25.91, reason:"stop_loss",   date:"2024-11-30", capital:13134},
+    {n:36, cat:"POL", market:"POL-0012", side:"NO", entry:0.7515, exit:0.9497, montant:210, pnl:-55.72,  rend:-26.57, reason:"stop_loss",   date:"2024-12-08", capital:13078},
+    {n:37, cat:"GEO", market:"GEO-0029", side:"NO", entry:0.7643, exit:0.9584, montant:291, pnl:-74.52,  rend:-25.60, reason:"stop_loss",   date:"2024-12-02", capital:13003},
+    {n:38, cat:"SPO", market:"SPO-0020", side:"NO", entry:0.8138, exit:0.9900, montant:191, pnl:-41.84,  rend:-21.86, reason:"resolution",  date:"2024-08-06", capital:12962},
+    {n:39, cat:"CRY", market:"CRY-0007", side:"NO", entry:0.8260, exit:0.0100, montant:185, pnl:182.80,  rend:98.59,  reason:"take_profit", date:"2025-01-14", capital:13144},
+    {n:40, cat:"SPO", market:"SPO-0026", side:"NO", entry:0.8299, exit:0.9900, montant:272, pnl:-52.94,  rend:-19.48, reason:"resolution",  date:"2025-01-16", capital:13091},
+    {n:41, cat:"ECO", market:"ECO-0015", side:"NO", entry:0.8190, exit:0.0148, montant:182, pnl:178.74,  rend:98.00,  reason:"take_profit", date:"2024-12-18", capital:13270},
+    {n:42, cat:"ECO", market:"ECO-0021", side:"NO", entry:0.8022, exit:0.9900, montant:174, pnl:-41.06,  rend:-23.60, reason:"resolution",  date:"2024-12-11", capital:13229},
+    {n:43, cat:"ECO", market:"ECO-0003", side:"NO", entry:0.9664, exit:0.0976, montant:371, pnl:332.36,  rend:89.70,  reason:"take_profit", date:"2025-02-04", capital:13562},
+    {n:44, cat:"TEC", market:"TEC-0004", side:"NO", entry:0.9794, exit:0.9900, montant:488, pnl:-6.26,   rend:-1.28,  reason:"resolution",  date:"2024-10-15", capital:13555},
+    {n:45, cat:"TEC", market:"TEC-0010", side:"NO", entry:0.8883, exit:0.0497, montant:253, pnl:238.56,  rend:94.20,  reason:"take_profit", date:"2025-03-12", capital:13794},
+    {n:46, cat:"POL", market:"POL-0012", side:"NO", entry:0.8313, exit:0.0100, montant:265, pnl:260.92,  rend:98.60,  reason:"take_profit", date:"2024-12-12", capital:14055},
+    {n:47, cat:"POL", market:"POL-0000", side:"NO", entry:0.7475, exit:0.9900, montant:201, pnl:-65.68,  rend:-32.64, reason:"stop_loss",   date:"2025-04-13", capital:13989},
+    {n:48, cat:"POL", market:"POL-0000", side:"NO", entry:0.7520, exit:0.9405, montant:203, pnl:-51.32,  rend:-25.28, reason:"stop_loss",   date:"2025-04-15", capital:13938},
+    {n:49, cat:"ECO", market:"ECO-0003", side:"NO", entry:0.9671, exit:0.0100, montant:439, pnl:433.46,  rend:98.77,  reason:"take_profit", date:"2025-04-11", capital:14371},
+    {n:50, cat:"POL", market:"POL-0000", side:"NO", entry:0.9584, exit:0.9900, montant:473, pnl:-16.56,  rend:-3.50,  reason:"resolution",  date:"2025-04-17", capital:14355},
+    {n:51, cat:"TEC", market:"TEC-0016", side:"NO", entry:0.7451, exit:0.1434, montant:272, pnl:218.92,  rend:80.55,  reason:"take_profit", date:"2025-05-27", capital:14574},
+];
+
+const CAT_NAMES = {POL:"Politique",CRY:"Crypto",SPO:"Sport",GEO:"Géopolitique",ECO:"Économie",TEC:"Tech"};
+const CAT_CLASS = {POL:"pol",CRY:"cry",SPO:"spo",GEO:"geo",ECO:"eco",TEC:"tec"};
+
+function reasonBadge(r) {
+    const map = {take_profit:["Take Profit","tp"], stop_loss:["Stop Loss","sl"], resolution:["Resolution","res"]};
+    const [label, cls] = map[r] || [r, "res"];
+    return `<span class="reason reason-${cls}">${label}</span>`;
+}
+
+function renderTable(data) {
+    const tbody = document.getElementById('tradesBody');
+    const maxCap = Math.max(...data.map(t => t.capital));
+    tbody.innerHTML = data.map(t => {
+        const isWin = t.pnl >= 0;
+        const pnlClass = isWin ? 'pnl-pos' : 'pnl-neg';
+        const rendClass = isWin ? 'rend-pos' : 'rend-neg';
+        const rowClass = isWin ? 'win' : 'loss';
+        const barWidth = Math.min(Math.abs(t.capital - 10000) / (maxCap - 10000) * 60, 60);
+        const barColor = t.capital >= 10000 ? '#00d4aa' : '#ff4757';
+        return `<tr class="${rowClass}" data-cat="${t.cat}" data-result="${isWin?'win':'loss'}" data-reason="${t.reason}">
+            <td style="font-weight:600;color:#4a90d9">${t.n}</td>
+            <td><span class="badge badge-${CAT_CLASS[t.cat]}">${CAT_NAMES[t.cat]}</span></td>
+            <td style="font-family:monospace;color:#aaa">${t.market}</td>
+            <td>${t.side}</td>
+            <td style="font-family:monospace">${t.entry.toFixed(4)}</td>
+            <td style="font-family:monospace">${t.exit.toFixed(4)}</td>
+            <td>${t.montant.toLocaleString('fr-FR')} €</td>
+            <td class="${pnlClass}">${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(0)} €</td>
+            <td class="${rendClass}">${t.rend >= 0 ? '+' : ''}${t.rend.toFixed(1)}%</td>
+            <td>${reasonBadge(t.reason)}</td>
+            <td>${t.date}</td>
+            <td><span class="cumul-bar" style="width:${barWidth}px;background:${barColor}"></span>${t.capital.toLocaleString('fr-FR')} €</td>
+        </tr>`;
+    }).join('');
+    document.getElementById('filterCount').textContent = data.length + ' trade' + (data.length > 1 ? 's' : '');
+}
+
+function applyFilters() {
+    const cat = document.getElementById('filterCat').value;
+    const result = document.getElementById('filterResult').value;
+    const reason = document.getElementById('filterReason').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+    const filtered = TRADES.filter(t => {
+        if (cat !== 'all' && t.cat !== cat) return false;
+        if (result === 'win' && t.pnl < 0) return false;
+        if (result === 'loss' && t.pnl >= 0) return false;
+        if (reason !== 'all' && t.reason !== reason) return false;
+        if (search && !t.market.toLowerCase().includes(search)) return false;
+        return true;
+    });
+    renderTable(filtered);
+}
+
+function resetFilters() {
+    document.getElementById('filterCat').value = 'all';
+    document.getElementById('filterResult').value = 'all';
+    document.getElementById('filterReason').value = 'all';
+    document.getElementById('filterSearch').value = '';
+    renderTable(TRADES);
+}
+
+let sortCol = 0, sortAsc = true;
+function sortTable(col, type) {
+    if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+    const keys = ['n','cat','market','side','entry','exit','montant','pnl','rend','reason','date','capital'];
+    const key = keys[col];
+    const sorted = [...TRADES].sort((a, b) => {
+        let va = a[key], vb = b[key];
+        if (type === 'num') return sortAsc ? va - vb : vb - va;
+        return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+    TRADES.length = 0;
+    TRADES.push(...sorted);
+    applyFilters();
+    // Update arrows
+    document.querySelectorAll('.sort-arrow').forEach(el => { el.className = 'sort-arrow'; el.textContent = ''; });
+    const arrows = document.querySelectorAll('th .sort-arrow');
+    if (arrows[col]) { arrows[col].className = 'sort-arrow active'; arrows[col].textContent = sortAsc ? '▲' : '▼'; }
+}
+
+// Events
+document.getElementById('filterCat').addEventListener('change', applyFilters);
+document.getElementById('filterResult').addEventListener('change', applyFilters);
+document.getElementById('filterReason').addEventListener('change', applyFilters);
+document.getElementById('filterSearch').addEventListener('input', applyFilters);
+
+// Init
+renderTable(TRADES);
+</script>
+</body>
+</html>

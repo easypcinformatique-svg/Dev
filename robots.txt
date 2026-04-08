@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /css/
+Disallow: /js/
+Sitemap: https://www.elcr-maconnerie.fr/sitemap.xml

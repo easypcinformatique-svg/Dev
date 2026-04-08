@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokyMarket - Reporting Portefeuille 10 000 €</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #12122a 0%, #1a1a3a 100%);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid #2a2a4a;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #00d4aa, #4a90d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header .subtitle { color: #8888aa; font-size: 1.1rem; }
+        .header .date { color: #6666aa; font-size: 0.9rem; margin-top: 5px; }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .metric-card {
+            background: #12122a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .metric-card:hover { transform: translateY(-2px); border-color: #00d4aa44; }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .metric-label { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .green { color: #00d4aa; }
+        .red { color: #ff4757; }
+        .blue { color: #4a90d9; }
+        .yellow { color: #ffa502; }
+        .white { color: #e0e0e0; }
+
+        /* Sections */
+        .section {
+            background: #12122a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .section h2 {
+            font-size: 1.3rem;
+            color: #4a90d9;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .chart { width: 100%; height: 400px; }
+        .chart-half { width: 100%; height: 350px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        /* Table */
+        .trades-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .trades-table th {
+            background: #1a1a3a;
+            color: #4a90d9;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        .trades-table td {
+            padding: 8px;
+            border-bottom: 1px solid #1a1a3a;
+        }
+        .trades-table tr:hover { background: #1a1a3a44; }
+        .table-wrap {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-pol { background: #4a90d922; color: #4a90d9; }
+        .badge-cry { background: #ffa50222; color: #ffa502; }
+        .badge-spo { background: #00d4aa22; color: #00d4aa; }
+        .badge-geo { background: #ff475722; color: #ff4757; }
+        .badge-eco { background: #9b59b622; color: #9b59b6; }
+        .badge-tec { background: #3498db22; color: #3498db; }
+
+        .reason {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+        .reason-take_profit { background: #00d4aa22; color: #00d4aa; }
+        .reason-stop_loss { background: #ff475722; color: #ff4757; }
+        .reason-resolution { background: #ffa50222; color: #ffa502; }
+
+        /* Params grid */
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #1a1a3a;
+            border-radius: 6px;
+        }
+        .param-label { color: #8888aa; font-size: 0.85rem; }
+        .param-value { color: #00d4aa; font-weight: 600; }
+
+        /* Risk gauge */
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .risk-item {
+            background: #1a1a3a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .risk-item .label { color: #8888aa; font-size: 0.85rem; margin-bottom: 4px; }
+        .risk-item .value { font-size: 1.3rem; font-weight: 700; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #555;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>PokyMarket Portfolio Report</h1>
+        <div class="subtitle">Portefeuille de 10,000 € — Stratégie AlphaComposite</div>
+        <div class="date">Période : 2023-03-03 au 2025-05-27 | Généré le 21/03/2026 06:48</div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value green">+45.7%</div>
+            <div class="metric-label">Return Total</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value green">+4,574 €</div>
+            <div class="metric-label">PnL Total</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value green">14,574 €</div>
+            <div class="metric-label">Capital Final</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value blue">51</div>
+            <div class="metric-label">Trades Total</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value green">54.9%</div>
+            <div class="metric-label">Win Rate</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value green">4.81x</div>
+            <div class="metric-label">Profit Factor</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value red">-2.6%</div>
+            <div class="metric-label">Max Drawdown</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value yellow">+90 €</div>
+            <div class="metric-label">Espérance / Trade</div>
+        </div>
+    </div>
+
+    <!-- Equity Curve -->
+    <div class="section">
+        <h2>Courbe d'Equity & Drawdown</h2>
+        <div id="equity-chart" class="chart"></div>
+    </div>
+
+    <!-- Monthly + Categories -->
+    <div class="grid-2">
+        <div class="section">
+            <h2>PnL Mensuel</h2>
+            <div id="monthly-chart" class="chart-half"></div>
+        </div>
+        <div class="section">
+            <h2>Performance par Catégorie</h2>
+            <div id="category-chart" class="chart-half"></div>
+        </div>
+    </div>
+
+    <!-- Risk Metrics -->
+    <div class="section">
+        <h2>Analyse des Risques</h2>
+        <div class="risk-grid">
+            <div class="risk-item">
+                <div class="label">Capital Initial</div>
+                <div class="value white">10,000 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Capital Final</div>
+                <div class="value green">14,574 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Capital Peak</div>
+                <div class="value blue">14,574 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Max Drawdown</div>
+                <div class="value red">-2.63% (-279 €)</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Plus Gros Gain</div>
+                <div class="value green">+433 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Plus Grosse Perte</div>
+                <div class="value red">-115 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Gain Moyen</div>
+                <div class="value green">+206 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Perte Moyenne</div>
+                <div class="value red">-52 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Profit Brut</div>
+                <div class="value green">+5,775 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Perte Brute</div>
+                <div class="value red">-1,202 €</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Consécutifs Gagnants</div>
+                <div class="value green">6</div>
+            </div>
+            <div class="risk-item">
+                <div class="label">Consécutifs Perdants</div>
+                <div class="value red">5</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category breakdown table -->
+    <div class="section">
+        <h2>Détail par Catégorie</h2>
+        <table class="trades-table">
+            <thead>
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Trades</th>
+                    <th>Win Rate</th>
+                    <th>PnL</th>
+                    <th>% du PnL Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-cry">Crypto</span></td>
+                    <td>6</td>
+                    <td>100%</td>
+                    <td style="color:#00d4aa;font-weight:700">+1,123 €</td>
+                    <td>24.6%</td>
+                </tr><tr>
+                    <td><span class="badge badge-pol">Politique</span></td>
+                    <td>14</td>
+                    <td>50%</td>
+                    <td style="color:#00d4aa;font-weight:700">+1,106 €</td>
+                    <td>24.2%</td>
+                </tr><tr>
+                    <td><span class="badge badge-eco">Économie</span></td>
+                    <td>6</td>
+                    <td>50%</td>
+                    <td style="color:#00d4aa;font-weight:700">+843 €</td>
+                    <td>18.4%</td>
+                </tr><tr>
+                    <td><span class="badge badge-spo">Sport</span></td>
+                    <td>7</td>
+                    <td>71%</td>
+                    <td style="color:#00d4aa;font-weight:700">+778 €</td>
+                    <td>17.0%</td>
+                </tr><tr>
+                    <td><span class="badge badge-tec">Tech</span></td>
+                    <td>8</td>
+                    <td>50%</td>
+                    <td style="color:#00d4aa;font-weight:700">+642 €</td>
+                    <td>14.0%</td>
+                </tr><tr>
+                    <td><span class="badge badge-geo">Géopolitique</span></td>
+                    <td>10</td>
+                    <td>30%</td>
+                    <td style="color:#00d4aa;font-weight:700">+81 €</td>
+                    <td>1.8%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    
+        <div class="section">
+            <h2>Paramètres Optimisés (Bayesian Training - 100 itérations)</h2>
+            <div class="params-grid">
+                <div class="param-item">
+                    <span class="param-label">Consensus min</span>
+                    <span class="param-value">0.138</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Stratégies min</span>
+                    <span class="param-value">2</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Spread filter</span>
+                    <span class="param-value">0.104</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Vol. percentile</span>
+                    <span class="param-value">27.5</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Stop Loss</span>
+                    <span class="param-value">25.0%</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Take Profit</span>
+                    <span class="param-value">50.5%</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Trailing Stop</span>
+                    <span class="param-value">17.0%</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Max Position</span>
+                    <span class="param-value">8%</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Max Positions</span>
+                    <span class="param-value">12</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Prix max extrême</span>
+                    <span class="param-value">0.894</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Prix min extrême</span>
+                    <span class="param-value">0.085</span>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Best Fitness</span>
+                    <span class="param-value">-5.709</span>
+                </div>
+            </div>
+        </div>
+        
+
+    <!-- Trade History -->
+    <div class="section">
+        <h2>Historique des Trades (51 trades)</h2>
+        <div class="table-wrap">
+            <table class="trades-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Catégorie</th>
+                        <th>Side</th>
+                        <th>Entrée</th>
+                        <th>Sortie</th>
+                        <th>Montant</th>
+                        <th>PnL</th>
+                        <th>Rend.</th>
+                        <th>Raison</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td>1</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.7433</td>
+            <td>0.1337</td>
+            <td>167 €</td>
+            <td style="color:#00d4aa;font-weight:700">+136.48 €</td>
+            <td style="color:#00d4aa">+81.8%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-03-03</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.6598</td>
+            <td>0.9900</td>
+            <td>124 €</td>
+            <td style="color:#ff4757;font-weight:700">-62.34 €</td>
+            <td style="color:#ff4757">-50.2%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-03-08</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6327</td>
+            <td>0.1062</td>
+            <td>211 €</td>
+            <td style="color:#00d4aa;font-weight:700">+175.46 €</td>
+            <td style="color:#00d4aa">+83.0%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-03-07</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6723</td>
+            <td>0.1260</td>
+            <td>195 €</td>
+            <td style="color:#00d4aa;font-weight:700">+158.16 €</td>
+            <td style="color:#00d4aa">+81.1%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-03-21</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6614</td>
+            <td>0.0640</td>
+            <td>185 €</td>
+            <td style="color:#00d4aa;font-weight:700">+167.02 €</td>
+            <td style="color:#00d4aa">+90.1%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-03-27</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.7258</td>
+            <td>0.9197</td>
+            <td>151 €</td>
+            <td style="color:#ff4757;font-weight:700">-40.74 €</td>
+            <td style="color:#ff4757">-26.9%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-04-13</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.7592</td>
+            <td>0.9900</td>
+            <td>268 €</td>
+            <td style="color:#ff4757;font-weight:700">-82.12 €</td>
+            <td style="color:#ff4757">-30.6%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-04-17</td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6525</td>
+            <td>0.8482</td>
+            <td>303 €</td>
+            <td style="color:#ff4757;font-weight:700">-91.58 €</td>
+            <td style="color:#ff4757">-30.2%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-04-19</td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.9705</td>
+            <td>0.9900</td>
+            <td>364 €</td>
+            <td style="color:#ff4757;font-weight:700">-8.06 €</td>
+            <td style="color:#ff4757">-2.2%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2023-03-15</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6248</td>
+            <td>0.7825</td>
+            <td>221 €</td>
+            <td style="color:#ff4757;font-weight:700">-56.14 €</td>
+            <td style="color:#ff4757">-25.4%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-05-04</td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.7710</td>
+            <td>0.0979</td>
+            <td>303 €</td>
+            <td style="color:#00d4aa;font-weight:700">+263.58 €</td>
+            <td style="color:#00d4aa">+87.1%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-05-06</td>
+        </tr>
+        <tr>
+            <td>12</td>
+            <td><span class="badge badge-eco">Économie</span></td>
+            <td>NO</td>
+            <td>0.7932</td>
+            <td>0.9900</td>
+            <td>136 €</td>
+            <td style="color:#ff4757;font-weight:700">-34.00 €</td>
+            <td style="color:#ff4757">-25.0%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2023-03-11</td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td><span class="badge badge-eco">Économie</span></td>
+            <td>NO</td>
+            <td>0.8658</td>
+            <td>0.9900</td>
+            <td>183 €</td>
+            <td style="color:#ff4757;font-weight:700">-26.68 €</td>
+            <td style="color:#ff4757">-14.5%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2023-05-03</td>
+        </tr>
+        <tr>
+            <td>14</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6281</td>
+            <td>0.0100</td>
+            <td>174 €</td>
+            <td style="color:#00d4aa;font-weight:700">+170.46 €</td>
+            <td style="color:#00d4aa">+98.2%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-05-08</td>
+        </tr>
+        <tr>
+            <td>15</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.6224</td>
+            <td>0.9900</td>
+            <td>195 €</td>
+            <td style="color:#ff4757;font-weight:700">-115.48 €</td>
+            <td style="color:#ff4757">-59.3%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-06-18</td>
+        </tr>
+        <tr>
+            <td>16</td>
+            <td><span class="badge badge-cry">Crypto</span></td>
+            <td>NO</td>
+            <td>0.7141</td>
+            <td>0.1354</td>
+            <td>131 €</td>
+            <td style="color:#00d4aa;font-weight:700">+105.66 €</td>
+            <td style="color:#00d4aa">+80.8%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-06-21</td>
+        </tr>
+        <tr>
+            <td>17</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.9347</td>
+            <td>0.1830</td>
+            <td>453 €</td>
+            <td style="color:#00d4aa;font-weight:700">+363.20 €</td>
+            <td style="color:#00d4aa">+80.2%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-06-20</td>
+        </tr>
+        <tr>
+            <td>18</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.8078</td>
+            <td>0.1314</td>
+            <td>290 €</td>
+            <td style="color:#00d4aa;font-weight:700">+242.48 €</td>
+            <td style="color:#00d4aa">+83.5%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-04-19</td>
+        </tr>
+        <tr>
+            <td>19</td>
+            <td><span class="badge badge-cry">Crypto</span></td>
+            <td>NO</td>
+            <td>0.8679</td>
+            <td>0.1328</td>
+            <td>201 €</td>
+            <td style="color:#00d4aa;font-weight:700">+169.94 €</td>
+            <td style="color:#00d4aa">+84.5%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-08-01</td>
+        </tr>
+        <tr>
+            <td>20</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.7023</td>
+            <td>0.1391</td>
+            <td>162 €</td>
+            <td style="color:#00d4aa;font-weight:700">+129.88 €</td>
+            <td style="color:#00d4aa">+80.0%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-08-28</td>
+        </tr>
+        <tr>
+            <td>21</td>
+            <td><span class="badge badge-cry">Crypto</span></td>
+            <td>NO</td>
+            <td>0.8833</td>
+            <td>0.1625</td>
+            <td>312 €</td>
+            <td style="color:#00d4aa;font-weight:700">+254.00 €</td>
+            <td style="color:#00d4aa">+81.4%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-08-19</td>
+        </tr>
+        <tr>
+            <td>22</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.6965</td>
+            <td>0.9228</td>
+            <td>246 €</td>
+            <td style="color:#ff4757;font-weight:700">-80.38 €</td>
+            <td style="color:#ff4757">-32.7%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2023-09-19</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td><span class="badge badge-cry">Crypto</span></td>
+            <td>NO</td>
+            <td>0.7823</td>
+            <td>0.0609</td>
+            <td>285 €</td>
+            <td style="color:#00d4aa;font-weight:700">+262.28 €</td>
+            <td style="color:#00d4aa">+92.0%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-11-20</td>
+        </tr>
+        <tr>
+            <td>24</td>
+            <td><span class="badge badge-cry">Crypto</span></td>
+            <td>NO</td>
+            <td>0.7947</td>
+            <td>0.1577</td>
+            <td>186 €</td>
+            <td style="color:#00d4aa;font-weight:700">+148.74 €</td>
+            <td style="color:#00d4aa">+80.0%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2023-12-10</td>
+        </tr>
+        <tr>
+            <td>25</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.6159</td>
+            <td>0.7802</td>
+            <td>155 €</td>
+            <td style="color:#ff4757;font-weight:700">-41.62 €</td>
+            <td style="color:#ff4757">-26.9%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2024-02-10</td>
+        </tr>
+        <tr>
+            <td>26</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.7317</td>
+            <td>0.9259</td>
+            <td>190 €</td>
+            <td style="color:#ff4757;font-weight:700">-50.84 €</td>
+            <td style="color:#ff4757">-26.7%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2024-03-19</td>
+        </tr>
+        <tr>
+            <td>27</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.8281</td>
+            <td>0.0100</td>
+            <td>190 €</td>
+            <td style="color:#00d4aa;font-weight:700">+187.14 €</td>
+            <td style="color:#00d4aa">+98.6%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-04-18</td>
+        </tr>
+        <tr>
+            <td>28</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.8264</td>
+            <td>0.0130</td>
+            <td>252 €</td>
+            <td style="color:#00d4aa;font-weight:700">+247.12 €</td>
+            <td style="color:#00d4aa">+98.2%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-06-09</td>
+        </tr>
+        <tr>
+            <td>29</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.7414</td>
+            <td>0.0100</td>
+            <td>181 €</td>
+            <td style="color:#00d4aa;font-weight:700">+178.04 €</td>
+            <td style="color:#00d4aa">+98.5%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-06-24</td>
+        </tr>
+        <tr>
+            <td>30</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.6495</td>
+            <td>0.1136</td>
+            <td>166 €</td>
+            <td style="color:#00d4aa;font-weight:700">+136.84 €</td>
+            <td style="color:#00d4aa">+82.3%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-08-22</td>
+        </tr>
+        <tr>
+            <td>31</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.7873</td>
+            <td>0.0100</td>
+            <td>177 €</td>
+            <td style="color:#00d4aa;font-weight:700">+174.02 €</td>
+            <td style="color:#00d4aa">+98.5%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-09-20</td>
+        </tr>
+        <tr>
+            <td>32</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.6514</td>
+            <td>0.8482</td>
+            <td>163 €</td>
+            <td style="color:#ff4757;font-weight:700">-49.64 €</td>
+            <td style="color:#ff4757">-30.4%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2024-10-13</td>
+        </tr>
+        <tr>
+            <td>33</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.7139</td>
+            <td>0.1330</td>
+            <td>166 €</td>
+            <td style="color:#00d4aa;font-weight:700">+134.92 €</td>
+            <td style="color:#00d4aa">+81.2%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-11-13</td>
+        </tr>
+        <tr>
+            <td>34</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.7655</td>
+            <td>0.1447</td>
+            <td>153 €</td>
+            <td style="color:#00d4aa;font-weight:700">+124.12 €</td>
+            <td style="color:#00d4aa">+80.9%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-11-18</td>
+        </tr>
+        <tr>
+            <td>35</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.6512</td>
+            <td>0.8186</td>
+            <td>217 €</td>
+            <td style="color:#ff4757;font-weight:700">-56.20 €</td>
+            <td style="color:#ff4757">-25.9%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2024-11-30</td>
+        </tr>
+        <tr>
+            <td>36</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.7515</td>
+            <td>0.9497</td>
+            <td>210 €</td>
+            <td style="color:#ff4757;font-weight:700">-55.72 €</td>
+            <td style="color:#ff4757">-26.6%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2024-12-08</td>
+        </tr>
+        <tr>
+            <td>37</td>
+            <td><span class="badge badge-geo">Géopolitique</span></td>
+            <td>NO</td>
+            <td>0.7643</td>
+            <td>0.9584</td>
+            <td>291 €</td>
+            <td style="color:#ff4757;font-weight:700">-74.52 €</td>
+            <td style="color:#ff4757">-25.6%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2024-12-02</td>
+        </tr>
+        <tr>
+            <td>38</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.8138</td>
+            <td>0.9900</td>
+            <td>191 €</td>
+            <td style="color:#ff4757;font-weight:700">-41.84 €</td>
+            <td style="color:#ff4757">-21.9%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2024-08-06</td>
+        </tr>
+        <tr>
+            <td>39</td>
+            <td><span class="badge badge-cry">Crypto</span></td>
+            <td>NO</td>
+            <td>0.8260</td>
+            <td>0.0100</td>
+            <td>185 €</td>
+            <td style="color:#00d4aa;font-weight:700">+182.80 €</td>
+            <td style="color:#00d4aa">+98.6%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2025-01-14</td>
+        </tr>
+        <tr>
+            <td>40</td>
+            <td><span class="badge badge-spo">Sport</span></td>
+            <td>NO</td>
+            <td>0.8299</td>
+            <td>0.9900</td>
+            <td>272 €</td>
+            <td style="color:#ff4757;font-weight:700">-52.94 €</td>
+            <td style="color:#ff4757">-19.5%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2025-01-16</td>
+        </tr>
+        <tr>
+            <td>41</td>
+            <td><span class="badge badge-eco">Économie</span></td>
+            <td>NO</td>
+            <td>0.8190</td>
+            <td>0.0148</td>
+            <td>182 €</td>
+            <td style="color:#00d4aa;font-weight:700">+178.74 €</td>
+            <td style="color:#00d4aa">+98.0%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-12-18</td>
+        </tr>
+        <tr>
+            <td>42</td>
+            <td><span class="badge badge-eco">Économie</span></td>
+            <td>NO</td>
+            <td>0.8022</td>
+            <td>0.9900</td>
+            <td>174 €</td>
+            <td style="color:#ff4757;font-weight:700">-41.06 €</td>
+            <td style="color:#ff4757">-23.6%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2024-12-11</td>
+        </tr>
+        <tr>
+            <td>43</td>
+            <td><span class="badge badge-eco">Économie</span></td>
+            <td>NO</td>
+            <td>0.9664</td>
+            <td>0.0976</td>
+            <td>371 €</td>
+            <td style="color:#00d4aa;font-weight:700">+332.36 €</td>
+            <td style="color:#00d4aa">+89.7%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2025-02-04</td>
+        </tr>
+        <tr>
+            <td>44</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.9794</td>
+            <td>0.9900</td>
+            <td>488 €</td>
+            <td style="color:#ff4757;font-weight:700">-6.26 €</td>
+            <td style="color:#ff4757">-1.3%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2024-10-15</td>
+        </tr>
+        <tr>
+            <td>45</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.8883</td>
+            <td>0.0497</td>
+            <td>253 €</td>
+            <td style="color:#00d4aa;font-weight:700">+238.56 €</td>
+            <td style="color:#00d4aa">+94.2%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2025-03-12</td>
+        </tr>
+        <tr>
+            <td>46</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.8313</td>
+            <td>0.0100</td>
+            <td>265 €</td>
+            <td style="color:#00d4aa;font-weight:700">+260.92 €</td>
+            <td style="color:#00d4aa">+98.6%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2024-12-12</td>
+        </tr>
+        <tr>
+            <td>47</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.7475</td>
+            <td>0.9900</td>
+            <td>201 €</td>
+            <td style="color:#ff4757;font-weight:700">-65.68 €</td>
+            <td style="color:#ff4757">-32.6%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2025-04-13</td>
+        </tr>
+        <tr>
+            <td>48</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.7520</td>
+            <td>0.9405</td>
+            <td>203 €</td>
+            <td style="color:#ff4757;font-weight:700">-51.32 €</td>
+            <td style="color:#ff4757">-25.3%</td>
+            <td><span class="reason reason-stop_loss">stop_loss</span></td>
+            <td>2025-04-15</td>
+        </tr>
+        <tr>
+            <td>49</td>
+            <td><span class="badge badge-eco">Économie</span></td>
+            <td>NO</td>
+            <td>0.9671</td>
+            <td>0.0100</td>
+            <td>439 €</td>
+            <td style="color:#00d4aa;font-weight:700">+433.46 €</td>
+            <td style="color:#00d4aa">+98.8%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2025-04-11</td>
+        </tr>
+        <tr>
+            <td>50</td>
+            <td><span class="badge badge-pol">Politique</span></td>
+            <td>NO</td>
+            <td>0.9584</td>
+            <td>0.9900</td>
+            <td>473 €</td>
+            <td style="color:#ff4757;font-weight:700">-16.56 €</td>
+            <td style="color:#ff4757">-3.5%</td>
+            <td><span class="reason reason-resolution">resolution</span></td>
+            <td>2025-04-17</td>
+        </tr>
+        <tr>
+            <td>51</td>
+            <td><span class="badge badge-tec">Tech</span></td>
+            <td>NO</td>
+            <td>0.7451</td>
+            <td>0.1434</td>
+            <td>272 €</td>
+            <td style="color:#00d4aa;font-weight:700">+218.92 €</td>
+            <td style="color:#00d4aa">+80.5%</td>
+            <td><span class="reason reason-take_profit">take_profit</span></td>
+            <td>2025-05-27</td>
+        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        PokyMarket — Reporting automatisé | Stratégie AlphaComposite optimisée par Bayesian Training<br>
+        Les performances passées ne préjugent pas des performances futures.
+    </div>
+</div>
+
+<script>
+    const plotConfig = {responsive: true, displayModeBar: false};
+    const layoutBase = {
+        paper_bgcolor: '#12122a',
+        plot_bgcolor: '#12122a',
+        font: {color: '#e0e0e0', family: 'Segoe UI, system-ui, sans-serif'},
+        margin: {l: 50, r: 30, t: 30, b: 40},
+        xaxis: {gridcolor: '#1a1a3a', zerolinecolor: '#2a2a4a'},
+        yaxis: {gridcolor: '#1a1a3a', zerolinecolor: '#2a2a4a'},
+    };
+
+    // Equity Curve
+    Plotly.newPlot('equity-chart', [
+        {
+            y: [10000.0, 10136.48, 10074.14, 10249.6, 10407.76, 10574.78, 10534.04, 10451.92, 10360.34, 10352.28, 10296.14, 10559.72, 10525.72, 10499.04, 10669.5, 10554.02, 10659.68, 11022.88, 11265.36, 11435.3, 11565.18, 11819.18, 11738.8, 12001.08, 12149.82, 12108.2, 12057.36, 12244.5, 12491.62, 12669.66, 12806.5, 12980.52, 12930.88, 13065.8, 13189.92, 13133.72, 13078.0, 13003.48, 12961.64, 13144.44, 13091.5, 13270.24, 13229.18, 13561.54, 13555.28, 13793.84, 14054.76, 13989.08, 13937.76, 14371.22, 14354.66, 14573.58],
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Capital (€)',
+            line: {color: '#00d4aa', width: 2},
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0,212,170,0.05)',
+        },
+        {
+            y: [0.0, 0.0, -0.62, 0.0, 0.0, 0.0, -0.39, -1.16, -2.03, -2.1, -2.63, -0.14, -0.46, -0.72, 0.0, -1.08, -0.09, 0.0, 0.0, 0.0, 0.0, 0.0, -0.68, 0.0, 0.0, -0.34, -0.76, 0.0, 0.0, 0.0, 0.0, 0.0, -0.38, 0.0, 0.0, -0.43, -0.85, -1.41, -1.73, -0.34, -0.75, 0.0, -0.31, 0.0, -0.05, 0.0, 0.0, -0.47, -0.83, 0.0, -0.12, 0.0],
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Drawdown (%)',
+            yaxis: 'y2',
+            line: {color: '#ff4757', width: 1},
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255,71,87,0.1)',
+        }
+    ], {
+        ...layoutBase,
+        yaxis: {...layoutBase.yaxis, title: 'Capital (€)', tickformat: ',.0f'},
+        yaxis2: {
+            title: 'Drawdown (%)',
+            overlaying: 'y',
+            side: 'right',
+            gridcolor: '#1a1a3a',
+            tickformat: '.1f',
+            range: [-3.945, 0],
+        },
+        legend: {x: 0.01, y: 0.99, bgcolor: 'rgba(0,0,0,0.5)'},
+        hovermode: 'x unified',
+    }, plotConfig);
+
+    // Monthly PnL
+    Plotly.newPlot('monthly-chart', [{
+        x: ['2023-03', '2023-04', '2023-05', '2023-06', '2023-08', '2023-09', '2023-11', '2023-12', '2024-02', '2024-03', '2024-04', '2024-06', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05'],
+        y: [532.72, 28.04, 351.22, 353.38, 553.82, -80.38, 262.28, 148.74, -41.62, -50.84, 187.14, 425.16, 95.0, 174.02, -55.9, 202.84, 268.36, 129.86, 332.36, 238.56, 299.9, 218.92],
+        type: 'bar',
+        marker: {color: ['#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#ff4757', '#00d4aa', '#00d4aa', '#ff4757', '#ff4757', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#ff4757', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa']},
+        hovertemplate: '%{x}<br>PnL: %{y:+,.0f} €<extra></extra>',
+    }], {
+        ...layoutBase,
+        yaxis: {...layoutBase.yaxis, title: 'PnL (€)', tickformat: '+,.0f'},
+        xaxis: {...layoutBase.xaxis, tickangle: -45},
+    }, plotConfig);
+
+    // Category
+    Plotly.newPlot('category-chart', [
+        {
+            x: ['Tech', 'Politique', 'Géopolitique', 'Économie', 'Crypto', 'Sport'],
+            y: [641.68, 1106.32, 80.86, 842.82, 1123.42, 778.48],
+            type: 'bar',
+            name: 'PnL (€)',
+            marker: {color: ['#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa', '#00d4aa']},
+            hovertemplate: '%{x}<br>PnL: %{y:+,.0f} €<extra></extra>',
+        },
+    ], {
+        ...layoutBase,
+        yaxis: {...layoutBase.yaxis, title: 'PnL (€)', tickformat: '+,.0f'},
+    }, plotConfig);
+</script>
+
+</body>
+</html>

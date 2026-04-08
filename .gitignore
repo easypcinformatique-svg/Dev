@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+instance/
+uploads/
+*.db
+venv/
+.venv/
+token.json
+credentials.json
+*.egg-info/
+dist/
+build/
+backtest_report.html
+logs/

@@ -1,40 +1,659 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EasyPC Informatique — Projets</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#e0e0e0;display:flex;flex-direction:column;align-items:center;padding:40px 20px}
-h1{font-size:28px;color:#e94560;margin-bottom:8px;text-transform:uppercase;letter-spacing:2px}
-.subtitle{color:#888;font-size:14px;margin-bottom:40px}
-.projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;max-width:900px;width:100%}
-.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;transition:all 0.3s;text-decoration:none;color:inherit;display:block}
-.card:hover{transform:translateY(-4px);border-color:#e94560;box-shadow:0 8px 30px rgba(233,69,96,0.2);background:rgba(255,255,255,0.08)}
-.card .tag{display:inline-block;background:rgba(233,69,96,0.2);color:#e94560;font-size:10px;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
-.card h2{font-size:18px;color:#fff;margin-bottom:8px}
-.card p{font-size:13px;color:#999;line-height:1.6;margin-bottom:16px}
-.card .meta{display:flex;flex-wrap:wrap;gap:16px;font-size:11px;color:#666}
-.badge{background:rgba(33,150,243,0.15);color:#2196F3;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:8px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELCR Maçon Les Pennes-Mirabeau | Construction Maison Neuve, Extension, Rénovation 13170</title>
+  <meta name="description" content="ELCR, votre entreprise de maçonnerie aux Pennes-Mirabeau depuis 2009. Construction neuve, extension, rénovation gros œuvre. Devis gratuit sous 48h. Assurance décennale. ☎ 06 07 83 50 21">
+  <meta name="robots" content="index, follow">
+  <meta name="geo.region" content="FR-13">
+  <meta name="geo.placename" content="Les Pennes-Mirabeau">
+  <meta name="geo.position" content="43.4267;5.3047">
+  <link rel="canonical" href="https://www.elcr-maconnerie.fr/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="ELCR Maçonnerie">
+  <meta property="og:title" content="ELCR Maçon Les Pennes-Mirabeau | Construction, Extension, Rénovation">
+  <meta property="og:description" content="Entreprise de maçonnerie aux Pennes-Mirabeau depuis 2009. Devis gratuit sous 48h.">
+  <meta property="og:image" content="https://www.elcr-maconnerie.fr/images/og-elcr.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* CSS critique inline */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;font-size:16px;color:#1A2744;background:#F8F6F2;line-height:1.6}
+    .header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#1A2744;height:70px;transition:all .25s ease}
+    .header__inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1200px;margin:0 auto;padding:0 20px}
+    .header__logo-name{font-family:'Oswald',sans-serif;font-weight:600;font-size:26px;color:#fff;line-height:1;letter-spacing:2px}
+    .header__logo-tagline{font-size:11px;color:#E8650A;letter-spacing:.5px;margin-top:2px}
+    .page-content{padding-top:70px}
+    .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:100px 20px 60px}
+  </style>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": ["GeneralContractor", "LocalBusiness"],
+    "name": "ELCR",
+    "legalName": "ELCR - Jonathan LUCI Entrepreneur Individuel",
+    "description": "Entreprise de Construction Maçonnerie et Rénovation aux Pennes-Mirabeau. Construction maison neuve, extension, rénovation gros œuvre, terrasse.",
+    "foundingDate": "2009",
+    "url": "https://www.elcr-maconnerie.fr",
+    "telephone": "+33607835021",
+    "email": "entreprise_lcr@yahoo.fr",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Les Pennes-Mirabeau",
+      "postalCode": "13170",
+      "addressRegion": "Bouches-du-Rhône",
+      "addressCountry": "FR"
+    },
+    "geo": {"@type": "GeoCoordinates", "latitude": 43.4267, "longitude": 5.3047},
+    "areaServed": [
+      {"@type": "City", "name": "Les Pennes-Mirabeau"},
+      {"@type": "City", "name": "Vitrolles"},
+      {"@type": "City", "name": "Septèmes-les-Vallons"},
+      {"@type": "City", "name": "Cabriès"},
+      {"@type": "City", "name": "Marseille"}
+    ],
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "08:00",
+      "closes": "18:00"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Services ELCR",
+      "itemListElement": [
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Construction de maison neuve"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Extension et surélévation"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Rénovation gros œuvre"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Terrasse, dallage et clôture"}}
+      ]
+    },
+    "sameAs": ["https://www.facebook.com/elcr33210"]
+  }
+  </script>
 </head>
 <body>
-<h1>EasyPC Informatique</h1>
-<p class="subtitle">Projets & Visualisations</p>
 
-<div class="projects">
-  <a href="./projet-verduron-marseille/" class="card">
-    <span class="tag">Construction neuve</span>
-    <h2>Projet Verduron — Marseille 13015 <span class="badge">3D</span></h2>
-    <p>Visualisation 3D interactive d'une maison R+1+combles sur terrain en pente. Parcelle 906/0E/0251, zone PLUi UM2. Sous-sol, RDC, etage, combles, balcon porte-a-faux, piscine.</p>
-    <div class="meta">
-      <span>~301 m2 habitables</span>
-      <span>Piscine 8x4m</span>
-      <span>Alt. 183m NGF</span>
+  <!-- SPLASH SCREEN — Animation construction du logo -->
+  <div class="splash" id="splash">
+    <style>
+      .splash{position:fixed;top:0;left:0;width:100%;height:100%;background:#1A2744;z-index:10000;display:flex;align-items:center;justify-content:center;transition:opacity .6s ease,transform .6s ease}
+      .splash.done{opacity:0;transform:translateY(-100%);pointer-events:none}
+      .splash-logo{width:100%;max-width:98vw;padding:0 10px}
+      .splash-logo svg{width:100%;height:auto;overflow:visible}
+      /* Building blocks animation */
+      .bl{opacity:0;transform:translateY(20px);animation:blockIn .35s forwards}
+      @keyframes blockIn{to{opacity:1;transform:translateY(0)}}
+      /* Roof drop */
+      .rf{opacity:0;transform:translateY(-30px);animation:roofDrop .4s forwards}
+      @keyframes roofDrop{to{opacity:1;transform:translateY(0)}}
+      /* Windows glow */
+      .wn{opacity:0;animation:winGlow .3s forwards}
+      @keyframes winGlow{to{opacity:1}}
+      /* Door */
+      .dr{opacity:0;transform:scaleY(0);transform-origin:bottom;animation:doorOpen .4s forwards}
+      @keyframes doorOpen{to{opacity:1;transform:scaleY(1)}}
+      /* Letter bold slide */
+      .tl{opacity:0;transform:translateX(-15px);animation:textSlide .4s forwards}
+      @keyframes textSlide{to{opacity:1;transform:translateX(0)}}
+      /* Word reveal — slides in from right and fades */
+      .wr{opacity:0;transform:translateX(10px);animation:wordReveal .5s forwards}
+      @keyframes wordReveal{to{opacity:1;transform:translateX(0)}}
+      /* Accent bar grow */
+      .ab{transform:scaleX(0);transform-origin:left;animation:barGrow .5s forwards}
+      @keyframes barGrow{to{transform:scaleX(1)}}
+      /* Tagline fade */
+      .tg{opacity:0;animation:tagFade .6s forwards}
+      @keyframes tagFade{to{opacity:.6}}
+      /* Separator dot */
+      .dt{opacity:0;animation:dotPop .3s forwards}
+      @keyframes dotPop{to{opacity:.5}}
+    </style>
+    <div class="splash-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 200" width="520" height="200">
+        <defs>
+          <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#E8650A"/>
+            <stop offset="100%" style="stop-color:#F5920A"/>
+          </linearGradient>
+        </defs>
+
+        <!-- BUILDING ICON — centered top -->
+        <g transform="translate(195, 0) scale(1.3)">
+          <!-- Building blocks — bottom to top -->
+          <rect class="bl" style="animation-delay:.2s" x="8" y="40" width="24" height="20" rx="2" fill="#fff"/>
+          <rect class="bl" style="animation-delay:.35s" x="8" y="20" width="24" height="20" rx="2" fill="#fff"/>
+          <rect class="bl" style="animation-delay:.5s" x="36" y="40" width="24" height="20" rx="2" fill="#fff"/>
+          <rect class="bl" style="animation-delay:.65s" x="36" y="20" width="24" height="20" rx="2" fill="#fff"/>
+          <rect class="bl" style="animation-delay:.8s" x="36" y="10" width="24" height="10" rx="2" fill="#fff"/>
+          <!-- Roofs -->
+          <polygon class="rf" style="animation-delay:1s" points="6,22 34,22 20,6" fill="url(#sg)"/>
+          <polygon class="rf" style="animation-delay:1.15s" points="34,12 62,12 48,0" fill="url(#sg)"/>
+          <!-- Windows — left building -->
+          <rect class="wn" style="animation-delay:1.4s" x="14" y="28" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.5s" x="22" y="28" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.6s" x="14" y="40" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.7s" x="22" y="40" width="6" height="6" rx="1" fill="#1A2744"/>
+          <!-- Windows — right building -->
+          <rect class="wn" style="animation-delay:1.5s" x="42" y="18" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.6s" x="50" y="18" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.7s" x="42" y="30" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.8s" x="50" y="30" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:1.9s" x="42" y="42" width="6" height="6" rx="1" fill="#1A2744"/>
+          <rect class="wn" style="animation-delay:2.0s" x="50" y="42" width="6" height="6" rx="1" fill="#1A2744"/>
+          <!-- Door -->
+          <rect class="dr" style="animation-delay:2.1s" x="17" y="50" width="10" height="10" rx="1.5" fill="url(#sg)"/>
+        </g>
+
+        <!-- E.L.C.R — each letter with its full word meaning -->
+        <!-- E — Entreprise -->
+        <text class="tl" style="animation-delay:2.4s" x="28" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">E</text>
+        <text class="wr" style="animation-delay:2.6s" x="56" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">ntreprise</text>
+
+        <!-- Dot separator -->
+        <text class="dt" style="animation-delay:2.8s" x="210" y="130" font-family="'Oswald',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">·</text>
+
+        <!-- L — Luci -->
+        <text class="tl" style="animation-delay:2.9s" x="230" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">L</text>
+        <text class="wr" style="animation-delay:3.1s" x="254" y="130" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">uci</text>
+
+        <!-- C — Construction -->
+        <text class="tl" style="animation-delay:3.4s" x="28" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">C</text>
+        <text class="wr" style="animation-delay:3.6s" x="58" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">onstruction</text>
+
+        <!-- Dot separator -->
+        <text class="dt" style="animation-delay:3.8s" x="268" y="172" font-family="'Oswald',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">·</text>
+
+        <!-- R — Rénovation -->
+        <text class="tl" style="animation-delay:3.9s" x="288" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="700" font-size="42" fill="url(#sg)">R</text>
+        <text class="wr" style="animation-delay:4.1s" x="316" y="172" font-family="'Oswald','Arial Black',sans-serif" font-weight="600" font-size="42" fill="#fff">énovation</text>
+
+        <!-- Bottom accent bar — full width -->
+        <rect class="ab" style="animation-delay:4.5s" x="28" y="185" width="464" height="3" rx="1.5" fill="url(#sg)"/>
+
+        <!-- Tagline -->
+        <text class="tg" style="animation-delay:4.8s" x="260" y="197" font-family="'Inter','Helvetica Neue',sans-serif" font-weight="400" font-size="10" letter-spacing=".5" fill="#fff" text-anchor="middle">Votre artisan maçon en Provence depuis 2009</text>
+      </svg>
     </div>
-  </a>
-</div>
+  </div>
+  <script>
+  (function(){
+    if(sessionStorage.getItem('elcr_splash')){
+      var s=document.getElementById('splash');
+      if(s)s.style.display='none';
+      return;
+    }
+    sessionStorage.setItem('elcr_splash','1');
+    document.body.style.overflow='hidden';
+    setTimeout(function(){
+      var s=document.getElementById('splash');
+      if(s)s.classList.add('done');
+      document.body.style.overflow='';
+      setTimeout(function(){if(s)s.style.display='none';},700);
+    },5800);
+  })();
+  </script>
 
+  <!-- TOP BAR CONFIANCE -->
+  <div class="top-bar">
+    <div class="container top-bar__inner">
+      <span class="top-bar__item">🛡️ Assurance décennale à jour</span>
+      <span class="top-bar__item">📍 Les Pennes-Mirabeau, 13170</span>
+      <span class="top-bar__item top-bar__item--accent">
+        <a href="tel:+33607835021">📞 06 07 83 50 21</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="index.html" class="header__logo">
+        <img src="images/logo-elcr-white.svg" alt="ELCR — Construction Maçonnerie Rénovation" class="header__logo-img" width="360" height="80">
+      </a>
+      <nav class="header__nav" aria-label="Navigation principale">
+        <ul class="header__nav-list">
+          <li class="header__nav-item">
+            <a href="index.html" class="header__nav-link header__nav-link--active">Accueil</a>
+          </li>
+          <li class="header__nav-item">
+            <a href="#services" class="header__nav-link">Nos Services</a>
+            <div class="header__dropdown">
+              <a href="services/construction-maison-neuve.html" class="header__dropdown-link">Construction maison neuve</a>
+              <a href="services/extension-surelevation.html" class="header__dropdown-link">Extension et surélévation</a>
+              <a href="services/renovation-gros-oeuvre.html" class="header__dropdown-link">Rénovation gros œuvre</a>
+              <a href="services/terrasse-dallage-cloture.html" class="header__dropdown-link">Terrasse, dallage, clôture</a>
+            </div>
+          </li>
+          <li class="header__nav-item">
+            <a href="realisations.html" class="header__nav-link">Réalisations</a>
+          </li>
+          <li class="header__nav-item">
+            <a href="a-propos.html" class="header__nav-link">À propos</a>
+          </li>
+          <li class="header__nav-item">
+            <a href="devis.html" class="header__nav-link">Contact</a>
+          </li>
+        </ul>
+      </nav>
+      <a href="tel:+33607835021" class="header__phone">📞 06 07 83 50 21</a>
+      <button class="hamburger" aria-label="Menu" aria-expanded="false">
+        <span class="hamburger__line"></span>
+        <span class="hamburger__line"></span>
+        <span class="hamburger__line"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE NAV OVERLAY -->
+  <nav class="mobile-nav" aria-label="Navigation mobile">
+    <a href="index.html" class="mobile-nav__link">Accueil</a>
+    <div class="mobile-nav__sub">
+      <a href="services/construction-maison-neuve.html" class="mobile-nav__sub-link">Construction maison neuve</a>
+      <a href="services/extension-surelevation.html" class="mobile-nav__sub-link">Extension et surélévation</a>
+      <a href="services/renovation-gros-oeuvre.html" class="mobile-nav__sub-link">Rénovation gros œuvre</a>
+      <a href="services/terrasse-dallage-cloture.html" class="mobile-nav__sub-link">Terrasse, dallage, clôture</a>
+    </div>
+    <a href="realisations.html" class="mobile-nav__link">Réalisations</a>
+    <a href="devis.html" class="mobile-nav__link">Contact</a>
+    <a href="tel:+33607835021" class="mobile-nav__phone">📞 Appeler maintenant</a>
+  </nav>
+
+  <main class="page-content">
+
+    <!-- HERO avec CARROUSEL -->
+    <section class="hero">
+      <div class="hero-carousel" id="hero-carousel">
+        <img src="images/hero-chantier.jpg" alt="Chantier de construction maçonnerie ELCR aux Pennes-Mirabeau" class="hero__bg hero-carousel__slide hero-carousel__slide--active" width="1920" height="1080" loading="eager">
+        <img src="images/carousel-01.jpg" alt="Maison traditionnelle construite par ELCR aux Pennes-Mirabeau" class="hero__bg hero-carousel__slide" width="1200" height="700" loading="eager">
+        <img src="images/carousel-02.jpg" alt="Construction maison neuve ELCR Bouches-du-Rhône" class="hero__bg hero-carousel__slide" width="1200" height="700" loading="lazy">
+        <img src="images/carousel-03.jpg" alt="Réalisation ELCR maison contemporaine Vitrolles" class="hero__bg hero-carousel__slide" width="1200" height="700" loading="lazy">
+        <img src="images/carousel-04.jpg" alt="Extension maison ELCR artisan maçon 13170" class="hero__bg hero-carousel__slide" width="1200" height="700" loading="lazy">
+        <img src="images/carousel-05.jpg" alt="Maison provençale rénovée par ELCR maçonnerie" class="hero__bg hero-carousel__slide" width="1200" height="700" loading="lazy">
+      </div>
+      <div class="hero__overlay"></div>
+      <div class="hero__content">
+        <h1 class="hero__title">Maçon aux Pennes-Mirabeau — ELCR, votre artisan depuis 2009</h1>
+        <p class="hero__subtitle">Construction neuve · Extension · Rénovation gros œuvre · Terrasse &amp; Clôture</p>
+        <div class="hero__badges">
+          <span class="hero__badge">✅ Assurance décennale</span>
+          <span class="hero__badge">✅ Devis gratuit 48h</span>
+          <span class="hero__badge">✅ 16 ans d'expérience</span>
+        </div>
+        <div class="hero__ctas">
+          <a href="devis.html" class="btn btn--accent">Demander un devis gratuit →</a>
+          <a href="realisations.html" class="btn btn--outline">Voir nos réalisations</a>
+        </div>
+      </div>
+      <a href="#chiffres" class="hero__scroll-down" aria-label="Défiler vers le bas"><span></span></a>
+    </section>
+
+    <!-- CHIFFRES -->
+    <section class="section section--bg" id="chiffres">
+      <div class="container">
+        <div class="chiffres">
+          <div class="chiffre-item animate-on-scroll">
+            <div class="chiffre-item__number" data-target="16">0</div>
+            <div class="chiffre-item__label">ans d'expérience terrain</div>
+          </div>
+          <div class="chiffre-item animate-on-scroll">
+            <div class="chiffre-item__number" data-target="200" data-suffix="+">0</div>
+            <div class="chiffre-item__label">chantiers réalisés</div>
+          </div>
+          <div class="chiffre-item animate-on-scroll">
+            <div class="chiffre-item__number" data-target="0">0</div>
+            <div class="chiffre-item__label">sous-traitant</div>
+          </div>
+          <div class="chiffre-item animate-on-scroll">
+            <div class="chiffre-item__number" data-target="48" data-suffix="h">0</div>
+            <div class="chiffre-item__label">pour votre devis</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section section--white" id="services">
+      <div class="container">
+        <h2 class="section-title">Nos services de maçonnerie</h2>
+        <div class="services-grid">
+          <div class="card-service animate-on-scroll">
+            <span class="card-service__icon">🏠</span>
+            <h3 class="card-service__title">Construction maison neuve</h3>
+            <p class="card-service__text">De la fondation à la toiture, ELCR prend en charge l'intégralité du gros œuvre. Ferraillage, élévation parpaings, dalle, chape : chaque étape est réalisée dans les règles de l'art, avec les matériaux adaptés au terrain provençal.</p>
+            <a href="services/construction-maison-neuve.html" class="card-service__link">Découvrir →</a>
+          </div>
+          <div class="card-service animate-on-scroll">
+            <span class="card-service__icon">🏗️</span>
+            <h3 class="card-service__title">Extension et surélévation</h3>
+            <p class="card-service__text">Agrandissez votre surface habitable sans déménager. Nos équipes maîtrisent l'extension latérale comme la surélévation de toiture, en respectant les contraintes structurelles et le PLU de votre commune.</p>
+            <a href="services/extension-surelevation.html" class="card-service__link">Découvrir →</a>
+          </div>
+          <div class="card-service animate-on-scroll">
+            <span class="card-service__icon">🔨</span>
+            <h3 class="card-service__title">Rénovation gros œuvre</h3>
+            <p class="card-service__text">Ouverture de mur porteur, reprise de fondations, réfection de chape, démolition maîtrisée : ELCR intervient sur tous les travaux lourds qui demandent une vraie expertise de maçon.</p>
+            <a href="services/renovation-gros-oeuvre.html" class="card-service__link">Découvrir →</a>
+          </div>
+          <div class="card-service animate-on-scroll">
+            <span class="card-service__icon">🌿</span>
+            <h3 class="card-service__title">Terrasse, dallage, clôture</h3>
+            <p class="card-service__text">Terrasse carrelée ou en béton désactivé, allée carrossable, muret de clôture, escalier extérieur : nos réalisations extérieures combinent solidité et esthétique méditerranéenne.</p>
+            <a href="services/terrasse-dallage-cloture.html" class="card-service__link">Découvrir →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GARANTIES & ASSURANCES -->
+    <section class="section section--bg" id="garanties">
+      <div class="container">
+        <h2 class="section-title">Vos garanties avec ELCR</h2>
+        <p class="section-subtitle text-center">Chaque chantier est couvert par des assurances professionnelles conformes à la loi. Votre tranquillité est notre priorité.</p>
+        <div class="guarantees-grid">
+          <div class="guarantee-card animate-on-scroll">
+            <div class="guarantee-card__icon">🛡️</div>
+            <h3 class="guarantee-card__title">Assurance décennale</h3>
+            <p class="guarantee-card__duration">10 ans de couverture</p>
+            <p class="guarantee-card__text">Conformément à l'article 1792 du Code civil, ELCR est couvert par une assurance décennale à jour. Elle garantit la réparation de tout dommage compromettant la solidité de l'ouvrage ou le rendant impropre à sa destination, pendant 10 ans après réception des travaux.</p>
+            <span class="guarantee-card__legal">Art. 1792 du Code civil</span>
+          </div>
+          <div class="guarantee-card animate-on-scroll">
+            <div class="guarantee-card__icon">✅</div>
+            <h3 class="guarantee-card__title">Garantie de parfait achèvement</h3>
+            <p class="guarantee-card__duration">1 an après réception</p>
+            <p class="guarantee-card__text">Pendant un an suivant la réception du chantier, ELCR s'engage à réparer tous les désordres signalés, quels qu'ils soient. C'est votre première protection légale après la fin des travaux.</p>
+            <span class="guarantee-card__legal">Art. 1792-6 du Code civil</span>
+          </div>
+          <div class="guarantee-card animate-on-scroll">
+            <div class="guarantee-card__icon">🔧</div>
+            <h3 class="guarantee-card__title">Garantie de bon fonctionnement</h3>
+            <p class="guarantee-card__duration">2 ans de couverture</p>
+            <p class="guarantee-card__text">Les éléments d'équipement dissociables du gros œuvre sont couverts pendant 2 ans. En cas de dysfonctionnement, ELCR intervient pour remettre en état sans frais supplémentaires.</p>
+            <span class="guarantee-card__legal">Art. 1792-3 du Code civil</span>
+          </div>
+          <div class="guarantee-card animate-on-scroll">
+            <div class="guarantee-card__icon">📋</div>
+            <h3 class="guarantee-card__title">Responsabilité civile professionnelle</h3>
+            <p class="guarantee-card__duration">Couverture permanente</p>
+            <p class="guarantee-card__text">ELCR dispose d'une assurance responsabilité civile professionnelle couvrant les dommages causés aux tiers pendant l'exécution des travaux. Protection complète pour vous et vos voisins.</p>
+            <span class="guarantee-card__legal">Attestation disponible sur demande</span>
+          </div>
+        </div>
+        <div class="text-center" style="margin-top: 24px;">
+          <a href="mentions-legales.html#assurances" class="card-service__link">Consulter nos mentions légales complètes →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOS ENGAGEMENTS -->
+    <section class="section section--white">
+      <div class="container">
+        <h2 class="section-title">Nos engagements professionnels</h2>
+        <div class="engagements-grid">
+          <div class="engagement-item animate-on-scroll">
+            <div class="engagement-item__number">01</div>
+            <h3 class="engagement-item__title">Artisan en direct</h3>
+            <p class="engagement-item__text">Jonathan LUCI, dirigeant d'ELCR, est présent sur chaque chantier. Pas de sous-traitance, pas d'intermédiaire. Vous échangez directement avec celui qui réalise vos travaux.</p>
+          </div>
+          <div class="engagement-item animate-on-scroll">
+            <div class="engagement-item__number">02</div>
+            <h3 class="engagement-item__title">Devis détaillé et transparent</h3>
+            <p class="engagement-item__text">Chaque devis est chiffré poste par poste : matériaux, main-d'œuvre, délais. Pas de mauvaise surprise, pas de frais cachés. Le prix annoncé est le prix final.</p>
+          </div>
+          <div class="engagement-item animate-on-scroll">
+            <div class="engagement-item__number">03</div>
+            <h3 class="engagement-item__title">Respect des délais</h3>
+            <p class="engagement-item__text">Un planning est défini dès la signature du devis. ELCR s'engage sur les dates de début et de fin de chantier. En 16 ans, notre taux de respect des délais est notre fierté.</p>
+          </div>
+          <div class="engagement-item animate-on-scroll">
+            <div class="engagement-item__number">04</div>
+            <h3 class="engagement-item__title">Chantier propre et sécurisé</h3>
+            <p class="engagement-item__text">Nettoyage quotidien, balisage, protection des abords : un chantier ELCR est un chantier organisé. Nous respectons votre domicile comme s'il était le nôtre.</p>
+          </div>
+          <div class="engagement-item animate-on-scroll">
+            <div class="engagement-item__number">05</div>
+            <h3 class="engagement-item__title">Matériaux de qualité</h3>
+            <p class="engagement-item__text">Nous sélectionnons nos matériaux auprès de fournisseurs locaux de confiance. Parpaings, béton, ferraillage : tout est choisi pour durer et résister au climat provençal.</p>
+          </div>
+          <div class="engagement-item animate-on-scroll">
+            <div class="engagement-item__number">06</div>
+            <h3 class="engagement-item__title">Suivi après travaux</h3>
+            <p class="engagement-item__text">Notre relation ne s'arrête pas à la fin du chantier. ELCR reste joignable pour toute question ou intervention, dans le cadre de vos garanties légales.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REFERENCE COMMERCIALE -->
+    <section class="section section--primary">
+      <div class="container">
+        <div class="reference animate-on-scroll">
+          <p class="reference__quote">ELCR a réalisé les travaux de faïence de l'Intermarché littoral Marseille — une référence qui témoigne du niveau d'exigence que nous appliquons sur chaque chantier, qu'il soit pour un particulier ou un professionnel.</p>
+          <span class="reference__badge">🏆 Référence commerciale — Grande distribution</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- GALERIE APERCU -->
+    <section class="section section--bg">
+      <div class="container">
+        <h2 class="section-title">Nos réalisations parlent pour nous</h2>
+        <div class="gallery-grid">
+          <!-- REMPLACER : Photo d'une maison neuve construite par ELCR, vue extérieure terminée -->
+          <div class="photo-item animate-on-scroll" data-category="maison-neuve">
+            <span class="photo-item__badge">Maison neuve</span>
+            <img src="images/real-01.jpg" alt="Construction maison neuve aux Pennes-Mirabeau par ELCR" width="600" height="400" loading="lazy">
+            <div class="photo-item__overlay">
+              <span class="photo-item__overlay-category">Maison neuve</span>
+              <span class="photo-item__overlay-icon">🔍</span>
+            </div>
+          </div>
+          <!-- REMPLACER : Photo d'une extension de maison en cours de construction -->
+          <div class="photo-item animate-on-scroll" data-category="extension">
+            <span class="photo-item__badge">Extension</span>
+            <img src="images/real-02.jpg" alt="Extension de maison à Vitrolles réalisée par ELCR" width="600" height="400" loading="lazy">
+            <div class="photo-item__overlay">
+              <span class="photo-item__overlay-category">Extension</span>
+              <span class="photo-item__overlay-icon">🔍</span>
+            </div>
+          </div>
+          <!-- REMPLACER : Photo de travaux de rénovation gros œuvre, mur porteur ouvert -->
+          <div class="photo-item animate-on-scroll" data-category="renovation">
+            <span class="photo-item__badge">Rénovation</span>
+            <img src="images/real-03.jpg" alt="Rénovation gros œuvre maçonnerie ELCR Bouches-du-Rhône" width="600" height="400" loading="lazy">
+            <div class="photo-item__overlay">
+              <span class="photo-item__overlay-category">Rénovation</span>
+              <span class="photo-item__overlay-icon">🔍</span>
+            </div>
+          </div>
+          <!-- REMPLACER : Photo d'une terrasse carrelée terminée avec vue jardin -->
+          <div class="photo-item animate-on-scroll" data-category="terrasse">
+            <span class="photo-item__badge">Terrasse</span>
+            <img src="images/real-04.jpg" alt="Terrasse dallage réalisée par ELCR aux Pennes-Mirabeau" width="600" height="400" loading="lazy">
+            <div class="photo-item__overlay">
+              <span class="photo-item__overlay-category">Terrasse</span>
+              <span class="photo-item__overlay-icon">🔍</span>
+            </div>
+          </div>
+          <!-- REMPLACER : Photo de fondations en cours de coulage sur chantier -->
+          <div class="photo-item animate-on-scroll" data-category="maison-neuve">
+            <span class="photo-item__badge">Maison neuve</span>
+            <img src="images/real-05.jpg" alt="Fondations maison neuve maçon ELCR 13170" width="600" height="400" loading="lazy">
+            <div class="photo-item__overlay">
+              <span class="photo-item__overlay-category">Maison neuve</span>
+              <span class="photo-item__overlay-icon">🔍</span>
+            </div>
+          </div>
+          <!-- REMPLACER : Photo d'un muret de clôture en parpaings avec finition enduit -->
+          <div class="photo-item animate-on-scroll" data-category="terrasse">
+            <span class="photo-item__badge">Clôture</span>
+            <img src="images/real-06.jpg" alt="Muret clôture maçonnerie ELCR Marignane" width="600" height="400" loading="lazy">
+            <div class="photo-item__overlay">
+              <span class="photo-item__overlay-category">Clôture</span>
+              <span class="photo-item__overlay-icon">🔍</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-center" style="margin-top:32px;">
+          <a href="realisations.html" class="btn btn--accent">Voir toutes nos réalisations →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- AVIS CLIENTS -->
+    <section class="section section--white">
+      <div class="container">
+        <h2 class="section-title">Ce que disent nos clients</h2>
+        <div class="avis-grid">
+          <div class="avis-card animate-on-scroll">
+            <div class="avis-card__stars">★★★★★</div>
+            <p class="avis-card__text">"Jonathan est intervenu rapidement pour notre extension. Sérieux, propre, résultat vraiment solide. ELCR était le seul à connaître les contraintes du terrain ici aux Pennes. Je recommande sans hésiter."</p>
+            <p class="avis-card__author">— Christophe M., Les Pennes-Mirabeau</p>
+          </div>
+          <div class="avis-card animate-on-scroll">
+            <div class="avis-card__stars">★★★★★</div>
+            <p class="avis-card__text">"Terrasse réalisée avec soin, délais respectés. Ce qu'on apprécie : Jonathan fait lui-même le travail, pas de sous-traitants. La dalle est nickel."</p>
+            <p class="avis-card__author">— Isabelle T., Vitrolles</p>
+          </div>
+          <div class="avis-card animate-on-scroll">
+            <div class="avis-card__stars">★★★★★</div>
+            <p class="avis-card__text">"Devis clair, prix honnête, chantier impeccable. Notre maison neuve est sortie de terre exactement comme prévu. ELCR c'est un artisan à l'ancienne."</p>
+            <p class="avis-card__author">— Marc R., Cabriès</p>
+          </div>
+        </div>
+        <div class="text-center" style="margin-top:24px;">
+          <a href="#" target="_blank" rel="noopener" class="card-service__link">Laisser un avis Google →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE D'INTERVENTION -->
+    <section class="section section--bg">
+      <div class="container">
+        <h2 class="section-title">Nous intervenons dans tout le secteur</h2>
+        <div class="zone-badges">
+          <span class="zone-badge">Les Pennes-Mirabeau</span>
+          <span class="zone-badge">Vitrolles</span>
+          <span class="zone-badge">Septèmes-les-Vallons</span>
+          <span class="zone-badge">Cabriès</span>
+          <span class="zone-badge">Plan-de-Campagne</span>
+          <span class="zone-badge">Gignac-la-Nerthe</span>
+          <span class="zone-badge">Marignane</span>
+          <span class="zone-badge">Marseille 13e/14e/15e/16e</span>
+        </div>
+        <p class="zone-note">Et plus généralement dans les Bouches-du-Rhône (13)</p>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="section--accent cta-section">
+      <div class="container">
+        <h2 class="cta-section__title">Votre projet mérite un artisan qui connaît le terrain.</h2>
+        <p class="cta-section__subtitle">Devis gratuit · Réponse sous 48h · Pas d'acompte</p>
+        <a href="devis.html" class="btn btn--white">Obtenir mon devis gratuit →</a>
+        <p class="cta-section__phone">Ou appelez directement : <a href="tel:+33607835021">06 07 83 50 21</a></p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" role="dialog" aria-label="Visionneuse photos">
+    <button class="lightbox__close" aria-label="Fermer">&times;</button>
+    <button class="lightbox__nav lightbox__nav--prev" aria-label="Photo précédente">&#8249;</button>
+    <button class="lightbox__nav lightbox__nav--next" aria-label="Photo suivante">&#8250;</button>
+    <img class="lightbox__img" src="" alt="Réalisation ELCR">
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__col">
+          <div class="footer__logo-name">ELCR</div>
+          <p class="footer__tagline">Votre artisan maçon en Provence depuis 2009</p>
+          <p class="footer__siren">SIREN 514 466 473</p>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Navigation</h4>
+          <div class="footer__links">
+            <a href="index.html" class="footer__link">Accueil</a>
+            <a href="services/construction-maison-neuve.html" class="footer__link">Construction maison neuve</a>
+            <a href="services/extension-surelevation.html" class="footer__link">Extension et surélévation</a>
+            <a href="services/renovation-gros-oeuvre.html" class="footer__link">Rénovation gros œuvre</a>
+            <a href="services/terrasse-dallage-cloture.html" class="footer__link">Terrasse, dallage, clôture</a>
+            <a href="realisations.html" class="footer__link">Réalisations</a>
+            <a href="devis.html" class="footer__link">Demander un devis</a>
+          </div>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Contact</h4>
+          <div class="footer__contact-item">
+            📍 Les Pennes-Mirabeau, 13170
+          </div>
+          <div class="footer__contact-item">
+            📞 <a href="tel:+33607835021">06 07 83 50 21</a>
+          </div>
+          <div class="footer__contact-item">
+            ✉️ <a href="mailto:entreprise_lcr@yahoo.fr">entreprise_lcr@yahoo.fr</a>
+          </div>
+          <div class="footer__socials">
+            <a href="https://www.facebook.com/elcr33210" target="_blank" rel="noopener" class="footer__social-link" aria-label="Facebook ELCR">f</a>
+            <a href="https://maps.google.com/?q=Les+Pennes-Mirabeau+13170" target="_blank" rel="noopener" class="footer__social-link" aria-label="Google Maps ELCR">📍</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- TRUST BAR FOOTER -->
+    <div class="footer__trust-bar">
+      <div class="container">
+        <div class="trust-bar">
+          <div class="trust-bar__item">
+            <span class="trust-bar__icon">🛡️</span>
+            <span class="trust-bar__label">Assurance décennale</span>
+          </div>
+          <div class="trust-bar__item">
+            <span class="trust-bar__icon">📋</span>
+            <span class="trust-bar__label">RC Professionnelle</span>
+          </div>
+          <div class="trust-bar__item">
+            <span class="trust-bar__icon">🏗️</span>
+            <span class="trust-bar__label">SIREN 514 466 473</span>
+          </div>
+          <div class="trust-bar__item">
+            <span class="trust-bar__icon">📅</span>
+            <span class="trust-bar__label">Depuis 2009</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>&copy; 2025 ELCR — Tous droits réservés | <a href="mentions-legales.html">Mentions légales</a> | <a href="mentions-legales.html#donnees">Politique de confidentialité</a></p>
+        <p class="footer__bottom-trust">Entrepreneur Individuel · SIREN 514 466 473 · Assurance décennale à jour · Devis gratuit sous 48h</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FLOATING CTA -->
+  <div class="floating-cta" id="floating-cta">
+    <a href="devis.html" class="floating-cta__btn floating-cta__btn--devis" aria-label="Demander un devis gratuit">
+      <span class="floating-cta__icon">📝</span>
+      <span class="floating-cta__label">Devis gratuit</span>
+    </a>
+    <a href="tel:+33607835021" class="floating-cta__btn floating-cta__btn--phone" aria-label="Appeler ELCR">
+      <span class="floating-cta__icon">📞</span>
+      <span class="floating-cta__label">Appeler</span>
+    </a>
+  </div>
+
+  <script src="js/main.js" defer></script>
 </body>
 </html>
