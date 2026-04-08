@@ -163,36 +163,42 @@ canvas{display:block}
   </div>
 
   <div class="section" id="plu-section">
-    <div class="section-title">Contraintes PLUi UM2</div>
+    <div class="section-title">Contraintes PLUi UM2 (officiel)</div>
+    <div class="plu-ref" style="font-size:9px;color:#666;margin-bottom:8px">Ref: PLUi Marseille Provence, approuve 19/12/2019</div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Emprise au sol (CES max 5%)</div>
+      <div class="plu-gauge-label">Art.4 — Emprise au sol (CES max 5%)</div>
       <div class="plu-bar-bg"><div class="plu-bar-fill" id="plu-ces-bar" style="width:99.8%"></div></div>
       <div class="plu-values"><span id="plu-ces-val">84.7 m²</span> / <span>84.9 m² max</span> <span class="plu-status plu-warn" id="plu-ces-status">LIMITE</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Hauteur faitage (max 10m / TN)</div>
+      <div class="plu-gauge-label">Art.5a — Hauteur facade (max 7m / TN)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-he-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span id="plu-he-val">~7.7m</span> / <span>7.0m max</span> <span class="plu-status plu-danger" id="plu-he-status">DEPASSE</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Art.5b — Hauteur totale (facade+3m = 10m max)</div>
       <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-hf-bar" style="width:100%"></div></div>
       <div class="plu-values"><span id="plu-hf-val">~13.7m</span> / <span>10.0m max</span> <span class="plu-status plu-danger" id="plu-hf-status">DEPASSE</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Hauteur egout (max 7m / TN)</div>
-      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-he-bar" style="width:100%"></div></div>
-      <div class="plu-values"><span id="plu-he-val">~9.7m</span> / <span>7.0m max</span> <span class="plu-status plu-danger" id="plu-he-status">DEPASSE</span></div>
-    </div>
-    <div class="plu-gauge">
-      <div class="plu-gauge-label">Recul voie publique (min 5m)</div>
+      <div class="plu-gauge-label">Art.6a — Recul voie publique (min 4m)</div>
       <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-rv-bar" style="width:50%"></div></div>
-      <div class="plu-values"><span>~8m</span> / <span>5m min</span> <span class="plu-status plu-ok">OK</span></div>
+      <div class="plu-values"><span>~8m</span> / <span>4m min</span> <span class="plu-status plu-ok">OK</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Recul limites separatives (H/2, min 3m)</div>
+      <div class="plu-gauge-label">Art.7a — Recul separatif (DA/2, min 3m)</div>
       <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-rs-bar" style="width:60%"></div></div>
       <div class="plu-values"><span>~5m</span> / <span>3m min</span> <span class="plu-status plu-ok">OK</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Pleine terre (min 40%)</div>
+      <div class="plu-gauge-label">Pleine terre (min ~40%)</div>
       <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-pt-bar" style="width:45%"></div></div>
       <div class="plu-values"><span>~88%</span> / <span>40% min</span> <span class="plu-status plu-ok">OK</span></div>
+    </div>
+    <div style="margin-top:8px;padding:8px;background:rgba(76,175,80,0.1);border-radius:6px;border:1px solid rgba(76,175,80,0.2)">
+      <div style="font-size:10px;color:#4CAF50;font-weight:600">EXEMPTIONS PLUi (Art.6/7/8)</div>
+      <div style="font-size:10px;color:#999;margin-top:4px">Piscine non couverte : exempte</div>
+      <div style="font-size:10px;color:#999">Sous-sol enterre : exempt implantation</div>
     </div>
     <div style="margin-top:10px">
       <label class="floor-toggle" style="margin:0">
@@ -886,18 +892,18 @@ scene.add(pluGroup);
     s.scale.set(5, 1.25, 1);
     pluGroup.add(s);
   }
-  pluLabel('HMAX FAITAGE 10m', 10, 10.5, 0, '#f44336');
-  pluLabel('HMAX EGOUT 7m', 10, 7.5, 0, '#FF9800');
+  pluLabel('Art.5b HMAX TOTALE 10m', 10, 10.5, 0, '#f44336');
+  pluLabel('Art.5a HMAX FACADE 7m', 10, 7.5, 0, '#FF9800');
 
-  // Recul voie publique (5m from road at z=-18, road edge ~z=-15)
+  // Art.6a Recul voie publique (4m from road edge at z~-15)
   const reculVoiePts = [
-    new THREE.Vector3(-20, 0.2, -13), new THREE.Vector3(20, 0.2, -13)
+    new THREE.Vector3(-20, 0.2, -14), new THREE.Vector3(20, 0.2, -14)
   ];
   const reculVoieGeo = new THREE.BufferGeometry().setFromPoints(reculVoiePts);
   const reculVoieLine = new THREE.Line(reculVoieGeo, new THREE.LineDashedMaterial({ color: 0xFFC107, dashSize: 1, gapSize: 0.5, transparent: true, opacity: 0.7 }));
   reculVoieLine.computeLineDistances();
   pluGroup.add(reculVoieLine);
-  pluLabel('RECUL VOIE 5m', -10, 1, -13, '#FFC107');
+  pluLabel('Art.6a RECUL VOIE 4m', -10, 1, -14, '#FFC107');
 
   // Recul limites separatives (3m from plot boundary - simplified)
   const reculSepMat = new THREE.LineDashedMaterial({ color: 0x9C27B0, dashSize: 0.8, gapSize: 0.4, transparent: true, opacity: 0.6 });
@@ -910,7 +916,7 @@ scene.add(pluGroup);
   const sepLine = new THREE.Line(sepGeo, reculSepMat);
   sepLine.computeLineDistances();
   pluGroup.add(sepLine);
-  pluLabel('RECUL SEPARATIF 3m', -12, 1, 10, '#9C27B0');
+  pluLabel('Art.7a RECUL DA/2, min 3m', -12, 1, 10, '#9C27B0');
 
   // Emprise au sol max zone (5% of 1698 = 84.9 m², ~9.2m x 9.2m square equivalent)
   const empMaxSide = Math.sqrt(84.9);
