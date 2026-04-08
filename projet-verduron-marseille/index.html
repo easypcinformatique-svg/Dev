@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projet Verduron - Visualisation 3D - Marseille 13015</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#1a1a2e}
+canvas{display:block}
+#sidebar{position:fixed;top:0;left:0;width:300px;height:100vh;background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);color:#e0e0e0;padding:20px;overflow-y:auto;z-index:100;border-right:1px solid #0f3460;box-shadow:2px 0 15px rgba(0,0,0,0.5)}
+#sidebar h1{font-size:16px;color:#e94560;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+#sidebar h2{font-size:12px;color:#888;margin-bottom:15px;font-weight:normal}
+.section{background:rgba(255,255,255,0.05);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.08)}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#e94560;margin-bottom:10px;font-weight:600}
+.info-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.info-row:last-child{border:none}
+.info-label{color:#888}.info-value{color:#fff;font-weight:500}
+.floor-toggle{display:flex;align-items:center;padding:6px 8px;margin:3px 0;border-radius:6px;cursor:pointer;transition:background 0.2s}
+.floor-toggle:hover{background:rgba(255,255,255,0.1)}
+.floor-toggle input{margin-right:10px;accent-color:#e94560}
+.floor-toggle .color-dot{width:12px;height:12px;border-radius:50%;margin-right:8px;border:1px solid rgba(255,255,255,0.3)}
+.floor-toggle label{font-size:12px;cursor:pointer;flex:1}
+.floor-toggle .surface{font-size:10px;color:#888;margin-left:auto}
+.view-btn{background:rgba(233,69,96,0.15);border:1px solid rgba(233,69,96,0.3);color:#e94560;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:11px;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px}
+.view-btn:hover{background:rgba(233,69,96,0.3);transform:translateY(-1px)}
+.view-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+#compass{position:fixed;bottom:20px;right:20px;width:90px;height:90px;z-index:100}
+#loading{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;color:#e94560;font-family:'Segoe UI',sans-serif}
+#loading .spinner{width:50px;height:50px;border:3px solid #16213e;border-top-color:#e94560;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#tooltip{position:fixed;background:rgba(26,26,46,0.95);color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;pointer-events:none;display:none;z-index:200;border:1px solid #e94560;backdrop-filter:blur(10px)}
+.legend-item{display:flex;align-items:center;font-size:11px;padding:2px 0}
+.legend-color{width:16px;height:10px;border-radius:2px;margin-right:8px;border:1px solid rgba(255,255,255,0.2)}
+.slider-row{margin:6px 0;font-size:11px}
+.slider-row label{display:flex;justify-content:space-between;margin-bottom:3px;color:#ccc}
+.slider-row label span{color:#e94560;font-weight:600}
+.slider-row input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:#16213e;border-radius:2px;outline:none}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e94560;cursor:pointer;border:2px solid #1a1a2e}
+#altitude-bar{position:fixed;right:130px;bottom:20px;width:24px;height:200px;background:rgba(26,26,46,0.8);border-radius:12px;border:1px solid rgba(255,255,255,0.1);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;font-size:9px;color:#888}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><div>Chargement du projet Verduron...</div></div>
+<div id="tooltip"></div>
+
+<div id="sidebar">
+  <h1>Projet Verduron</h1>
+  <h2>Parcelle 906/0E/0251 — Marseille 13015</h2>
+
+  <div class="section">
+    <div class="section-title">Informations Terrain</div>
+    <div class="info-row"><span class="info-label">Surface</span><span class="info-value">1 698 m²</span></div>
+    <div class="info-row"><span class="info-label">Altitude</span><span class="info-value">183m NGF</span></div>
+    <div class="info-row"><span class="info-label">Pente</span><span class="info-value">15-20° Nord→Sud</span></div>
+    <div class="info-row"><span class="info-label">Zone PLUi</span><span class="info-value">UM2</span></div>
+    <div class="info-row"><span class="info-label">Orientation</span><span class="info-value">Sud (vue mer)</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Niveaux</div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-basement" checked onchange="toggleFloor('basement')">
+      <div class="color-dot" style="background:#5D4E37"></div>
+      <label for="tog-basement">Sous-sol</label>
+      <span class="surface">100 m²</span>
+    </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-ground" checked onchange="toggleFloor('ground')">
+      <div class="color-dot" style="background:#E8DCC8"></div>
+      <label for="tog-ground">RDC</label>
+      <span class="surface">84.7 m²</span>
+    </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-first" checked onchange="toggleFloor('first')">
+      <div class="color-dot" style="background:#F5F0E8"></div>
+      <label for="tog-first">R+1</label>
+      <span class="surface">84.7 m²</span>
+    </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-attic" checked onchange="toggleFloor('attic')">
+      <div class="color-dot" style="background:#8B7355"></div>
+      <label for="tog-attic">Combles</label>
+      <span class="surface">~32 m²</span>
+    </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-balcony" checked onchange="toggleFloor('balcony')">
+      <div class="color-dot" style="background:#404040"></div>
+      <label for="tog-balcony">Balcon</label>
+      <span class="surface">27 m²</span>
+    </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-terrace" checked onchange="toggleFloor('terrace')">
+      <div class="color-dot" style="background:#C0B090"></div>
+      <label for="tog-terrace">Terrasse</label>
+      <span class="surface">—</span>
+    </div>
+    <div class="floor-toggle">
+      <input type="checkbox" id="tog-pool" checked onchange="toggleFloor('pool')">
+      <div class="color-dot" style="background:#2196F3"></div>
+      <label for="tog-pool">Piscine</label>
+      <span class="surface">32 m²</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Vues</div>
+    <div class="view-grid">
+      <button class="view-btn" onclick="setView('north')">Nord</button>
+      <button class="view-btn" onclick="setView('south')">Sud</button>
+      <button class="view-btn" onclick="setView('east')">Est</button>
+      <button class="view-btn" onclick="setView('west')">Ouest</button>
+      <button class="view-btn" onclick="setView('top')">Dessus</button>
+      <button class="view-btn" onclick="setView('persp')">3D</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Dimensions Ajustables</div>
+    <div class="slider-row">
+      <label>Piscine Long. <span id="val-poolW">8.0</span>m</label>
+      <input type="range" min="4" max="12" step="0.5" value="8" id="sl-poolW" oninput="updatePool()">
+    </div>
+    <div class="slider-row">
+      <label>Piscine Larg. <span id="val-poolD">4.0</span>m</label>
+      <input type="range" min="2" max="6" step="0.5" value="4" id="sl-poolD" oninput="updatePool()">
+    </div>
+    <div class="slider-row">
+      <label>Piscine Prof. <span id="val-poolH">1.5</span>m</label>
+      <input type="range" min="1" max="2.5" step="0.1" value="1.5" id="sl-poolH" oninput="updatePool()">
+    </div>
+    <div class="slider-row">
+      <label>Balcon Prof. <span id="val-balcD">3.0</span>m</label>
+      <input type="range" min="1" max="5" step="0.5" value="3" id="sl-balcD" oninput="updateBalcony()">
+    </div>
+    <div class="slider-row">
+      <label>Terrasse Prof. <span id="val-terrD">5.0</span>m</label>
+      <input type="range" min="3" max="10" step="0.5" value="5" id="sl-terrD" oninput="updateTerrace()">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Dimensions Bâtiment</div>
+    <div class="info-row"><span class="info-label">Sous-sol</span><span class="info-value">11.0 × 9.0 × 2.5m</span></div>
+    <div class="info-row"><span class="info-label">RDC</span><span class="info-value">11.0 × 7.7 × 2.7m</span></div>
+    <div class="info-row"><span class="info-label">R+1</span><span class="info-value">11.0 × 7.7 × 2.5m</span></div>
+    <div class="info-row"><span class="info-label">Combles</span><span class="info-value">11.0 × 5.2 × ~4m</span></div>
+    <div class="info-row"><span class="info-label">Balcon R+1</span><span class="info-value" id="dim-balcon">9.0 × 3.0m</span></div>
+    <div class="info-row"><span class="info-label">Piscine</span><span class="info-value" id="dim-piscine">8.0 × 4.0m</span></div>
+    <div class="info-row"><span class="info-label">Toit</span><span class="info-value">Mono-pente 30°</span></div>
+    <div class="info-row"><span class="info-label">Surface totale</span><span class="info-value">~301 m²</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Légende</div>
+    <div class="legend-item"><div class="legend-color" style="background:#6B8E23"></div>Terrain</div>
+    <div class="legend-item"><div class="legend-color" style="background:#555"></div>Voirie / Rampe</div>
+    <div class="legend-item"><div class="legend-color" style="background:#88CCEE"></div>Vitrages</div>
+    <div class="legend-item"><div class="legend-color" style="background:#2196F3"></div>Piscine</div>
+    <div class="legend-item"><div class="legend-color" style="background:#708090"></div>Réservoirs d'eau</div>
+  </div>
+</div>
+
+<svg id="compass" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="45" fill="rgba(26,26,46,0.8)" stroke="rgba(233,69,96,0.4)" stroke-width="1"/>
+  <polygon id="compass-needle-n" points="50,12 44,50 56,50" fill="#e94560"/>
+  <polygon id="compass-needle-s" points="50,88 44,50 56,50" fill="#555"/>
+  <text x="50" y="9" text-anchor="middle" fill="#e94560" font-size="11" font-weight="bold">N</text>
+  <text x="50" y="97" text-anchor="middle" fill="#888" font-size="9">S</text>
+  <text x="95" y="54" text-anchor="middle" fill="#888" font-size="9">E</text>
+  <text x="6" y="54" text-anchor="middle" fill="#888" font-size="9">O</text>
+</svg>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ============ SCENE SETUP ============
+const scene = new THREE.Scene();
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(25, 20, 30);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 4, 0);
+controls.minDistance = 8;
+controls.maxDistance = 100;
+controls.maxPolarAngle = Math.PI / 2.05;
+controls.update();
+
+// ============ SKY ============
+const skyGeo = new THREE.SphereGeometry(200, 32, 32);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms: { topColor: { value: new THREE.Color(0x0077be) }, bottomColor: { value: new THREE.Color(0xc8e6f5) } },
+  vertexShader: `varying vec3 vWorldPos; void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vWorldPos=wp.xyz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform vec3 topColor; uniform vec3 bottomColor; varying vec3 vWorldPos; void main(){ float h=normalize(vWorldPos).y; gl_FragColor=vec4(mix(bottomColor,topColor,max(h,0.0)),1.0); }`
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// ============ LIGHTING ============
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
+sun.position.set(-15, 25, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -30; sun.shadow.camera.right = 30;
+sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 80;
+sun.shadow.bias = -0.001;
+scene.add(sun);
+
+const fillLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+fillLight.position.set(10, 10, -15);
+scene.add(fillLight);
+
+const hemi = new THREE.HemisphereLight(0x87ceeb, 0x556633, 0.3);
+scene.add(hemi);
+
+// ============ MATERIALS ============
+const mat = {
+  basement: new THREE.MeshPhongMaterial({ color: 0x5D4E37, flatShading: false }),
+  ground: new THREE.MeshPhongMaterial({ color: 0xE8DCC8 }),
+  first: new THREE.MeshPhongMaterial({ color: 0xF5F0E8 }),
+  roof: new THREE.MeshPhongMaterial({ color: 0x8B7355 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: 0x88CCEE, transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, transmission: 0.7, side: THREE.DoubleSide }),
+  glassFrame: new THREE.MeshPhongMaterial({ color: 0x333333 }),
+  terrain: new THREE.MeshPhongMaterial({ color: 0x6B8E23, flatShading: true, side: THREE.DoubleSide }),
+  terrace: new THREE.MeshPhongMaterial({ color: 0xC0B090 }),
+  road: new THREE.MeshPhongMaterial({ color: 0x555555 }),
+  steel: new THREE.MeshPhongMaterial({ color: 0x404040, metalness: 0.8 }),
+  reservoir: new THREE.MeshPhongMaterial({ color: 0x708090 }),
+  white: new THREE.MeshPhongMaterial({ color: 0xffffff }),
+  wall: new THREE.MeshPhongMaterial({ color: 0xd5c9b5 }),
+};
+
+// ============ GROUPS ============
+const groups = {};
+['basement','ground','first','attic','balcony','terrace','pool'].forEach(k => {
+  groups[k] = new THREE.Group();
+  groups[k].name = k;
+  scene.add(groups[k]);
+});
+const buildingGroup = new THREE.Group();
+scene.add(buildingGroup);
+
+// Helper to add mesh
+function addBox(group, w, h, d, matl, x, y, z) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mesh = new THREE.Mesh(geo, matl);
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  group.add(mesh);
+  return mesh;
+}
+
+
+// ============ TERRAIN (pente Nord→Sud) ============
+(function buildTerrain() {
+  // Pentagone irrégulier ~1698 m², pente 17 degrés
+  const slopeAngle = 17 * Math.PI / 180;
+  const terrainGeo = new THREE.PlaneGeometry(60, 60, 40, 40);
+  const pos = terrainGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    // Slope: north (y>0) is higher, south (y<0) is lower
+    const elevation = -y * Math.tan(slopeAngle) * 0.5;
+    // Add subtle undulation
+    const noise = Math.sin(x * 0.3) * Math.cos(y * 0.2) * 0.3;
+    pos.setZ(i, elevation + noise);
+  }
+  terrainGeo.computeVertexNormals();
+  const terrainMesh = new THREE.Mesh(terrainGeo, mat.terrain);
+  terrainMesh.rotation.x = -Math.PI / 2;
+  terrainMesh.receiveShadow = true;
+  terrainMesh.position.set(0, -0.5, 0);
+  scene.add(terrainMesh);
+
+  // Plot boundary (pentagone)
+  const plotShape = new THREE.Shape();
+  // Approximate irregular pentagon - 1698 sqm
+  const pts = [
+    [-18, -15], [-20, 5], [-10, 18], [15, 16], [20, -5], [10, -18]
+  ];
+  plotShape.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) plotShape.lineTo(pts[i][0], pts[i][1]);
+  plotShape.lineTo(pts[0][0], pts[0][1]);
+
+  const plotLine = new THREE.BufferGeometry().setFromPoints(
+    pts.map(p => new THREE.Vector3(p[0], 0.05, p[1])).concat([new THREE.Vector3(pts[0][0], 0.05, pts[0][1])])
+  );
+  const plotBorder = new THREE.Line(plotLine, new THREE.LineBasicMaterial({ color: 0xe94560, linewidth: 2 }));
+  scene.add(plotBorder);
+
+  // Plot fill (very subtle)
+  const plotGeo = new THREE.ShapeGeometry(plotShape);
+  const plotFill = new THREE.Mesh(plotGeo, new THREE.MeshBasicMaterial({ color: 0x6B8E23, transparent: true, opacity: 0.15, side: THREE.DoubleSide }));
+  plotFill.rotation.x = -Math.PI / 2;
+  plotFill.position.y = 0.06;
+  scene.add(plotFill);
+})();
+
+// ============ ROAD (Boulevard Marius Brémond - North) ============
+(function buildRoad() {
+  const roadGeo = new THREE.PlaneGeometry(50, 6);
+  const roadMesh = new THREE.Mesh(roadGeo, mat.road);
+  roadMesh.rotation.x = -Math.PI / 2;
+  roadMesh.position.set(0, 5.8, -18);
+  roadMesh.receiveShadow = true;
+  scene.add(roadMesh);
+
+  // Road label
+  const roadCanvas = document.createElement('canvas');
+  roadCanvas.width = 512; roadCanvas.height = 64;
+  const rctx = roadCanvas.getContext('2d');
+  rctx.fillStyle = '#ffffff';
+  rctx.font = '24px Arial';
+  rctx.textAlign = 'center';
+  rctx.fillText('Boulevard Marius Brémond', 256, 40);
+  const roadTex = new THREE.CanvasTexture(roadCanvas);
+  const roadLabel = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 2),
+    new THREE.MeshBasicMaterial({ map: roadTex, transparent: true, side: THREE.DoubleSide })
+  );
+  roadLabel.rotation.x = -Math.PI / 2;
+  roadLabel.position.set(0, 6.0, -18);
+  scene.add(roadLabel);
+})();
+
+// ============ BASEMENT (Sous-sol) 11.0 x 9.0 x 2.5m ============
+(function buildBasement() {
+  const g = groups.basement;
+  const bW = 11, bD = 9, bH = 2.5;
+  const baseY = 0; // basement floor level
+
+  // Main volume - embedded in slope
+  // North wall (garage side)
+  addBox(g, bW, bH, 0.3, mat.basement, 0, baseY + bH/2, -bD/2);
+  // South wall (studio side - partially glazed)
+  addBox(g, 1.0, bH, 0.3, mat.basement, -bW/2 + 0.5, baseY + bH/2, bD/2);
+  addBox(g, 1.0, bH, 0.3, mat.basement, bW/2 - 0.5, baseY + bH/2, bD/2);
+  addBox(g, bW, 0.5, 0.3, mat.basement, 0, baseY + bH - 0.25, bD/2); // top strip
+  // South glass (studio)
+  addBox(g, bW - 2, bH - 0.5, 0.05, mat.glass, 0, baseY + (bH-0.5)/2, bD/2);
+
+  // East wall
+  addBox(g, 0.3, bH, bD, mat.basement, bW/2, baseY + bH/2, 0);
+  // West wall
+  addBox(g, 0.3, bH, bD, mat.basement, -bW/2, baseY + bH/2, 0);
+
+  // Floor slab
+  addBox(g, bW, 0.3, bD, mat.basement, 0, baseY, 0);
+  // Ceiling slab
+  addBox(g, bW, 0.3, bD, mat.basement, 0, baseY + bH, 0);
+
+  // Garage doors (north face) - 2 car garage
+  addBox(g, 2.8, 2.2, 0.15, mat.steel, -2.5, baseY + 1.1, -bD/2 + 0.1);
+  addBox(g, 2.8, 2.2, 0.15, mat.steel, 2.5, baseY + 1.1, -bD/2 + 0.1);
+
+  // Interior dividing wall (garage | studio)
+  addBox(g, bW - 0.6, bH - 0.3, 0.2, new THREE.MeshPhongMaterial({color:0x6B5D4F}), 0, baseY + bH/2, 1.0);
+})();
+
+// ============ GARAGE RAMP ============
+(function buildRamp() {
+  // Ramp from street level (y~5.8) down to basement (y~0), north side
+  const rampGeo = new THREE.BoxGeometry(5, 0.2, 10);
+  const rampMesh = new THREE.Mesh(rampGeo, mat.road);
+  rampMesh.position.set(0, 3.0, -10);
+  // Angle the ramp
+  rampMesh.rotation.x = Math.atan2(5.8, 10) * 0.85;
+  rampMesh.castShadow = true;
+  rampMesh.receiveShadow = true;
+  scene.add(rampMesh);
+
+  // Ramp walls
+  const wallGeo = new THREE.BoxGeometry(0.2, 1.5, 10);
+  const wallL = new THREE.Mesh(wallGeo, mat.basement);
+  wallL.position.set(-2.6, 3.0, -10);
+  wallL.rotation.x = Math.atan2(5.8, 10) * 0.85;
+  wallL.castShadow = true;
+  scene.add(wallL);
+  const wallR = wallL.clone();
+  wallR.position.x = 2.6;
+  scene.add(wallR);
+})();
+
+
+// ============ GROUND FLOOR (RDC) 11.0 x 7.7 x 2.7m ============
+(function buildGroundFloor() {
+  const g = groups.ground;
+  const gW = 11, gD = 7.7, gH = 2.7;
+  const baseY = 2.5; // on top of basement ceiling
+
+  // Floor slab
+  addBox(g, gW, 0.25, gD, mat.ground, 0, baseY, -0.65);
+
+  // North wall (solid)
+  addBox(g, gW, gH, 0.25, mat.ground, 0, baseY + gH/2, -gD/2 - 0.65);
+
+  // East wall
+  addBox(g, 0.25, gH, gD, mat.ground, gW/2, baseY + gH/2, -0.65);
+  // West wall
+  addBox(g, 0.25, gH, gD, mat.ground, -gW/2, baseY + gH/2, -0.65);
+
+  // South wall - full width sliding glass doors 9m x 2.5m
+  // Side pillars
+  addBox(g, 1.0, gH, 0.25, mat.ground, -gW/2 + 0.5, baseY + gH/2, gD/2 - 0.65);
+  addBox(g, 1.0, gH, 0.25, mat.ground, gW/2 - 0.5, baseY + gH/2, gD/2 - 0.65);
+  // Top strip above glass
+  addBox(g, 9, gH - 2.5, 0.25, mat.ground, 0, baseY + gH - (gH-2.5)/2, gD/2 - 0.65);
+
+  // Large sliding glass doors (9m x 2.5m)
+  addBox(g, 9, 2.5, 0.06, mat.glass, 0, baseY + 1.25, gD/2 - 0.65);
+
+  // Glass door frames (vertical dividers)
+  for (let i = -3; i <= 3; i += 1.5) {
+    addBox(g, 0.04, 2.5, 0.08, mat.glassFrame, i, baseY + 1.25, gD/2 - 0.65);
+  }
+
+  // Ceiling
+  addBox(g, gW, 0.25, gD, mat.ground, 0, baseY + gH, -0.65);
+
+  // Windows on east/west walls
+  for (const xSide of [-1, 1]) {
+    for (let wz = -2; wz <= 1; wz += 2) {
+      addBox(g, 0.06, 1.4, 1.2, mat.glass, xSide * gW/2, baseY + 1.5, wz - 0.65);
+    }
+  }
+})();
+
+// ============ FIRST FLOOR (R+1) 11.0 x 7.7 x 2.5m ============
+(function buildFirstFloor() {
+  const g = groups.first;
+  const fW = 11, fD = 7.7, fH = 2.5;
+  const baseY = 5.2; // on top of ground floor ceiling (2.5 + 2.7)
+
+  // Floor slab
+  addBox(g, fW, 0.25, fD, mat.first, 0, baseY, -0.65);
+
+  // North wall
+  addBox(g, fW, fH, 0.25, mat.first, 0, baseY + fH/2, -fD/2 - 0.65);
+
+  // East wall
+  addBox(g, 0.25, fH, fD, mat.first, fW/2, baseY + fH/2, -0.65);
+  // West wall
+  addBox(g, 0.25, fH, fD, mat.first, -fW/2, baseY + fH/2, -0.65);
+
+  // South wall - windows + balcony door opening
+  addBox(g, 1.0, fH, 0.25, mat.first, -fW/2 + 0.5, baseY + fH/2, fD/2 - 0.65);
+  addBox(g, 1.0, fH, 0.25, mat.first, fW/2 - 0.5, baseY + fH/2, fD/2 - 0.65);
+  addBox(g, 9, fH - 2.3, 0.25, mat.first, 0, baseY + fH - (fH-2.3)/2, fD/2 - 0.65);
+  // Balcony access glass
+  addBox(g, 9, 2.3, 0.06, mat.glass, 0, baseY + 1.15, fD/2 - 0.65);
+
+  // Ceiling
+  addBox(g, fW, 0.25, fD, mat.first, 0, baseY + fH, -0.65);
+
+  // Windows east/west
+  for (const xSide of [-1, 1]) {
+    for (let wz = -2; wz <= 1; wz += 2) {
+      addBox(g, 0.06, 1.3, 1.1, mat.glass, xSide * fW/2, baseY + 1.4, wz - 0.65);
+    }
+  }
+})();
+
+// ============ CANTILEVERED BALCONY (9m x 3m, porte-à-faux) ============
+(function buildBalcony() {
+  const g = groups.balcony;
+  const baseY = 5.2; // same as first floor base
+  const southFace = 7.7/2 - 0.65;
+
+  // Balcony slab (structural concrete)
+  addBox(g, 9, 0.2, 3, mat.steel, 0, baseY, southFace + 1.5);
+
+  // Steel underframe beams
+  for (let bx = -3.5; bx <= 3.5; bx += 1.75) {
+    addBox(g, 0.12, 0.3, 3, mat.steel, bx, baseY - 0.25, southFace + 1.5);
+  }
+  // Cross beam
+  addBox(g, 9, 0.15, 0.12, mat.steel, 0, baseY - 0.2, southFace + 2.8);
+
+  // Frameless glass balustrade
+  // Front
+  addBox(g, 9, 1.1, 0.02, mat.glass, 0, baseY + 0.55, southFace + 2.95);
+  // Side left
+  addBox(g, 0.02, 1.1, 3, mat.glass, -4.5, baseY + 0.55, southFace + 1.5);
+  // Side right
+  addBox(g, 0.02, 1.1, 3, mat.glass, 4.5, baseY + 0.55, southFace + 1.5);
+
+  // Glass handrail top rail (subtle)
+  addBox(g, 9, 0.03, 0.05, new THREE.MeshPhongMaterial({color:0xcccccc, metalness:0.9}), 0, baseY + 1.1, southFace + 2.95);
+})();
+
+// ============ TERRACE (RDC level, south) ============
+(function buildTerrace() {
+  const g = groups.terrace;
+  const baseY = 2.5;
+  const southFace = 7.7/2 - 0.65;
+
+  // Terrace slab
+  addBox(g, 12, 0.15, 5, mat.terrace, 0, baseY - 0.1, southFace + 2.5);
+
+  // Subtle border
+  addBox(g, 12, 0.1, 0.1, new THREE.MeshPhongMaterial({color:0xa09070}), 0, baseY, southFace + 5);
+  addBox(g, 0.1, 0.1, 5, new THREE.MeshPhongMaterial({color:0xa09070}), -6, baseY, southFace + 2.5);
+  addBox(g, 0.1, 0.1, 5, new THREE.MeshPhongMaterial({color:0xa09070}), 6, baseY, southFace + 2.5);
+})();
+
+
+// ============ PISCINE (sud, en contrebas de la terrasse) ============
+(function buildPool() {
+  const g = groups.pool;
+  const poolW = 8, poolD = 4, poolDepth = 1.5;
+  const baseY = 1.8; // slightly below terrace level (slope)
+  const poolZ = 10.5; // south of terrace
+
+  // Pool water surface
+  const waterGeo = new THREE.BoxGeometry(poolW - 0.4, 0.1, poolD - 0.4);
+  const waterMat = new THREE.MeshPhysicalMaterial({
+    color: 0x2196F3, transparent: true, opacity: 0.6,
+    roughness: 0.05, metalness: 0.1, transmission: 0.4
+  });
+  const water = new THREE.Mesh(waterGeo, waterMat);
+  water.position.set(0, baseY - 0.15, poolZ);
+  water.receiveShadow = true;
+  g.add(water);
+
+  // Pool basin (walls)
+  const basinMat = new THREE.MeshPhongMaterial({ color: 0x1565C0 });
+  // Bottom
+  addBox(g, poolW, 0.15, poolD, basinMat, 0, baseY - poolDepth, poolZ);
+  // North wall
+  addBox(g, poolW, poolDepth, 0.2, basinMat, 0, baseY - poolDepth/2, poolZ - poolD/2);
+  // South wall
+  addBox(g, poolW, poolDepth, 0.2, basinMat, 0, baseY - poolDepth/2, poolZ + poolD/2);
+  // East wall
+  addBox(g, 0.2, poolDepth, poolD, basinMat, poolW/2, baseY - poolDepth/2, poolZ);
+  // West wall
+  addBox(g, 0.2, poolDepth, poolD, basinMat, -poolW/2, baseY - poolDepth/2, poolZ);
+
+  // Pool coping / margelles (contour en pierre)
+  const copingMat = new THREE.MeshPhongMaterial({ color: 0xe0d8c8 });
+  addBox(g, poolW + 0.6, 0.12, 0.5, copingMat, 0, baseY + 0.05, poolZ - poolD/2 - 0.15);
+  addBox(g, poolW + 0.6, 0.12, 0.5, copingMat, 0, baseY + 0.05, poolZ + poolD/2 + 0.15);
+  addBox(g, 0.5, 0.12, poolD + 0.6, copingMat, -poolW/2 - 0.15, baseY + 0.05, poolZ);
+  addBox(g, 0.5, 0.12, poolD + 0.6, copingMat, poolW/2 + 0.15, baseY + 0.05, poolZ);
+})();
+
+// ============ ATTIC / ROOF (combles, mono-pente 30°) ============
+(function buildAttic() {
+  const g = groups.attic;
+  const fW = 11, fD = 7.7;
+  const baseY = 7.7; // on top of first floor (5.2 + 2.5)
+  const ridgeH = 6.0; // ridge height above first floor ceiling (north)
+  const eaveH = 2.0;  // eave height (south)
+  const zNorth = -fD/2 - 0.65;
+  const zSouth = fD/2 - 0.65;
+
+  // Roof - custom geometry (single slope north-high to south-low)
+  const roofShape = new THREE.BufferGeometry();
+  const hw = fW / 2;
+  // Vertices: north-top, south-top (eave), and matching bottom edges
+  const vertices = new Float32Array([
+    // Top face (roof surface)
+    -hw, baseY + ridgeH, zNorth,   // 0: north-west top (ridge)
+     hw, baseY + ridgeH, zNorth,   // 1: north-east top (ridge)
+     hw, baseY + eaveH,  zSouth,   // 2: south-east top (eave)
+    -hw, baseY + eaveH,  zSouth,   // 3: south-west top (eave)
+  ]);
+  const indices = [0, 3, 2, 0, 2, 1]; // two triangles
+  roofShape.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  roofShape.setIndex(indices);
+  roofShape.computeVertexNormals();
+  const roofMesh = new THREE.Mesh(roofShape, new THREE.MeshPhongMaterial({
+    color: 0x8B7355, side: THREE.DoubleSide, flatShading: false
+  }));
+  roofMesh.castShadow = true;
+  roofMesh.receiveShadow = true;
+  g.add(roofMesh);
+
+  // Roof thickness (underside)
+  const roofThick = 0.25;
+  const roofUnder = new THREE.BufferGeometry();
+  const uv = new Float32Array([
+    -hw, baseY + ridgeH - roofThick, zNorth,
+     hw, baseY + ridgeH - roofThick, zNorth,
+     hw, baseY + eaveH - roofThick,  zSouth,
+    -hw, baseY + eaveH - roofThick,  zSouth,
+  ]);
+  roofUnder.setAttribute('position', new THREE.BufferAttribute(uv, 3));
+  roofUnder.setIndex([0, 2, 3, 0, 1, 2]);
+  roofUnder.computeVertexNormals();
+  g.add(new THREE.Mesh(roofUnder, new THREE.MeshPhongMaterial({ color: 0xF5F0E8, side: THREE.DoubleSide })));
+
+  // East gable wall (triangle)
+  const eastGable = new THREE.BufferGeometry();
+  const egv = new Float32Array([
+    hw, baseY,           zNorth,
+    hw, baseY,           zSouth,
+    hw, baseY + ridgeH,  zNorth,
+    hw, baseY + eaveH,   zSouth,
+  ]);
+  eastGable.setAttribute('position', new THREE.BufferAttribute(egv, 3));
+  eastGable.setIndex([0, 1, 3, 0, 3, 2]);
+  eastGable.computeVertexNormals();
+  const egMesh = new THREE.Mesh(eastGable, new THREE.MeshPhongMaterial({ color: 0xF5F0E8, side: THREE.DoubleSide }));
+  egMesh.castShadow = true;
+  g.add(egMesh);
+
+  // West gable wall
+  const westGable = new THREE.BufferGeometry();
+  const wgv = new Float32Array([
+    -hw, baseY,           zNorth,
+    -hw, baseY,           zSouth,
+    -hw, baseY + ridgeH,  zNorth,
+    -hw, baseY + eaveH,   zSouth,
+  ]);
+  westGable.setAttribute('position', new THREE.BufferAttribute(wgv, 3));
+  westGable.setIndex([0, 3, 1, 0, 2, 3]);
+  westGable.computeVertexNormals();
+  const wgMesh = new THREE.Mesh(westGable, new THREE.MeshPhongMaterial({ color: 0xF5F0E8, side: THREE.DoubleSide }));
+  wgMesh.castShadow = true;
+  g.add(wgMesh);
+
+  // North wall (under ridge)
+  addBox(g, fW, ridgeH, 0.25, mat.first, 0, baseY + ridgeH/2, zNorth);
+
+  // South wall (under eave) - with window
+  addBox(g, fW, eaveH * 0.3, 0.25, mat.first, 0, baseY + eaveH * 0.85, zSouth);
+  addBox(g, 2, eaveH, 0.25, mat.first, -hw + 1, baseY + eaveH/2, zSouth);
+  addBox(g, 2, eaveH, 0.25, mat.first, hw - 1, baseY + eaveH/2, zSouth);
+  // Attic south windows
+  addBox(g, fW - 4, eaveH * 0.65, 0.06, mat.glass, 0, baseY + eaveH * 0.35, zSouth);
+
+  // Roof overhang (extends 0.5m on all sides)
+  const overhang = new THREE.BufferGeometry();
+  const ohw = hw + 0.5;
+  const ov = new Float32Array([
+    -ohw, baseY + ridgeH + 0.1, zNorth - 0.3,
+     ohw, baseY + ridgeH + 0.1, zNorth - 0.3,
+     ohw, baseY + eaveH - 0.1,  zSouth + 0.5,
+    -ohw, baseY + eaveH - 0.1,  zSouth + 0.5,
+  ]);
+  overhang.setAttribute('position', new THREE.BufferAttribute(ov, 3));
+  overhang.setIndex([0, 3, 2, 0, 2, 1]);
+  overhang.computeVertexNormals();
+  const ohMesh = new THREE.Mesh(overhang, new THREE.MeshPhongMaterial({
+    color: 0x7A6545, side: THREE.DoubleSide
+  }));
+  ohMesh.castShadow = true;
+  g.add(ohMesh);
+})();
+
+// ============ WATER RESERVOIRS (east adjacent plot) ============
+(function buildReservoirs() {
+  const resGeo = new THREE.CylinderGeometry(3, 3, 6, 24);
+  const res1 = new THREE.Mesh(resGeo, mat.reservoir);
+  res1.position.set(18, 3, 5);
+  res1.castShadow = true;
+  res1.receiveShadow = true;
+  scene.add(res1);
+
+  const res2 = new THREE.Mesh(resGeo.clone(), mat.reservoir);
+  res2.position.set(18, 3, -4);
+  res2.castShadow = true;
+  res2.receiveShadow = true;
+  scene.add(res2);
+
+  // Reservoir caps
+  const capGeo = new THREE.CylinderGeometry(3.1, 3.1, 0.3, 24);
+  const capMat = new THREE.MeshPhongMaterial({ color: 0x5a6a7a });
+  const cap1 = new THREE.Mesh(capGeo, capMat);
+  cap1.position.set(18, 6.15, 5);
+  scene.add(cap1);
+  const cap2 = new THREE.Mesh(capGeo.clone(), capMat);
+  cap2.position.set(18, 6.15, -4);
+  scene.add(cap2);
+})();
+
+// ============ VEGETATION (simple trees) ============
+(function buildTrees() {
+  function makeTree(x, y, z, scale) {
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15 * scale, 0.2 * scale, 2 * scale, 8),
+      new THREE.MeshPhongMaterial({ color: 0x8B4513 })
+    );
+    trunk.position.set(x, y + scale, z);
+    trunk.castShadow = true;
+    scene.add(trunk);
+
+    const foliage = new THREE.Mesh(
+      new THREE.SphereGeometry(1.2 * scale, 8, 8),
+      new THREE.MeshPhongMaterial({ color: 0x228B22 + Math.floor(Math.random() * 0x002200) })
+    );
+    foliage.position.set(x, y + 2.5 * scale, z);
+    foliage.castShadow = true;
+    scene.add(foliage);
+  }
+  makeTree(-12, 0, 8, 1.2);
+  makeTree(-14, 0, -5, 1.0);
+  makeTree(12, 0, 10, 1.5);
+  makeTree(-8, 0, 14, 1.1);
+  makeTree(8, 0, -12, 0.9);
+  makeTree(-16, 0, 0, 1.3);
+})();
+
+
+// ============ 3D LABELS ============
+(function buildLabels() {
+  function makeLabel(text, x, y, z, color, size) {
+    const canvas = document.createElement('canvas');
+    const s = size || 256;
+    canvas.width = s; canvas.height = s / 4;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = color || '#ffffff';
+    ctx.font = `bold ${s/8}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, s/2, s/8);
+    const tex = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sprite.position.set(x, y, z);
+    sprite.scale.set(size ? size/40 : 6, size ? size/160 : 1.5, 1);
+    scene.add(sprite);
+    return sprite;
+  }
+
+  makeLabel('SOUS-SOL', -7, 1.25, 6, '#5D4E37', 200);
+  makeLabel('100 m²', -7, 0.6, 6, '#888888', 160);
+  makeLabel('RDC', -7, 3.8, 6, '#B8A888', 200);
+  makeLabel('84.7 m²', -7, 3.2, 6, '#888888', 160);
+  makeLabel('R+1', -7, 6.5, 6, '#C5B8A8', 200);
+  makeLabel('84.7 m²', -7, 5.9, 6, '#888888', 160);
+  makeLabel('COMBLES', -7, 10, 1, '#8B7355', 200);
+  makeLabel('~32 m²', -7, 9.4, 1, '#888888', 160);
+  makeLabel('BALCON', 0, 6.0, 8, '#e94560', 180);
+  makeLabel('9×3m', 0, 5.5, 8, '#888888', 140);
+  makeLabel('TERRASSE', 0, 3.0, 9, '#C0B090', 180);
+  makeLabel('PISCINE', 0, 2.8, 12.5, '#2196F3', 200);
+  makeLabel('8×4m', 0, 2.2, 12.5, '#888888', 150);
+  makeLabel('Garage', 0, 1.25, -5, '#aaaaaa', 160);
+  makeLabel('Studio', 0, 1.25, 3, '#aaaaaa', 160);
+  makeLabel('Réservoirs', 18, 8, 0.5, '#708090', 200);
+  makeLabel('(Parcelle 0190)', 18, 7.2, 0.5, '#555555', 180);
+
+  // North / South indicators
+  makeLabel('▲ NORD', 0, 7, -20, '#e94560', 220);
+  makeLabel('▼ SUD (Vue mer)', 0, 4, 16, '#4488aa', 220);
+})();
+
+// ============ DIMENSION LINES ============
+(function buildDimensions() {
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xe94560, transparent: true, opacity: 0.6 });
+  
+  function dimLine(p1, p2) {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...p1), new THREE.Vector3(...p2)
+    ]);
+    const line = new THREE.Line(geo, lineMat);
+    scene.add(line);
+  }
+
+  // Building width (11m) at ground level
+  dimLine([-5.5, 2.6, 4.5], [5.5, 2.6, 4.5]);
+  // Building depth (7.7m)
+  dimLine([6, 2.6, -4.5], [6, 2.6, 3.2]);
+})();
+
+// ============ GRID HELPER ============
+const grid = new THREE.GridHelper(60, 30, 0x333355, 0x222244);
+grid.position.y = -0.4;
+grid.material.transparent = true;
+grid.material.opacity = 0.3;
+scene.add(grid);
+
+// ============ SLIDER REBUILD FUNCTIONS ============
+function clearGroup(g) {
+  while (g.children.length) { g.remove(g.children[0]); }
+}
+
+window.updatePool = function() {
+  const pw = parseFloat(document.getElementById('sl-poolW').value);
+  const pd = parseFloat(document.getElementById('sl-poolD').value);
+  const ph = parseFloat(document.getElementById('sl-poolH').value);
+  document.getElementById('val-poolW').textContent = pw.toFixed(1);
+  document.getElementById('val-poolD').textContent = pd.toFixed(1);
+  document.getElementById('val-poolH').textContent = ph.toFixed(1);
+  document.getElementById('dim-piscine').textContent = pw.toFixed(1) + ' × ' + pd.toFixed(1) + 'm';
+
+  const g = groups.pool;
+  clearGroup(g);
+  const baseY = 1.8, poolZ = 10.5;
+
+  const waterMat = new THREE.MeshPhysicalMaterial({ color:0x2196F3, transparent:true, opacity:0.6, roughness:0.05, metalness:0.1, transmission:0.4 });
+  const water = new THREE.Mesh(new THREE.BoxGeometry(pw-0.4, 0.1, pd-0.4), waterMat);
+  water.position.set(0, baseY-0.15, poolZ); water.receiveShadow=true; g.add(water);
+
+  const bm = new THREE.MeshPhongMaterial({color:0x1565C0});
+  addBox(g, pw, 0.15, pd, bm, 0, baseY-ph, poolZ);
+  addBox(g, pw, ph, 0.2, bm, 0, baseY-ph/2, poolZ-pd/2);
+  addBox(g, pw, ph, 0.2, bm, 0, baseY-ph/2, poolZ+pd/2);
+  addBox(g, 0.2, ph, pd, bm, pw/2, baseY-ph/2, poolZ);
+  addBox(g, 0.2, ph, pd, bm, -pw/2, baseY-ph/2, poolZ);
+
+  const cm = new THREE.MeshPhongMaterial({color:0xe0d8c8});
+  addBox(g, pw+0.6, 0.12, 0.5, cm, 0, baseY+0.05, poolZ-pd/2-0.15);
+  addBox(g, pw+0.6, 0.12, 0.5, cm, 0, baseY+0.05, poolZ+pd/2+0.15);
+  addBox(g, 0.5, 0.12, pd+0.6, cm, -pw/2-0.15, baseY+0.05, poolZ);
+  addBox(g, 0.5, 0.12, pd+0.6, cm, pw/2+0.15, baseY+0.05, poolZ);
+};
+
+window.updateBalcony = function() {
+  const bd = parseFloat(document.getElementById('sl-balcD').value);
+  document.getElementById('val-balcD').textContent = bd.toFixed(1);
+  document.getElementById('dim-balcon').textContent = '9.0 × ' + bd.toFixed(1) + 'm';
+
+  const g = groups.balcony;
+  clearGroup(g);
+  const baseY = 5.2, southFace = 7.7/2 - 0.65;
+
+  addBox(g, 9, 0.2, bd, mat.steel, 0, baseY, southFace + bd/2);
+  for (let bx = -3.5; bx <= 3.5; bx += 1.75) {
+    addBox(g, 0.12, 0.3, bd, mat.steel, bx, baseY-0.25, southFace + bd/2);
+  }
+  addBox(g, 9, 0.15, 0.12, mat.steel, 0, baseY-0.2, southFace + bd - 0.2);
+  addBox(g, 9, 1.1, 0.02, mat.glass, 0, baseY+0.55, southFace + bd - 0.05);
+  addBox(g, 0.02, 1.1, bd, mat.glass, -4.5, baseY+0.55, southFace + bd/2);
+  addBox(g, 0.02, 1.1, bd, mat.glass, 4.5, baseY+0.55, southFace + bd/2);
+  addBox(g, 9, 0.03, 0.05, new THREE.MeshPhongMaterial({color:0xcccccc,metalness:0.9}), 0, baseY+1.1, southFace+bd-0.05);
+};
+
+window.updateTerrace = function() {
+  const td = parseFloat(document.getElementById('sl-terrD').value);
+  document.getElementById('val-terrD').textContent = td.toFixed(1);
+
+  const g = groups.terrace;
+  clearGroup(g);
+  const baseY = 2.5, southFace = 7.7/2 - 0.65;
+
+  addBox(g, 12, 0.15, td, mat.terrace, 0, baseY-0.1, southFace + td/2);
+  const bm = new THREE.MeshPhongMaterial({color:0xa09070});
+  addBox(g, 12, 0.1, 0.1, bm, 0, baseY, southFace + td);
+  addBox(g, 0.1, 0.1, td, bm, -6, baseY, southFace + td/2);
+  addBox(g, 0.1, 0.1, td, bm, 6, baseY, southFace + td/2);
+};
+
+// ============ CONTROLS & INTERACTION ============
+
+// Floor toggle
+window.toggleFloor = function(name) {
+  if (groups[name]) {
+    groups[name].visible = !groups[name].visible;
+  }
+};
+
+// View presets
+window.setView = function(view) {
+  const target = new THREE.Vector3(0, 4, 0);
+  let pos;
+  switch(view) {
+    case 'north': pos = new THREE.Vector3(0, 8, -35); break;
+    case 'south': pos = new THREE.Vector3(0, 8, 35); break;
+    case 'east':  pos = new THREE.Vector3(35, 8, 0); break;
+    case 'west':  pos = new THREE.Vector3(-35, 8, 0); break;
+    case 'top':   pos = new THREE.Vector3(0, 40, 0.1); break;
+    case 'persp': pos = new THREE.Vector3(25, 20, 30); break;
+  }
+  // Smooth animation
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  let t = 0;
+  function animateView() {
+    t += 0.03;
+    if (t >= 1) {
+      camera.position.copy(pos);
+      controls.target.copy(target);
+      controls.update();
+      return;
+    }
+    const ease = t * t * (3 - 2 * t); // smoothstep
+    camera.position.lerpVectors(startPos, pos, ease);
+    controls.target.lerpVectors(startTarget, target, ease);
+    controls.update();
+    requestAnimationFrame(animateView);
+  }
+  animateView();
+};
+
+// ============ COMPASS UPDATE ============
+function updateCompass() {
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  const angle = Math.atan2(dir.x, dir.z);
+  const compass = document.getElementById('compass');
+  if (compass) {
+    compass.style.transform = `rotate(${angle}rad)`;
+  }
+}
+
+// ============ RAYCASTER (hover tooltips) ============
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const tooltip = document.getElementById('tooltip');
+
+const floorNames = {
+  basement: 'Sous-sol — 11.0×9.0m — 100 m² (Garage + Studio)',
+  ground: 'RDC — 11.0×7.7m — 84.7 m² (Séjour, Cuisine)',
+  first: 'R+1 — 11.0×7.7m — 84.7 m² (Chambres)',
+  attic: 'Combles — ~11.0×5.2m — ~32 m² (Mono-pente 30°)',
+  balcony: 'Balcon porte-à-faux — 9.0×3.0m — 27 m²',
+  terrace: 'Terrasse RDC — Plain-pied sud',
+  pool: 'Piscine — 8.0×4.0m — 32 m² — Profondeur 1.5m'
+};
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = ((e.clientX) / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  let found = false;
+  for (const [name, group] of Object.entries(groups)) {
+    const hits = raycaster.intersectObjects(group.children, true);
+    if (hits.length > 0) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 15) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+      tooltip.textContent = floorNames[name] || name;
+      found = true;
+      break;
+    }
+  }
+  if (!found) tooltip.style.display = 'none';
+});
+
+// ============ ANIMATION LOOP ============
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  updateCompass();
+  renderer.render(scene, camera);
+}
+
+// ============ RESIZE ============
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============ START ============
+document.getElementById('loading').style.display = 'none';
+animate();
+
+</script>
+</body>
+</html>
