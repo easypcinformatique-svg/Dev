@@ -73,8 +73,8 @@ canvas{display:block}
     <div class="floor-toggle">
       <input type="checkbox" id="tog-basement" checked onchange="toggleFloor('basement')">
       <div class="color-dot" style="background:#5D4E37"></div>
-      <label for="tog-basement">Sous-sol</label>
-      <span class="surface">100 m²</span>
+      <label for="tog-basement">Sous-sol (garage)</label>
+      <span class="surface">100 m² (0 SDP)</span>
     </div>
     <div class="floor-toggle">
       <input type="checkbox" id="tog-ground" checked onchange="toggleFloor('ground')">
@@ -153,13 +153,15 @@ canvas{display:block}
   <div class="section">
     <div class="section-title">Dimensions Bâtiment</div>
     <div class="info-row"><span class="info-label">Sous-sol</span><span class="info-value">11.0 × 9.0 × 2.5m</span></div>
-    <div class="info-row"><span class="info-label">RDC</span><span class="info-value">11.0 × 7.7 × 2.7m</span></div>
-    <div class="info-row"><span class="info-label">R+1</span><span class="info-value">11.0 × 7.7 × 2.5m</span></div>
-    <div class="info-row"><span class="info-label">Combles</span><span class="info-value">11.0 × 5.2 × ~4m</span></div>
+    <div class="info-row"><span class="info-label">RDC</span><span class="info-value">11.0 × 7.7 × 2.5m</span></div>
+    <div class="info-row"><span class="info-label">R+1</span><span class="info-value">11.0 × 7.7 × 2.2m</span></div>
+    <div class="info-row"><span class="info-label">Combles</span><span class="info-value">11.0 × ~3.6m = ~40 m²</span></div>
     <div class="info-row"><span class="info-label">Balcon R+1</span><span class="info-value" id="dim-balcon">9.0 × 3.0m</span></div>
     <div class="info-row"><span class="info-label">Piscine</span><span class="info-value" id="dim-piscine">8.0 × 4.0m</span></div>
-    <div class="info-row"><span class="info-label">Toit</span><span class="info-value">Mono-pente 30°</span></div>
-    <div class="info-row"><span class="info-label">SDP totale</span><span class="info-value" style="color:#f44336">~251 m² / 200 max</span></div>
+    <div class="info-row"><span class="info-label">Toit</span><span class="info-value">Mono-pente ~21°</span></div>
+    <div class="info-row"><span class="info-label">H. facade</span><span class="info-value" style="color:#4CAF50">7.0m / 7m max</span></div>
+    <div class="info-row"><span class="info-label">H. totale</span><span class="info-value" style="color:#4CAF50">10.0m / 10m max</span></div>
+    <div class="info-row"><span class="info-label">SDP totale</span><span class="info-value" style="color:#4CAF50">~200 m² / 200 max</span></div>
   </div>
 
   <div class="section" id="plu-section">
@@ -171,17 +173,17 @@ canvas{display:block}
       <div class="plu-values"><span id="plu-ces-val">84.7 m²</span> / <span>84.9 m² max</span> <span class="plu-status plu-warn" id="plu-ces-status">LIMITE</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Art.5a — Hauteur facade (max 7m / TN)</div>
-      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-he-bar" style="width:100%"></div></div>
-      <div class="plu-values"><span id="plu-he-val">~7.7m</span> / <span>7.0m max</span> <span class="plu-status plu-danger" id="plu-he-status">DEPASSE</span></div>
+      <div class="plu-gauge-label">Art.5a — Hauteur facade / egout (max 7m / TN)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-he-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span id="plu-he-val">7.0m</span> / <span>7.0m max</span> <span class="plu-status plu-ok" id="plu-he-status">MAX</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Art.5b — Hauteur totale (facade+3m = 10m max)</div>
-      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-hf-bar" style="width:100%"></div></div>
-      <div class="plu-values"><span id="plu-hf-val">~13.7m</span> / <span>10.0m max</span> <span class="plu-status plu-danger" id="plu-hf-status">DEPASSE</span></div>
+      <div class="plu-gauge-label">Art.5b — Hauteur totale / faitage (max 10m / TN)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-hf-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span id="plu-hf-val">10.0m</span> / <span>10.0m max</span> <span class="plu-status plu-ok" id="plu-hf-status">MAX</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Art.6a — Recul voie publique (min 4m)</div>
+      <div class="plu-gauge-label">Art.6 — Recul voie publique (min 4m)</div>
       <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-rv-bar" style="width:50%"></div></div>
       <div class="plu-values"><span>~8m</span> / <span>4m min</span> <span class="plu-status plu-ok">OK</span></div>
     </div>
@@ -192,8 +194,8 @@ canvas{display:block}
     </div>
     <div class="plu-gauge">
       <div class="plu-gauge-label">Art.1f — Surface de plancher (max 200 m²)</div>
-      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-sdp-bar" style="width:100%"></div></div>
-      <div class="plu-values"><span>~251 m²</span> / <span>200 m² max</span> <span class="plu-status plu-danger">DEPASSE</span></div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-sdp-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span>200 m²</span> / <span>200 m² max</span> <span class="plu-status plu-ok">MAX</span></div>
     </div>
     <div class="plu-gauge">
       <div class="plu-gauge-label">Art.10a — Espaces vegetalises (min 75%)</div>
@@ -216,12 +218,11 @@ canvas{display:block}
       <div style="font-size:10px;color:#999">Sous-sol enterre : exempt implantation</div>
       <div style="font-size:10px;color:#999">Garage : exclu de la surface de plancher</div>
     </div>
-    <div style="margin-top:6px;padding:8px;background:rgba(244,67,54,0.1);border-radius:6px;border:1px solid rgba(244,67,54,0.2)">
-      <div style="font-size:10px;color:#f44336;font-weight:600">ALERTES NON-CONFORMITE</div>
-      <div style="font-size:10px;color:#f44336;margin-top:4px">1. Hauteur facade +0.7m au-dessus du max</div>
-      <div style="font-size:10px;color:#f44336">2. Hauteur totale +3.7m au-dessus du max</div>
-      <div style="font-size:10px;color:#f44336">3. Surface plancher +51 m² au-dessus du max</div>
-      <div style="font-size:10px;color:#FFC107">4. Emprise au sol a 99.8% du max</div>
+    <div style="margin-top:6px;padding:8px;background:rgba(76,175,80,0.1);border-radius:6px;border:1px solid rgba(76,175,80,0.3)">
+      <div style="font-size:10px;color:#4CAF50;font-weight:600">PROJET CONFORME PLUi UM2</div>
+      <div style="font-size:10px;color:#4CAF50;margin-top:4px">Toutes les contraintes sont respectees</div>
+      <div style="font-size:10px;color:#aaa;margin-top:4px">Potentiel PLU exploite au maximum :</div>
+      <div style="font-size:10px;color:#FFC107">CES 99.8% | SDP 100% | H.facade 100% | H.totale 100%</div>
     </div>
     <div style="margin-top:10px">
       <label class="floor-toggle" style="margin:0">
@@ -425,22 +426,17 @@ function addBox(group, w, h, d, matl, x, y, z) {
   scene.add(roadLabel);
 })();
 
-// ============ BASEMENT (Sous-sol) 11.0 x 9.0 x 2.5m ============
+// ============ BASEMENT (Sous-sol) 11.0 x 9.0 x 2.5m — 100% enterré, garage+technique ============
 (function buildBasement() {
   const g = groups.basement;
   const bW = 11, bD = 9, bH = 2.5;
   const baseY = 0; // basement floor level
 
-  // Main volume - embedded in slope
-  // North wall (garage side)
+  // Main volume - FULLY embedded in slope (exempt art.6/7/8, 0 SDP)
+  // North wall (garage doors)
   addBox(g, bW, bH, 0.3, mat.basement, 0, baseY + bH/2, -bD/2);
-  // South wall (studio side - partially glazed)
-  addBox(g, 1.0, bH, 0.3, mat.basement, -bW/2 + 0.5, baseY + bH/2, bD/2);
-  addBox(g, 1.0, bH, 0.3, mat.basement, bW/2 - 0.5, baseY + bH/2, bD/2);
-  addBox(g, bW, 0.5, 0.3, mat.basement, 0, baseY + bH - 0.25, bD/2); // top strip
-  // South glass (studio)
-  addBox(g, bW - 2, bH - 0.5, 0.05, mat.glass, 0, baseY + (bH-0.5)/2, bD/2);
-
+  // South wall (solid - no studio, fully buried)
+  addBox(g, bW, bH, 0.3, mat.basement, 0, baseY + bH/2, bD/2);
   // East wall
   addBox(g, 0.3, bH, bD, mat.basement, bW/2, baseY + bH/2, 0);
   // West wall
@@ -455,8 +451,8 @@ function addBox(group, w, h, d, matl, x, y, z) {
   addBox(g, 2.8, 2.2, 0.15, mat.steel, -2.5, baseY + 1.1, -bD/2 + 0.1);
   addBox(g, 2.8, 2.2, 0.15, mat.steel, 2.5, baseY + 1.1, -bD/2 + 0.1);
 
-  // Interior dividing wall (garage | studio)
-  addBox(g, bW - 0.6, bH - 0.3, 0.2, new THREE.MeshPhongMaterial({color:0x6B5D4F}), 0, baseY + bH/2, 1.0);
+  // Interior: garage | local technique | cave
+  addBox(g, 0.2, bH - 0.3, bD * 0.4, new THREE.MeshPhongMaterial({color:0x6B5D4F}), 2, baseY + bH/2, -bD * 0.3);
 })();
 
 // ============ GARAGE RAMP ============
@@ -484,42 +480,32 @@ function addBox(group, w, h, d, matl, x, y, z) {
 })();
 
 
-// ============ GROUND FLOOR (RDC) 11.0 x 7.7 x 2.7m ============
+// ============ GROUND FLOOR (RDC) 11.0 x 7.7 x 2.5m — ~80 m² SDP ============
 (function buildGroundFloor() {
   const g = groups.ground;
-  const gW = 11, gD = 7.7, gH = 2.7;
-  const baseY = 2.5; // on top of basement ceiling
+  const gW = 11, gD = 7.7, gH = 2.5;
+  const baseY = 2.5; // on top of basement ceiling = TN south reference
 
   // Floor slab
   addBox(g, gW, 0.25, gD, mat.ground, 0, baseY, -0.65);
-
   // North wall (solid)
   addBox(g, gW, gH, 0.25, mat.ground, 0, baseY + gH/2, -gD/2 - 0.65);
-
   // East wall
   addBox(g, 0.25, gH, gD, mat.ground, gW/2, baseY + gH/2, -0.65);
   // West wall
   addBox(g, 0.25, gH, gD, mat.ground, -gW/2, baseY + gH/2, -0.65);
 
-  // South wall - full width sliding glass doors 9m x 2.5m
-  // Side pillars
+  // South wall - full width sliding glass doors 9m x 2.3m
   addBox(g, 1.0, gH, 0.25, mat.ground, -gW/2 + 0.5, baseY + gH/2, gD/2 - 0.65);
   addBox(g, 1.0, gH, 0.25, mat.ground, gW/2 - 0.5, baseY + gH/2, gD/2 - 0.65);
-  // Top strip above glass
-  addBox(g, 9, gH - 2.5, 0.25, mat.ground, 0, baseY + gH - (gH-2.5)/2, gD/2 - 0.65);
-
-  // Large sliding glass doors (9m x 2.5m)
-  addBox(g, 9, 2.5, 0.06, mat.glass, 0, baseY + 1.25, gD/2 - 0.65);
-
-  // Glass door frames (vertical dividers)
+  addBox(g, 9, gH - 2.3, 0.25, mat.ground, 0, baseY + gH - (gH-2.3)/2, gD/2 - 0.65);
+  addBox(g, 9, 2.3, 0.06, mat.glass, 0, baseY + 1.15, gD/2 - 0.65);
   for (let i = -3; i <= 3; i += 1.5) {
-    addBox(g, 0.04, 2.5, 0.08, mat.glassFrame, i, baseY + 1.25, gD/2 - 0.65);
+    addBox(g, 0.04, 2.3, 0.08, mat.glassFrame, i, baseY + 1.15, gD/2 - 0.65);
   }
-
-  // Ceiling
+  // Ceiling slab
   addBox(g, gW, 0.25, gD, mat.ground, 0, baseY + gH, -0.65);
-
-  // Windows on east/west walls
+  // Windows east/west
   for (const xSide of [-1, 1]) {
     for (let wz = -2; wz <= 1; wz += 2) {
       addBox(g, 0.06, 1.4, 1.2, mat.glass, xSide * gW/2, baseY + 1.5, wz - 0.65);
@@ -527,37 +513,31 @@ function addBox(group, w, h, d, matl, x, y, z) {
   }
 })();
 
-// ============ FIRST FLOOR (R+1) 11.0 x 7.7 x 2.5m ============
+// ============ FIRST FLOOR (R+1) 11.0 x 7.7 x 2.2m — ~80 m² SDP ============
 (function buildFirstFloor() {
   const g = groups.first;
-  const fW = 11, fD = 7.7, fH = 2.5;
-  const baseY = 5.2; // on top of ground floor ceiling (2.5 + 2.7)
+  const fW = 11, fD = 7.7, fH = 2.2;
+  const baseY = 5.25; // 2.5 (basement) + 2.5 (RDC) + 0.25 (slab)
 
-  // Floor slab
   addBox(g, fW, 0.25, fD, mat.first, 0, baseY, -0.65);
-
   // North wall
   addBox(g, fW, fH, 0.25, mat.first, 0, baseY + fH/2, -fD/2 - 0.65);
-
   // East wall
   addBox(g, 0.25, fH, fD, mat.first, fW/2, baseY + fH/2, -0.65);
   // West wall
   addBox(g, 0.25, fH, fD, mat.first, -fW/2, baseY + fH/2, -0.65);
 
-  // South wall - windows + balcony door opening
+  // South wall - balcony access
   addBox(g, 1.0, fH, 0.25, mat.first, -fW/2 + 0.5, baseY + fH/2, fD/2 - 0.65);
   addBox(g, 1.0, fH, 0.25, mat.first, fW/2 - 0.5, baseY + fH/2, fD/2 - 0.65);
-  addBox(g, 9, fH - 2.3, 0.25, mat.first, 0, baseY + fH - (fH-2.3)/2, fD/2 - 0.65);
-  // Balcony access glass
-  addBox(g, 9, 2.3, 0.06, mat.glass, 0, baseY + 1.15, fD/2 - 0.65);
-
-  // Ceiling
+  addBox(g, 9, fH - 2.1, 0.25, mat.first, 0, baseY + fH - (fH-2.1)/2, fD/2 - 0.65);
+  addBox(g, 9, 2.1, 0.06, mat.glass, 0, baseY + 1.05, fD/2 - 0.65);
+  // Ceiling slab
   addBox(g, fW, 0.25, fD, mat.first, 0, baseY + fH, -0.65);
-
   // Windows east/west
   for (const xSide of [-1, 1]) {
     for (let wz = -2; wz <= 1; wz += 2) {
-      addBox(g, 0.06, 1.3, 1.1, mat.glass, xSide * fW/2, baseY + 1.4, wz - 0.65);
+      addBox(g, 0.06, 1.2, 1.1, mat.glass, xSide * fW/2, baseY + 1.3, wz - 0.65);
     }
   }
 })();
@@ -565,7 +545,7 @@ function addBox(group, w, h, d, matl, x, y, z) {
 // ============ CANTILEVERED BALCONY (9m x 3m, porte-à-faux) ============
 (function buildBalcony() {
   const g = groups.balcony;
-  const baseY = 5.2; // same as first floor base
+  const baseY = 5.25; // same as first floor base (PLU conforme)
   const southFace = 7.7/2 - 0.65;
 
   // Balcony slab (structural concrete)
@@ -645,13 +625,17 @@ function addBox(group, w, h, d, matl, x, y, z) {
   addBox(g, 0.5, 0.12, poolD + 0.6, copingMat, poolW/2 + 0.15, baseY + 0.05, poolZ);
 })();
 
-// ============ ATTIC / ROOF (combles, mono-pente 30°) ============
+// ============ ATTIC / ROOF (combles, mono-pente ~21°) — PLU CONFORME ============
+// Facade max 7m (eave) + 3m (roof) = 10m total from TN
+// TN ref (south) = model y=2.5 → eave at y=9.5, ridge at y=12.5
 (function buildAttic() {
   const g = groups.attic;
   const fW = 11, fD = 7.7;
-  const baseY = 7.7; // on top of first floor (5.2 + 2.5)
-  const ridgeH = 6.0; // ridge height above first floor ceiling (north)
-  const eaveH = 2.0;  // eave height (south)
+  const baseY = 7.7; // attic floor (5.25 + 2.2 + 0.25)
+  const eaveY = 9.5;  // 2.5 + 7.0m (facade max)
+  const ridgeY = 12.5; // 2.5 + 10.0m (total max)
+  const eaveH = eaveY - baseY;  // 1.8m knee wall south
+  const ridgeH = ridgeY - baseY; // 4.8m at ridge north
   const zNorth = -fD/2 - 0.65;
   const zSouth = fD/2 - 0.65;
 
@@ -824,21 +808,21 @@ function addBox(group, w, h, d, matl, x, y, z) {
     return sprite;
   }
 
-  makeLabel('SOUS-SOL', -7, 1.25, 6, '#5D4E37', 200);
-  makeLabel('100 m²', -7, 0.6, 6, '#888888', 160);
+  makeLabel('SOUS-SOL (garage)', -7, 1.25, 6, '#5D4E37', 200);
+  makeLabel('100 m² (0 SDP)', -7, 0.6, 6, '#888888', 160);
   makeLabel('RDC', -7, 3.8, 6, '#B8A888', 200);
-  makeLabel('84.7 m²', -7, 3.2, 6, '#888888', 160);
-  makeLabel('R+1', -7, 6.5, 6, '#C5B8A8', 200);
-  makeLabel('84.7 m²', -7, 5.9, 6, '#888888', 160);
+  makeLabel('80 m² SDP', -7, 3.2, 6, '#888888', 160);
+  makeLabel('R+1', -7, 6.4, 6, '#C5B8A8', 200);
+  makeLabel('80 m² SDP', -7, 5.8, 6, '#888888', 160);
   makeLabel('COMBLES', -7, 10, 1, '#8B7355', 200);
-  makeLabel('~32 m²', -7, 9.4, 1, '#888888', 160);
-  makeLabel('BALCON', 0, 6.0, 8, '#e94560', 180);
-  makeLabel('9×3m', 0, 5.5, 8, '#888888', 140);
+  makeLabel('~40 m² SDP', -7, 9.4, 1, '#888888', 160);
+  makeLabel('BALCON', 0, 5.9, 8, '#e94560', 180);
+  makeLabel('9×3m', 0, 5.4, 8, '#888888', 140);
   makeLabel('TERRASSE', 0, 3.0, 9, '#C0B090', 180);
   makeLabel('PISCINE', 0, 2.8, 12.5, '#2196F3', 200);
   makeLabel('8×4m', 0, 2.2, 12.5, '#888888', 150);
-  makeLabel('Garage', 0, 1.25, -5, '#aaaaaa', 160);
-  makeLabel('Studio', 0, 1.25, 3, '#aaaaaa', 160);
+  makeLabel('Garage 2 voitures', 0, 1.25, -3, '#aaaaaa', 160);
+  makeLabel('Local technique', 0, 1.25, 3, '#aaaaaa', 140);
   makeLabel('Réservoirs', 18, 8, 0.5, '#708090', 200);
   makeLabel('(Parcelle 0190)', 18, 7.2, 0.5, '#555555', 180);
 
@@ -871,33 +855,33 @@ pluGroup.visible = false;
 scene.add(pluGroup);
 
 (function buildPLUOverlay() {
-  // Height limit plane - faitage 10m from TN (terrain naturel ~ y=0 at building)
+  // Height limit plane - faitage 10m from TN (TN=2.5 in model coords)
   const hMaxFaitGeo = new THREE.PlaneGeometry(16, 16);
-  const hMaxFaitMat = new THREE.MeshBasicMaterial({ color: 0xf44336, transparent: true, opacity: 0.08, side: THREE.DoubleSide });
+  const hMaxFaitMat = new THREE.MeshBasicMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.08, side: THREE.DoubleSide });
   const hMaxFait = new THREE.Mesh(hMaxFaitGeo, hMaxFaitMat);
   hMaxFait.rotation.x = -Math.PI / 2;
-  hMaxFait.position.set(0, 10, 0);
+  hMaxFait.position.set(0, 12.5, 0); // 2.5 + 10m
   pluGroup.add(hMaxFait);
 
   // Height limit wireframe border
   const hMaxEdge = new THREE.EdgesGeometry(hMaxFaitGeo);
-  const hMaxLine = new THREE.LineSegments(hMaxEdge, new THREE.LineBasicMaterial({ color: 0xf44336, transparent: true, opacity: 0.5 }));
+  const hMaxLine = new THREE.LineSegments(hMaxEdge, new THREE.LineBasicMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.5 }));
   hMaxLine.rotation.x = -Math.PI / 2;
-  hMaxLine.position.set(0, 10, 0);
+  hMaxLine.position.set(0, 12.5, 0);
   pluGroup.add(hMaxLine);
 
   // Egout height limit plane - 7m
   const hMaxEgoutGeo = new THREE.PlaneGeometry(16, 16);
-  const hMaxEgoutMat = new THREE.MeshBasicMaterial({ color: 0xFF9800, transparent: true, opacity: 0.06, side: THREE.DoubleSide });
+  const hMaxEgoutMat = new THREE.MeshBasicMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.06, side: THREE.DoubleSide });
   const hMaxEgout = new THREE.Mesh(hMaxEgoutGeo, hMaxEgoutMat);
   hMaxEgout.rotation.x = -Math.PI / 2;
-  hMaxEgout.position.set(0, 7, 0);
+  hMaxEgout.position.set(0, 9.5, 0); // 2.5 + 7m
   pluGroup.add(hMaxEgout);
 
   const hEgoutEdge = new THREE.EdgesGeometry(hMaxEgoutGeo);
-  const hEgoutLine = new THREE.LineSegments(hEgoutEdge, new THREE.LineBasicMaterial({ color: 0xFF9800, transparent: true, opacity: 0.5 }));
+  const hEgoutLine = new THREE.LineSegments(hEgoutEdge, new THREE.LineBasicMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.5 }));
   hEgoutLine.rotation.x = -Math.PI / 2;
-  hEgoutLine.position.set(0, 7, 0);
+  hEgoutLine.position.set(0, 9.5, 0);
   pluGroup.add(hEgoutLine);
 
   // PLU height labels
@@ -915,8 +899,8 @@ scene.add(pluGroup);
     s.scale.set(5, 1.25, 1);
     pluGroup.add(s);
   }
-  pluLabel('Art.5b HMAX TOTALE 10m', 10, 10.5, 0, '#f44336');
-  pluLabel('Art.5a HMAX FACADE 7m', 10, 7.5, 0, '#FF9800');
+  pluLabel('Art.5b HMAX TOTALE 10m', 10, 13, 0, '#4CAF50');
+  pluLabel('Art.5a HMAX FACADE 7m', 10, 10, 0, '#4CAF50');
 
   // Art.6a Recul voie publique (4m from road edge at z~-15)
   const reculVoiePts = [
@@ -967,15 +951,16 @@ scene.add(pluGroup);
   pluLabel('EMPRISE PROJET 84.7m2', 0, 0.8, 5, '#e94560');
 
   // Vertical height indicator poles
-  const poleMat = new THREE.MeshBasicMaterial({ color: 0xf44336, transparent: true, opacity: 0.4 });
+  // Height poles from TN (model y=2.5) up to 10m (model y=12.5)
+  const poleMat = new THREE.MeshBasicMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.4 });
   for (const x of [-6, 6]) {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 10, 8), poleMat);
-    pole.position.set(x, 5, -5);
+    pole.position.set(x, 7.5, -5); // center of 2.5-12.5 range
     pluGroup.add(pole);
-    // Tick marks every meter
+    // Tick marks every meter from TN
     for (let h = 1; h <= 10; h++) {
       const tick = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.02, 0.02), poleMat);
-      tick.position.set(x, h, -5);
+      tick.position.set(x, 2.5 + h, -5);
       pluGroup.add(tick);
     }
   }
@@ -1035,7 +1020,7 @@ window.updateBalcony = function() {
 
   const g = groups.balcony;
   clearGroup(g);
-  const baseY = 5.2, southFace = 7.7/2 - 0.65;
+  const baseY = 5.25, southFace = 7.7/2 - 0.65;
 
   addBox(g, 9, 0.2, bd, mat.steel, 0, baseY, southFace + bd/2);
   for (let bx = -3.5; bx <= 3.5; bx += 1.75) {
@@ -1122,13 +1107,13 @@ const mouse = new THREE.Vector2();
 const tooltip = document.getElementById('tooltip');
 
 const floorNames = {
-  basement: 'Sous-sol — 11.0×9.0m — 100 m² (Garage + Studio)',
-  ground: 'RDC — 11.0×7.7m — 84.7 m² (Séjour, Cuisine)',
-  first: 'R+1 — 11.0×7.7m — 84.7 m² (Chambres)',
-  attic: 'Combles — ~11.0×5.2m — ~32 m² (Mono-pente 30°)',
-  balcony: 'Balcon porte-à-faux — 9.0×3.0m — 27 m²',
-  terrace: 'Terrasse RDC — Plain-pied sud',
-  pool: 'Piscine — 8.0×4.0m — 32 m² — Profondeur 1.5m'
+  basement: 'Sous-sol — 11.0×9.0m — Garage + Local technique (0 m² SDP)',
+  ground: 'RDC — 11.0×7.7m — H=2.5m — ~80 m² SDP (Sejour, Cuisine)',
+  first: 'R+1 — 11.0×7.7m — H=2.2m — ~80 m² SDP (Chambres)',
+  attic: 'Combles — ~40 m² SDP — Mono-pente 21° (H.facade 7m, H.totale 10m)',
+  balcony: 'Balcon porte-a-faux — 9.0×3.0m — 27 m² (hors SDP/CES)',
+  terrace: 'Terrasse RDC — Plain-pied sud (hors CES)',
+  pool: 'Piscine — 8.0×4.0m — 32 m² — Recul 2m (Art.3.5 DG)'
 };
 
 window.addEventListener('mousemove', (e) => {
