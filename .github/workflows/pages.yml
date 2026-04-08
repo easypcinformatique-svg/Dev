@@ -1,0 +1,46 @@
+name: Deploy 3D Visualization to GitHub Pages
+
+on:
+  push:
+    branches:
+      - claude/3d-house-visualization-5ELaW
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: claude/3d-house-visualization-5ELaW
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Create deploy directory
+        run: |
+          mkdir -p _site
+          cp 3d-house-visualization.html _site/index.html
+          cp 3d-house-visualization.html _site/3d-house-visualization.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
