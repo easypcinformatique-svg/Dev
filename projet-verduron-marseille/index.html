@@ -32,6 +32,17 @@ canvas{display:block}
 #tooltip{position:fixed;background:rgba(26,26,46,0.95);color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;pointer-events:none;display:none;z-index:200;border:1px solid #e94560;backdrop-filter:blur(10px)}
 .legend-item{display:flex;align-items:center;font-size:11px;padding:2px 0}
 .legend-color{width:16px;height:10px;border-radius:2px;margin-right:8px;border:1px solid rgba(255,255,255,0.2)}
+.plu-gauge{margin:8px 0}
+.plu-gauge-label{font-size:10px;color:#aaa;margin-bottom:3px}
+.plu-bar-bg{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.plu-bar-fill{height:100%;background:#e94560;border-radius:3px;transition:width 0.5s}
+.plu-bar-ok{background:#4CAF50}
+.plu-bar-danger{background:#f44336}
+.plu-values{display:flex;justify-content:space-between;font-size:10px;color:#777;margin-top:2px;align-items:center}
+.plu-status{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:0.5px}
+.plu-ok{background:rgba(76,175,80,0.2);color:#4CAF50}
+.plu-warn{background:rgba(255,193,7,0.2);color:#FFC107}
+.plu-danger{background:rgba(244,67,54,0.2);color:#f44336}
 .slider-row{margin:6px 0;font-size:11px}
 .slider-row label{display:flex;justify-content:space-between;margin-bottom:3px;color:#ccc}
 .slider-row label span{color:#e94560;font-weight:600}
@@ -149,6 +160,46 @@ canvas{display:block}
     <div class="info-row"><span class="info-label">Piscine</span><span class="info-value" id="dim-piscine">8.0 × 4.0m</span></div>
     <div class="info-row"><span class="info-label">Toit</span><span class="info-value">Mono-pente 30°</span></div>
     <div class="info-row"><span class="info-label">Surface totale</span><span class="info-value">~301 m²</span></div>
+  </div>
+
+  <div class="section" id="plu-section">
+    <div class="section-title">Contraintes PLUi UM2</div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Emprise au sol (CES max 5%)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill" id="plu-ces-bar" style="width:99.8%"></div></div>
+      <div class="plu-values"><span id="plu-ces-val">84.7 m²</span> / <span>84.9 m² max</span> <span class="plu-status plu-warn" id="plu-ces-status">LIMITE</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Hauteur faitage (max 10m / TN)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-hf-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span id="plu-hf-val">~13.7m</span> / <span>10.0m max</span> <span class="plu-status plu-danger" id="plu-hf-status">DEPASSE</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Hauteur egout (max 7m / TN)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-he-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span id="plu-he-val">~9.7m</span> / <span>7.0m max</span> <span class="plu-status plu-danger" id="plu-he-status">DEPASSE</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Recul voie publique (min 5m)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-rv-bar" style="width:50%"></div></div>
+      <div class="plu-values"><span>~8m</span> / <span>5m min</span> <span class="plu-status plu-ok">OK</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Recul limites separatives (H/2, min 3m)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-rs-bar" style="width:60%"></div></div>
+      <div class="plu-values"><span>~5m</span> / <span>3m min</span> <span class="plu-status plu-ok">OK</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Pleine terre (min 40%)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-pt-bar" style="width:45%"></div></div>
+      <div class="plu-values"><span>~88%</span> / <span>40% min</span> <span class="plu-status plu-ok">OK</span></div>
+    </div>
+    <div style="margin-top:10px">
+      <label class="floor-toggle" style="margin:0">
+        <input type="checkbox" id="tog-plu" onchange="togglePLU()">
+        <label for="tog-plu" style="font-size:12px;cursor:pointer">Afficher limites PLU en 3D</label>
+      </label>
+    </div>
   </div>
 
   <div class="section">
@@ -784,6 +835,126 @@ function addBox(group, w, h, d, matl, x, y, z) {
   // Building depth (7.7m)
   dimLine([6, 2.6, -4.5], [6, 2.6, 3.2]);
 })();
+
+// ============ PLU CONSTRAINTS 3D OVERLAY ============
+const pluGroup = new THREE.Group();
+pluGroup.visible = false;
+scene.add(pluGroup);
+
+(function buildPLUOverlay() {
+  // Height limit plane - faitage 10m from TN (terrain naturel ~ y=0 at building)
+  const hMaxFaitGeo = new THREE.PlaneGeometry(16, 16);
+  const hMaxFaitMat = new THREE.MeshBasicMaterial({ color: 0xf44336, transparent: true, opacity: 0.08, side: THREE.DoubleSide });
+  const hMaxFait = new THREE.Mesh(hMaxFaitGeo, hMaxFaitMat);
+  hMaxFait.rotation.x = -Math.PI / 2;
+  hMaxFait.position.set(0, 10, 0);
+  pluGroup.add(hMaxFait);
+
+  // Height limit wireframe border
+  const hMaxEdge = new THREE.EdgesGeometry(hMaxFaitGeo);
+  const hMaxLine = new THREE.LineSegments(hMaxEdge, new THREE.LineBasicMaterial({ color: 0xf44336, transparent: true, opacity: 0.5 }));
+  hMaxLine.rotation.x = -Math.PI / 2;
+  hMaxLine.position.set(0, 10, 0);
+  pluGroup.add(hMaxLine);
+
+  // Egout height limit plane - 7m
+  const hMaxEgoutGeo = new THREE.PlaneGeometry(16, 16);
+  const hMaxEgoutMat = new THREE.MeshBasicMaterial({ color: 0xFF9800, transparent: true, opacity: 0.06, side: THREE.DoubleSide });
+  const hMaxEgout = new THREE.Mesh(hMaxEgoutGeo, hMaxEgoutMat);
+  hMaxEgout.rotation.x = -Math.PI / 2;
+  hMaxEgout.position.set(0, 7, 0);
+  pluGroup.add(hMaxEgout);
+
+  const hEgoutEdge = new THREE.EdgesGeometry(hMaxEgoutGeo);
+  const hEgoutLine = new THREE.LineSegments(hEgoutEdge, new THREE.LineBasicMaterial({ color: 0xFF9800, transparent: true, opacity: 0.5 }));
+  hEgoutLine.rotation.x = -Math.PI / 2;
+  hEgoutLine.position.set(0, 7, 0);
+  pluGroup.add(hEgoutLine);
+
+  // PLU height labels
+  function pluLabel(text, x, y, z, color) {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = color;
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, 128, 40);
+    const tex = new THREE.CanvasTexture(c);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    s.position.set(x, y, z);
+    s.scale.set(5, 1.25, 1);
+    pluGroup.add(s);
+  }
+  pluLabel('HMAX FAITAGE 10m', 10, 10.5, 0, '#f44336');
+  pluLabel('HMAX EGOUT 7m', 10, 7.5, 0, '#FF9800');
+
+  // Recul voie publique (5m from road at z=-18, road edge ~z=-15)
+  const reculVoiePts = [
+    new THREE.Vector3(-20, 0.2, -13), new THREE.Vector3(20, 0.2, -13)
+  ];
+  const reculVoieGeo = new THREE.BufferGeometry().setFromPoints(reculVoiePts);
+  const reculVoieLine = new THREE.Line(reculVoieGeo, new THREE.LineDashedMaterial({ color: 0xFFC107, dashSize: 1, gapSize: 0.5, transparent: true, opacity: 0.7 }));
+  reculVoieLine.computeLineDistances();
+  pluGroup.add(reculVoieLine);
+  pluLabel('RECUL VOIE 5m', -10, 1, -13, '#FFC107');
+
+  // Recul limites separatives (3m from plot boundary - simplified)
+  const reculSepMat = new THREE.LineDashedMaterial({ color: 0x9C27B0, dashSize: 0.8, gapSize: 0.4, transparent: true, opacity: 0.6 });
+  const sepPts = [
+    [-15, -12], [-17, 5], [-7, 15], [12, 13], [17, -2], [7, -15], [-15, -12]
+  ];
+  const sepGeo = new THREE.BufferGeometry().setFromPoints(
+    sepPts.map(p => new THREE.Vector3(p[0], 0.2, p[1]))
+  );
+  const sepLine = new THREE.Line(sepGeo, reculSepMat);
+  sepLine.computeLineDistances();
+  pluGroup.add(sepLine);
+  pluLabel('RECUL SEPARATIF 3m', -12, 1, 10, '#9C27B0');
+
+  // Emprise au sol max zone (5% of 1698 = 84.9 m², ~9.2m x 9.2m square equivalent)
+  const empMaxSide = Math.sqrt(84.9);
+  const empGeo = new THREE.PlaneGeometry(empMaxSide, empMaxSide);
+  const empMat = new THREE.MeshBasicMaterial({ color: 0xFFC107, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
+  const empMesh = new THREE.Mesh(empGeo, empMat);
+  empMesh.rotation.x = -Math.PI / 2;
+  empMesh.position.set(0, 0.15, 0);
+  pluGroup.add(empMesh);
+
+  const empEdge = new THREE.EdgesGeometry(empGeo);
+  const empLine = new THREE.LineSegments(empEdge, new THREE.LineBasicMaterial({ color: 0xFFC107, transparent: true, opacity: 0.6 }));
+  empLine.rotation.x = -Math.PI / 2;
+  empLine.position.set(0, 0.15, 0);
+  pluGroup.add(empLine);
+  pluLabel('CES MAX 5% = 84.9m2', 0, 0.8, -8, '#FFC107');
+
+  // Building actual footprint overlay (for comparison)
+  const bldgGeo = new THREE.PlaneGeometry(11, 7.7);
+  const bldgMat = new THREE.MeshBasicMaterial({ color: 0xe94560, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+  const bldgMesh = new THREE.Mesh(bldgGeo, bldgMat);
+  bldgMesh.rotation.x = -Math.PI / 2;
+  bldgMesh.position.set(0, 0.18, -0.65);
+  pluGroup.add(bldgMesh);
+  pluLabel('EMPRISE PROJET 84.7m2', 0, 0.8, 5, '#e94560');
+
+  // Vertical height indicator poles
+  const poleMat = new THREE.MeshBasicMaterial({ color: 0xf44336, transparent: true, opacity: 0.4 });
+  for (const x of [-6, 6]) {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 10, 8), poleMat);
+    pole.position.set(x, 5, -5);
+    pluGroup.add(pole);
+    // Tick marks every meter
+    for (let h = 1; h <= 10; h++) {
+      const tick = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.02, 0.02), poleMat);
+      tick.position.set(x, h, -5);
+      pluGroup.add(tick);
+    }
+  }
+})();
+
+window.togglePLU = function() {
+  pluGroup.visible = document.getElementById('tog-plu').checked;
+};
 
 // ============ GRID HELPER ============
 const grid = new THREE.GridHelper(60, 30, 0x333355, 0x222244);
