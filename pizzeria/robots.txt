@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-
-# Sitemaps
-Sitemap: https://pizzanapolicarpentras.fr/sitemap.xml
-
-# Block internal/admin paths
-Disallow: /redirect/
-
