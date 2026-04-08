@@ -112,6 +112,12 @@ canvas{display:block}
       <label for="tog-pool">Piscine</label>
       <span class="surface">32 m²</span>
     </div>
+    <div class="floor-toggle" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">
+      <input type="checkbox" id="tog-heights" checked onchange="toggleHeights()">
+      <div class="color-dot" style="background:#e94560"></div>
+      <label for="tog-heights">Cotes de hauteur</label>
+      <span class="surface">NGF</span>
+    </div>
   </div>
 
   <div class="section">
@@ -340,6 +346,11 @@ const groups = {};
 });
 const buildingGroup = new THREE.Group();
 scene.add(buildingGroup);
+
+// Heights annotation group
+const heightsGroup = new THREE.Group();
+heightsGroup.name = 'heights';
+scene.add(heightsGroup);
 
 // Helper to add mesh
 function addBox(group, w, h, d, matl, x, y, z) {
@@ -848,6 +859,120 @@ function addBox(group, w, h, d, matl, x, y, z) {
   // Building depth (7.7m)
   dimLine([6, 2.6, -4.5], [6, 2.6, 3.2]);
 })();
+
+// ============ HEIGHT ANNOTATIONS (cotes de hauteur) ============
+(function buildHeightAnnotations() {
+  const g = heightsGroup;
+  const TN = 2.5; // terrain naturel in model coords = y reference
+  const NGF_BASE = 183; // altitude NGF du terrain
+  const xPos = -6.5; // position on west side of building
+
+  // Level definitions: [model_y, label, color]
+  const levels = [
+    [0,       'Plancher sous-sol',    '#5D4E37'],
+    [TN,      'TN / Plancher RDC',    '#E8DCC8'],
+    [5.0,     'Plafond RDC',          '#E8DCC8'],
+    [5.25,    'Plancher R+1',         '#F5F0E8'],
+    [7.45,    'Plafond R+1',          '#F5F0E8'],
+    [7.7,     'Plancher combles',     '#8B7355'],
+    [9.5,     'Egout (facade 7.0m)',  '#4CAF50'],
+    [12.5,    'Faitage (total 10.0m)','#e94560'],
+  ];
+
+  // Vertical ruler line (west side)
+  const rulerPts = [new THREE.Vector3(xPos, 0, -4.5), new THREE.Vector3(xPos, 13, -4.5)];
+  const rulerGeo = new THREE.BufferGeometry().setFromPoints(rulerPts);
+  const rulerLine = new THREE.Line(rulerGeo, new THREE.LineBasicMaterial({ color: 0xe94560, transparent: true, opacity: 0.5 }));
+  g.add(rulerLine);
+
+  // Tick marks + labels for each level
+  levels.forEach(([modelY, label, color]) => {
+    const heightFromTN = modelY - TN;
+    const ngf = NGF_BASE + heightFromTN;
+
+    // Horizontal tick line
+    const tickPts = [
+      new THREE.Vector3(xPos - 0.5, modelY, -4.5),
+      new THREE.Vector3(xPos + 0.5, modelY, -4.5)
+    ];
+    const tickGeo = new THREE.BufferGeometry().setFromPoints(tickPts);
+    const tickLine = new THREE.Line(tickGeo, new THREE.LineBasicMaterial({ color: parseInt(color.replace('#',''), 16) }));
+    g.add(tickLine);
+
+    // Dashed line across building width
+    const dashPts = [
+      new THREE.Vector3(xPos + 0.5, modelY, -4.5),
+      new THREE.Vector3(-xPos, modelY, -4.5)
+    ];
+    const dashGeo = new THREE.BufferGeometry().setFromPoints(dashPts);
+    const dashLine = new THREE.Line(dashGeo, new THREE.LineDashedMaterial({
+      color: parseInt(color.replace('#',''), 16),
+      dashSize: 0.3, gapSize: 0.2, transparent: true, opacity: 0.35
+    }));
+    dashLine.computeLineDistances();
+    g.add(dashLine);
+
+    // Label canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'right';
+    // Height from TN
+    const hText = heightFromTN >= 0 ? '+' + heightFromTN.toFixed(1) + 'm' : heightFromTN.toFixed(1) + 'm';
+    ctx.fillStyle = color;
+    ctx.fillText(hText + '  ' + ngf.toFixed(1) + ' NGF', 490, 25);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillText(label, 490, 50);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sprite.position.set(xPos - 4.5, modelY + 0.15, -4.5);
+    sprite.scale.set(7, 0.9, 1);
+    g.add(sprite);
+  });
+
+  // Vertical dimension arrows between key levels
+  function vDimArrow(y1, y2, x, z, label, color) {
+    const pts = [new THREE.Vector3(x, y1, z), new THREE.Vector3(x, y2, z)];
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: parseInt(color.replace('#',''), 16), transparent: true, opacity: 0.7 }));
+    g.add(line);
+    // Arrow caps
+    for (const y of [y1, y2]) {
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.05),
+        new THREE.MeshBasicMaterial({ color: parseInt(color.replace('#',''), 16) }));
+      cap.position.set(x, y, z);
+      g.add(cap);
+    }
+    // Dimension label
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 48;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = color;
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, 64, 30);
+    const tex = new THREE.CanvasTexture(c);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    s.position.set(x + 1.2, (y1 + y2) / 2, z);
+    s.scale.set(2.5, 0.9, 1);
+    g.add(s);
+  }
+
+  // Show room heights
+  vDimArrow(0, 2.5, 7, -4.5, '2.5m', '#5D4E37');        // sous-sol
+  vDimArrow(2.5, 5.0, 7, -4.5, '2.5m', '#E8DCC8');       // RDC
+  vDimArrow(5.25, 7.45, 7, -4.5, '2.2m', '#F5F0E8');     // R+1
+  vDimArrow(9.5, 12.5, 7, -4.5, '3.0m', '#e94560');      // roof rise
+  vDimArrow(2.5, 9.5, 8.5, -4.5, '7.0m', '#4CAF50');     // facade height
+  vDimArrow(2.5, 12.5, 9.5, -4.5, '10.0m', '#e94560');   // total height
+})();
+
+window.toggleHeights = function() {
+  heightsGroup.visible = document.getElementById('tog-heights').checked;
+};
 
 // ============ PLU CONSTRAINTS 3D OVERLAY ============
 const pluGroup = new THREE.Group();
