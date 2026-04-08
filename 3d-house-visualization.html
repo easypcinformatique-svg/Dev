@@ -159,7 +159,7 @@ canvas{display:block}
     <div class="info-row"><span class="info-label">Balcon R+1</span><span class="info-value" id="dim-balcon">9.0 × 3.0m</span></div>
     <div class="info-row"><span class="info-label">Piscine</span><span class="info-value" id="dim-piscine">8.0 × 4.0m</span></div>
     <div class="info-row"><span class="info-label">Toit</span><span class="info-value">Mono-pente 30°</span></div>
-    <div class="info-row"><span class="info-label">Surface totale</span><span class="info-value">~301 m²</span></div>
+    <div class="info-row"><span class="info-label">SDP totale</span><span class="info-value" style="color:#f44336">~251 m² / 200 max</span></div>
   </div>
 
   <div class="section" id="plu-section">
@@ -191,14 +191,37 @@ canvas{display:block}
       <div class="plu-values"><span>~5m</span> / <span>3m min</span> <span class="plu-status plu-ok">OK</span></div>
     </div>
     <div class="plu-gauge">
-      <div class="plu-gauge-label">Pleine terre (min ~40%)</div>
-      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-pt-bar" style="width:45%"></div></div>
-      <div class="plu-values"><span>~88%</span> / <span>40% min</span> <span class="plu-status plu-ok">OK</span></div>
+      <div class="plu-gauge-label">Art.1f — Surface de plancher (max 200 m²)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-danger" id="plu-sdp-bar" style="width:100%"></div></div>
+      <div class="plu-values"><span>~251 m²</span> / <span>200 m² max</span> <span class="plu-status plu-danger">DEPASSE</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Art.10a — Espaces vegetalises (min 75%)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-veg-bar" style="width:60%"></div></div>
+      <div class="plu-values"><span>~90%</span> / <span>75% min</span> <span class="plu-status plu-ok">OK</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Art.10b — Pleine terre (min 50%)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" id="plu-pt-bar2" style="width:55%"></div></div>
+      <div class="plu-values"><span>~85%</span> / <span>50% min</span> <span class="plu-status plu-ok">OK</span></div>
+    </div>
+    <div class="plu-gauge">
+      <div class="plu-gauge-label">Piscine bassin+plage (max 50 m²)</div>
+      <div class="plu-bar-bg"><div class="plu-bar-fill plu-bar-ok" style="width:64%"></div></div>
+      <div class="plu-values"><span>~32 m²</span> / <span>50 m² max</span> <span class="plu-status plu-ok">OK</span></div>
     </div>
     <div style="margin-top:8px;padding:8px;background:rgba(76,175,80,0.1);border-radius:6px;border:1px solid rgba(76,175,80,0.2)">
       <div style="font-size:10px;color:#4CAF50;font-weight:600">EXEMPTIONS PLUi (Art.6/7/8)</div>
-      <div style="font-size:10px;color:#999;margin-top:4px">Piscine non couverte : exempte</div>
+      <div style="font-size:10px;color:#999;margin-top:4px">Piscine non couverte : exempte implant. (recul 2m min)</div>
       <div style="font-size:10px;color:#999">Sous-sol enterre : exempt implantation</div>
+      <div style="font-size:10px;color:#999">Garage : exclu de la surface de plancher</div>
+    </div>
+    <div style="margin-top:6px;padding:8px;background:rgba(244,67,54,0.1);border-radius:6px;border:1px solid rgba(244,67,54,0.2)">
+      <div style="font-size:10px;color:#f44336;font-weight:600">ALERTES NON-CONFORMITE</div>
+      <div style="font-size:10px;color:#f44336;margin-top:4px">1. Hauteur facade +0.7m au-dessus du max</div>
+      <div style="font-size:10px;color:#f44336">2. Hauteur totale +3.7m au-dessus du max</div>
+      <div style="font-size:10px;color:#f44336">3. Surface plancher +51 m² au-dessus du max</div>
+      <div style="font-size:10px;color:#FFC107">4. Emprise au sol a 99.8% du max</div>
     </div>
     <div style="margin-top:10px">
       <label class="floor-toggle" style="margin:0">
