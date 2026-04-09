@@ -418,6 +418,9 @@ export default function ConstructionCostCalculator() {
   const [coutM2, setCoutM2] = useState(1600);
   const [niveaux, setNiveaux] = useState(1);
   const [fondation, setFondation] = useState('dalle');
+  const [micropieux, setMicropieux] = useState(false);
+  const [nbMicropieux, setNbMicropieux] = useState(20);
+  const [coutMicropieu, setCoutMicropieu] = useState(350);
   const [prestations, setPrestations] = useState('moyen');
   const [re2020, setRe2020] = useState(false);
 
@@ -547,7 +550,8 @@ export default function ConstructionCostCalculator() {
     const fondCoeff = FONDATION_COEFF[fondation];
     const nivCoeff = NIVEAUX_COEFF[niveaux];
     const re2020Coeff = re2020 ? 1.10 : 1;
-    const constructionBase = shab * coutM2 * prestCoeff * re2020Coeff * fondCoeff * nivCoeff;
+    const micropieuxCost = micropieux ? nbMicropieux * coutMicropieu : 0;
+    const constructionBase = shab * coutM2 * prestCoeff * re2020Coeff * fondCoeff * nivCoeff + micropieuxCost;
 
     // Décomposition construction nette par lots
     const coutBrut = shab * coutM2;
@@ -570,6 +574,7 @@ export default function ConstructionCostCalculator() {
         { nom: 'Murs exterieurs', qte: surfaceMurs, unite: 'm2', pu: Math.round((typeConstruction === 'bois' ? 95 : 110) * pC) },
         ...(niveaux === 2 ? [{ nom: 'Plancher intermediaire R+1', qte: emprise, unite: 'm2', pu: Math.round(90 * pC) }] : []),
         ...(niveaux === 2 ? [{ nom: 'Escalier', qte: 1, unite: 'u', pu: Math.round(3500 * pC) }] : []),
+        ...(micropieux ? [{ nom: 'Micropieux', qte: nbMicropieux, unite: 'u', pu: coutMicropieu }] : []),
       ]},
       { nom: 'Charpente / Couverture', sousLots: [
         { nom: 'Charpente', qte: surfaceToiture, unite: 'm2', pu: Math.round(55 * pC) },
@@ -724,7 +729,7 @@ export default function ConstructionCostCalculator() {
     };
   }, [prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom, deptInfo,
-    tauxCommunal, sdp, shab, coutM2, prestations, fondation, niveaux, re2020,
+    tauxCommunal, sdp, shab, coutM2, prestations, fondation, micropieux, nbMicropieux, coutMicropieu, niveaux, re2020,
     architecte, architectePct, architecteFixe, architecteMontant, maitreOeuvre, maitreOeuvrePct, maitreOeuvreFixe, maitreOeuvreMontant, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, dommagesOuvrage, dommagesOuvragePct, dommagesOuvrageFixe, dommagesOuvrageMontant,
     raccElec, raccEau, assainissementType, raccAssCollectif, raccANC, redevanceArcheo,
@@ -862,7 +867,7 @@ export default function ConstructionCostCalculator() {
     setEtudeSol(true); setEtudeSolMontant(2500); setTerrainViabilise(true);
     setViabEau(3000); setViabElec(3500); setViabGaz(4000); setViabAssainissement(6000); setViabTelecom(1500);
     setTauxCommunal(1.7); setSurfaceTerrain(500); setCesMax(40); setShab(100); setSdpAuto(true); setSdpManuel(110);
-    setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle'); setLotOverrides({});
+    setTypeConstruction('traditionnelle'); setCoutM2(1600); setNiveaux(1); setFondation('dalle'); setMicropieux(false); setNbMicropieux(20); setCoutMicropieu(350); setLotOverrides({});
     setPrestations('moyen'); setRe2020(false); setArchitecte(false); setArchitectePct(12); setArchitecteFixe(false); setArchitecteMontant(0);
     setMaitreOeuvre(true); setMaitreOeuvrePct(6); setMaitreOeuvreFixe(false); setMaitreOeuvreMontant(0);
     setDommagesOuvrage(true); setDommagesOuvragePct(3.5); setDommagesOuvrageFixe(false); setDommagesOuvrageMontant(0);
@@ -909,7 +914,7 @@ export default function ConstructionCostCalculator() {
     codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
     tauxCommunal, surfaceTerrain, cesMax, shab, sdpAuto, sdpManuel, typeConstruction,
-    coutM2, niveaux, fondation, prestations, re2020, lotOverrides, architecte, architectePct,
+    coutM2, niveaux, fondation, micropieux, nbMicropieux, coutMicropieu, prestations, re2020, lotOverrides, architecte, architectePct,
     maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
     assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
@@ -921,7 +926,7 @@ export default function ConstructionCostCalculator() {
   }), [codePostal, prixTerrain, fraisNotairePct, fraisGeometre, etudeSol, etudeSolMontant,
     terrainViabilise, viabEau, viabElec, viabGaz, viabAssainissement, viabTelecom,
     tauxCommunal, surfaceTerrain, cesMax, shab, sdpAuto, sdpManuel, typeConstruction,
-    coutM2, niveaux, fondation, prestations, re2020, lotOverrides, architecte, architectePct,
+    coutM2, niveaux, fondation, micropieux, nbMicropieux, coutMicropieu, prestations, re2020, lotOverrides, architecte, architectePct,
     maitreOeuvre, maitreOeuvrePct, dommagesOuvrage, dommagesOuvragePct, bureauControle,
     bureauControleMontant, coordSPS, coordSPSMontant, raccElec, raccEau,
     assainissementType, raccAssCollectif, raccANC, ancType, redevanceArcheo,
@@ -954,6 +959,9 @@ export default function ConstructionCostCalculator() {
     if (data.coutM2 != null) setCoutM2(data.coutM2);
     if (data.niveaux != null) setNiveaux(data.niveaux);
     if (data.fondation != null) setFondation(data.fondation);
+    if (data.micropieux != null) setMicropieux(data.micropieux);
+    if (data.nbMicropieux != null) setNbMicropieux(data.nbMicropieux);
+    if (data.coutMicropieu != null) setCoutMicropieu(data.coutMicropieu);
     if (data.prestations != null) setPrestations(data.prestations);
     if (data.re2020 != null) setRe2020(data.re2020);
     if (data.lotOverrides != null) setLotOverrides(data.lotOverrides);
@@ -1499,6 +1507,36 @@ pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body><pre>${text}<
                   </span>
                 )}
               </div>
+            </div>
+
+            {/* MICROPIEUX */}
+            <div className="space-y-2">
+              <CheckboxInput label="Micropieux (sol argileux / instable)" checked={micropieux} onChange={setMicropieux}
+                tooltip="Necessaires si etude de sol G2 revele un sol porteur insuffisant (argile, remblais, nappe haute). L'etude de sol definit le nombre et la profondeur." />
+              {micropieux && (
+                <div className="ml-2 border-l-2 border-gray-700 pl-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberInput label="Nombre de micropieux" value={nbMicropieux} onChange={(v) => setNbMicropieux(clamp(v, 4, 80))} min={4} max={80}
+                      tooltip="Defini par l'etude de sol G2 et le bureau d'etudes structure. Typiquement 15 a 40 pour une maison individuelle." />
+                    <NumberInput label="Cout unitaire" value={coutMicropieu} onChange={setCoutMicropieu} suffix="€"
+                      tooltip="300 a 500 € par micropieu selon profondeur (3 a 12m), diametre et accessibilite." />
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-2 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Cout total micropieux</span>
+                      <span className="font-mono text-orange-400 font-bold">{formatEuroShort(nbMicropieux * coutMicropieu)}</span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {nbMicropieux} micropieux x {formatEuroShort(coutMicropieu)} = {formatEuroShort(nbMicropieux * coutMicropieu)}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-0.5">
+                    <div className="flex items-center gap-1"><Info size={12} className="text-blue-400" /> Le nombre exact depend de l'etude G2 (obligatoire)</div>
+                    <div className="flex items-center gap-1"><Info size={12} className="text-blue-400" /> Profondeur courante : 3-8m (jusqu'a 12m en sol tres instable)</div>
+                    <div className="flex items-center gap-1"><AlertTriangle size={12} className="text-orange-400" /> Prevoir aussi les longrines de liaison (~{formatEuroShort(Math.round(empriseAuSol * 25))} pour {empriseAuSol} m²)</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
