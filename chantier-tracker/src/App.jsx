@@ -6,6 +6,7 @@ import Finances from './components/Finances.jsx'
 import Legal from './components/Legal.jsx'
 import ArtisansView from './components/Artisans.jsx'
 import Notes from './components/Notes.jsx'
+import Documents from './components/Documents.jsx'
 import './App.css'
 
 const TABS = [
@@ -14,6 +15,7 @@ const TABS = [
   { id: 'finances', label: 'Finances', icon: '\u20AC' },
   { id: 'legal', label: 'Legal', icon: '\u2696' },
   { id: 'artisans', label: 'Artisans', icon: '\u2692' },
+  { id: 'documents', label: 'Documents', icon: '\u{1F4CE}' },
   { id: 'notes', label: 'Journal', icon: '\u270E' },
 ]
 
@@ -58,6 +60,7 @@ export default function App() {
         {activeTab === 'finances' && <Finances state={state} updatePayment={updatePayment} updateFinancement={updateFinancement} />}
         {activeTab === 'legal' && <Legal state={state} toggleLegal={toggleLegal} />}
         {activeTab === 'artisans' && <ArtisansView state={state} updateArtisan={updateArtisan} />}
+        {activeTab === 'documents' && <Documents />}
         {activeTab === 'notes' && <Notes state={state} addNote={addNote} deleteNote={deleteNote} />}
       </main>
     </div>
