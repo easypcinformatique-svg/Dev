@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { PHASES } from '../data/phases.js'
 import { OBLIGATIONS } from '../data/legal.js'
 import { TOTAL_TTC } from '../data/finances.js'
+import { exportZip } from '../hooks/useExport.js'
 
 function daysUntil(dateStr) {
   const target = new Date(dateStr + 'T00:00:00')
@@ -16,6 +18,18 @@ function formatDate(dateStr) {
 }
 
 export default function Dashboard({ state }) {
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      await exportZip(state)
+    } catch (e) {
+      console.error('Export error:', e)
+    }
+    setExporting(false)
+  }
+
   const allTasks = PHASES.flatMap(p => p.tasks)
   const totalTasks = allTasks.length
   const completedCount = Object.keys(state.completedTasks).length
@@ -96,6 +110,14 @@ export default function Dashboard({ state }) {
 
   return (
     <div className="dashboard">
+      <button
+        className="btn-export"
+        onClick={handleExport}
+        disabled={exporting}
+      >
+        {exporting ? 'Generation en cours...' : '\u{1F4E6} Exporter rapport + documents (ZIP)'}
+      </button>
+
       <div className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-value">{pctTasks}%</div>

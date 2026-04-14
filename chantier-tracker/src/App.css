@@ -386,6 +386,17 @@ body {
 .note-delete:hover { color: var(--danger); background: var(--danger-bg); }
 .note-text { font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; }
 
+/* ===== EXPORT BUTTON ===== */
+.btn-export {
+  display: block; width: 100%; padding: 0.75rem 1rem; margin-bottom: 1rem;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white; border: none; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-export:hover { opacity: 0.9; }
+.btn-export:disabled { opacity: 0.5; cursor: wait; }
+
 /* ===== DOCUMENTS ===== */
 .drop-zone {
   border: 2px dashed var(--border); border-radius: 12px;
