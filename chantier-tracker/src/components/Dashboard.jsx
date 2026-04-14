@@ -5,6 +5,7 @@ import { TOTAL_TTC } from '../data/finances.js'
 import { exportZip } from '../hooks/useExport.js'
 import { saveDocument, getAllDocuments, fileToBase64, DOC_CATEGORIES } from '../hooks/useDocuments.js'
 import { DOC_TASK_MAP, getAutoCheckFromFilename } from '../data/docTaskMap.js'
+import { guessCategory } from '../data/guessCategory.js'
 import { ARTISANS } from '../data/artisans.js'
 
 function daysUntil(dateStr) {
@@ -33,20 +34,7 @@ export default function Dashboard({ state, toggleTask, toggleLegal }) {
     })
   }, [uploading])
 
-  function guessCategory(name) {
-    const lower = name.toLowerCase()
-    if (lower.includes('decennale') || lower.includes('décennale')) return 'decennale'
-    if (lower.includes('devis')) return 'devis'
-    if (lower.includes('facture') || lower.includes('situation')) return 'facture'
-    if (lower.includes('contrat')) return 'contrat'
-    if (lower.includes('attestation')) return 'attestation'
-    if (lower.includes('assurance') || lower.includes('do ') || lower.includes('dommage')) return 'assurance'
-    if (lower.includes('pc ') || lower.includes('permis') || lower.includes('daact') || lower.includes('cerfa')) return 'administratif'
-    if (lower.includes('plan') || lower.includes('etude') || lower.includes('étude')) return 'plan'
-    if (lower.match(/\.(jpg|jpeg|png|heic|webp)$/)) return 'photo'
-    return 'autre'
-  }
-
+  // guessCategory imported from ../data/guessCategory.js
   const handleFiles = useCallback(async (files) => {
     setUploading(true)
     const checked = []

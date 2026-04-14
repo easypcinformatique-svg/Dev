@@ -5,6 +5,7 @@ import {
 } from '../hooks/useDocuments.js'
 import { ARTISANS } from '../data/artisans.js'
 import { DOC_TASK_MAP, getAutoCheckFromFilename } from '../data/docTaskMap.js'
+import { guessCategory } from '../data/guessCategory.js'
 
 export default function Documents({ toggleTask, toggleLegal, completedTasks, completedLegal }) {
   const [docs, setDocs] = useState([])
@@ -66,19 +67,7 @@ export default function Documents({ toggleTask, toggleLegal, completedTasks, com
     }
   }, [toggleTask, toggleLegal, completedTasks, completedLegal])
 
-  function guessCategory(name) {
-    const lower = name.toLowerCase()
-    if (lower.includes('decennale') || lower.includes('décennale')) return 'decennale'
-    if (lower.includes('devis')) return 'devis'
-    if (lower.includes('facture') || lower.includes('situation')) return 'facture'
-    if (lower.includes('contrat')) return 'contrat'
-    if (lower.includes('attestation')) return 'attestation'
-    if (lower.includes('assurance') || lower.includes('do ') || lower.includes('dommage')) return 'assurance'
-    if (lower.includes('pc ') || lower.includes('permis') || lower.includes('daact') || lower.includes('doc ') || lower.includes('cerfa')) return 'administratif'
-    if (lower.includes('plan') || lower.includes('etude') || lower.includes('étude')) return 'plan'
-    if (lower.match(/\.(jpg|jpeg|png|heic|webp)$/)) return 'photo'
-    return 'autre'
-  }
+  // guessCategory imported from ../data/guessCategory.js
 
   function onDragOver(e) { e.preventDefault(); setDragging(true) }
   function onDragLeave(e) { e.preventDefault(); setDragging(false) }

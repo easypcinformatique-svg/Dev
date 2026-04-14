@@ -58,14 +58,19 @@ export function getAutoCheckFromFilename(filename) {
   const lower = filename.toLowerCase()
   const result = { tasks: [], legal: [] }
 
-  // Decennale
-  if (lower.includes('decennale') || lower.includes('décennale') || lower.includes('rc decennale')) {
+  // Decennale — reconnu aussi comme "attestation assurance" d'un artisan
+  if (lower.includes('decennale') || lower.includes('décennale') || lower.includes('rc decennale')
+    || lower.includes('attestation assurance') || lower.includes('attestation d\'assurance')
+    || lower.includes('responsabilit') || lower.includes('rc pro')
+    || lower.includes('orus') || lower.includes('smabtp') || lower.includes('maaf')
+    || lower.includes('axa pro') || lower.includes('allianz pro')) {
     result.tasks.push('p0t2')
     result.legal.push('leg2')
   }
 
-  // Dommages-Ouvrage
-  if (lower.includes('dommage') || lower.includes('do ') || lower.includes('_do_') || lower.includes('dommages-ouvrage')) {
+  // Dommages-Ouvrage (DO specifiquement, pas une decennale artisan)
+  if (lower.includes('dommage') || lower.includes('dommages-ouvrage') || lower.includes('dommages ouvrage')
+    || lower.includes('_do_') || (lower.includes('do ') && !lower.includes('doc '))) {
     result.tasks.push('p0t1', 'p0t6', 'p1t2')
     result.legal.push('leg1')
   }
