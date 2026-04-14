@@ -245,28 +245,73 @@ export default function Dashboard({ state, toggleTask, toggleLegal }) {
         <div className="empty-state">Aucune alerte dans les 30 prochains jours.</div>
       ) : (
         <div className="alerts-list">
-          {alerts.map(a => (
-            <div key={a.id} className={`alert-item ${alertClass(a.days, a.critical)}`}>
-              <span className="alert-badge">{alertIcon(a.days)}</span>
-              <div className="alert-content">
-                <div className="alert-label">
-                  {a.type === 'legal' && <span className="tag-legal">LEGAL</span>}
-                  {a.critical && <span className="tag-critical">CRITIQUE</span>}
-                  {a.label}
+          {alerts.map(a => {
+            const docForAlert = recentDocs.find(d => {
+              const linked = d.linkedTaskId === a.id || d.linkedLegalId === a.id
+              return linked
+            })
+            return (
+              <div key={a.id} className={`alert-item ${alertClass(a.days, a.critical)}`}>
+                <span className="alert-badge">{alertIcon(a.days)}</span>
+                <div className="alert-content">
+                  <div className="alert-label">
+                    {a.type === 'legal' && <span className="tag-legal">LEGAL</span>}
+                    {a.critical && <span className="tag-critical">CRITIQUE</span>}
+                    {a.label}
+                  </div>
+                  <div className="alert-meta">
+                    {a.days < 0 ? (
+                      <span className="overdue-text">En retard de {Math.abs(a.days)} jour(s)</span>
+                    ) : a.days === 0 ? (
+                      <span className="today-text">Aujourd'hui !</span>
+                    ) : (
+                      <span>J-{a.days} — {formatDate(a.deadline)}</span>
+                    )}
+                  </div>
+                  {a.note && <div className="alert-note">{a.note}</div>}
+                  <div className="alert-attach">
+                    <label className="attach-btn" htmlFor={`attach-${a.id}`}>
+                      {'\u{1F4CE}'} Joindre un justificatif
+                    </label>
+                    <input
+                      id={`attach-${a.id}`}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,.doc,.docx,.xls,.xlsx"
+                      style={{ display: 'none' }}
+                      onChange={async (e) => {
+                        if (!e.target.files.length) return
+                        const file = e.target.files[0]
+                        const data = await fileToBase64(file)
+                        const category = guessCategory(file.name)
+                        const doc = {
+                          id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                          name: file.name, size: file.size, type: file.type, data, category,
+                          artisanId: '', date: new Date().toISOString(), note: '',
+                          linkedTaskId: a.type === 'task' ? a.id : '',
+                          linkedLegalId: a.type === 'legal' ? a.id : '',
+                        }
+                        await saveDocument(doc)
+                        // Auto-coche cette tache/obligation
+                        if (a.type === 'task' && !state.completedTasks[a.id]) toggleTask(a.id)
+                        if (a.type === 'legal' && !state.completedLegal[a.id]) toggleLegal(a.id)
+                        // + auto-coche par detection du nom
+                        const byFilename = getAutoCheckFromFilename(file.name)
+                        const byCategory = DOC_TASK_MAP[category] || { tasks: [], legal: [] }
+                        const tasksToCheck = [...new Set([...byFilename.tasks, ...byCategory.tasks])]
+                        const legalToCheck = [...new Set([...byFilename.legal, ...byCategory.legal])]
+                        tasksToCheck.forEach(id => { if (id !== a.id && !state.completedTasks?.[id]) toggleTask(id) })
+                        legalToCheck.forEach(id => { if (id !== a.id && !state.completedLegal?.[id]) toggleLegal(id) })
+                        setAutoChecked([a.id])
+                        setTimeout(() => setAutoChecked([]), 4000)
+                        getAllDocuments().then(docs => setRecentDocs(docs.sort((x, y) => new Date(y.date) - new Date(x.date)).slice(0, 5)))
+                        e.target.value = ''
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="alert-meta">
-                  {a.days < 0 ? (
-                    <span className="overdue-text">En retard de {Math.abs(a.days)} jour(s)</span>
-                  ) : a.days === 0 ? (
-                    <span className="today-text">Aujourd'hui !</span>
-                  ) : (
-                    <span>J-{a.days} — {formatDate(a.deadline)}</span>
-                  )}
-                </div>
-                {a.note && <div className="alert-note">{a.note}</div>}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

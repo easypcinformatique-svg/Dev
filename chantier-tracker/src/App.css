@@ -132,6 +132,16 @@ body {
 .alert-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
 .alert-note { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem; line-height: 1.4; }
 
+/* ===== ATTACH INLINE ===== */
+.alert-attach { margin-top: 0.5rem; }
+.attach-btn {
+  display: inline-block; padding: 0.35rem 0.7rem;
+  background: var(--bg-input); border: 1px dashed var(--border);
+  border-radius: 6px; font-size: 0.72rem; color: var(--text-muted);
+  cursor: pointer; transition: all 0.2s;
+}
+.attach-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--info-bg); }
+
 /* ===== TAGS ===== */
 .tag-critical {
   display: inline-block; background: var(--danger); color: white;
