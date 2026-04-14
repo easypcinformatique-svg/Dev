@@ -395,6 +395,21 @@ body {
   transition: opacity 0.2s;
 }
 .btn-export:hover { opacity: 0.9; }
+.dashboard-actions { margin-bottom: 1rem; }
+
+.drop-zone-dashboard { padding: 1.25rem 1rem; margin-bottom: 0.75rem; }
+.drop-zone-dashboard .drop-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+.drop-zone-dashboard .drop-text { font-size: 0.85rem; }
+
+.recent-docs {
+  background: var(--bg-card); border-radius: 10px; padding: 0.75rem;
+  border: 1px solid var(--border); margin-bottom: 0.75rem;
+}
+.recent-docs-title { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+.recent-doc-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.8rem; }
+.recent-doc-icon { font-size: 1rem; }
+.recent-doc-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-doc-cat { font-size: 0.65rem; color: var(--text-dim); background: var(--bg-input); padding: 0.15rem 0.4rem; border-radius: 4px; white-space: nowrap; }
 .btn-export:disabled { opacity: 0.5; cursor: wait; }
 
 /* ===== DOCUMENTS ===== */

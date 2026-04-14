@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { PHASES } from '../data/phases.js'
 import { OBLIGATIONS } from '../data/legal.js'
 import { TOTAL_TTC } from '../data/finances.js'
 import { exportZip } from '../hooks/useExport.js'
+import { saveDocument, getAllDocuments, fileToBase64, DOC_CATEGORIES } from '../hooks/useDocuments.js'
+import { DOC_TASK_MAP, getAutoCheckFromFilename } from '../data/docTaskMap.js'
+import { ARTISANS } from '../data/artisans.js'
 
 function daysUntil(dateStr) {
   const target = new Date(dateStr + 'T00:00:00')
@@ -17,18 +20,69 @@ function formatDate(dateStr) {
   })
 }
 
-export default function Dashboard({ state }) {
+export default function Dashboard({ state, toggleTask, toggleLegal }) {
   const [exporting, setExporting] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [autoChecked, setAutoChecked] = useState([])
+  const [recentDocs, setRecentDocs] = useState([])
+
+  useEffect(() => {
+    getAllDocuments().then(docs => {
+      setRecentDocs(docs.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5))
+    })
+  }, [uploading])
+
+  function guessCategory(name) {
+    const lower = name.toLowerCase()
+    if (lower.includes('decennale') || lower.includes('décennale')) return 'decennale'
+    if (lower.includes('devis')) return 'devis'
+    if (lower.includes('facture') || lower.includes('situation')) return 'facture'
+    if (lower.includes('contrat')) return 'contrat'
+    if (lower.includes('attestation')) return 'attestation'
+    if (lower.includes('assurance') || lower.includes('do ') || lower.includes('dommage')) return 'assurance'
+    if (lower.includes('pc ') || lower.includes('permis') || lower.includes('daact') || lower.includes('cerfa')) return 'administratif'
+    if (lower.includes('plan') || lower.includes('etude') || lower.includes('étude')) return 'plan'
+    if (lower.match(/\.(jpg|jpeg|png|heic|webp)$/)) return 'photo'
+    return 'autre'
+  }
+
+  const handleFiles = useCallback(async (files) => {
+    setUploading(true)
+    const checked = []
+    for (const file of files) {
+      const data = await fileToBase64(file)
+      const category = guessCategory(file.name)
+      const doc = {
+        id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+        name: file.name, size: file.size, type: file.type, data, category,
+        artisanId: '', date: new Date().toISOString(), note: '',
+      }
+      await saveDocument(doc)
+      const byFilename = getAutoCheckFromFilename(file.name)
+      const byCategory = DOC_TASK_MAP[category] || { tasks: [], legal: [] }
+      const tasksToCheck = [...new Set([...byFilename.tasks, ...byCategory.tasks])]
+      const legalToCheck = [...new Set([...byFilename.legal, ...byCategory.legal])]
+      tasksToCheck.forEach(id => { if (!state.completedTasks?.[id]) { toggleTask(id); checked.push(id) } })
+      legalToCheck.forEach(id => { if (!state.completedLegal?.[id]) { toggleLegal(id); checked.push(id) } })
+    }
+    setUploading(false)
+    if (checked.length > 0) {
+      setAutoChecked(checked)
+      setTimeout(() => setAutoChecked([]), 5000)
+    }
+  }, [state.completedTasks, state.completedLegal, toggleTask, toggleLegal])
 
   async function handleExport() {
     setExporting(true)
-    try {
-      await exportZip(state)
-    } catch (e) {
-      console.error('Export error:', e)
-    }
+    try { await exportZip(state) } catch (e) { console.error('Export error:', e) }
     setExporting(false)
   }
+
+  function onDragOver(e) { e.preventDefault(); setDragging(true) }
+  function onDragLeave(e) { e.preventDefault(); setDragging(false) }
+  function onDrop(e) { e.preventDefault(); setDragging(false); if (e.dataTransfer.files.length) handleFiles([...e.dataTransfer.files]) }
+  function onFileInput(e) { if (e.target.files.length) handleFiles([...e.target.files]); e.target.value = '' }
 
   const allTasks = PHASES.flatMap(p => p.tasks)
   const totalTasks = allTasks.length
@@ -110,13 +164,52 @@ export default function Dashboard({ state }) {
 
   return (
     <div className="dashboard">
-      <button
-        className="btn-export"
-        onClick={handleExport}
-        disabled={exporting}
+      {/* Zone d'upload */}
+      <div
+        className={`drop-zone drop-zone-dashboard ${dragging ? 'drop-active' : ''} ${uploading ? 'drop-uploading' : ''}`}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onClick={() => document.getElementById('dash-file-input').click()}
       >
-        {exporting ? 'Generation en cours...' : '\u{1F4E6} Exporter rapport + documents (ZIP)'}
-      </button>
+        <input id="dash-file-input" type="file" multiple
+          accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,.doc,.docx,.xls,.xlsx"
+          onChange={onFileInput} style={{ display: 'none' }} />
+        {uploading ? (
+          <div className="drop-text">Enregistrement...</div>
+        ) : (
+          <>
+            <div className="drop-icon">{'\u{1F4E5}'}</div>
+            <div className="drop-text">Glissez vos documents ici</div>
+            <div className="drop-hint">Decennale, devis, DO, Consuel... → coche automatiquement les taches</div>
+          </>
+        )}
+      </div>
+
+      {autoChecked.length > 0 && (
+        <div className="auto-check-banner">
+          {'\u2705'} {autoChecked.length} tache(s) / obligation(s) cochee(s) automatiquement
+        </div>
+      )}
+
+      {recentDocs.length > 0 && (
+        <div className="recent-docs">
+          <div className="recent-docs-title">Derniers documents</div>
+          {recentDocs.map(d => (
+            <div key={d.id} className="recent-doc-item">
+              <span className="recent-doc-icon">{d.type?.includes('pdf') ? '\u{1F4C4}' : d.type?.startsWith('image/') ? '\u{1F5BC}' : '\u{1F4CE}'}</span>
+              <span className="recent-doc-name">{d.name}</span>
+              <span className="recent-doc-cat">{DOC_CATEGORIES.find(c => c.id === d.category)?.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="dashboard-actions">
+        <button className="btn-export" onClick={handleExport} disabled={exporting}>
+          {exporting ? 'Generation en cours...' : '\u{1F4E6} Exporter rapport + documents (ZIP)'}
+        </button>
+      </div>
 
       <div className="kpi-grid">
         <div className="kpi-card">

@@ -55,7 +55,7 @@ export default function App() {
       </nav>
 
       <main className="app-main">
-        {activeTab === 'dashboard' && <Dashboard state={state} />}
+        {activeTab === 'dashboard' && <Dashboard state={state} toggleTask={toggleTask} toggleLegal={toggleLegal} />}
         {activeTab === 'planning' && <Planning state={state} toggleTask={toggleTask} />}
         {activeTab === 'finances' && <Finances state={state} updatePayment={updatePayment} updateFinancement={updateFinancement} />}
         {activeTab === 'legal' && <Legal state={state} toggleLegal={toggleLegal} />}
