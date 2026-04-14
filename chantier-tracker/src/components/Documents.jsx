@@ -4,8 +4,9 @@ import {
   fileToBase64, DOC_CATEGORIES
 } from '../hooks/useDocuments.js'
 import { ARTISANS } from '../data/artisans.js'
+import { DOC_TASK_MAP, getAutoCheckFromFilename } from '../data/docTaskMap.js'
 
-export default function Documents() {
+export default function Documents({ toggleTask, toggleLegal, completedTasks, completedLegal }) {
   const [docs, setDocs] = useState([])
   const [dragging, setDragging] = useState(false)
   const [filter, setFilter] = useState('all')
@@ -16,27 +17,54 @@ export default function Documents() {
     getAllDocuments().then(setDocs)
   }, [])
 
+  const [autoChecked, setAutoChecked] = useState([])
+
   const handleFiles = useCallback(async (files) => {
     setUploading(true)
+    const checked = []
     for (const file of files) {
       const data = await fileToBase64(file)
+      const category = guessCategory(file.name)
       const doc = {
         id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
         name: file.name,
         size: file.size,
         type: file.type,
         data,
-        category: guessCategory(file.name),
+        category,
         artisanId: '',
         date: new Date().toISOString(),
         note: '',
       }
       await saveDocument(doc)
+
+      // Auto-cocher les taches liees
+      const byFilename = getAutoCheckFromFilename(file.name)
+      const byCategory = DOC_TASK_MAP[category] || { tasks: [], legal: [] }
+      const tasksToCheck = [...new Set([...byFilename.tasks, ...byCategory.tasks])]
+      const legalToCheck = [...new Set([...byFilename.legal, ...byCategory.legal])]
+
+      tasksToCheck.forEach(taskId => {
+        if (!completedTasks?.[taskId]) {
+          toggleTask(taskId)
+          checked.push(taskId)
+        }
+      })
+      legalToCheck.forEach(legalId => {
+        if (!completedLegal?.[legalId]) {
+          toggleLegal(legalId)
+          checked.push(legalId)
+        }
+      })
     }
     const updated = await getAllDocuments()
     setDocs(updated)
     setUploading(false)
-  }, [])
+    if (checked.length > 0) {
+      setAutoChecked(checked)
+      setTimeout(() => setAutoChecked([]), 5000)
+    }
+  }, [toggleTask, toggleLegal, completedTasks, completedLegal])
 
   function guessCategory(name) {
     const lower = name.toLowerCase()
@@ -126,6 +154,13 @@ export default function Documents() {
           </>
         )}
       </div>
+
+      {/* Notification auto-coche */}
+      {autoChecked.length > 0 && (
+        <div className="auto-check-banner">
+          {'\u2705'} {autoChecked.length} tache(s) / obligation(s) cochee(s) automatiquement
+        </div>
+      )}
 
       {/* Filtres */}
       <div className="filter-bar">

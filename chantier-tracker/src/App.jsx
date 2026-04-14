@@ -60,7 +60,7 @@ export default function App() {
         {activeTab === 'finances' && <Finances state={state} updatePayment={updatePayment} updateFinancement={updateFinancement} />}
         {activeTab === 'legal' && <Legal state={state} toggleLegal={toggleLegal} />}
         {activeTab === 'artisans' && <ArtisansView state={state} updateArtisan={updateArtisan} />}
-        {activeTab === 'documents' && <Documents />}
+        {activeTab === 'documents' && <Documents toggleTask={toggleTask} toggleLegal={toggleLegal} completedTasks={state.completedTasks} completedLegal={state.completedLegal} />}
         {activeTab === 'notes' && <Notes state={state} addNote={addNote} deleteNote={deleteNote} />}
       </main>
     </div>
