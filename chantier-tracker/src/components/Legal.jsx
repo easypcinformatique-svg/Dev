@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { OBLIGATIONS } from '../data/legal.js'
 
 function daysUntil(dateStr) {
@@ -16,6 +17,7 @@ function formatDate(dateStr) {
 const CATEGORIES = ['Avant chantier', 'Ouverture', 'Pendant travaux', 'Fin travaux', 'Post-réception']
 
 export default function Legal({ state, toggleLegal }) {
+  const [expandedHelp, setExpandedHelp] = useState(null)
   const grouped = CATEGORIES.map(cat => ({
     category: cat,
     items: OBLIGATIONS.filter(o => o.category === cat),
@@ -70,6 +72,28 @@ export default function Legal({ state, toggleLegal }) {
                   </div>
                   <div className="legal-ref">{ob.reference}</div>
                   <div className="legal-detail">{ob.detail}</div>
+                  {(ob.help || (ob.links && ob.links.length > 0)) && (
+                    <button
+                      className="info-toggle"
+                      onClick={(e) => { e.stopPropagation(); setExpandedHelp(expandedHelp === ob.id ? null : ob.id) }}
+                    >
+                      {expandedHelp === ob.id ? '\u25B2 Masquer' : '\u{2139}\u{FE0F} En savoir plus'}
+                    </button>
+                  )}
+                  {expandedHelp === ob.id && (
+                    <div className="info-bubble">
+                      {ob.help && <div className="info-text">{ob.help}</div>}
+                      {ob.links && ob.links.length > 0 && (
+                        <div className="info-links">
+                          {ob.links.map((link, i) => (
+                            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="info-link" onClick={e => e.stopPropagation()}>
+                              {'\u{1F517}'} {link.label}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )

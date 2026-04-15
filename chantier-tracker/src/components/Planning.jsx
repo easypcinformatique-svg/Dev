@@ -123,6 +123,16 @@ export default function Planning({ state, toggleTask }) {
                             </div>
                           )}
                           {task.note && <div className="task-note">{task.note}</div>}
+                          {task.help && <div className="task-help">{task.help}</div>}
+                          {task.links && task.links.length > 0 && (
+                            <div className="task-links">
+                              {task.links.map((link, i) => (
+                                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="info-link" onClick={e => e.stopPropagation()}>
+                                  {'\u{1F517}'} {link.label}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                           {isDone && state.completedTasks[task.id] && (
                             <div className="task-done-date">
                               Fait le {new Date(state.completedTasks[task.id]).toLocaleDateString('fr-FR')}
