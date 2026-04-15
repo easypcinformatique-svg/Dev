@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useProjectState, INITIAL_STATE } from './hooks/useLocalStorage.js'
+import { useProjectState, INITIAL_STATE, STORAGE_KEY } from './hooks/useLocalStorage.js'
 import Dashboard from './components/Dashboard.jsx'
 import Planning from './components/Planning.jsx'
 import Finances from './components/Finances.jsx'
@@ -30,7 +30,14 @@ export default function App() {
     addNote,
     deleteNote,
     updateFinancement,
+    resetState,
   } = useProjectState(INITIAL_STATE)
+
+  function handleReset() {
+    if (confirm('Reinitialiser toutes les donnees (taches, paiements, notes) ?\n\nCette action est IRREVERSIBLE.\nLes documents (IndexedDB) ne seront pas supprimes.')) {
+      resetState()
+    }
+  }
 
   return (
     <div className="app">
@@ -41,20 +48,23 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="tab-nav">
+      <nav className="tab-nav" role="tablist" aria-label="Navigation principale">
         {TABS.map(tab => (
           <button
             key={tab.id}
             className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`panel-${tab.id}`}
           >
-            <span className="tab-icon">{tab.icon}</span>
+            <span className="tab-icon" aria-hidden="true">{tab.icon}</span>
             <span className="tab-label">{tab.label}</span>
           </button>
         ))}
       </nav>
 
-      <main className="app-main">
+      <main className="app-main" role="tabpanel" id={`panel-${activeTab}`}>
         {activeTab === 'dashboard' && <Dashboard state={state} toggleTask={toggleTask} toggleLegal={toggleLegal} />}
         {activeTab === 'planning' && <Planning state={state} toggleTask={toggleTask} />}
         {activeTab === 'finances' && <Finances state={state} updatePayment={updatePayment} updateFinancement={updateFinancement} />}
@@ -63,6 +73,12 @@ export default function App() {
         {activeTab === 'documents' && <Documents toggleTask={toggleTask} toggleLegal={toggleLegal} completedTasks={state.completedTasks} completedLegal={state.completedLegal} />}
         {activeTab === 'notes' && <Notes state={state} addNote={addNote} deleteNote={deleteNote} />}
       </main>
+
+      <footer className="app-footer">
+        <button className="btn-reset" onClick={handleReset}>
+          Reinitialiser les donnees
+        </button>
+      </footer>
     </div>
   )
 }

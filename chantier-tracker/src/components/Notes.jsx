@@ -38,7 +38,7 @@ export default function Notes({ state, addNote, deleteNote }) {
                 <span className="note-date">{formatDateTime(note.date)}</span>
                 <button
                   className="note-delete"
-                  onClick={() => deleteNote(note.id)}
+                  onClick={() => { if (confirm('Supprimer cette note ?')) deleteNote(note.id) }}
                   title="Supprimer"
                 >
                   &#10005;

@@ -50,6 +50,8 @@ export default function Documents({ toggleTask, toggleLegal, completedTasks, com
   }
 
   async function handleDelete(id) {
+    const doc = docs.find(d => d.id === id)
+    if (!confirm(`Supprimer "${doc?.name || 'ce document'}" ? Cette action est irreversible.`)) return
     await deleteDocument(id)
     setDocs(prev => prev.filter(d => d.id !== id))
     if (preview?.id === id) setPreview(null)

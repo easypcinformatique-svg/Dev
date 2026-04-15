@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
-const STORAGE_KEY = 'chantier_11_pierre_loti'
+export const STORAGE_KEY = 'chantier_11_pierre_loti'
 
 function loadState() {
   try {
@@ -95,6 +95,10 @@ export function useProjectState(initialData) {
     }))
   }, [])
 
+  const resetState = useCallback(() => {
+    setState(initialData)
+  }, [initialData])
+
   return {
     state,
     toggleTask,
@@ -104,6 +108,7 @@ export function useProjectState(initialData) {
     addNote,
     deleteNote,
     updateFinancement,
+    resetState,
   }
 }
 

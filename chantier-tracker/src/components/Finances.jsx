@@ -15,6 +15,12 @@ export default function Finances({ state, updatePayment, updateFinancement }) {
   const apport = Number(state.financement?.apport) || 0
   const totalFinancement = pret + apport
 
+  // Calcul avancement reel global
+  const lotsWithBudget = LOTS.filter(l => l.ht > 0)
+  const avgAvancement = lotsWithBudget.length > 0
+    ? Math.round(lotsWithBudget.reduce((sum, lot) => sum + (Number(state.payments[lot.id]?.avancement) || 0), 0) / lotsWithBudget.length)
+    : 0
+
   return (
     <div className="finances">
       {/* Financement */}
@@ -58,10 +64,10 @@ export default function Finances({ state, updatePayment, updateFinancement }) {
         )}
       </div>
 
-      {/* Résumé paiements */}
+      {/* Resume paiements vs avancement */}
       <div className="finance-section">
-        <h2 className="section-title">Paiements ELCR</h2>
-        <div className="kpi-grid kpi-grid-3">
+        <h2 className="section-title">Paiements ELCR vs Avancement reel</h2>
+        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
           <div className="kpi-card kpi-card-sm">
             <div className="kpi-value-sm">{totalPaid.toLocaleString('fr-FR')}</div>
             <div className="kpi-label">Paye (EUR)</div>
@@ -72,15 +78,33 @@ export default function Finances({ state, updatePayment, updateFinancement }) {
           </div>
           <div className="kpi-card kpi-card-sm">
             <div className="kpi-value-sm">{pctPaid}%</div>
-            <div className="kpi-label">Avancement</div>
+            <div className="kpi-label">% Paye</div>
+          </div>
+          <div className="kpi-card kpi-card-sm">
+            <div className="kpi-value-sm" style={{ color: avgAvancement < pctPaid - 10 ? 'var(--danger)' : 'var(--success)' }}>
+              {avgAvancement}%
+            </div>
+            <div className="kpi-label">% Realise</div>
           </div>
         </div>
-        <div className="progress-bar">
+        <div className="progress-bar" style={{ marginBottom: '0.25rem' }}>
           <div className="progress-fill progress-finance" style={{ width: `${pctPaid}%` }} />
         </div>
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: `${avgAvancement}%`, background: 'var(--primary)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
+          <span>Paiements (vert)</span>
+          <span>Travaux realises (bleu)</span>
+        </div>
+        {pctPaid > avgAvancement + 15 && (
+          <div className="warning-text" style={{ marginTop: '0.5rem' }}>
+            Attention : les paiements ({pctPaid}%) depassent l'avancement reel ({avgAvancement}%) de plus de 15 points.
+          </div>
+        )}
       </div>
 
-      {/* Échéancier */}
+      {/* Echeancier */}
       <div className="finance-section">
         <h2 className="section-title">Echeancier contractuel</h2>
         <div className="echeancier">
@@ -96,7 +120,7 @@ export default function Finances({ state, updatePayment, updateFinancement }) {
         </div>
       </div>
 
-      {/* Détail par lot */}
+      {/* Detail par lot */}
       <div className="finance-section">
         <h2 className="section-title">Detail par lot</h2>
         {LOTS.map(lot => {
@@ -104,13 +128,17 @@ export default function Finances({ state, updatePayment, updateFinancement }) {
           const lotPaid = (Number(p.acompte) || 0) + (Number(p.situations) || 0) + (Number(p.solde) || 0)
           const lotTTC = Math.round(lot.ht * (1 + TVA_RATE))
           const isEditing = editingLot === lot.id
+          const avancement = Number(p.avancement) || 0
+          const lotPctPaid = lotTTC > 0 ? Math.round((lotPaid / lotTTC) * 100) : 0
+          const overpaid = lotPctPaid > avancement + 20
 
           return (
-            <div key={lot.id} className={`lot-card ${lot.missing ? 'lot-missing' : ''}`}>
+            <div key={lot.id} className={`lot-card ${lot.missing ? 'lot-missing' : ''} ${overpaid ? 'lot-overpaid' : ''}`}>
               <div className="lot-header" onClick={() => setEditingLot(isEditing ? null : lot.id)}>
                 <div>
                   <div className="lot-name">
                     {lot.missing && <span className="tag-warning">A TROUVER</span>}
+                    {overpaid && <span className="tag-critical">SURPAYE</span>}
                     {lot.name}
                   </div>
                   <div className="lot-artisan">{lot.artisan}</div>
@@ -123,13 +151,33 @@ export default function Finances({ state, updatePayment, updateFinancement }) {
                     </>
                   )}
                   {lotPaid > 0 && (
-                    <div className="lot-paid">Paye : {lotPaid.toLocaleString('fr-FR')} EUR</div>
+                    <div className="lot-paid">Paye : {lotPaid.toLocaleString('fr-FR')} EUR ({lotPctPaid}%)</div>
+                  )}
+                  {avancement > 0 && lot.ht > 0 && (
+                    <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '0.1rem' }}>
+                      Realise : {avancement}%
+                    </div>
                   )}
                 </div>
               </div>
 
               {isEditing && lot.ht > 0 && (
                 <div className="lot-edit">
+                  <div className="lot-edit-row">
+                    <label>Avancement reel des travaux</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        type="range"
+                        min="0" max="100" step="5"
+                        value={avancement}
+                        onChange={e => updatePayment(lot.id, 'avancement', e.target.value)}
+                        style={{ width: '100px' }}
+                      />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', minWidth: '35px' }}>
+                        {avancement}%
+                      </span>
+                    </div>
+                  </div>
                   <div className="lot-edit-row">
                     <label>Acompte verse (10%)</label>
                     <input

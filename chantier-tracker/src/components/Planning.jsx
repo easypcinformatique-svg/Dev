@@ -4,9 +4,9 @@ import { daysUntil, formatDateShort } from '../utils/dateUtils.js'
 
 export default function Planning({ state, toggleTask }) {
   const [expandedPhase, setExpandedPhase] = useState(null)
-  const [filter, setFilter] = useState('all') // all, pending, done, critical, legal
+  const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
 
-  // Auto-expand first phase with pending tasks
   const firstPendingPhase = PHASES.find(p =>
     p.tasks.some(t => !state.completedTasks[t.id])
   )
@@ -16,17 +16,38 @@ export default function Planning({ state, toggleTask }) {
   }
 
   function filterTasks(tasks) {
+    let result = tasks
     switch (filter) {
-      case 'pending': return tasks.filter(t => !state.completedTasks[t.id])
-      case 'done': return tasks.filter(t => state.completedTasks[t.id])
-      case 'critical': return tasks.filter(t => t.critical)
-      case 'legal': return tasks.filter(t => t.legal)
-      default: return tasks
+      case 'pending': result = result.filter(t => !state.completedTasks[t.id]); break
+      case 'done': result = result.filter(t => state.completedTasks[t.id]); break
+      case 'critical': result = result.filter(t => t.critical); break
+      case 'legal': result = result.filter(t => t.legal); break
     }
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(t => t.label.toLowerCase().includes(q) || t.note?.toLowerCase().includes(q))
+    }
+    return result
   }
+
+  const totalFiltered = PHASES.reduce((sum, p) => sum + filterTasks(p.tasks).length, 0)
 
   return (
     <div className="planning">
+      <div className="search-bar">
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher une tache..."
+          className="search-input"
+        />
+        {search && (
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+            {totalFiltered} resultat(s)
+          </span>
+        )}
+      </div>
       <div className="filter-bar">
         {[
           { key: 'all', label: 'Toutes' },

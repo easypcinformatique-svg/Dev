@@ -3,19 +3,30 @@ const DB_NAME = 'chantier_docs'
 const DB_VERSION = 1
 const STORE_NAME = 'documents'
 
+let dbInstance = null
+
 function openDB() {
+  if (dbInstance) return Promise.resolve(dbInstance)
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION)
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' })
-        store.createIndex('category', 'category', { unique: false })
-        store.createIndex('artisanId', 'artisanId', { unique: false })
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION)
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' })
+          store.createIndex('category', 'category', { unique: false })
+          store.createIndex('artisanId', 'artisanId', { unique: false })
+        }
       }
+      request.onsuccess = () => {
+        dbInstance = request.result
+        dbInstance.onclose = () => { dbInstance = null }
+        resolve(dbInstance)
+      }
+      request.onerror = () => reject(request.error)
+    } catch (err) {
+      reject(new Error('IndexedDB non disponible. Mode prive ou stockage plein.'))
     }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
   })
 }
 
@@ -30,35 +41,17 @@ export async function saveDocument(doc) {
 }
 
 export async function getAllDocuments() {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly')
-    const request = tx.objectStore(STORE_NAME).getAll()
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
-
-export async function getDocumentsByArtisan(artisanId) {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly')
-    const index = tx.objectStore(STORE_NAME).index('artisanId')
-    const request = index.getAll(artisanId)
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
-
-export async function getDocumentsByCategory(category) {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly')
-    const index = tx.objectStore(STORE_NAME).index('category')
-    const request = index.getAll(category)
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
+  try {
+    const db = await openDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const request = tx.objectStore(STORE_NAME).getAll()
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
+  } catch {
+    return []
+  }
 }
 
 export async function deleteDocument(id) {

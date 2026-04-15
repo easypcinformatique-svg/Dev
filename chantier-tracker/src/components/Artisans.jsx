@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ARTISANS } from '../data/artisans.js'
+import { daysUntil } from '../utils/dateUtils.js'
 
 const STATUS_LABELS = {
   contracted: 'Sous contrat',
@@ -15,6 +16,15 @@ const STATUS_COLORS = {
   completed: '#6b7280',
 }
 
+function getDecennaleStatus(expiration) {
+  if (!expiration) return { label: 'Non renseignee', color: 'var(--text-dim)', icon: '?' }
+  const days = daysUntil(expiration)
+  if (days < 0) return { label: 'EXPIREE', color: 'var(--danger)', icon: '!!' }
+  if (days <= 30) return { label: `Expire dans ${days}j`, color: 'var(--danger)', icon: '!' }
+  if (days <= 90) return { label: `Expire dans ${days}j`, color: 'var(--warning)', icon: '~' }
+  return { label: 'Valide', color: 'var(--success)', icon: null }
+}
+
 export default function ArtisansView({ state, updateArtisan }) {
   const [expandedArtisan, setExpandedArtisan] = useState(null)
 
@@ -23,24 +33,67 @@ export default function ArtisansView({ state, updateArtisan }) {
     return { ...artisan, ...updates }
   }
 
+  // Alertes globales decennale
+  const decennaleAlerts = ARTISANS
+    .filter(a => a.status !== 'to_find')
+    .map(a => {
+      const data = getArtisanData(a)
+      const exp = data.decennale?.expiration || data.decennaleExpiration
+      return { ...a, expiration: exp, status: getDecennaleStatus(exp) }
+    })
+    .filter(a => a.status.icon)
+
   return (
     <div className="artisans">
+      {/* Resume alertes decennale */}
+      {decennaleAlerts.length > 0 && (
+        <div className="decennale-alerts">
+          <div className="section-title" style={{ marginTop: 0 }}>Alertes assurance decennale</div>
+          {decennaleAlerts.map(a => (
+            <div key={a.id} className="decennale-alert-item" style={{ borderLeftColor: a.status.color }}>
+              <span className="decennale-alert-icon" style={{ color: a.status.color }}>{a.status.icon}</span>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{a.name}</div>
+                <div style={{ fontSize: '0.72rem', color: a.status.color }}>{a.status.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {ARTISANS.map(art => {
         const data = getArtisanData(art)
         const isExpanded = expandedArtisan === art.id
+        const exp = data.decennale?.expiration || data.decennaleExpiration
+        const decStatus = getDecennaleStatus(exp)
 
         return (
           <div key={art.id} className={`artisan-card ${art.status === 'to_find' ? 'artisan-missing' : ''}`}>
             <div
               className="artisan-header"
               onClick={() => setExpandedArtisan(isExpanded ? null : art.id)}
+              role="button"
+              aria-expanded={isExpanded}
+              tabIndex={0}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedArtisan(isExpanded ? null : art.id) } }}
             >
               <div className="artisan-info">
                 <div className="artisan-name">{data.name}</div>
                 <div className="artisan-role">{data.role}</div>
               </div>
-              <div className="artisan-status" style={{ background: STATUS_COLORS[art.status] }}>
-                {STATUS_LABELS[art.status]}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {decStatus.icon && art.status !== 'to_find' && (
+                  <span
+                    className="decennale-badge"
+                    style={{ background: decStatus.color }}
+                    title={`Decennale: ${decStatus.label}`}
+                  >
+                    {decStatus.icon}
+                  </span>
+                )}
+                <div className="artisan-status" style={{ background: STATUS_COLORS[art.status] }}>
+                  {STATUS_LABELS[art.status]}
+                </div>
               </div>
             </div>
 
@@ -91,11 +144,20 @@ export default function ArtisansView({ state, updateArtisan }) {
                 )}
 
                 <div className="artisan-section-title">Assurance decennale</div>
+                {decStatus.icon && (
+                  <div style={{
+                    padding: '0.4rem 0.75rem', borderRadius: '6px', marginBottom: '0.6rem',
+                    background: decStatus.color === 'var(--success)' ? 'transparent' : 'var(--danger-bg)',
+                    border: `1px solid ${decStatus.color}`, fontSize: '0.75rem', color: decStatus.color
+                  }}>
+                    {decStatus.label}
+                  </div>
+                )}
                 <div className="artisan-field">
                   <label>N° police</label>
                   <input
                     type="text"
-                    value={data.decennale?.numero || ''}
+                    value={data.decennale?.numero || data.decennaleNumero || ''}
                     onChange={e => updateArtisan(art.id, 'decennaleNumero', e.target.value)}
                     placeholder="Numero de police"
                   />
@@ -104,7 +166,7 @@ export default function ArtisansView({ state, updateArtisan }) {
                   <label>Assureur</label>
                   <input
                     type="text"
-                    value={data.decennale?.assureur || ''}
+                    value={data.decennale?.assureur || data.decennaleAssureur || ''}
                     onChange={e => updateArtisan(art.id, 'decennaleAssureur', e.target.value)}
                     placeholder="Nom de l'assureur"
                   />
@@ -113,7 +175,7 @@ export default function ArtisansView({ state, updateArtisan }) {
                   <label>Expiration</label>
                   <input
                     type="date"
-                    value={data.decennale?.expiration || ''}
+                    value={exp || ''}
                     onChange={e => updateArtisan(art.id, 'decennaleExpiration', e.target.value)}
                   />
                 </div>
