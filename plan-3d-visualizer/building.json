@@ -1,0 +1,9 @@
+{
+  "level_height": 2.8,
+  "ground_offset": 0.5,
+  "roof": {
+    "kind": "gable",
+    "slope_percent": 25.0,
+    "overhang": 0.3
+  }
+}
