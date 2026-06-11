@@ -26,7 +26,11 @@ class Wall(BaseModel):
     x2: float
     y2: float
     thickness: float = Field(description="Épaisseur du mur en mètres (ex: 0.2)")
-    height: float = Field(description="Hauteur du mur en mètres (ex: 2.5)")
+    height: float = Field(description="Hauteur du mur en mètres (ex: 2.8)")
+    level: int = Field(
+        default=0,
+        description="Niveau : 0 = rez-de-chaussée, 1 = étage, etc.",
+    )
 
 
 class Opening(BaseModel):
@@ -38,9 +42,10 @@ class Opening(BaseModel):
     width: float = Field(description="Largeur de l'ouverture en mètres")
     height: float = Field(description="Hauteur de l'ouverture en mètres")
     sill_height: float = Field(
-        description="Hauteur d'allège (bas de l'ouverture depuis le sol) en mètres. "
-        "0 pour une porte."
+        description="Hauteur d'allège (bas de l'ouverture depuis le plancher du "
+        "niveau) en mètres. 0 pour une porte."
     )
+    level: int = Field(default=0, description="Niveau : 0 = RDC, 1 = étage.")
 
 
 class Room(BaseModel):
@@ -49,13 +54,51 @@ class Room(BaseModel):
     name: str = Field(description="Nom de la pièce, ex: 'Chambre 1', 'Cuisine'")
     polygon: List[Point] = Field(description="Sommets du sol dans l'ordre, en mètres")
     area_m2: float = Field(description="Surface en m² indiquée sur le plan (0 si absente)")
+    level: int = Field(default=0, description="Niveau : 0 = RDC, 1 = étage.")
+
+
+class Roof(BaseModel):
+    """Toiture générée par-dessus l'empreinte du niveau supérieur.
+
+    `gable` = toiture à deux pentes ; le faîtage suit le plus grand côté de
+    l'empreinte et les pans descendent vers les deux côtés opposés.
+    """
+
+    kind: Literal["flat", "gable"] = "gable"
+    slope_percent: float = Field(
+        default=25.0, description="Pente des pans en % (25 = 25 %)"
+    )
+    overhang: float = Field(
+        default=0.3, description="Débord de toiture en mètres"
+    )
+
+
+class BuildingSpec(BaseModel):
+    """Paramètres volumétriques (hauteurs, toiture) appliqués au rendu 3D.
+
+    Ces valeurs ne sont pas lues sur le plan d'intérieur : elles proviennent
+    des coupes / façades du dossier de permis (ou des valeurs par défaut).
+    """
+
+    level_height: float = Field(
+        default=2.8, description="Hauteur d'étage (plancher à plancher) en mètres"
+    )
+    ground_offset: float = Field(
+        default=0.0,
+        description="Surélévation du plancher RDC par rapport au sol (ex: 0.5 "
+        "en zone inondable)",
+    )
+    roof: Roof = Field(default_factory=Roof)
 
 
 class PlanGeometry(BaseModel):
-    """Géométrie complète extraite d'un plan d'intérieur."""
+    """Géométrie complète extraite d'un plan d'intérieur (multi-niveaux)."""
 
     notes: str = Field(
         description="Notes sur l'échelle, les hypothèses ou les ambiguïtés rencontrées"
+    )
+    num_levels: int = Field(
+        default=1, description="Nombre de niveaux habitables (R+1 => 2)"
     )
     ceiling_height: float = Field(
         description="Hauteur sous plafond par défaut en mètres (ex: 2.5)"

@@ -27,10 +27,15 @@ Règles :
 - Représente chaque mur comme un segment droit (x1,y1)->(x2,y2). Découpe les
   murs longs aux intersections et aux angles.
 - Donne une épaisseur de mur réaliste (0.20 m pour les murs porteurs, 0.10 m
-  pour les cloisons) si elle n'est pas cotée.
+  pour les cloisons) si elle n'est pas cotée. Hauteur de mur par défaut 2.8 m.
 - Pour chaque pièce, donne le polygone fermé de son sol et la surface si elle
   est écrite sur le plan.
 - Positionne les portes et fenêtres par le centre, le long d'un mur.
+- NIVEAUX : si le plan montre plusieurs niveaux (ex. R+1 : rez-de-chaussée ET
+  étage), affecte à chaque mur / pièce / ouverture son `level` (0 = RDC,
+  1 = étage) et renseigne `num_levels`. Aligne les deux niveaux sur la même
+  origine (0,0) pour qu'ils s'empilent correctement. Si un seul niveau est
+  visible, mets tout en level 0 et num_levels = 1.
 - Si une dimension est illisible, fais l'hypothèse la plus raisonnable et
   signale-la dans `notes`. Ne renvoie jamais de champ vide faute de certitude.
 """
