@@ -11,6 +11,76 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Create fix script
+        run: |
+          cat > /tmp/fix_accents.py << 'PYEOF'
+          import re, os
+
+          # Fix nos-engagements accents
+          path = 'site/nos-engagements/index.html'
+          if os.path.exists(path):
+              with open(path, 'r', encoding='utf-8') as f:
+                  c = f.read()
+              pairs = [
+                  ('engagements qualite', 'engagements qualité'),
+                  ('Qualite', 'Qualité'),
+                  ('difference', 'différence'),
+                  ('Decouvrez', 'Découvrez'),
+                  ('Ingredients Frais', 'Ingrédients Frais'),
+                  ('selectionnons', 'sélectionnons'),
+                  ('ingredients', 'ingrédients'),
+                  ('legumes', 'légumes'),
+                  ('congele', 'congelé'),
+                  ('genereuse', 'généreuse'),
+                  ('genereux', 'généreux'),
+                  ('Pate Maison', 'Pâte Maison'),
+                  ('pate est preparee', 'pâte est préparée'),
+                  ('pate maison', 'pâte maison'),
+                  ('resultat', 'résultat'),
+                  ('Proximite', 'Proximité'),
+                  ('preferences', 'préférences'),
+                  ('societe', 'société'),
+                  ('demarche', 'démarche'),
+                  ('supplements caches', 'suppléments cachés'),
+                  ('selectionnees', 'sélectionnées'),
+                  ('aupres de', 'auprès de'),
+                  ('preparee chaque', 'préparée chaque'),
+                  ('probleme', 'problème'),
+                  ('fierte', 'fierté'),
+                  ("d une", "d'une"),
+                  ("l ecoute", "l'écoute"),
+                  ("n est", "n'est"),
+                  ("c est", "c'est"),
+                  ("C est", "C'est"),
+              ]
+              for old, new in pairs:
+                  c = c.replace(old, new)
+              with open(path, 'w', encoding='utf-8') as f:
+                  f.write(c)
+              print('Fixed accents on nos-engagements')
+
+          # Sync review count on index.html
+          path2 = 'site/index.html'
+          if os.path.exists(path2):
+              with open(path2, 'r', encoding='utf-8') as f:
+                  c = f.read()
+              rc_match = re.search(r'"reviewCount":"(\d+)"', c)
+              rv_match = re.search(r'"ratingValue":"([\d.]+)"', c)
+              if rc_match and rv_match:
+                  rc = rc_match.group(1)
+                  rv = rv_match.group(1)
+                  c = re.sub(r'\d+ avis Google', rc + ' avis Google', c)
+                  c = re.sub(r'\d+ avis clients', rc + ' avis clients', c)
+                  c = re.sub(r'data-target="\d+"(>0</span><span class="counter-lbl">Avis)', 'data-target="' + rc + '"\\1', c)
+                  c = re.sub(r'4[,.]2/5', rv + '/5', c)
+                  with open(path2, 'w', encoding='utf-8') as f:
+                      f.write(c)
+                  print(f'Synced reviews to {rv}/5, {rc} avis')
+          PYEOF
+
       - name: Clone and fix
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
@@ -19,96 +89,10 @@ jobs:
           cd site
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # 1. Rewrite nos-engagements with proper accents
-          python3 -c "
-          with open('nos-engagements/index.html','r',encoding='utf-8') as f: c=f.read()
-
-          # Meta tags
-          c=c.replace('engagements qualite','engagements qualité')
-          c=c.replace('ingredients frais, pate maison','ingrédients frais, pâte maison')
-          c=c.replace('Decouvrez nos engagements qualite','Découvrez nos engagements qualité')
-          c=c.replace('ingredients frais, pate maison, livraison rapide','ingrédients frais, pâte maison, livraison rapide')
-
-          # Page title
-          c=c.replace('Nos Engagements Qualite','Nos Engagements Qualité')
-          c=c.replace('Ce qui fait la difference','Ce qui fait la différence')
-
-          # Body content - fix all missing accents
-          replacements = {
-              'Ingredients Frais': 'Ingrédients Frais',
-              'selectionnons': 'sélectionnons',
-              'ingredients': 'ingrédients',
-              'legumes': 'légumes',
-              'congele': 'congelé',
-              'genereuse': 'généreuse',
-              'Pate Maison': 'Pâte Maison',
-              'pate est preparee': 'pâte est préparée',
-              'genereux': 'généreux',
-              'resultat': 'résultat',
-              'savoir-faire': 'savoir-faire',
-              'Livraison Rapide et Gratuite': 'Livraison Rapide et Gratuite',
-              'genereuse,': 'généreuse,',
-              'Proximite et Service': 'Proximité et Service',
-              'l ecoute': \"l'écoute\",
-              'preferences': 'préférences',
-              'c est': \"c'est\",
-              'C est': \"C'est\",
-              'n est': \"n'est\",
-              'd une': \"d'une\",
-              'fierte': 'fierté',
-              'Engagement Local': 'Engagement Local',
-              'societe': 'société',
-              'demarche': 'démarche',
-              'genereuses a partir': 'généreuses à partir',
-              'supplements caches': 'suppléments cachés',
-              'Decouvrez': 'Découvrez',
-              'qualite :': 'qualité :',
-              'selectionnees': 'sélectionnées',
-              'aupres de': 'auprès de',
-              'preparee chaque': 'préparée chaque',
-              'genereux,': 'généreux,',
-              'allergies,': 'allergies,',
-              'probleme': 'problème',
-              'cotes': 'côtés',
-              'Carpentras depuis': 'Carpentras depuis',
-              'a travers': 'à travers',
-              'Prix Justes': 'Prix Justes',
-              'Envie d une pizza': \"Envie d'une pizza\",
-          }
-          for old, new in replacements.items():
-              c = c.replace(old, new)
-
-          with open('nos-engagements/index.html','w',encoding='utf-8') as f: f.write(c)
-          print('Fixed accents on nos-engagements')
-          "
-
-          # 2. Sync review count: get Schema values and update visible text
-          python3 -c "
-          import re
-          with open('index.html','r',encoding='utf-8') as f: c=f.read()
-
-          # Find the Schema.org reviewCount and ratingValue
-          rc_match = re.search(r'\"reviewCount\":\"(\d+)\"', c)
-          rv_match = re.search(r'\"ratingValue\":\"([\d.]+)\"', c)
-
-          if rc_match and rv_match:
-              rc = rc_match.group(1)
-              rv = rv_match.group(1)
-              print(f'Schema says: {rv}/5, {rc} avis')
-
-              # Update all visible text to match Schema
-              c = re.sub(r'\d+ avis Google', f'{rc} avis Google', c)
-              c = re.sub(r'\d+ avis clients', f'{rc} avis clients', c)
-              c = re.sub(r'\d+ avis client', f'{rc} avis client', c)
-              c = re.sub(r'data-target=\"\d+\"(>0</span><span class=\"counter-lbl\">Avis)', f'data-target=\"{rc}\"\\1', c)
-              c = re.sub(r'4[,.]2/5', f'{rv}/5', c)
-
-              with open('index.html','w',encoding='utf-8') as f: f.write(c)
-              print(f'Synced visible text to {rv}/5, {rc} avis')
-          "
-
+          cd ..
+          python3 /tmp/fix_accents.py
+          cd site
           git add -A
-          git commit -m "Fix nos-engagements accents + sync review count with Schema.org"
+          git commit -m "Fix nos-engagements accents + sync review count" || echo "No changes"
           git push origin main
           echo "Done!"
