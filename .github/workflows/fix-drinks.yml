@@ -11,45 +11,6 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Create fix script
-        run: |
-          cat > /tmp/fix_drinks.py << 'PYEOF'
-          with open('site/index.html', 'r', encoding='utf-8') as f:
-              c = f.read()
-
-          # Remove unwanted drinks
-          drinks_to_remove = [
-              "{name:'Sprite 33cl',price:2.50}",
-              "{name:'Eau minérale 50cl',price:1.50}",
-              "{name:'Eau minérale 1.5L',price:2.50}",
-              "{name:'Orangina 33cl',price:2.50}",
-              "{name:'Jus de fruits 33cl',price:2.50}",
-              "{name:'Bière 33cl',price:3.00}",
-          ]
-
-          for drink in drinks_to_remove:
-              # Remove with trailing comma
-              c = c.replace(drink + ',', '')
-              # Remove without trailing comma (if last item)
-              c = c.replace(',' + drink, '')
-              c = c.replace(drink, '')
-
-          # Clean up any double commas left over
-          while ',,' in c:
-              c = c.replace(',,', ',')
-          # Clean trailing comma before ]
-          c = c.replace(',]', ']')
-
-          with open('site/index.html', 'w', encoding='utf-8') as f:
-              f.write(c)
-
-          print('Removed: Sprite, Eau minerale 50cl, Eau minerale 1.5L, Orangina, Jus de fruits, Biere')
-          print('Kept: Coca-Cola 33cl, Coca-Cola 1.5L, Fanta Orange 33cl, Ice Tea Peche 33cl')
-          PYEOF
-
       - name: Clone and fix
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
@@ -58,10 +19,26 @@ jobs:
           cd site
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cd ..
-          python3 /tmp/fix_drinks.py
-          cd site
+
+          python3 -c "
+          import re
+          with open('index.html','r',encoding='utf-8') as f: c=f.read()
+          keep = ['Coca-Cola','Fanta','Ice Tea']
+          drinks = re.findall(r\"\{name:'[^']*',price:[0-9.]+\}\", c)
+          for d in drinks:
+              name = re.search(r\"name:'([^']*)\", d).group(1)
+              if not any(k.lower() in name.lower() for k in keep):
+                  c = c.replace(d+',','')
+                  c = c.replace(','+d,'')
+                  c = c.replace(d,'')
+                  print(f'Removed: {name}')
+              else:
+                  print(f'Kept: {name}')
+          while ',,' in c: c=c.replace(',,',',')
+          c=c.replace(',]',']')
+          with open('index.html','w',encoding='utf-8') as f: f.write(c)
+          "
+
           git add index.html
           git commit -m "Remove drinks: keep only Coca-Cola, Fanta, Ice Tea"
           git push origin main
-          echo "Done!"
