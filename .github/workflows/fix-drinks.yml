@@ -11,6 +11,33 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Create script
+        run: |
+          cat > /tmp/fix.py << 'PYEOF'
+          import re
+          with open('site/index.html','r',encoding='utf-8') as f:
+              c = f.read()
+          keep = ['Coca-Cola','Fanta','Ice Tea']
+          drinks = re.findall(r"\{name:'[^']*',price:[0-9.]+\}", c)
+          for d in drinks:
+              name = re.search(r"name:'([^']*)", d).group(1)
+              if not any(k.lower() in name.lower() for k in keep):
+                  c = c.replace(d+',','')
+                  c = c.replace(','+d,'')
+                  c = c.replace(d,'')
+                  print('Removed: ' + name)
+              else:
+                  print('Kept: ' + name)
+          while ',,' in c:
+              c = c.replace(',,',',')
+          c = c.replace(',]',']')
+          with open('site/index.html','w',encoding='utf-8') as f:
+              f.write(c)
+          PYEOF
+
       - name: Clone and fix
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
@@ -19,26 +46,9 @@ jobs:
           cd site
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          python3 -c "
-          import re
-          with open('index.html','r',encoding='utf-8') as f: c=f.read()
-          keep = ['Coca-Cola','Fanta','Ice Tea']
-          drinks = re.findall(r\"\{name:'[^']*',price:[0-9.]+\}\", c)
-          for d in drinks:
-              name = re.search(r\"name:'([^']*)\", d).group(1)
-              if not any(k.lower() in name.lower() for k in keep):
-                  c = c.replace(d+',','')
-                  c = c.replace(','+d,'')
-                  c = c.replace(d,'')
-                  print(f'Removed: {name}')
-              else:
-                  print(f'Kept: {name}')
-          while ',,' in c: c=c.replace(',,',',')
-          c=c.replace(',]',']')
-          with open('index.html','w',encoding='utf-8') as f: f.write(c)
-          "
-
+          cd ..
+          python3 /tmp/fix.py
+          cd site
           git add index.html
           git commit -m "Remove drinks: keep only Coca-Cola, Fanta, Ice Tea"
           git push origin main
