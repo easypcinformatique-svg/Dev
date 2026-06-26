@@ -11,33 +11,6 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Create script
-        run: |
-          cat > /tmp/fix.py << 'PYEOF'
-          import re
-          with open('site/index.html','r',encoding='utf-8') as f:
-              c = f.read()
-          keep = ['Coca-Cola','Fanta','Ice Tea']
-          drinks = re.findall(r"\{name:'[^']*',price:[0-9.]+\}", c)
-          for d in drinks:
-              name = re.search(r"name:'([^']*)", d).group(1)
-              if not any(k.lower() in name.lower() for k in keep):
-                  c = c.replace(d+',','')
-                  c = c.replace(','+d,'')
-                  c = c.replace(d,'')
-                  print('Removed: ' + name)
-              else:
-                  print('Kept: ' + name)
-          while ',,' in c:
-              c = c.replace(',,',',')
-          c = c.replace(',]',']')
-          with open('site/index.html','w',encoding='utf-8') as f:
-              f.write(c)
-          PYEOF
-
       - name: Clone and fix
         env:
           PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
@@ -46,9 +19,16 @@ jobs:
           cd site
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cd ..
-          python3 /tmp/fix.py
-          cd site
+
+          sed -i "s/{name:'Sprite 33cl',price:2.50},//g" index.html
+          sed -i "s/{name:'Orangina 33cl',price:2.50},//g" index.html
+          sed -i "s/{name:'Jus de fruits 33cl',price:2.50},//g" index.html
+          sed -i "s/{name:'Eau min.*50cl',price:1.50},//g" index.html
+          sed -i "s/{name:'Eau min.*1.5L',price:2.50},//g" index.html
+          sed -i "s/{name:'Bi.*re 33cl',price:3.00}//g" index.html
+
+          echo "Removed Sprite, Orangina, Jus, Eau, Biere"
+
           git add index.html
           git commit -m "Remove drinks: keep only Coca-Cola, Fanta, Ice Tea"
           git push origin main
