@@ -1,0 +1,33 @@
+name: Fix order form (time slots, zone validation, free bottle)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-order-form.yml'
+      - '.github/scripts/fix_order_form.py'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone and fix
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd ..
+          python3 .github/scripts/fix_order_form.py site/index.html
+          cd site
+          git add index.html
+          git diff --cached --stat
+          git commit -m "Fix order form: time slots 19h30-21h30, zone minimums, free bottle offer" || echo "No changes"
+          git push origin main
+          echo "Done!"
