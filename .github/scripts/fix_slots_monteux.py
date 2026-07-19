@@ -5,9 +5,13 @@ path = sys.argv[1] if len(sys.argv) > 1 else "site/index.html"
 with open(path, "r", encoding="utf-8") as f:
     c = f.read()
 
-# 1. Remove 21h45 slot
+# 1. Remove 21h45 slot (multiple formats)
 c = c.replace('<option value="21h45">21h45</option>', '')
-print("Removed 21h45 slot")
+c = c.replace('<option value="21h45">21h45 — dernier créneau</option>', '')
+c = c.replace('<option value="21h45">21h45 &mdash; dernier cr&eacute;neau</option>', '')
+# Make 21h30 the last slot with "dernier creneau" label
+c = c.replace('<option value="21h30">21h30</option>', '<option value="21h30">21h30 — dernier créneau</option>')
+print("Removed 21h45 slot, 21h30 is now dernier creneau")
 
 # 2. Add Monteux to zone table before Mazan row
 monteux_row = '<tr style="border-bottom:1px solid rgba(255,255,255,.07);"> <td style="padding:.55rem 1rem;">\U0001f4cd Monteux</td> <td style="text-align:center;padding:.55rem 1rem;">3 grandes pizzas</td> </tr>'
