@@ -2,6 +2,10 @@ name: Update site version date
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/update-version.yml'
   workflow_run:
     workflows: ["Restore pizzeria site from backup"]
     types: [completed]
