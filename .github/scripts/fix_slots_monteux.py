@@ -30,4 +30,11 @@ else:
 with open(path, "w", encoding="utf-8") as f:
     f.write(c)
 
+# Also ensure 21h45 is removed (may have been re-added)
+if '<option value="21h45">21h45</option>' in c:
+    c = c.replace('<option value="21h45">21h45</option>', '')
+    print("Removed 21h45 slot (cleanup)")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(c)
+
 print("Done!")
