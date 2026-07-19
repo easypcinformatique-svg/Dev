@@ -1,0 +1,33 @@
+name: Fix all remaining audit issues
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-all-remaining.yml'
+      - '.github/scripts/fix_all_remaining.py'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone and fix
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd ..
+          python3 .github/scripts/fix_all_remaining.py site/index.html
+          cd site
+          git add -A
+          git diff --cached --stat
+          git commit -m "Fix: OG image webp, preload webp, remove sw.js ref, dup width/height, external links target" || echo "No changes"
+          git push origin main
+          echo "Done!"
