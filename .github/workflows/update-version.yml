@@ -7,7 +7,25 @@ on:
     paths:
       - '.github/workflows/update-version.yml'
   workflow_run:
-    workflows: ["Restore pizzeria site from backup"]
+    workflows:
+      - "Restore pizzeria site from backup"
+      - "Fix all remaining audit issues"
+      - "Fix order form (time slots, zone validation, free bottle)"
+      - "Fix order validation (grande/petite) + font-display + breadcrumb"
+      - "Fix 21h45 slot + add Monteux to zone table"
+      - "Remove drinks except Fanta Coca Ice Tea"
+      - "Fix engagements accents + review count sync"
+      - "Fix mentions legales"
+      - "Audit expert fixes (legal + SEO + accessibility)"
+      - "Fix meta descriptions + canonical + citations + accessibility"
+      - "SEO batch fixes"
+      - "SEO batch 2 (breadcrumbs, hreflang, LCP, service worker)"
+      - "SEO batch 3 (breadcrumbs, engagements, order schema, social, email)"
+      - "Fix critical SEO and accessibility issues"
+      - "Fix menu errors + WebP images + GA4"
+      - "Fix WebP references and remaining Since 2008"
+      - "Inject zone validation into original envoyerWhatsApp"
+      - "Fix zone validation - block unknown cities"
     types: [completed]
 
 jobs:
