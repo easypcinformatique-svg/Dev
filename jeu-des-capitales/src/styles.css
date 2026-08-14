@@ -20,7 +20,11 @@
 html, body, #root { height: 100%; }
 
 body {
-  background: var(--creme);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(242, 193, 78, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(29, 111, 165, 0.07), transparent 45%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(44, 54, 72, 0.025) 23px 24px),
+    var(--creme);
   color: var(--encre);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 17px;
@@ -343,6 +347,232 @@ button:focus-visible {
   right: 10px;
   box-shadow: none;
 }
+
+/* ————— Carte du monde ————— */
+
+.ligne-titre-destination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ligne-titre-destination .titre-section { margin-bottom: 0; }
+
+.cadre-carte {
+  background: var(--papier);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 10px;
+}
+
+.carte-monde { display: block; width: 100%; height: auto; }
+
+.continent {
+  fill: #dcebf5;
+  stroke: var(--bleu);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 0.15s ease, transform 0.15s ease;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.continent:hover { fill: #fbe9c8; }
+
+.continent:focus-visible {
+  outline: none;
+  stroke: var(--corail);
+  stroke-width: 2.6;
+  stroke-dasharray: none;
+}
+
+.continent.choisi {
+  fill: var(--sable);
+  stroke: var(--corail);
+  stroke-dasharray: none;
+  stroke-width: 2.2;
+  transform: scale(1.03);
+}
+
+.ile { fill: #dcebf5; stroke: var(--bleu); stroke-width: 1; }
+
+.etiquette-continent {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 9.5px;
+  fill: var(--encre-douce);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.legende-carte {
+  text-align: center;
+  color: var(--encre-douce);
+  font-size: 14px;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ————— Atlas ————— */
+
+.ligne-entete-atlas { display: flex; align-items: center; gap: 12px; }
+
+.titre-atlas { font-size: 26px; color: var(--bleu-fonce); }
+
+.champ-recherche {
+  width: 100%;
+  font: inherit;
+  padding: 13px 16px;
+  min-height: 50px;
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--papier);
+  color: var(--encre);
+  box-shadow: var(--ombre);
+}
+
+.champ-recherche:focus {
+  outline: none;
+  border-color: var(--bleu);
+}
+
+.chips-defilantes {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.chips-defilantes::-webkit-scrollbar { display: none; }
+
+.chip-compacte { min-height: 42px; padding: 6px 14px; font-size: 14px; white-space: nowrap; }
+
+.compte-resultats { color: var(--encre-douce); font-size: 14px; font-weight: 600; }
+
+.liste-pays { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+.ligne-pays {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--papier);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 10px 14px;
+  min-height: 60px;
+  box-shadow: var(--ombre);
+  text-align: left;
+  transition: transform 0.1s ease;
+}
+
+.ligne-pays:active { transform: scale(0.98); }
+
+.drapeau-liste { font-size: 32px; }
+
+.nom-pays-liste { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.nom-pays-liste strong { font-size: 17px; }
+
+.capitale-liste { color: var(--encre-douce); font-size: 14px; }
+
+.chevron { color: var(--encre-douce); font-size: 24px; }
+
+.vide-atlas {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--encre-douce);
+}
+
+.emoji-vide { font-size: 44px; }
+
+.astuce-vide { font-size: 14px; margin-top: 6px; }
+
+/* ————— Fiche pays ————— */
+
+.entete-fiche { display: flex; }
+
+.heros-fiche { text-align: center; }
+
+.drapeau-fiche { font-size: 96px; }
+
+.heros-fiche h1 { font-size: 34px; color: var(--bleu-fonce); }
+
+.sous-titre-fiche {
+  color: var(--encre-douce);
+  font-size: 18px;
+  font-style: italic;
+}
+
+.details-fiche {
+  background: var(--papier);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  overflow: hidden;
+}
+
+.ligne-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 13px 16px;
+}
+
+.ligne-detail + .ligne-detail { border-top: 1px dashed var(--bordure); }
+
+.ligne-detail dt {
+  color: var(--encre-douce);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ligne-detail dd { text-align: right; font-weight: 600; }
+
+.carte-anecdote {
+  background: var(--papier);
+  border: 2px dashed var(--sable);
+  border-radius: var(--rayon);
+  padding: 16px;
+}
+
+/* ————— Carte Atlas sur l'accueil ————— */
+
+.carte-atlas { border: 2px dashed var(--bleu); }
+
+.icone-atlas { font-size: 30px; }
+
+.texte-atlas { display: flex; flex-direction: column; flex: 1; }
+
+.texte-atlas strong { font-size: 17px; }
+
+.texte-atlas span:not(strong) { color: var(--encre-douce); font-size: 13px; }
+
+/* ————— Animations douces ————— */
+
+@keyframes apparition {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.corps-quiz, .panneau-feedback, .heros-fiche, .details-fiche,
+.carte-anecdote, .resultat > * {
+  animation: apparition 0.25s ease both;
+}
+
+@keyframes celebration {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.emoji-final { animation: celebration 0.5s ease both; }
 
 /* ————— Divers ————— */
 

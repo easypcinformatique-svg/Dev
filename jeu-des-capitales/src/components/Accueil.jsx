@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { CONTINENTS, listePays, chargerMeilleurScore } from '../utils.js'
+import { listePays, chargerMeilleurScore } from '../utils.js'
+import CarteMonde from './CarteMonde.jsx'
 
 const SENS = [
   { id: 'pc', label: 'Pays → Capitale' },
@@ -47,20 +48,24 @@ export default function Accueil({ onJouer }) {
       </section>
 
       <section aria-labelledby="titre-continent">
-        <h2 id="titre-continent" className="titre-section">Destination</h2>
-        <div className="chips">
-          {['Monde', ...CONTINENTS].map((c) => (
-            <button
-              key={c}
-              className={`chip ${continent === c ? 'actif' : ''}`}
-              onClick={() => setContinent(c)}
-              aria-pressed={continent === c}
-            >
-              {c === 'Monde' ? '🌐 Monde entier' : c}
-              <span className="compte">{listePays(c).length}</span>
-            </button>
-          ))}
+        <div className="ligne-titre-destination">
+          <h2 id="titre-continent" className="titre-section">Destination</h2>
+          <button
+            className={`chip chip-compacte ${continent === 'Monde' ? 'actif' : ''}`}
+            onClick={() => setContinent('Monde')}
+            aria-pressed={continent === 'Monde'}
+          >
+            🌐 Monde entier
+          </button>
         </div>
+        <div className="cadre-carte">
+          <CarteMonde selection={continent} onSelect={setContinent} />
+        </div>
+        <p className="legende-carte" aria-live="polite">
+          {continent === 'Monde'
+            ? `Tous les continents · ${listePays('Monde').length} pays`
+            : `${continent} · ${listePays(continent).length} pays`}
+        </p>
       </section>
 
       <section aria-labelledby="titre-sens">
@@ -85,6 +90,15 @@ export default function Accueil({ onJouer }) {
 
       <button className="bouton-principal" onClick={() => onJouer({ mode, continent, sens })}>
         C'est parti !
+      </button>
+
+      <button className="carte-atlas ligne-pays" onClick={() => onJouer({ mode: 'atlas' })}>
+        <span className="icone-atlas" aria-hidden="true">🗺️</span>
+        <span className="texte-atlas">
+          <strong>Atlas</strong>
+          <span>Explore les 197 pays : drapeaux, capitales, habitants…</span>
+        </span>
+        <span className="chevron" aria-hidden="true">›</span>
       </button>
 
       <footer className="pied-accueil">
