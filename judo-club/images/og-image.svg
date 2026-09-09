@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Judo Club Cadeneaux OJM">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#16253f"/>
+    </linearGradient>
+    <pattern id="tatami" width="48" height="48" patternUnits="userSpaceOnUse">
+      <rect width="48" height="48" fill="none"/>
+      <path d="M0 0H48M0 0V48" stroke="rgba(255,255,255,.10)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect width="1200" height="630" fill="url(#tatami)"/>
+  <circle cx="983" cy="138" r="189" fill="rgba(255,255,255,.05)"/>
+  <text x="72" y="390" font-family="Georgia,serif" font-size="189" fill="rgba(255,255,255,.14)">&#26580;&#36947;</text>
+  <text x="72" y="529" font-family="Arial Narrow,Arial,sans-serif" font-size="53" letter-spacing="2" fill="#ffffff" font-weight="bold">JUDO CLUB CADENEAUX OJM</text>
+  <text x="72" y="585" font-family="Arial,sans-serif" font-size="31" fill="rgba(255,255,255,.62)">Les Pennes-Mirabeau - Les Cadeneaux</text>
+</svg>
