@@ -55,8 +55,11 @@ Ces valeurs sont des **placeholders** ; le contenu factuel du club doit les remp
    le jour courant et le sélecteur de groupe se recalculent à partir de là.
 6. **Ju-jitsu** — la fiche fédérale mentionne la discipline sans créneau
    dédié : préciser le créneau réel ou retirer la carte.
-7. **Encadrement** — noms, grades et diplômes réels des professeurs. Pour
-   ajouter des photos, remplacer le `<img>` de chaque `.coach__photo`.
+7. **Le sensei** — la section présente Raoul Laï, 6e dan (fait public, cité
+   parmi les grands champions historiques du judo provençal). Les lignes
+   « Titres » et « Parcours » du bloc `.palmares` sont à compléter avec le
+   club (titre, niveau, année) ; la photo remplace le pictogramme dans
+   `.sensei__frame`.
 8. **Actualités** — les trois dates sont des exemples de rendez-vous de saison.
 9. **Galerie** — la section est prête, en commentaire dans `index.html`.
    Déposer les photos dans `images/galerie/` puis retirer le commentaire.
