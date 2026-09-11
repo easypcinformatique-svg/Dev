@@ -136,6 +136,27 @@ def repair_ref(ref, base_dir):
             return cand
     return None
 
+_tailles = {}
+
+def mesurer(ref, base_dir):
+    """Pixel size of a local image, read once and cached."""
+    if not ref or ref.startswith(("http", "data:", "//")):
+        return None
+    ref = ref.split("?")[0].split("#")[0]
+    for chemin in (os.path.join(base_dir, ref), os.path.join(SITE, ref.lstrip("/"))):
+        if chemin in _tailles:
+            return _tailles[chemin]
+        if os.path.exists(chemin):
+            try:
+                from PIL import Image
+                with Image.open(chemin) as im:
+                    _tailles[chemin] = im.size
+                    return im.size
+            except Exception:
+                _tailles[chemin] = None
+    return None
+
+
 def page_url(path):
     rel = os.path.relpath(path, SITE).replace(os.sep, "/")
     if rel == "index.html":
@@ -447,6 +468,71 @@ for path in pages:
     c = re.sub(r'\b80\s*\+?\s*pizzas\b', "80 recettes", c)
     c = re.sub(r'\b80\+\s*recettes\b', "80 recettes", c)
 
+    # 6p. images without width/height shift the layout as they load (CLS),
+    # and the first image of a page is its LCP candidate, so it must not wait
+    # for lazy loading.
+    premiere = [True]
+    def dimensionner(m):
+        tag, src = m.group(0), re.search(r'src="([^"]+)"', m.group(0))
+        if not src:
+            return tag
+        if "width=" not in tag or "height=" not in tag:
+            taille = mesurer(src.group(1), base_dir)
+            if taille:
+                tag = tag[:-1].rstrip() + f' width="{taille[0]}" height="{taille[1]}">'
+        if premiere[0]:
+            premiere[0] = False
+            tag = tag.replace(' loading="lazy"', ' loading="eager" fetchpriority="high"')
+        return tag
+
+    avant_img = c
+    c = re.sub(r'<img\s[^>]*>', dimensionner, c)
+    if c != avant_img:
+        log(rel, "dimensions d'images / priorité LCP")
+
+    # 6q. social cards: a share with no image is a share nobody clicks
+    if "</head>" in c:
+        titre = re.search(r'<title>([^<]*)</title>', c)
+        desc = re.search(r'<meta name="description" content="([^"]*)"', c)
+        ajouts = []
+        if "og:image" not in c:
+            ajouts.append(f'<meta property="og:image" content="{HOST}/hero1.webp">')
+        if "og:type" not in c:
+            ajouts.append('<meta property="og:type" content="article">')
+        if "og:site_name" not in c:
+            ajouts.append('<meta property="og:site_name" content="Pizza Napoli Carpentras">')
+        if "og:locale" not in c:
+            ajouts.append('<meta property="og:locale" content="fr_FR">')
+        if "twitter:card" not in c:
+            ajouts.append('<meta name="twitter:card" content="summary_large_image">')
+            ajouts.append(f'<meta name="twitter:image" content="{HOST}/hero1.webp">')
+            if titre:
+                ajouts.append(f'<meta name="twitter:title" content="{titre.group(1)}">')
+            if desc:
+                ajouts.append(f'<meta name="twitter:description" content="{desc.group(1)}">')
+        if ajouts:
+            c = c.replace("</head>", "\n".join(ajouts) + "\n</head>", 1)
+            log(rel, f"{len(ajouts)} balise(s) sociale(s) ajoutée(s)")
+
+    # 6r. a breadcrumb with a single item is not shown by Google
+    if rel != "index.html" and ("BreadcrumbList" not in c or c.count('"ListItem"') < 2):
+        chemin = rel[:-len("/index.html")] if rel.endswith("/index.html") else rel[:-len(".html")]
+        miettes = [("Accueil", f"{HOST}/")]
+        if chemin.startswith("blog/") or chemin == "blog":
+            miettes.append(("Blog", f"{HOST}/blog/"))
+        if chemin not in ("blog",):
+            nom = unescape(re.search(r'<h1[^>]*>(.*?)</h1>', c, re.DOTALL).group(1)) if re.search(r'<h1', c) else chemin
+            nom = re.sub(r'<[^>]+>', ' ', nom).strip()[:70]
+            miettes.append((nom, page_url(path)))
+        fil = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": i + 1, "name": n, "item": u} for i, (n, u) in enumerate(miettes)]}
+        bloc = '<script type="application/ld+json">' + json.dumps(fil, ensure_ascii=False) + '</script>'
+        if "BreadcrumbList" in c:
+            c = re.sub(r'<script type="application/ld\+json">\{[^<]*BreadcrumbList[^<]*\}</script>', bloc, c)
+        else:
+            c = c.replace("</head>", bloc + "\n</head>", 1)
+        log(rel, "fil d'Ariane structuré")
+
     # 6d. repair damage left by earlier one-shot scripts
     if '<div class="galerie-grid"> </div>' in c:
         i = c.find('<div class="galerie-grid">')
@@ -454,6 +540,13 @@ for path in pages:
         if i != -1 and j != -1:
             c = c[:i] + GALLERY + "\n" + c[j:]
             log(rel, "galerie reconstruite (4 vignettes perdues par un script)")
+    # 6s. Sarrians: the stub redirected with setTimeout, which Google reads as
+    # a soft redirect and which fails WCAG 2.2.1 (no adjustable time limit).
+    # Ten pages link here, so it must be a real page, not a trap door.
+    if rel == "livraison-pizza-sarrians/index.html" and "setTimeout" in c:
+        c = re.sub(r'<script>\s*setTimeout\([^<]*?</script>', '', c, flags=re.DOTALL)
+        log(rel, "redirection JavaScript temporisée supprimée")
+
     if "</nav>rsaquo;" in c:
         n = c.count("</nav>rsaquo;")
         c = c.replace("</nav>rsaquo;", "&rsaquo;")
@@ -470,6 +563,41 @@ for path in pages:
         with open(path, "w", encoding="utf-8") as f:
             f.write(c)
         log(rel, "normalisée")
+
+# ---------- custom 404 ----------
+# GitHub Pages serves its own English "Page not found" otherwise: no branding,
+# no navigation, no phone number.
+page404 = os.path.join(SITE, "404.html")
+if not os.path.exists(page404):
+    with open(page404, "w", encoding="utf-8") as f:
+        f.write(f'''<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, follow">
+<title>Page introuvable — Pizza Napoli Carpentras</title>
+<style>
+body{{margin:0;font-family:system-ui,sans-serif;background:#FFFDF7;color:#3D3328;
+display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;}}
+.b{{max-width:540px;text-align:center;}}
+h1{{font-size:clamp(1.6rem,5vw,2.2rem);margin:0 0 .6rem;color:#A8202A;}}
+p{{line-height:1.7;color:#5A5248;}}
+.l{{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center;margin-top:1.8rem;}}
+a{{padding:.75rem 1.4rem;border:2px solid #C8972A;border-radius:2px;color:#3D3328;
+text-decoration:none;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;}}
+a.p{{background:#A8202A;border-color:#A8202A;color:#fff;}}
+</style></head>
+<body><main class="b">
+<p style="font-size:3rem;margin:0;">🍕</p>
+<h1>Cette page n'existe pas</h1>
+<p>Le lien est peut-être ancien, ou l'adresse comporte une erreur.
+Notre carte, elle, est toujours là — et le four tourne 7&nbsp;j/7 dès 17h30.</p>
+<div class="l">
+<a class="p" href="{HOST}/">Retour à l'accueil</a>
+<a href="{HOST}/#menu">Voir la carte</a>
+<a href="tel:0761083608">07 61 08 36 08</a>
+</div></main></body></html>
+''')
+    print("  [404.html] page d'erreur personnalisée créée")
 
 # ---------- 4. sitemap from disk ----------
 smap = os.path.join(SITE, "sitemap.xml")
