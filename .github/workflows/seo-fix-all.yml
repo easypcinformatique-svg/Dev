@@ -1,0 +1,41 @@
+name: SEO complete fix (audit Sept 2026)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/seo-fix-all.yml'
+      - '.github/scripts/seo_fix_all.py'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Apply SEO fixes
+        run: python3 .github/scripts/seo_fix_all.py site
+
+      - name: Commit and push
+        run: |
+          cd site
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git add -A
+            git diff --cached --stat
+            git commit -m "SEO audit fixes: images, ratings, title, headings, sitemap, accessibility"
+            git push origin main
+            echo "All SEO fixes pushed!"
+          fi

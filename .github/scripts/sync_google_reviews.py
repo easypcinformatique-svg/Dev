@@ -192,14 +192,38 @@ for pattern in [r'>\s*(\d{3,4})\s*<[^>]*>\s*AVIS\s*GOOGLE']:
             changes += 1
             print(f"  AVIS GOOGLE counter: {old_count} -> {count_str}")
 
-print(f"\nTotal changes: {changes}")
+print(f"\nHomepage changes: {changes}")
 
 # --- 4. Write back ---
 with open(SITE_PATH, "w", encoding="utf-8") as f:
     f.write(c)
 
-if changes > 0:
-    print(f"Site updated to {rating_str}/5 - {count_str} avis Google")
+# --- 5. Fix ALL sub-pages too (prevent rating inconsistency) ---
+import glob
+site_dir = os.path.dirname(SITE_PATH)
+sub_changes = 0
+for html_file in glob.glob(os.path.join(site_dir, "**", "index.html"), recursive=True):
+    if os.path.abspath(html_file) == os.path.abspath(SITE_PATH):
+        continue
+    with open(html_file, "r", encoding="utf-8") as f:
+        sc = f.read()
+    sc_orig = sc
+    old_r = re.search(r'"ratingValue":"[\d.]+"', sc)
+    if old_r and old_r.group(0) != f'"ratingValue":"{rating_str}"':
+        sc = sc.replace(old_r.group(0), f'"ratingValue":"{rating_str}"')
+    old_c = re.search(r'"reviewCount":"\d+"', sc)
+    if old_c and old_c.group(0) != f'"reviewCount":"{count_str}"':
+        sc = sc.replace(old_c.group(0), f'"reviewCount":"{count_str}"')
+    if sc != sc_orig:
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(sc)
+        sub_changes += 1
+        rel = os.path.relpath(html_file, site_dir)
+        print(f"  Sub-page synced: {rel}")
+
+total = changes + sub_changes
+if total > 0:
+    print(f"\nSite updated to {rating_str}/5 - {count_str} avis Google ({changes} homepage + {sub_changes} sub-pages)")
 else:
     print("Site already up to date, no changes needed")
 

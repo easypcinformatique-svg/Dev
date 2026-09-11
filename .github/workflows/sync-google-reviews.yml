@@ -46,7 +46,7 @@ jobs:
           if git diff --quiet; then
             echo "No changes - reviews already up to date"
           else
-            git add index.html
+            git add -A
             RATING=$(python3 -c "
           import re
           with open('index.html') as f: c=f.read()
