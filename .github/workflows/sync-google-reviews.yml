@@ -13,6 +13,10 @@ on:
         description: 'Manual review count override (e.g. 526)'
         required: false
 
+concurrency:
+  group: pizza-napoli-prod
+  cancel-in-progress: false
+
 jobs:
   sync-reviews:
     runs-on: ubuntu-latest
@@ -38,23 +42,19 @@ jobs:
         run: |
           python3 .github/scripts/sync_google_reviews.py site/index.html
 
-      - name: Commit and push
-        env:
-          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+      - name: Commit and push (rebase + retry)
         run: |
           cd site
-          if git diff --quiet; then
-            echo "No changes - reviews already up to date"
-          else
-            git add -A
-            RATING=$(python3 -c "
+          if git diff --quiet; then echo "No changes - reviews already up to date"; exit 0; fi
+          git add -A
+          RATING=$(python3 -c "
           import re
-          with open('index.html') as f: c=f.read()
-          m=re.search(r'ratingValue.:.(\d\.\d)', c)
-          n=re.search(r'reviewCount.:.(\d+)', c)
-          print(f'{m.group(1)}/5 - {n.group(1)} avis' if m and n else 'updated')
-          ")
-            git commit -m "Auto-sync Google reviews: ${RATING}"
-            git push origin main
-            echo "Reviews synced: ${RATING}"
-          fi
+          c=open('index.html').read()
+          m=re.search(r'ratingValue.:.(\d\.\d)', c); n=re.search(r'reviewCount.:.(\d+)', c)
+          print(f'{m.group(1)}/5 - {n.group(1)} avis' if m and n else 'updated')")
+          git commit -q -m "Auto-sync Google reviews: ${RATING}"
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q origin main && git push -q origin main && { echo "Reviews synced: ${RATING}"; exit 0; }
+            echo "Push rejeté, nouvelle tentative..."; sleep $((i*5))
+          done
+          echo "::error::Push impossible après 5 tentatives"; exit 1
