@@ -168,11 +168,7 @@ def fix_sitemap(site_dir):
     c = re.sub(r'<lastmod>\d{4}-\d{2}-\d{2}</lastmod>', f'<lastmod>{today}</lastmod>', c)
     fixes.append(f"Updated lastmod to {today}")
 
-    # Standardize: remove .html extensions, ensure trailing slash
-    c = re.sub(r'<loc>(https://[^<]*?)\.html</loc>', r'<loc>\1/</loc>', c)
-    # Fix double slashes
-    c = re.sub(r'([^:])//+', r'\1/', c)
-    fixes.append("Standardized URL format (trailing slash)")
+    # NOTE: do NOT rewrite .html -> / : blog/guide-*.html only exist as files (no index dir)
 
     if c != original:
         with open(sitemap_path, "w", encoding="utf-8") as f:

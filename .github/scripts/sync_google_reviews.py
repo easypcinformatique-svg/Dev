@@ -214,6 +214,12 @@ for html_file in glob.glob(os.path.join(site_dir, "**", "index.html"), recursive
     old_c = re.search(r'"reviewCount":"\d+"', sc)
     if old_c and old_c.group(0) != f'"reviewCount":"{count_str}"':
         sc = sc.replace(old_c.group(0), f'"reviewCount":"{count_str}"')
+    # Visible text must match the schema (Google penalizes mismatches)
+    rating_comma = rating_str.replace(".", ",")
+    sc = re.sub(r'\b[1-5],\d\s*/\s*5\b', f'{rating_comma}/5', sc)
+    sc = re.sub(r'\b[1-5]\.\d\s*/\s*5\b(?![\d"])', f'{rating_str}/5', sc)
+    sc = re.sub(r'\bnote\s+[1-5][,.]\d\b', f'note {rating_comma}', sc)
+    sc = re.sub(r'\b\d{3}\s+avis\b', f'{count_str} avis', sc)
     if sc != sc_orig:
         with open(html_file, "w", encoding="utf-8") as f:
             f.write(sc)
