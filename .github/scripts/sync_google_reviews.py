@@ -16,19 +16,21 @@ count = None
 api_key = os.environ.get("GOOGLE_PLACES_API_KEY", "")
 place_id = os.environ.get("GOOGLE_PLACE_ID", "")
 
+reviews = []
 if api_key and place_id:
     print("[Places API] Fetching reviews...")
     try:
-        url = f"https://places.googleapis.com/v1/places/{place_id}?fields=rating,userRatingCount&key={api_key}"
+        url = f"https://places.googleapis.com/v1/places/{place_id}?languageCode=fr"
         req = urllib.request.Request(url)
         req.add_header("X-Goog-Api-Key", api_key)
-        req.add_header("X-Goog-FieldMask", "rating,userRatingCount")
+        req.add_header("X-Goog-FieldMask", "rating,userRatingCount,reviews")
         resp = urllib.request.urlopen(req, timeout=15)
         data = json.loads(resp.read().decode())
         if "rating" in data:
             rating = round(data["rating"], 1)
             count = data.get("userRatingCount", 0)
-            print(f"[Places API] Got: {rating}/5 - {count} avis")
+            reviews = data.get("reviews", [])
+            print(f"[Places API] Got: {rating}/5 - {count} avis, {len(reviews)} temoignages")
     except Exception as e:
         print(f"[Places API] Error: {e}")
 
@@ -206,6 +208,49 @@ for pattern in [r'>\s*(\d{3,4})\s*<[^>]*>\s*AVIS\s*GOOGLE']:
             c = c.replace(m.group(0), m.group(0).replace(old_count, count_str))
             changes += 1
             print(f"  AVIS GOOGLE counter: {old_count} -> {count_str}")
+
+# --- Testimonials: publish real Google reviews, named and dated ---
+# The cards previously held unattributed quotes ("Marie L., cliente régulière")
+# naming pizzas absent from the menu. These come from the Places API.
+if reviews:
+    from html import escape
+    cartes, points = [], []
+    retenus = [r for r in reviews if r.get("rating", 0) >= 4][:6]
+    for i, r in enumerate(retenus):
+        note = int(r.get("rating", 5))
+        texte = ((r.get("originalText") or r.get("text") or {}).get("text", "") or "").strip()
+        texte = " ".join(texte.split())
+        if len(texte) > 260:
+            texte = texte[:257].rsplit(" ", 1)[0] + "…"
+        auteur = (r.get("authorAttribution", {}) or {}).get("displayName", "Client Google")
+        quand = r.get("relativePublishTimeDescription", "")
+        signature = f"— {auteur}" + (f", {quand}" if quand else "")
+        cartes.append(
+            '<div class="testi-card"><div class="testi-quote">"</div>'
+            f'<div class="testi-stars">{"★" * note}{"☆" * (5 - note)}</div>'
+            f'<p class="testi-text">{escape(texte)}</p>'
+            f'<div class="testi-author">{escape(signature)}</div></div>')
+        points.append(
+            f'<button class="testi-dot{" active" if i == 0 else ""}" '
+            f'data-idx="{i}" aria-label="Avis {i + 1}"></button>')
+
+    ouvre = '<div class="testi-grid" id="testiGrid">'
+    i, j = c.find(ouvre), c.find('<div class="testi-nav"')
+    if cartes and i != -1 and j > i:
+        # The grid sits inside testi-carousel-wrap, so the run of </div> before
+        # the nav closes both. Keep that run intact and swap only the cards.
+        milieu = c[i + len(ouvre):j]
+        orphelines = milieu.count("</div>") - len(re.findall(r'<div[\s>]', milieu))
+        queue = " " + " ".join(["</div>"] * max(orphelines, 1)) + " "
+        c_new = c[:i] + ouvre + " " + " ".join(cartes) + queue + c[j:]
+
+        dots = '<div class="testi-dots" id="testiDots"> ' + " ".join(points) + ' </div>'
+        c_new, n2 = re.subn(r'<div class="testi-dots" id="testiDots">.*?</div>\s*(?=</div>)',
+                            dots + " ", c_new, flags=re.DOTALL)
+        if n2 and c_new != c:
+            c = c_new
+            changes += 1
+            print(f"  Temoignages: {len(cartes)} vrais avis Google (nommes et dates)")
 
 print(f"\nHomepage changes: {changes}")
 
