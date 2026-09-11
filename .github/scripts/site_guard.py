@@ -15,6 +15,7 @@ Invariants:
 """
 import re, os, sys, glob, json, subprocess
 from datetime import date
+from html import unescape
 
 SITE = sys.argv[1] if len(sys.argv) > 1 else "site"
 HOST = "https://pizzanapolicarpentras.fr"
@@ -209,6 +210,27 @@ for path in pages:
         return tag[:-1].rstrip() + f' aria-label="{label}"' + tag[-1]
 
     c = re.sub(r'<(?:input|select|textarea)\s[^>]*>', name_control, c)
+
+    # 6c. titles: strip redundancy only (brand stated twice, decorative lists).
+    # Google truncates past ~65 chars. Nothing here removes a keyword.
+    def trim_title(m):
+        t = old = m.group(1)
+        if t.count("Pizza Napoli") > 1:
+            t = re.sub(r'\s*[|—-]\s*Pizza Napoli Carpentras\s*$', '', t)
+        t = t.replace("Sorties, Patrimoine + Pizza", "Sorties &amp; Pizza")
+        t = t.replace("Patrimoine, Marchés, Sorties + Pizza", "Marchés, Sorties &amp; Pizza")
+        t = re.sub(r'\s*\|\s*7j/7 dès 19h\s*$', '', t)
+        t = re.sub(r'\s*\|\s*Pizza Napoli\s*—\s*Pâte Maison dès 7€90\s*$', ' | Pizza Napoli', t)
+        t = re.sub(r'\s*\|\s*La Meilleure Pizza du Vaucluse depuis 2008\s*$', ' | Depuis 2008', t)
+        t = re.sub(r'\s{2,}', ' ', t).strip(" |—-")
+        # Measure what the reader sees: &amp; is one character, not five.
+        shown, was = len(unescape(t)), len(unescape(old))
+        if t != old and shown <= 65:
+            log(rel, f"title {was} -> {shown} car.")
+            return f"<title>{t}</title>"
+        return m.group(0)
+
+    c = re.sub(r'<title>([^<]*)</title>', trim_title, c)
 
     # 7. founding date
     c = re.sub(r'"foundingDate":"\d{4}"', f'"foundingDate":"{FOUNDED}"', c)
