@@ -56,6 +56,11 @@ DELIVERY_ANSWER = (
     "Aubignan, Loriol-du-Comtat et Caromb, 4 sur Mazan et Saint-Didier. Appelez le 07 61 08 36 08."
 )
 IMG_EXT = (".webp", ".png", ".jpg", ".jpeg", ".svg", ".gif")
+# The address that answers: it is the one on the legal pages.
+EMAIL = "carpentraspizzanapoli@gmail.com"
+GA4 = ('<script async src="https://www.googletagmanager.com/gtag/js?id=G-T2QW447J8J"></script>\n'
+       "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
+       "gtag('js',new Date());gtag('config','G-T2QW447J8J');</script>")
 
 # Testimonials named pizzas by Italian names the menu does not use.
 MENU_ALIASES = {"Quattro Formaggi": "4 Fro", "Regina": "Reine"}
@@ -362,15 +367,23 @@ for path in pages:
 
     morceaux = re.split(r'(<[^>]*>)', c)
     dans_script = False
+    doublons = 0
     for i, bout in enumerate(morceaux):
         if bout.startswith("<"):
             nom = re.match(r'</?\s*([a-zA-Z][a-zA-Z0-9]*)', bout)
-            if nom and nom.group(1).lower() in ("script", "style"):
+            if not nom:
+                continue  # "i+1<n" and friends: not a tag
+            if nom.group(1).lower() in ("script", "style"):
                 dans_script = not bout.startswith("</")
+            elif not dans_script and re.search(r'\b([\w-]+)="[^"]*"[^>]*\s\1=', bout):
+                morceaux[i] = dedupe(re.match(r'.*', bout, re.DOTALL))
+                doublons += 1
             continue
         if not dans_script:
             morceaux[i] = accentuer(bout)
     c = "".join(morceaux)
+    if doublons:
+        log(rel, f"{doublons} balise(s) avec attribut dupliqué corrigée(s)")
 
     # 6i. Serres: the article described Serres (05700) in the Hautes-Alpes,
     # 150 km outside the delivery zone, while promising delivery there.
@@ -387,6 +400,52 @@ for path in pages:
             c = c.replace("Serre-Ponçon", "Comtat Venaissin").replace("Hautes-Alpes", "Vaucluse")
             c = c.replace("05700", "84200")
             log(rel, "article réécrit sur Serres (84200), hameau de Carpentras")
+
+    # 6j. measurement was on the homepage only, so 44 pages reported nothing
+    if "googletagmanager" not in c and "</head>" in c and "noindex" not in (
+            re.search(r'<meta name="robots" content="([^"]*)"', c) or type("", (), {"group": lambda s, i: ""})()).group(1):
+        c = c.replace("</head>", GA4 + "\n</head>", 1)
+        log(rel, "GA4 ajouté (page non mesurée)")
+
+    # 6k. a page with no description lets Google invent one
+    if 'name="description"' not in c and "</head>" in c:
+        titre = re.search(r'<title>([^<]*)</title>', c)
+        resume = unescape(titre.group(1)).split("|")[0].strip() if titre else "Pizza Napoli Carpentras"
+        c = c.replace("</head>", f'<meta name="description" content="{resume} — Pizza Napoli Carpentras, '
+                                 f'pizzeria artisanale depuis 2008. Livraison 7j/7. ☎ 07 61 08 36 08">\n</head>', 1)
+        log(rel, "meta description ajoutée")
+
+    # 6l. an attribute written twice is invalid; the second one is ignored
+    def dedupe(m):
+        tag = m.group(0)
+        debut = re.match(r'<\w+', tag).group(0)
+        corps = tag[len(debut):].rstrip(">").rstrip("/")
+        vus, sortie = set(), []
+        # Boolean attributes (itemscope, async, checked) carry no value and
+        # must survive: dropping itemscope silently breaks the microdata.
+        for att in re.finditer(r'([\w-]+)(?:="[^"]*")?', corps):
+            if not att.group(1) or att.group(1) in vus:
+                continue
+            vus.add(att.group(1)); sortie.append(att.group(0))
+        ferme = "/>" if tag.rstrip(">").endswith("/") else ">"
+        return f"{debut} {' '.join(sortie)}{ferme}" if sortie else tag
+
+    # Applied during the tag walk below, never with a bare regex over the whole
+    # document: "i+1<n" inside a script reads as a tag opening and a pass like
+    # this one shredded the order form's JavaScript.
+
+    # 6m. the <main> target existed but no link ever pointed at it
+    if 'href="#main-content"' not in c and "<body" in c and 'id="main-content"' in c:
+        c = re.sub(r'(<body[^>]*>)',
+                   r'\1\n<a href="#main-content" class="skip-link">Aller au contenu</a>', c, count=1)
+        log(rel, "lien d'évitement ajouté")
+
+    # 6n. one contact address; the schema pointed at a second one
+    c = c.replace("contact@pizzanapolicarpentras.fr", EMAIL)
+
+    # 6o. the card holds 80 recipes, of which seven are desserts
+    c = re.sub(r'\b80\s*\+?\s*pizzas\b', "80 recettes", c)
+    c = re.sub(r'\b80\+\s*recettes\b', "80 recettes", c)
 
     # 6d. repair damage left by earlier one-shot scripts
     if '<div class="galerie-grid"> </div>' in c:
