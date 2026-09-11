@@ -32,7 +32,7 @@ jobs:
       - name: Sync Google reviews
         env:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
-          GOOGLE_PLACE_ID: ${{ secrets.GOOGLE_PLACE_ID }}
+          GOOGLE_PLACE_ID: "ChIJ6-i2vRmKtRIRwMwe1UNYRRY"
           OVERRIDE_RATING: ${{ github.event.inputs.override_rating }}
           OVERRIDE_COUNT: ${{ github.event.inputs.override_count }}
         run: |
