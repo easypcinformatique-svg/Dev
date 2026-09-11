@@ -168,12 +168,20 @@ if n and c_new != c:
     c = c_new; changes += n
     print(f"  Meta/about text: {n} fix(es)")
 
-# Counter target for review count
-old = re.search(r'data-target="(\d+)"\s*Google', c)
-if old and old.group(1) != count_str:
-    c = c.replace(old.group(0), f'data-target="{count_str}" Google')
+# Counter target for review count - also fix broken HTML structure
+# The counter may be malformed: data-target="422" Google</span> (missing >0< and label)
+broken = re.search(r'<span class="counter-num" data-target="\d+"[^>]*Google</span>', c)
+if broken:
+    fixed = f'<span class="counter-num" data-target="{count_str}">0</span><span class="counter-lbl">Avis Google</span>'
+    c = c.replace(broken.group(0), fixed)
     changes += 1
-    print(f"  Counter target: {old.group(1)} -> {count_str}")
+    print(f"  Fixed broken counter HTML + target -> {count_str}")
+else:
+    old = re.search(r'data-target="(\d+)"(>0</span><span class="counter-lbl">Avis Google)', c)
+    if old and old.group(1) != count_str:
+        c = c.replace(old.group(0), f'data-target="{count_str}"{old.group(2)}')
+        changes += 1
+        print(f"  Counter target: {old.group(1)} -> {count_str}")
 
 # Generic "NNN avis" near Google context (careful, only near Google mentions)
 for pattern in [r'>\s*(\d{3,4})\s*<[^>]*>\s*AVIS\s*GOOGLE']:
