@@ -58,9 +58,30 @@ DELIVERY_ANSWER = (
 IMG_EXT = (".webp", ".png", ".jpg", ".jpeg", ".svg", ".gif")
 # The address that answers: it is the one on the legal pages.
 EMAIL = "carpentraspizzanapoli@gmail.com"
-GA4 = ('<script async src="https://www.googletagmanager.com/gtag/js?id=G-T2QW447J8J"></script>\n'
-       "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
-       "gtag('js',new Date());gtag('config','G-T2QW447J8J');</script>")
+# Consent Mode v2, denied by default: no analytics cookie and no advertising
+# identifier is set until the visitor accepts. Required in France (CNIL).
+GA4 = (
+    "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}\n"
+    "var _c=null;try{_c=localStorage.getItem('consent-analytics');}catch(e){}\n"
+    "gtag('consent','default',{'analytics_storage':_c==='1'?'granted':'denied',"
+    "'ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied'});\n"
+    "gtag('js',new Date());gtag('config','G-T2QW447J8J',{'anonymize_ip':true});</script>\n"
+    '<script async src="https://www.googletagmanager.com/gtag/js?id=G-T2QW447J8J"></script>')
+
+BANDEAU = '''<div id="consent-banner" role="dialog" aria-live="polite" aria-label="Consentement aux cookies de mesure" style="position:fixed;inset:auto 0 0 0;z-index:9999;background:#3D3328;color:#FFFDF7;padding:1rem 1.2rem;display:none;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:center;font-size:.85rem;line-height:1.5;">
+<p style="margin:0;max-width:42rem;">Nous utilisons une mesure d'audience anonyme pour améliorer le site. Aucun cookie n'est déposé sans votre accord. <a href="/politique-de-confidentialite/" style="color:#C8972A;">En savoir plus</a></p>
+<span style="display:flex;gap:.6rem;">
+<button type="button" id="consent-no" style="padding:.5rem 1.1rem;border:1px solid rgba(255,253,247,.5);background:transparent;color:inherit;border-radius:2px;cursor:pointer;font:inherit;">Refuser</button>
+<button type="button" id="consent-yes" style="padding:.5rem 1.1rem;border:none;background:#C8972A;color:#3D3328;border-radius:2px;cursor:pointer;font:inherit;font-weight:600;">Accepter</button>
+</span></div>
+<script>(function(){var b=document.getElementById('consent-banner');if(!b)return;
+var s=null;try{s=localStorage.getItem('consent-analytics');}catch(e){}
+/* display is set inline, so an [hidden] attribute would be overridden. */
+if(s===null){b.style.display='flex';}
+function rep(v){try{localStorage.setItem('consent-analytics',v);}catch(e){}
+if(window.gtag)gtag('consent','update',{'analytics_storage':v==='1'?'granted':'denied'});b.style.display='none';}
+document.getElementById('consent-yes').addEventListener('click',function(){rep('1');});
+document.getElementById('consent-no').addEventListener('click',function(){rep('0');});})();</script>'''
 
 # Testimonials named pizzas by Italian names the menu does not use.
 MENU_ALIASES = {"Quattro Formaggi": "4 Fro", "Regina": "Reine"}
@@ -427,6 +448,19 @@ for path in pages:
             re.search(r'<meta name="robots" content="([^"]*)"', c) or type("", (), {"group": lambda s, i: ""})()).group(1):
         c = c.replace("</head>", GA4 + "\n</head>", 1)
         log(rel, "GA4 ajouté (page non mesurée)")
+
+    # Consent Mode v2 and the banner travel together: measurement without a
+    # way to refuse it is not lawful here.
+    if "googletagmanager" in c and "consent-banner" not in c and "</body>" in c:
+        c = c.replace("</body>", BANDEAU + "\n</body>", 1)
+        log(rel, "bandeau de consentement ajouté")
+    if "gtag('consent','default'" not in c and "googletagmanager" in c:
+        c = re.sub(r"gtag\('js',new Date\(\)\);",
+                   "gtag('consent','default',{'analytics_storage':(function(){try{return "
+                   "localStorage.getItem('consent-analytics')==='1'?'granted':'denied';}"
+                   "catch(e){return 'denied';}})(),'ad_storage':'denied','ad_user_data':'denied',"
+                   "'ad_personalization':'denied'});gtag('js',new Date());", c, count=1)
+        log(rel, "Consent Mode v2 (refus par défaut)")
 
     # 6k. a page with no description lets Google invent one
     if 'name="description"' not in c and "</head>" in c:
