@@ -124,6 +124,12 @@ for path in pages:
             fixed = repair_ref(img, base_dir) or "hero1.webp"
             c = c.replace(f'"{HOST}/{img}"', f'"{HOST}/{fixed}"')
             log(rel, f"image JSON-LD {img} introuvable -> {fixed}")
+    # no hotlinked external images: a third-party URL can rot without warning
+    for tag in set(re.findall(r'<img\s[^>]*>', c)):
+        src = re.search(r'src="([^"]+)"', tag)
+        if src and src.group(1).startswith(("http://", "https://")) and not src.group(1).startswith(HOST):
+            c = c.replace(tag, "")
+            log(rel, f"<img> externe retirée ({src.group(1).split('/')[2]})")
     for tag in set(re.findall(r'<img\s[^>]*>', c)):
         src = re.search(r'src="([^"]+)"', tag)
         if src and not exists_local(src.group(1), base_dir):
@@ -136,9 +142,12 @@ for path in pages:
                 log(rel, f"<img {src.group(1)}> introuvable, aucun remplaçant -> retirée")
 
     # 6. landmark + fonts
-    if "<main" not in c and "</nav>" in c:
-        c = c.replace("</nav>", '</nav>\n<main id="main-content">', 1)
-        c = c.replace("<footer", "</main>\n<footer", 1) if "<footer" in c else c.replace("</body>", "</main>\n</body>", 1)
+    if "<main" not in c:
+        anchor = re.search(r'</nav>|</header>|<body[^>]*>', c)
+        if anchor:
+            c = c[:anchor.end()] + '\n<main id="main-content">' + c[anchor.end():]
+            c = c.replace("<footer", "</main>\n<footer", 1) if "<footer" in c else c.replace("</body>", "</main>\n</body>", 1)
+            log(rel, "<main> ajouté")
     c = re.sub(r'(fonts\.googleapis\.com/css2\?[^"]*?)(?<!display=swap)"', lambda mm: mm.group(1) + ("" if "display=swap" in mm.group(1) else "&display=swap") + '"', c)
 
     # 7. founding date
