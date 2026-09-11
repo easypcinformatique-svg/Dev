@@ -364,8 +364,8 @@ for path in pages:
     dans_script = False
     for i, bout in enumerate(morceaux):
         if bout.startswith("<"):
-            tag = bout[1:].lstrip("/").split(None, 1)[0].lower() if len(bout) > 1 else ""
-            if tag in ("script", "style"):
+            nom = re.match(r'</?\s*([a-zA-Z][a-zA-Z0-9]*)', bout)
+            if nom and nom.group(1).lower() in ("script", "style"):
                 dans_script = not bout.startswith("</")
             continue
         if not dans_script:
