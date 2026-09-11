@@ -1,0 +1,98 @@
+name: Fix engagements accents + review count sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-final-audit.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Create fix script
+        run: |
+          cat > /tmp/fix_accents.py << 'PYEOF'
+          import re, os
+
+          # Fix nos-engagements accents
+          path = 'site/nos-engagements/index.html'
+          if os.path.exists(path):
+              with open(path, 'r', encoding='utf-8') as f:
+                  c = f.read()
+              pairs = [
+                  ('engagements qualite', 'engagements qualité'),
+                  ('Qualite', 'Qualité'),
+                  ('difference', 'différence'),
+                  ('Decouvrez', 'Découvrez'),
+                  ('Ingredients Frais', 'Ingrédients Frais'),
+                  ('selectionnons', 'sélectionnons'),
+                  ('ingredients', 'ingrédients'),
+                  ('legumes', 'légumes'),
+                  ('congele', 'congelé'),
+                  ('genereuse', 'généreuse'),
+                  ('genereux', 'généreux'),
+                  ('Pate Maison', 'Pâte Maison'),
+                  ('pate est preparee', 'pâte est préparée'),
+                  ('pate maison', 'pâte maison'),
+                  ('resultat', 'résultat'),
+                  ('Proximite', 'Proximité'),
+                  ('preferences', 'préférences'),
+                  ('societe', 'société'),
+                  ('demarche', 'démarche'),
+                  ('supplements caches', 'suppléments cachés'),
+                  ('selectionnees', 'sélectionnées'),
+                  ('aupres de', 'auprès de'),
+                  ('preparee chaque', 'préparée chaque'),
+                  ('probleme', 'problème'),
+                  ('fierte', 'fierté'),
+                  ("d une", "d'une"),
+                  ("l ecoute", "l'écoute"),
+                  ("n est", "n'est"),
+                  ("c est", "c'est"),
+                  ("C est", "C'est"),
+              ]
+              for old, new in pairs:
+                  c = c.replace(old, new)
+              with open(path, 'w', encoding='utf-8') as f:
+                  f.write(c)
+              print('Fixed accents on nos-engagements')
+
+          # Sync review count on index.html
+          path2 = 'site/index.html'
+          if os.path.exists(path2):
+              with open(path2, 'r', encoding='utf-8') as f:
+                  c = f.read()
+              rc_match = re.search(r'"reviewCount":"(\d+)"', c)
+              rv_match = re.search(r'"ratingValue":"([\d.]+)"', c)
+              if rc_match and rv_match:
+                  rc = rc_match.group(1)
+                  rv = rv_match.group(1)
+                  c = re.sub(r'\d+ avis Google', rc + ' avis Google', c)
+                  c = re.sub(r'\d+ avis clients', rc + ' avis clients', c)
+                  c = re.sub(r'data-target="\d+"(>0</span><span class="counter-lbl">Avis)', 'data-target="' + rc + '"\\1', c)
+                  c = re.sub(r'4[,.]2/5', rv + '/5', c)
+                  with open(path2, 'w', encoding='utf-8') as f:
+                      f.write(c)
+                  print(f'Synced reviews to {rv}/5, {rc} avis')
+          PYEOF
+
+      - name: Clone and fix
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd ..
+          python3 /tmp/fix_accents.py
+          cd site
+          git add -A
+          git commit -m "Fix nos-engagements accents + sync review count" || echo "No changes"
+          git push origin main
+          echo "Done!"

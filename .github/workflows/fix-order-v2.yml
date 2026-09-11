@@ -1,0 +1,33 @@
+name: Fix order validation (grande/petite) + font-display + breadcrumb
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-order-v2.yml'
+      - '.github/scripts/fix_order_validation_v2.py'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone and fix
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd ..
+          python3 .github/scripts/fix_order_validation_v2.py site/index.html
+          cd site
+          git add -A
+          git diff --cached --stat
+          git commit -m "Fix: grande/petite validation, zone table text, font-display, breadcrumb homepage" || echo "No changes"
+          git push origin main
+          echo "Done!"

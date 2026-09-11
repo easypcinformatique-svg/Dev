@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Encheres 13 - Bouches-du-Rhone</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">&#9878;</span>
+                <div>
+                    <h1>Scanner Encheres 13</h1>
+                    <p class="subtitle">Bouches-du-Rhone &bull; Marseille &bull; Aix-en-Provence</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span id="last-update" class="last-update"></span>
+                <button id="btn-scan" class="btn btn-primary" onclick="launchScan()">
+                    <span class="scan-icon">&#8635;</span> Scanner
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-number" id="stat-total">0</div>
+            <div class="stat-label">Encheres trouvees</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-immo">0</div>
+            <div class="stat-label">Immobilier</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-vehicules">0</div>
+            <div class="stat-label">Vehicules</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-objets">0</div>
+            <div class="stat-label">Objets & Mobilier</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-sources">3</div>
+            <div class="stat-label">Sources actives</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="filters-row">
+            <div class="filter-group">
+                <label>Recherche</label>
+                <input type="text" id="filter-search" placeholder="Mot-cle..." oninput="debounceLoad()">
+            </div>
+            <div class="filter-group">
+                <label>Categorie</label>
+                <select id="filter-category" onchange="loadAuctions()">
+                    <option value="all">Toutes categories</option>
+                    <option value="immobilier">Immobilier</option>
+                    <option value="vehicules">Vehicules</option>
+                    <option value="mobilier">Mobilier & Objets</option>
+                    <option value="art">Art & Antiquites</option>
+                    <option value="bijoux">Bijoux & Montres</option>
+                    <option value="electronique">Electronique</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Ville</label>
+                <select id="filter-ville" onchange="loadAuctions()">
+                    <option value="all">Toutes les villes</option>
+                    <option value="marseille">Marseille</option>
+                    <option value="aix-en-provence">Aix-en-Provence</option>
+                    <option value="arles">Arles</option>
+                    <option value="martigues">Martigues</option>
+                    <option value="aubagne">Aubagne</option>
+                    <option value="istres">Istres</option>
+                    <option value="salon-de-provence">Salon-de-Provence</option>
+                    <option value="vitrolles">Vitrolles</option>
+                    <option value="marignane">Marignane</option>
+                    <option value="la ciotat">La Ciotat</option>
+                    <option value="tarascon">Tarascon</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Prix min</label>
+                <input type="number" id="filter-price-min" placeholder="0" onchange="loadAuctions()">
+            </div>
+            <div class="filter-group">
+                <label>Prix max</label>
+                <input type="number" id="filter-price-max" placeholder="Illimite" onchange="loadAuctions()">
+            </div>
+            <div class="filter-group">
+                <label>Trier par</label>
+                <select id="filter-sort" onchange="loadAuctions()">
+                    <option value="date">Date (plus proche)</option>
+                    <option value="price_asc">Prix croissant</option>
+                    <option value="price_desc">Prix decroissant</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanning indicator -->
+    <div id="scanning-indicator" class="scanning-indicator" style="display:none;">
+        <div class="spinner"></div>
+        <span>Scan en cours... Recherche des encheres dans le departement 13</span>
+    </div>
+
+    <!-- Auction list -->
+    <main class="auctions-container">
+        <div id="auctions-list" class="auctions-grid">
+            <div class="loading-placeholder">
+                <div class="spinner"></div>
+                <p>Chargement des encheres...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Error display -->
+    <div id="errors-container" class="errors-container" style="display:none;"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Scanner Encheres 13 &mdash; Donnees issues de sources publiques (Interencheres, Encheres Publiques, Agorastore)</p>
+        <p>Departement 13 - Bouches-du-Rhone &bull; Actualisation automatique toutes les 30 minutes</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

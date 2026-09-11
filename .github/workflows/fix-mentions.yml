@@ -1,0 +1,40 @@
+name: Fix mentions legales
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-mentions.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix mentions legales
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Fix mentions-legales
+          sed -i 's/SARL au capital variable/SARL/g' mentions-legales/index.html
+          sed -i 's/Gerant : Brandon BRES/Co-gerant : Brandon BRES/g' mentions-legales/index.html
+          sed -i 's/contact@pizzanapolicarpentras.fr/carpentraspizzanapoli@gmail.com/g' mentions-legales/index.html
+
+          # Fix politique-de-confidentialite
+          sed -i 's/SARL au capital variable/SARL/g' politique-de-confidentialite/index.html 2>/dev/null || true
+          sed -i 's/Gerant : Brandon BRES/Co-gerant : Brandon BRES/g' politique-de-confidentialite/index.html 2>/dev/null || true
+          sed -i 's/contact@pizzanapolicarpentras.fr/carpentraspizzanapoli@gmail.com/g' politique-de-confidentialite/index.html 2>/dev/null || true
+
+          # Fix CGV
+          sed -i 's/SARL au capital variable/SARL/g' cgv/index.html 2>/dev/null || true
+          sed -i 's/Gerant : Brandon BRES/Co-gerant : Brandon BRES/g' cgv/index.html 2>/dev/null || true
+          sed -i 's/contact@pizzanapolicarpentras.fr/carpentraspizzanapoli@gmail.com/g' cgv/index.html 2>/dev/null || true
+
+          git add -A
+          git commit -m "Fix mentions legales: SARL, co-gerant, email gmail"
+          git push origin main

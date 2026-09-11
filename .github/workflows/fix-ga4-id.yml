@@ -1,0 +1,28 @@
+name: Fix GA4 ID
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/fix-ga4-id.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix GA4 ID
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          sed -i 's/G-1DB4477857/G-T2QW447J8J/g' index.html
+          echo "Fixed GA4 ID to G-T2QW447J8J"
+
+          git add index.html
+          git commit -m "Fix GA4 measurement ID: G-T2QW447J8J"
+          git push origin main

@@ -1,0 +1,85 @@
+name: Update site version date
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/update-version.yml'
+  workflow_run:
+    workflows:
+      - "Restore pizzeria site from backup"
+      - "Fix all remaining audit issues"
+      - "Fix order form (time slots, zone validation, free bottle)"
+      - "Fix order validation (grande/petite) + font-display + breadcrumb"
+      - "Fix 21h45 slot + add Monteux to zone table"
+      - "Remove drinks except Fanta Coca Ice Tea"
+      - "Fix engagements accents + review count sync"
+      - "Fix mentions legales"
+      - "Audit expert fixes (legal + SEO + accessibility)"
+      - "Fix meta descriptions + canonical + citations + accessibility"
+      - "SEO batch fixes"
+      - "SEO batch 2 (breadcrumbs, hreflang, LCP, service worker)"
+      - "SEO batch 3 (breadcrumbs, engagements, order schema, social, email)"
+      - "Fix critical SEO and accessibility issues"
+      - "Fix menu errors + WebP images + GA4"
+      - "Fix WebP references and remaining Since 2008"
+      - "Inject zone validation into original envoyerWhatsApp"
+      - "Fix zone validation - block unknown cities"
+    types: [completed]
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update version in production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          export VERSION_DATE=$(TZ='Europe/Paris' date '+%d/%m/%Y')
+          export VERSION_TIME=$(TZ='Europe/Paris' date '+%Hh%M')
+
+          echo "New version: v. ${VERSION_DATE} - ${VERSION_TIME}"
+
+          python3 << 'PYEOF'
+          import re, os
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          vdate = os.environ['VERSION_DATE']
+          vtime = os.environ['VERSION_TIME']
+
+          # Pattern: the entire div containing the version inside nav-logo
+          # Matches: >v. DD/MM/YYYY &middot; HHhMM</div>
+          pattern = r'>v\.[\s\S]*?</div>(\s*</div>\s*</nav>)'
+
+          # Simpler approach: find the exact version text pattern
+          # v. DD/MM/YYYY &middot; HHhMM (with possible garbage from previous bad edits)
+          pattern = r'v\.[^<]*\d{2}h\d{2}[^<]*'
+          replacement = f'v. {vdate} \u0026middot; {vtime}'
+
+          new_content, count = re.subn(pattern, replacement, content, count=1)
+
+          if count > 0:
+              with open('index.html', 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+              print(f'Replaced {count} occurrence(s)')
+              print(f'Version set to: v. {vdate} &middot; {vtime}')
+          else:
+              print('WARNING: No version pattern found in index.html')
+          PYEOF
+
+          if git diff --quiet; then
+            echo "No changes needed"
+          else
+            git add index.html
+            git commit -m "Update version: ${VERSION_DATE} ${VERSION_TIME}"
+            git push origin main
+            echo "Version updated and pushed!"
+          fi
