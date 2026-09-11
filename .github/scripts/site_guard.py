@@ -54,6 +54,56 @@ DELIVERY_ANSWER = (
 )
 IMG_EXT = (".webp", ".png", ".jpg", ".jpeg", ".svg", ".gif")
 
+# Testimonials named pizzas by Italian names the menu does not use.
+MENU_ALIASES = {"Quattro Formaggi": "4 Fro", "Regina": "Reine"}
+
+# A generator transliterated the guides to ASCII. Only words whose unaccented
+# form is not itself a French word are listed here — "reste", "marche", "cote"
+# and "ou" are real words and must never be rewritten blindly.
+ACCENTS = {
+    "chateau": "château", "chateaux": "châteaux", "medieval": "médiéval",
+    "medievale": "médiévale", "medievaux": "médiévaux", "medievales": "médiévales",
+    "siecle": "siècle", "siecles": "siècles", "tres": "très", "apres": "après",
+    "decouverte": "découverte", "decouvertes": "découvertes", "decouvrez": "découvrez",
+    "decouvrir": "découvrir", "fete": "fête", "fetes": "fêtes", "eglise": "église",
+    "eglises": "églises", "region": "région", "regions": "régions", "arreter": "arrêter",
+    "arrete": "arrête", "musee": "musée", "musees": "musées", "palir": "pâlir",
+    "legales": "légales", "legale": "légale", "confidentialite": "confidentialité",
+    "donnees": "données", "numero": "numéro", "duree": "durée",
+    "provencal": "provençal", "provencale": "provençale", "provencaux": "provençaux",
+    "provencales": "provençales", "cathedrale": "cathédrale", "celebre": "célèbre",
+    "celebres": "célèbres", "specialite": "spécialité", "specialites": "spécialités",
+    "reputee": "réputée", "repute": "réputé", "reputees": "réputées",
+    "developpe": "développé", "proximite": "proximité", "qualite": "qualité",
+    "qualites": "qualités", "atmosphere": "atmosphère", "ete": "été", "etait": "était",
+    "meme": "même", "memes": "mêmes", "creee": "créée", "cree": "créé",
+    "situee": "située", "situe": "situé", "realise": "réalisé", "interet": "intérêt",
+    "elegant": "élégant", "elegante": "élégante", "precede": "précédé",
+    "veritable": "véritable", "veritables": "véritables", "authentique": "authentique",
+    "etablissement": "établissement", "evenement": "événement", "evenements": "événements",
+    "cle": "clé", "the": "thé", "annee": "année", "annees": "années",
+    "quartier": "quartier", "acces": "accès", "succes": "succès", "proces": "procès",
+    "chateauneuf": "châteauneuf", "hotel": "hôtel", "hotels": "hôtels",
+    "foret": "forêt", "forets": "forêts", "riviere": "rivière", "rivieres": "rivières",
+    "riche": "riche", "prefere": "préféré", "preferee": "préférée",
+    "reserve": "réservé", "reservee": "réservée", "reservation": "réservation",
+    "specialement": "spécialement", "generalement": "généralement",
+    "particulierement": "particulièrement", "premiere": "première", "dernier": "dernier",
+    "derniere": "dernière", "entiere": "entière", "maniere": "manière",
+    "lumiere": "lumière", "priere": "prière", "carriere": "carrière",
+    "frontiere": "frontière", "barriere": "barrière", "cimetiere": "cimetière",
+}
+# Ambiguous words, disambiguated by their surroundings.
+ACCENTS_CONTEXTE = {
+    r'\bpres de\b': "près de", r'\bPres de\b': "Près de",
+    r"\bCote d'Azur\b": "Côte d'Azur",
+    r'\ble marche\b': "le marché", r'\bdu marche\b': "du marché",
+    r'\bau marche\b': "au marché", r'\bLe marche\b': "Le marché",
+    r'\bmarche provencal\b': "marché provençal", r'\bmarche hebdomadaire\b': "marché hebdomadaire",
+    r'\bmarches provencaux\b': "marchés provençaux", r'\bmarches de Noel\b': "marchés de Noël",
+    r'\bNoel\b': "Noël",
+}
+
 report = []
 
 def log(page, msg):
@@ -117,7 +167,21 @@ if not (m_r and m_c):
     print("FATAL: homepage has no AggregateRating"); sys.exit(1)
 RATING, COUNT = m_r.group(1), m_c.group(1)
 RATING_COMMA = RATING.replace(".", ",")
-print(f"Source of truth: {RATING}/5 — {COUNT} avis\n")
+
+# ---------- source of truth: the menu itself ----------
+_menu = re.search(r'const PIZZAS\s*=\s*\[(.*?)\];', home_html, re.DOTALL)
+MENU = {}
+for _n, _p26, _p30 in re.findall(r"name:'([^']+)'.*?p26:([\d.]+|null),p30:([\d.]+|null)", _menu.group(1)):
+    MENU[_n.lower()] = (None if _p26 == "null" else float(_p26),
+                        None if _p30 == "null" else float(_p30))
+MIN_PRICE = min(p for p26, p30 in MENU.values() for p in (p26,) if p)
+
+
+def euro(p):
+    return f"{int(p)}€" if abs(p - int(p)) < 0.005 else f"{int(p)}€{round((p - int(p)) * 100):02d}"
+
+
+print(f"Source of truth: {RATING}/5 — {COUNT} avis · {len(MENU)} pizzas, dès {euro(MIN_PRICE)}\n")
 
 # ---------- per-page invariants ----------
 pages = sorted(glob.glob(os.path.join(SITE, "**", "*.html"), recursive=True))
@@ -253,6 +317,57 @@ for path in pages:
         return m.group(0)
 
     c = re.sub(r'<title>([^<]*)</title>', trim_title, c)
+
+    # 6e. prices quoted in prose must match the menu
+    c = re.sub(r'dès\s*\d+\s*€\s*\d{0,2}', f'dès {euro(MIN_PRICE)}', c)
+    c = re.sub(r'[Pp]izzas? dès \d+\s*€\s*\d{0,2}', f'Pizzas dès {euro(MIN_PRICE)}', c)
+
+    def fix_card(m):
+        nom, prix = m.group(1), m.group(2)
+        p26, p30 = MENU.get(nom.lower(), (None, None))
+        if p30 is None:
+            return m.group(0)
+        vrai = f"{euro(p26)} / {euro(p30)}" if p26 else f"{euro(p30)} grande"
+        if vrai != prix:
+            log(rel, f"prix {nom} : {prix} -> {vrai}")
+        return m.group(0).replace(f'>{prix}<', f'>{vrai}<')
+
+    c = re.sub(r'<div class="pizza-name">([^<]+)</div>'
+               r'<div class="pizza-desc">[^<]*</div>'
+               r'<div class="pizza-price">([^<]+)</div>', fix_card, c)
+
+    # 6f. testimonials may only name pizzas that exist on the menu
+    for faux, vrai in MENU_ALIASES.items():
+        if faux in c:
+            c = c.replace(faux, vrai)
+            log(rel, f"avis : « {faux} » absente de la carte -> « {vrai} »")
+
+    # 6g. the CTA opens the online form before 17h30 and the phone modal after,
+    # so it must not promise one channel.
+    c = c.replace("🍕 Commander par WhatsApp", "🍕 Commander")
+
+    # 6h. accents dropped by a generator that transliterated to ASCII.
+    # Text nodes only: attributes carry file names and URLs, and accenting
+    # img/chateau.webp into img/château.webp breaks the image.
+    def accentuer(texte):
+        for sans, avec in ACCENTS.items():
+            texte = re.sub(rf'\b{sans}\b', avec, texte)
+            texte = re.sub(rf'\b{sans.capitalize()}\b', avec.capitalize(), texte)
+        for motif, remplacement in ACCENTS_CONTEXTE.items():
+            texte = re.sub(motif, remplacement, texte)
+        return texte
+
+    morceaux = re.split(r'(<[^>]*>)', c)
+    dans_script = False
+    for i, bout in enumerate(morceaux):
+        if bout.startswith("<"):
+            tag = bout[1:].lstrip("/").split(None, 1)[0].lower() if len(bout) > 1 else ""
+            if tag in ("script", "style"):
+                dans_script = not bout.startswith("</")
+            continue
+        if not dans_script:
+            morceaux[i] = accentuer(bout)
+    c = "".join(morceaux)
 
     # 6d. repair damage left by earlier one-shot scripts
     if '<div class="galerie-grid"> </div>' in c:
