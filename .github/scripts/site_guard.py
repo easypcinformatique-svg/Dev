@@ -456,6 +456,8 @@ for path in pages:
     # this one shredded the order form's JavaScript.
 
     # 6m. the <main> target existed but no link ever pointed at it
+    if "<main" in c and 'id="main-content"' not in c:
+        c = re.sub(r'<main(?![^>]*\bid=)', '<main id="main-content"', c, count=1)
     if 'href="#main-content"' not in c and "<body" in c and 'id="main-content"' in c:
         c = re.sub(r'(<body[^>]*>)',
                    r'\1\n<a href="#main-content" class="skip-link">Aller au contenu</a>', c, count=1)
@@ -514,7 +516,11 @@ for path in pages:
             c = c.replace("</head>", "\n".join(ajouts) + "\n</head>", 1)
             log(rel, f"{len(ajouts)} balise(s) sociale(s) ajoutée(s)")
 
-    # 6r. a breadcrumb with a single item is not shown by Google
+    # 6r. a breadcrumb with a single item is not shown by Google. On the
+    # homepage there is nothing to lead back to, so drop it entirely.
+    if rel == "index.html" and "BreadcrumbList" in c and c.count('"ListItem"') < 2:
+        c = re.sub(r'<script type="application/ld\+json">\{[^<]*BreadcrumbList[^<]*\}</script>\s*', '', c)
+        log(rel, "fil d'Ariane à un seul niveau retiré")
     if rel != "index.html" and ("BreadcrumbList" not in c or c.count('"ListItem"') < 2):
         chemin = rel[:-len("/index.html")] if rel.endswith("/index.html") else rel[:-len(".html")]
         miettes = [("Accueil", f"{HOST}/")]
