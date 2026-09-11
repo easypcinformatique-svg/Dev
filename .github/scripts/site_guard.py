@@ -296,6 +296,12 @@ for path in pages:
     seg = top if rel.endswith("/index.html") and rel != "index.html" else None
     if seg in DUPLICATES:
         continue
+    # A page asking not to be indexed must not also be submitted for indexing;
+    # Search Console reports the pair as "excluded by noindex tag".
+    robots = re.search(r'<meta name="robots" content="([^"]*)"', open(path, encoding="utf-8").read())
+    if robots and "noindex" in robots.group(1):
+        print(f"  [sitemap.xml] {rel} en noindex -> exclue")
+        continue
     url = page_url(path)
     if url == f"{HOST}/":
         prio, freq = "1.0", "daily"
