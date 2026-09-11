@@ -14,6 +14,7 @@ Invariants:
   8. One Facebook URL
 """
 import re, os, sys, glob, json, subprocess
+from datetime import date
 
 SITE = sys.argv[1] if len(sys.argv) > 1 else "site"
 HOST = "https://pizzanapolicarpentras.fr"
@@ -24,6 +25,13 @@ DUPLICATES = {  # page -> canonical target (content cannibalization)
     "pizza-carpentras": "pizzeria-carpentras",
 }
 EXCLUDE_FROM_SITEMAP = {"redirect", "404", "google", "mentions-legales-old", "photos-finales", "photos-preview"}
+# Must stay in step with getMinPizzasForCity() in the order form.
+DELIVERY_ANSWER = (
+    "sur Carpentras et les communes environnantes, "
+    "tous les soirs de 19h00 à 22h00 (commandes dès 17h30). Le minimum varie selon la commune : "
+    "2 grandes pizzas (ou 4 petites) sur Carpentras et Serres, 3 sur Pernes-les-Fontaines, Monteux, "
+    "Aubignan, Loriol-du-Comtat et Caromb, 4 sur Mazan et Saint-Didier. Appelez le 07 61 08 36 08."
+)
 IMG_EXT = (".webp", ".png", ".jpg", ".jpeg", ".svg", ".gif")
 
 report = []
@@ -115,6 +123,23 @@ for path in pages:
     # 2. single host
     c = c.replace("https://www.pizzanapolicarpentras.fr", HOST).replace("http://pizzanapolicarpentras.fr", HOST)
 
+    # 2b. years of experience, derived from the founding year so it never goes stale
+    years = date.today().year - int(FOUNDED)
+    # The optional backslash also repairs a bad \' escape left inside JSON-LD.
+    c = re.sub(r'\b\d{1,2}(\s*)ans(\s*)d\\?[\'’]exp[ée]rience',
+               rf"{years}\1ans\2d'expérience", c)
+
+    # 2c. the delivery minimum varies by town; no page may promise the lowest one
+    # for towns that need more, or the order form rejects a customer it invited.
+    c = re.sub(
+        r'dès 2 grandes pizzas commandées sur Carpentras et communes environnantes[^"<]*?'
+        r'Appelez le 07 61 08 36 08\.',
+        DELIVERY_ANSWER, c)
+
+    # 2d. delivery runs 19h-22h; orders are taken from 17h30. Don't conflate the two.
+    c = c.replace("livraison à domicile est disponible tous les jours de 17h30 à 22h",
+                  "livraison à domicile est disponible tous les jours de 19h00 à 22h00")
+
     # 3. canonical = own URL (or duplicate target)
     seg = rel.split("/")[0] if rel.endswith("/index.html") and rel != "index.html" else None
     target = f"{HOST}/{DUPLICATES[seg]}/" if seg in DUPLICATES else page_url(path)
@@ -162,6 +187,23 @@ for path in pages:
             c = c.replace("<footer", "</main>\n<footer", 1) if "<footer" in c else c.replace("</body>", "</main>\n</body>", 1)
             log(rel, "<main> ajouté")
     c = re.sub(r'(fonts\.googleapis\.com/css2\?[^"]*?)(?<!display=swap)"', lambda mm: mm.group(1) + ("" if "display=swap" in mm.group(1) else "&display=swap") + '"', c)
+
+    # 6b. every form control needs an accessible name; a placeholder is not one
+    def name_control(m):
+        tag = m.group(0)
+        cid = re.search(r'id="([^"]+)"', tag)
+        if re.search(r'\b(aria-label|aria-labelledby|title)=', tag):
+            return tag
+        if cid and f'for="{cid.group(1)}"' in c:
+            return tag
+        ph = re.search(r'placeholder="([^"]+)"', tag)
+        if not ph:
+            return tag
+        label = ph.group(1).rstrip("…. ")
+        log(rel, f'champ {cid.group(1) if cid else "?"} sans nom accessible -> aria-label="{label}"')
+        return tag[:-1].rstrip() + f' aria-label="{label}"' + tag[-1]
+
+    c = re.sub(r'<(?:input|select|textarea)\s[^>]*>', name_control, c)
 
     # 7. founding date
     c = re.sub(r'"foundingDate":"\d{4}"', f'"foundingDate":"{FOUNDED}"', c)
