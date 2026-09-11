@@ -97,6 +97,21 @@ if rating is None or count is None:
     print("or use OVERRIDE_RATING + OVERRIDE_COUNT as fallback.")
     sys.exit(1)
 
+# Sanity check: a scraper hitting the wrong business must not overwrite the site.
+# Reviews only accumulate, so a sharp drop means the source is wrong.
+with open(SITE_PATH, encoding="utf-8") as f:
+    _current = f.read()
+_prev = re.search(r'"reviewCount":"(\d+)"', _current)
+if not (1.0 <= float(rating) <= 5.0):
+    print(f"ERROR: implausible rating {rating} (expected 1.0-5.0), refusing to write.")
+    sys.exit(1)
+if _prev and not env_rating:
+    prev_count = int(_prev.group(1))
+    if count < prev_count * 0.9:
+        print(f"ERROR: review count dropped {prev_count} -> {count} (>10%), likely the wrong")
+        print("business or a broken source. Refusing to write. Use OVERRIDE_* to force.")
+        sys.exit(1)
+
 # Format rating
 rating_str = f"{rating:.1f}" if isinstance(rating, float) else str(rating)
 count_str = str(count)
