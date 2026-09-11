@@ -43,10 +43,18 @@ if os.path.exists(homepage):
     feature_labels = ['Ingrédients frais', 'Pâte maison', 'Livraison rapide', 'À emporter',
                       'Ingredients frais', 'Pate maison']
     for label in feature_labels:
-        # h4 with content containing label -> h3
         pattern = rf'<h4([^>]*)>([^<]*{re.escape(label)}[^<]*)</h4>'
         replacement = rf'<h3\1>\2</h3>'
         c, n = re.subn(pattern, replacement, c)
+
+    # Fix "visit" section: H4s after H2 -> H3 (Commande en ligne, Horaires, Livraison)
+    visit_labels = ['Commande en ligne', 'Horaires d\'ouverture', 'Horaires d\\\'ouverture', 'Livraison']
+    for label in visit_labels:
+        c = re.sub(rf'<h4([^>]*)>({re.escape(label)})</h4>', r'<h3\1>\2</h3>', c)
+    # Catch any remaining H4 that should be H3 (after H2, not inside specific components)
+    # Generic: all H4 -> H3 on the homepage (since we already converted H5->H4, H4->H3 earlier)
+    c = re.sub(r'<h4([^>]*)>', r'<h3\1>', c)
+    c = re.sub(r'</h4>', '</h3>', c)
 
     if c != orig:
         log("Homepage: Fixed heading hierarchy (info labels -> <strong>, features H4->H3)")
