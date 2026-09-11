@@ -1,6 +1,11 @@
 name: Sync Google Reviews (auto weekly)
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/sync-google-reviews.yml'
+      - '.github/scripts/sync_google_reviews.py'
   schedule:
     # Every Monday at 8:00 UTC (10:00 Paris)
     - cron: '0 8 * * 1'
