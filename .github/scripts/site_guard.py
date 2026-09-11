@@ -30,6 +30,19 @@ DUPLICATES = {  # page -> canonical target (content cannibalization)
 }
 EXCLUDE_FROM_SITEMAP = {"redirect", "404", "google", "mentions-legales-old", "photos-finales", "photos-preview"}
 CONTROL_LABELS = {"size-select": "Taille de la pizza", "qty-select": "Quantité"}
+# slug -> (nom, code postal, minimum de pizzas, slug du guide).
+# Les minimums doivent rester alignés sur getMinPizzasForCity().
+COMMUNES = {
+    "carpentras": ("Carpentras", "84200", 2, "carpentras"),
+    "serres": ("Serres", "84200", 2, "serres"),
+    "pernes-les-fontaines": ("Pernes-les-Fontaines", "84210", 3, "pernes"),
+    "monteux": ("Monteux", "84170", 3, "monteux"),
+    "aubignan": ("Aubignan", "84810", 3, "aubignan"),
+    "loriol-du-comtat": ("Loriol-du-Comtat", "84870", 3, "loriol"),
+    "caromb": ("Caromb", "84330", 3, "caromb"),
+    "mazan": ("Mazan", "84380", 4, "mazan"),
+    "saint-didier": ("Saint-Didier", "84210", 4, "saint-didier"),
+}
 STRUCTURAL = ("div", "nav", "main", "header", "footer", "section", "ul", "table")
 
 
@@ -572,6 +585,35 @@ for path in pages:
         else:
             c = c.replace("</head>", bloc + "\n</head>", 1)
         log(rel, "fil d'Ariane structuré")
+
+    # 6t. the nine delivery pages were 96% identical once the town name was
+    # neutralised — a doorway-page profile. What genuinely differs is the
+    # minimum order, and stating it here also answers the customer before they
+    # compose a basket the form would refuse at the last step.
+    if seg and seg.startswith("livraison-pizza-") and "zone-minimum" not in c:
+        ville = seg[len("livraison-pizza-"):]
+        if ville in COMMUNES:
+            nom, cp, mini, guide = COMMUNES[ville]
+            liens = []
+            if os.path.exists(os.path.join(SITE, "blog", f"guide-{guide}.html")):
+                liens.append(f'<a href="{HOST}/blog/guide-{guide}.html">notre guide de {nom}</a>')
+            if os.path.exists(os.path.join(SITE, "blog", f"que-faire-{ville}-ce-soir", "index.html")):
+                liens.append(f'<a href="{HOST}/blog/que-faire-{ville}-ce-soir/">que faire à {nom} ce soir</a>')
+            bloc = (
+                f'<div class="zone-minimum" style="margin:2rem auto;max-width:640px;padding:1.2rem 1.4rem;'
+                f'background:#FFFDF7;border-left:4px solid #C8972A;border-radius:2px;">'
+                f'<h2 style="margin:0 0 .6rem;font-size:1.05rem;">Livraison à {nom} ({cp})</h2>'
+                f'<p style="margin:0 0 .5rem;"><strong>Minimum de commande : {mini} grandes pizzas '
+                f'(ou {mini * 2} petites).</strong> La livraison est gratuite dès ce minimum atteint, '
+                f'tous les soirs de 19h00 à 22h00. Les commandes sont prises dès 17h30 au '
+                f'<a href="tel:0761083608">07 61 08 36 08</a>.</p>'
+                + (f'<p style="margin:0;">Pour préparer votre soirée : {" et ".join(liens)}.</p>' if liens else "")
+                + '</div>')
+            if "</main>" in c:
+                c = c.replace("</main>", bloc + "\n</main>", 1)
+            elif "<footer" in c:
+                c = c.replace("<footer", bloc + "\n<footer", 1)
+            log(rel, f"minimum de commande annoncé ({mini} grandes)")
 
     # 6d. repair damage left by earlier one-shot scripts
     if '<div class="galerie-grid"> </div>' in c:
