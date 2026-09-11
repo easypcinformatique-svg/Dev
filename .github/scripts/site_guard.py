@@ -58,7 +58,20 @@ def page_url(path):
         return f"{HOST}/{rel[:-len('index.html')]}"
     return f"{HOST}/{rel}"
 
+def is_shallow():
+    try:
+        return subprocess.run(["git", "-C", SITE, "rev-parse", "--is-shallow-repository"],
+                              capture_output=True, text=True, timeout=20).stdout.strip() == "true"
+    except Exception:
+        return True
+
+SHALLOW = is_shallow()
+
 def git_lastmod(path):
+    # A shallow clone truncates history and would date every file "today",
+    # churning the sitemap on each run. Fall back to the published date instead.
+    if SHALLOW:
+        return None
     try:
         out = subprocess.run(["git", "-C", SITE, "log", "-1", "--format=%cs", "--", os.path.relpath(path, SITE)],
                              capture_output=True, text=True, timeout=20).stdout.strip()
@@ -163,6 +176,12 @@ for path in pages:
         log(rel, "normalisée")
 
 # ---------- 4. sitemap from disk ----------
+smap = os.path.join(SITE, "sitemap.xml")
+published = {}
+if os.path.exists(smap):
+    prev = open(smap, encoding="utf-8").read()
+    published = dict(re.findall(r'<loc>(.*?)</loc>\s*<lastmod>(.*?)</lastmod>', prev, re.DOTALL))
+
 entries = []
 for path in pages:
     rel = os.path.relpath(path, SITE).replace(os.sep, "/")
@@ -181,7 +200,7 @@ for path in pages:
         prio, freq = "0.6", "monthly"
     else:
         prio, freq = "0.8", "weekly"
-    entries.append((url, git_lastmod(path) or "2026-09-11", freq, prio))
+    entries.append((url, git_lastmod(path) or published.get(url) or "2026-09-11", freq, prio))
 
 entries.sort(key=lambda e: (e[0] != f"{HOST}/", "/blog/" in e[0], e[0]))
 xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
@@ -190,7 +209,6 @@ for url, lastmod, freq, prio in entries:
             f"    <changefreq>{freq}</changefreq>", f"    <priority>{prio}</priority>", "  </url>"]
 xml.append("</urlset>\n")
 new_sitemap = "\n".join(xml)
-smap = os.path.join(SITE, "sitemap.xml")
 old = open(smap, encoding="utf-8").read() if os.path.exists(smap) else ""
 if old != new_sitemap:
     with open(smap, "w", encoding="utf-8") as f:
