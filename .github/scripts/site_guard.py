@@ -25,6 +25,7 @@ DUPLICATES = {  # page -> canonical target (content cannibalization)
     "pizza-carpentras": "pizzeria-carpentras",
 }
 EXCLUDE_FROM_SITEMAP = {"redirect", "404", "google", "mentions-legales-old", "photos-finales", "photos-preview"}
+CONTROL_LABELS = {"size-select": "Taille de la pizza", "qty-select": "Quantité"}
 # Must stay in step with getMinPizzasForCity() in the order form.
 DELIVERY_ANSWER = (
     "sur Carpentras et les communes environnantes, "
@@ -197,9 +198,13 @@ for path in pages:
         if cid and f'for="{cid.group(1)}"' in c:
             return tag
         ph = re.search(r'placeholder="([^"]+)"', tag)
-        if not ph:
+        cls = re.search(r'class="([^"]*)"', tag)
+        if ph:
+            label = ph.group(1).rstrip("…. ")
+        elif cls and (known := next((v for k, v in CONTROL_LABELS.items() if k in cls.group(1)), None)):
+            label = known  # controls built in JS templates, with no placeholder to borrow
+        else:
             return tag
-        label = ph.group(1).rstrip("…. ")
         log(rel, f'champ {cid.group(1) if cid else "?"} sans nom accessible -> aria-label="{label}"')
         return tag[:-1].rstrip() + f' aria-label="{label}"' + tag[-1]
 
