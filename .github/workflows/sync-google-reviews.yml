@@ -1,0 +1,60 @@
+name: Sync Google Reviews (auto weekly)
+
+on:
+  schedule:
+    # Every Monday at 8:00 UTC (10:00 Paris)
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    inputs:
+      override_rating:
+        description: 'Manual rating override (e.g. 4.5)'
+        required: false
+      override_count:
+        description: 'Manual review count override (e.g. 526)'
+        required: false
+
+jobs:
+  sync-reviews:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync Google reviews
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          GOOGLE_PLACE_ID: ${{ secrets.GOOGLE_PLACE_ID }}
+          OVERRIDE_RATING: ${{ github.event.inputs.override_rating }}
+          OVERRIDE_COUNT: ${{ github.event.inputs.override_count }}
+        run: |
+          python3 .github/scripts/sync_google_reviews.py site/index.html
+
+      - name: Commit and push
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          cd site
+          if git diff --quiet; then
+            echo "No changes - reviews already up to date"
+          else
+            git add index.html
+            RATING=$(python3 -c "
+          import re
+          with open('index.html') as f: c=f.read()
+          m=re.search(r'ratingValue.:.(\d\.\d)', c)
+          n=re.search(r'reviewCount.:.(\d+)', c)
+          print(f'{m.group(1)}/5 - {n.group(1)} avis' if m and n else 'updated')
+          ")
+            git commit -m "Auto-sync Google reviews: ${RATING}"
+            git push origin main
+            echo "Reviews synced: ${RATING}"
+          fi
