@@ -27,6 +27,24 @@ DUPLICATES = {  # page -> canonical target (content cannibalization)
 }
 EXCLUDE_FROM_SITEMAP = {"redirect", "404", "google", "mentions-legales-old", "photos-finales", "photos-preview"}
 CONTROL_LABELS = {"size-select": "Taille de la pizza", "qty-select": "Quantité"}
+STRUCTURAL = ("div", "nav", "main", "header", "footer", "section", "ul", "table")
+
+
+def _gal(src, emoji, alt, extra="", style=""):
+    return (f'<div class="gal-item"{extra}><img src="{src}" srcset="{src}" alt="{alt}" '
+            f'loading="lazy"{style}><div class="gal-overlay"><span>{emoji}</span></div></div>')
+
+
+GALLERY = '<div class="galerie-grid"> ' + " ".join([
+    _gal("20250425_192921.jpg", "🌿", "Pizza Milano courgettes Pizza Napoli Carpentras"),
+    _gal("20230926_202527.jpg", "🍕", "Pizza artisanale Pizza Napoli Carpentras"),
+    _gal("saint-jacques-.webp", "🌊", "Pizza Saint Jacques fruits de mer Carpentras",
+         ' style="overflow:hidden;"',
+         ' style="object-fit:cover;width:100%;height:100%;transform:rotate(90deg) scale(2.2);'
+         'transform-origin:center center;"'),
+    _gal("20240123_201507.jpg", "🍕", "Pizza Mozza di Bufala jambon Carpentras"),
+    _gal("20230926_203901.jpg", "🌿", "Pizza Végétarienne champignons Carpentras"),
+]) + " </div>"
 # Must stay in step with getMinPizzasForCity() in the order form.
 DELIVERY_ANSWER = (
     "sur Carpentras et les communes environnantes, "
@@ -176,10 +194,14 @@ for path in pages:
             fixed = repair_ref(src.group(1), base_dir)
             if fixed:
                 c = c.replace(tag, tag.replace(f'src="{src.group(1)}"', f'src="{fixed}"'))
+                if "srcset=" in tag:
+                    c = c.replace(f'srcset="{src.group(1)}"', f'srcset="{fixed}"')
                 log(rel, f"<img {src.group(1)}> introuvable -> réparé en {fixed}")
             else:
-                c = c.replace(tag, "")
-                log(rel, f"<img {src.group(1)}> introuvable, aucun remplaçant -> retirée")
+                # Never delete markup: an earlier one-shot script removed <img> tags
+                # with a regex that also swallowed their opening <div>, leaving four
+                # orphan </div> and a collapsed gallery. Report, don't cut.
+                log(rel, f"ALERTE <img {src.group(1)}> introuvable et irréparable")
 
     # 6. landmark + fonts
     if "<main" not in c:
@@ -231,6 +253,18 @@ for path in pages:
         return m.group(0)
 
     c = re.sub(r'<title>([^<]*)</title>', trim_title, c)
+
+    # 6d. repair damage left by earlier one-shot scripts
+    if '<div class="galerie-grid"> </div>' in c:
+        i = c.find('<div class="galerie-grid">')
+        j = c.find('<div style="text-align:center;padding:1rem;font-size:.75rem', i)
+        if i != -1 and j != -1:
+            c = c[:i] + GALLERY + "\n" + c[j:]
+            log(rel, "galerie reconstruite (4 vignettes perdues par un script)")
+    if "</nav>rsaquo;" in c:
+        n = c.count("</nav>rsaquo;")
+        c = c.replace("</nav>rsaquo;", "&rsaquo;")
+        log(rel, f"fil d'Ariane : {n}× '</nav>rsaquo;' -> '&rsaquo;'")
 
     # 7. founding date
     c = re.sub(r'"foundingDate":"\d{4}"', f'"foundingDate":"{FOUNDED}"', c)
@@ -285,3 +319,26 @@ if old != new_sitemap:
     log("sitemap.xml", f"régénéré depuis le disque : {len(entries)} URLs")
 
 print(f"\n{len(report)} changement(s)" if report else "\nAucun changement — site conforme")
+
+# ---------- structural check: fail loudly rather than ship broken markup ----------
+# The guard used to verify presence only, so it happily approved a page whose
+# <main> held four orphan </div> and whose <nav> was closed three times.
+broken = []
+for path in pages:
+    rel = os.path.relpath(path, SITE).replace(os.sep, "/")
+    if rel.split("/")[0] in EXCLUDE_FROM_SITEMAP:
+        continue
+    with open(path, encoding="utf-8") as f:
+        c = f.read()
+    for tag in STRUCTURAL:
+        opened = len(re.findall(rf'<{tag}[\s>]', c))
+        closed = c.count(f"</{tag}>")
+        if opened != closed:
+            broken.append(f"{rel}: <{tag}> ouvert {opened}× fermé {closed}×")
+
+if broken:
+    print(f"\nSTRUCTURE HTML INVALIDE — {len(broken)} anomalie(s) :")
+    for b in broken:
+        print(f"  {b}")
+    sys.exit(1)
+print("Structure HTML équilibrée sur toutes les pages")
