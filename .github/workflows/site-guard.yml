@@ -1,0 +1,45 @@
+name: Site guard (invariants SEO)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/site-guard.yml'
+      - '.github/scripts/site_guard.py'
+  schedule:
+    - cron: '15 8 * * 1'
+  workflow_run:
+    workflows: ["Sync Google Reviews (auto weekly)"]
+    types: [completed]
+
+concurrency:
+  group: pizza-napoli-prod
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone production site
+        env:
+          PAT: ${{ secrets.SATELLITE_DEPLOY_TOKEN }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/carpentraspizzanapoli-design/pizza-napoli.git site
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Enforce invariants
+        run: python3 .github/scripts/site_guard.py site
+      - name: Commit and push (rebase + retry)
+        run: |
+          cd site
+          if git diff --quiet; then echo "Site conforme, rien à pousser"; exit 0; fi
+          git add -A
+          git commit -q -m "Site guard: normalisation automatique (rating, canonicals, sitemap, images)"
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q origin main && git push -q origin main && { echo "Poussé (tentative $i)"; exit 0; }
+            echo "Push rejeté, nouvelle tentative..."; sleep $((i*5))
+          done
+          echo "::error::Push impossible après 5 tentatives"; exit 1
