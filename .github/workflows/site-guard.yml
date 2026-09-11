@@ -30,6 +30,9 @@ jobs:
           cd site
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Install Pillow
+        run: pip install --quiet Pillow   # reads real image dimensions
+
       - name: Enforce invariants
         run: python3 .github/scripts/site_guard.py site
       - name: Commit and push (rebase + retry)
