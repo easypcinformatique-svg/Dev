@@ -17,6 +17,9 @@ import re, os, sys, glob, json, subprocess
 from datetime import date
 from html import unescape
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from serres_page import CORPS as CORPS_SERRES, DESCRIPTION as DESC_SERRES
+
 SITE = sys.argv[1] if len(sys.argv) > 1 else "site"
 HOST = "https://pizzanapolicarpentras.fr"
 FACEBOOK = "https://www.facebook.com/PizzaNapoliCarpentras/"
@@ -368,6 +371,22 @@ for path in pages:
         if not dans_script:
             morceaux[i] = accentuer(bout)
     c = "".join(morceaux)
+
+    # 6i. Serres: the article described Serres (05700) in the Hautes-Alpes,
+    # 150 km outside the delivery zone, while promising delivery there.
+    # The Serres we serve is the hamlet of Carpentras (84200).
+    if rel == "blog/que-faire-serres-ce-soir/index.html" and "Hautes-Alpes" in c:
+        i, j = c.find("<h1>"), c.find('<h2>À lire aussi')
+        if i != -1 and j != -1:
+            fin = c.rfind("</div>", i, j)
+            fin = c.rfind('<div class="cta-box"', i, j)
+            fin = fin if fin != -1 else j
+            c = c[:i] + CORPS_SERRES + c[fin:]
+            c = re.sub(r'(<meta name="description" content=")[^"]*"', rf'\g<1>{DESC_SERRES}"', c)
+            c = re.sub(r'(<meta property="og:description" content=")[^"]*"', rf'\g<1>{DESC_SERRES}"', c)
+            c = c.replace("Serre-Ponçon", "Comtat Venaissin").replace("Hautes-Alpes", "Vaucluse")
+            c = c.replace("05700", "84200")
+            log(rel, "article réécrit sur Serres (84200), hameau de Carpentras")
 
     # 6d. repair damage left by earlier one-shot scripts
     if '<div class="galerie-grid"> </div>' in c:
