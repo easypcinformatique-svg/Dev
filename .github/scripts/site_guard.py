@@ -82,7 +82,7 @@ GA4 = (
     '<script async src="https://www.googletagmanager.com/gtag/js?id=G-T2QW447J8J"></script>')
 
 BANDEAU = '''<div id="consent-banner" role="dialog" aria-live="polite" aria-label="Consentement aux cookies de mesure" style="position:fixed;inset:auto 0 0 0;z-index:9999;background:#3D3328;color:#FFFDF7;padding:1rem 1.2rem;display:none;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:center;font-size:.85rem;line-height:1.5;">
-<p style="margin:0;max-width:42rem;">Nous utilisons une mesure d'audience anonyme pour améliorer le site. Aucun cookie n'est déposé sans votre accord. <a href="/politique-de-confidentialite/" style="color:#C8972A;">En savoir plus</a></p>
+<p style="margin:0;max-width:42rem;color:#FFFDF7;">Nous utilisons une mesure d'audience anonyme pour améliorer le site. Aucun cookie n'est déposé sans votre accord. <a href="/politique-de-confidentialite/" style="color:#C8972A;">En savoir plus</a></p>
 <span style="display:flex;gap:.6rem;">
 <button type="button" id="consent-no" style="padding:.5rem 1.1rem;border:1px solid rgba(255,253,247,.5);background:transparent;color:inherit;border-radius:2px;cursor:pointer;font:inherit;">Refuser</button>
 <button type="button" id="consent-yes" style="padding:.5rem 1.1rem;border:none;background:#C8972A;color:#3D3328;border-radius:2px;cursor:pointer;font:inherit;font-weight:600;">Accepter</button>
@@ -272,6 +272,14 @@ for path in pages:
     c = re.sub(r'\b[1-5]\.\d\s*/\s*5\b(?![\d"])', f'{RATING}/5', c)
     c = re.sub(r'\bnote\s+[1-5][,.]\d\b', f'note {RATING_COMMA}', c)
     c = re.sub(r'\b[1-5][,.]\d★', f'{RATING_COMMA}★', c)
+    # The number and its "/5" can be split by markup: 4,2<span>/5</span>.
+    c = re.sub(r'\b[1-5],\d(?=(?:<[^>]+>)+\s*/\s*5)', RATING_COMMA, c)
+    # Animated counters ship their final value, so a crawler or a reader
+    # without JavaScript sees 526 rather than "0 Avis Google".
+    c = re.sub(r'(data-target="(\d+)"[^>]*>)0(</span>)', r'\1\2\3', c)
+    c = re.sub(r'(id="ratingCounter"[^>]*>)0(<)', rf'\g<1>{RATING_COMMA}\2', c)
+    c = re.sub(r'(id="yearsCounter"[^>]*>)0(<)',
+               rf'\g<1>{date.today().year - int(FOUNDED)}\2', c)
     c = re.sub(r'\b\d{3}\s+avis\b', f'{COUNT} avis', c)
     c = re.sub(r'animCounter\(r,[\d.]+,', f'animCounter(r,{RATING},', c)
     c = re.sub(r'(data-target=")\d+(">0</span><span class="counter-lbl">Avis Google)', rf'\g<1>{COUNT}\2', c)
@@ -508,6 +516,13 @@ for path in pages:
     if "googletagmanager" in c and "consent-banner" not in c and "</body>" in c:
         c = c.replace("</body>", BANDEAU + "\n</body>", 1)
         log(rel, "bandeau de consentement ajouté")
+    # A page-level p{color:...} beats an inherited colour: on one page the
+    # banner text came out at contrast 1.08, unreadable, which is not informed
+    # consent. Pin the colour on the paragraph itself.
+    if 'id="consent-banner"' in c and 'max-width:42rem;color:' not in c:
+        c = c.replace('<p style="margin:0;max-width:42rem;">',
+                      '<p style="margin:0;max-width:42rem;color:#FFFDF7;">')
+        log(rel, "couleur du bandeau forcée sur le paragraphe")
     if "gtag('consent','default'" not in c and "googletagmanager" in c:
         c = re.sub(r"gtag\('js',new Date\(\)\);",
                    "gtag('consent','default',{'analytics_storage':(function(){try{return "
@@ -543,7 +558,17 @@ for path in pages:
     # document: "i+1<n" inside a script reads as a tag opening and a pass like
     # this one shredded the order form's JavaScript.
 
-    # 6m. the <main> target existed but no link ever pointed at it
+    # 6m. the <main> target existed but no link ever pointed at it.
+    # The anchor used to be </nav>, but on the homepage that </nav> sits inside
+    # <div id="header-wrap">, whose </div> follows immediately: the parser closed
+    # <main> straight away and the entire page ended up outside the landmark.
+    # Slide the opening tag past any closing tags that directly follow it.
+    m_ouvre = re.search(r'<main\b[^>]*>((?:\s*</\w+>)+)', c)
+    if m_ouvre:
+        balise = re.match(r'<main\b[^>]*>', m_ouvre.group(0)).group(0)
+        c = c.replace(m_ouvre.group(0), m_ouvre.group(1) + balise, 1)
+        log(rel, "<main> déplacé hors de l'en-tête (landmark vide)")
+
     if "<main" in c and 'id="main-content"' not in c:
         c = re.sub(r'<main(?![^>]*\bid=)', '<main id="main-content"', c, count=1)
     if 'href="#main-content"' not in c and "<body" in c and 'id="main-content"' in c:
@@ -562,6 +587,11 @@ for path in pages:
     # and the first image of a page is its LCP candidate, so it must not wait
     # for lazy loading.
     premiere = [True]
+    lcp_deja_declare = bool(re.search(r'<link[^>]+rel="preload"[^>]+as="image"', c))
+    # An existing high-priority image must not be left behind either.
+    if lcp_deja_declare:
+        c = re.sub(r'(<img[^>]*?) loading="eager" fetchpriority="high"', r'\1 loading="lazy"', c)
+
     def dimensionner(m):
         tag, src = m.group(0), re.search(r'src="([^"]+)"', m.group(0))
         if not src:
@@ -570,9 +600,13 @@ for path in pages:
             taille = mesurer(src.group(1), base_dir)
             if taille:
                 tag = tag[:-1].rstrip() + f' width="{taille[0]}" height="{taille[1]}">'
+        # Only promote the first image when nothing else already claims the
+        # LCP. The homepage preloads a CSS background hero, so promoting an
+        # <img> further down put two files in a priority race.
         if premiere[0]:
             premiere[0] = False
-            tag = tag.replace(' loading="lazy"', ' loading="eager" fetchpriority="high"')
+            if not lcp_deja_declare:
+                tag = tag.replace(' loading="lazy"', ' loading="eager" fetchpriority="high"')
         return tag
 
     avant_img = c
