@@ -244,6 +244,11 @@ def euro(p):
     return f"{int(p)}€" if abs(p - int(p)) < 0.005 else f"{int(p)}€{round((p - int(p)) * 100):02d}"
 
 
+FAVICONS = "\n".join(
+    t for t in re.findall(r'<link[^>]*rel="(?:shortcut )?(?:icon|apple-touch-icon)"[^>]*>', home_html)
+    if (lambda h: h and os.path.exists(os.path.join(SITE, h.group(1).lstrip("/"))))(
+        re.search(r'href="([^"]+)"', t)))
+
 print(f"Source of truth: {RATING}/5 — {COUNT} avis · {len(MENU)} pizzas, dès {euro(MIN_PRICE)}\n")
 
 # ---------- per-page invariants ----------
@@ -538,6 +543,35 @@ for path in pages:
     c = re.sub(r'<img\s[^>]*>', dimensionner, c)
     if c != avant_img:
         log(rel, "dimensions d'images / priorité LCP")
+
+    # 6p2. image names quoted in JavaScript escape the <img> rules above, and
+    # GitHub Pages is case-sensitive: 'orientale.jpg' never matched
+    # Orientale.jpg, so that pizza had no photo in the order form.
+    def caser(m):
+        ref = m.group(2)
+        if exists_local(ref, base_dir) or "/" in ref:
+            return m.group(0)
+        for nom in os.listdir(base_dir or "."):
+            if nom.lower() == ref.lower() and nom != ref:
+                log(rel, f"casse du fichier : {ref} -> {nom}")
+                return m.group(0).replace(ref, nom)
+        return m.group(0)
+
+    c = re.sub(r"(['\"])([\w.\-]+\.(?:jpg|jpeg|png|webp))\1", caser, c)
+
+    # 6p3. favicon: declared on 5 pages of 46, and two of the three files did
+    # not exist. Drop the dead declarations, carry the surviving ones everywhere.
+    def lien_mort(m):
+        href = re.search(r'href="([^"]+)"', m.group(0))
+        if href and not exists_local(href.group(1), SITE):
+            log(rel, f"déclaration d'icône morte retirée : {href.group(1)}")
+            return ""
+        return m.group(0)
+
+    c = re.sub(r'<link[^>]*rel="(?:shortcut )?(?:icon|apple-touch-icon)"[^>]*>', lien_mort, c)
+    if FAVICONS and "rel=\"icon\"" not in c and "</head>" in c:
+        c = c.replace("</head>", FAVICONS + "\n</head>", 1)
+        log(rel, "favicon déclaré")
 
     # 6q. social cards: a share with no image is a share nobody clicks
     if "</head>" in c:
