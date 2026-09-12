@@ -719,6 +719,61 @@ for path in pages:
                 c = c.replace("<footer", bloc + "\n<footer", 1)
             log(rel, f"minimum de commande annoncé ({mini} grandes)")
 
+    # 6u. Sarrians. Four pages told four different stories; the arbiter is the
+    # order form, and getMinPizzasForCity() does not list Sarrians, so an order
+    # there is refused. The pages that promised delivery were the wrong ones.
+    if "Sarrians" in c:
+        c = re.sub(
+            r'<div class="conseil-box">\s*<h3>Pizza Napoli livre à Sarrians[^<]*</h3>\s*<ul>\s*'
+            r'<li><strong>Livraison à Sarrians\s*:</strong>[^<]*</li>',
+            '<div class="conseil-box">\n      <h3>Commander depuis Sarrians</h3>\n      <ul>\n'
+            '        <li><strong>Livraison :</strong> Sarrians n\'est pas dans notre zone de '
+            'livraison. La commande reste possible à emporter.</li>', c)
+        c = c.replace("Que faire à Sarrians ce soir ? Idées + pizza livrée.",
+                      "Que faire à Sarrians ce soir ? Nos idées de sorties.")
+        c = c.replace("Livraison pizza à Sarrians", "Pizza à emporter depuis Sarrians")
+        c = re.sub(r'(communes voisines\s*:[^<.]*?),\s*Sarrians', r'\1', c)
+        if "livre à Sarrians" not in c and "🛵 Sarrians" in c:
+            c = c.replace("🛵 Sarrians", "")
+            log(rel, "Sarrians : mentions de livraison retirées (commune non desservie)")
+
+    # 6v. the order form could only be opened from the homepage, while the 37
+    # other pages are the ones that catch search traffic. They now link to
+    # /#commander, and the homepage opens the form when it sees that hash.
+    if rel == "index.html" and "commanderDepuisHash" not in c:
+        c = c.replace("</body>",
+                      "<script>function commanderDepuisHash(){if(location.hash==='#commander'"
+                      "&&typeof openCommander==='function'){openCommander();}}"
+                      "window.addEventListener('hashchange',commanderDepuisHash);"
+                      "window.addEventListener('load',commanderDepuisHash);</script>\n</body>", 1)
+        log(rel, "ouverture du formulaire par #commander")
+
+    # 6w. the form promises a recap by email while asking for no email address.
+    c = re.sub(r'Un r[ée]capitulatif de votre commande vous sera envoy[ée] par email[^<.]*\.',
+               "Votre commande est transmise à notre équipe, qui vous rappelle pour la confirmer.", c)
+
+    # 6x. the privacy policy said data never reaches a third party, while the
+    # order is sent through WhatsApp — that is a transfer to Meta.
+    if "Meta Platforms Ireland" not in c:
+        c = re.sub(
+            r'(jamais vendues ni transmises[^.]*?)(,\s*sauf obligation l[ée]gale\.)',
+            r'\1\2 Les informations de votre commande (nom, téléphone, adresse de livraison) '
+            r'transitent par WhatsApp — Meta Platforms Ireland Ltd — pour être transmises à notre '
+            r'équipe, et par notre prestataire d’envoi de formulaire.', c)
+
+    # 6v2. Every page other than the homepage gets a link into the order form.
+    # Before 17h30 it opens the online form; after, the homepage shows the
+    # phone modal by itself, so one label has to be true in both cases.
+    if (rel != "index.html" and "commander-inline" not in c
+            and "</main>" in c and "noindex" not in c):
+        cta = ('<p class="commander-inline" style="text-align:center;margin:2rem auto;">'
+               f'<a href="{HOST}/#commander" style="display:inline-block;padding:.9rem 2rem;'
+               'background:#A8202A;color:#FFFDF7;text-decoration:none;border-radius:2px;'
+               'font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;">'
+               '🍕 Commander</a></p>')
+        c = c.replace("</main>", cta + "\n</main>", 1)
+        log(rel, "accès au formulaire de commande ajouté")
+
     # 6d. repair damage left by earlier one-shot scripts
     if '<div class="galerie-grid"> </div>' in c:
         i = c.find('<div class="galerie-grid">')
