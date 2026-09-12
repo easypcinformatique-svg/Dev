@@ -238,6 +238,9 @@ for _n, _p26, _p30 in re.findall(r"name:'([^']+)'.*?p26:([\d.]+|null),p30:([\d.]
     MENU[_n.lower()] = (None if _p26 == "null" else float(_p26),
                         None if _p30 == "null" else float(_p30))
 MIN_PRICE = min(p for p26, p30 in MENU.values() for p in (p26,) if p)
+# Cheapest large, counting only items sold in both sizes: the desserts are
+# large-only and start at 3.50, which is not a pizza price.
+MIN_PRICE_30 = min(p30 for p26, p30 in MENU.values() if p26 and p30)
 
 
 def euro(p):
@@ -268,6 +271,7 @@ for path in pages:
     c = re.sub(r'\b[1-5],\d\s*/\s*5\b', f'{RATING_COMMA}/5', c)
     c = re.sub(r'\b[1-5]\.\d\s*/\s*5\b(?![\d"])', f'{RATING}/5', c)
     c = re.sub(r'\bnote\s+[1-5][,.]\d\b', f'note {RATING_COMMA}', c)
+    c = re.sub(r'\b[1-5][,.]\d★', f'{RATING_COMMA}★', c)
     c = re.sub(r'\b\d{3}\s+avis\b', f'{COUNT} avis', c)
     c = re.sub(r'animCounter\(r,[\d.]+,', f'animCounter(r,{RATING},', c)
     c = re.sub(r'(data-target=")\d+(">0</span><span class="counter-lbl">Avis Google)', rf'\g<1>{COUNT}\2', c)
@@ -386,9 +390,41 @@ for path in pages:
 
     c = re.sub(r'<title>([^<]*)</title>', trim_title, c)
 
-    # 6e. prices quoted in prose must match the menu
-    c = re.sub(r'dès\s*\d+\s*€\s*\d{0,2}', f'dès {euro(MIN_PRICE)}', c)
+    # Pizzas must be named as the menu names them: "Margharita" appeared 18
+    # times against 10 correct spellings, including in a title. This runs
+    # before the price rules because they look prices up by name.
+    c = c.replace("Margharita", "Margherita")
+
+    # 6e. prices quoted in prose must match the menu. The negative lookbehind
+    # matters: an earlier version rewrote "grande dès 12€50" to "dès 7€90" as
+    # well, advertising every large pizza at the small-size price.
+    c = re.sub(r'(?<!petite )(?<!grande )dès\s*\d+\s*€\s*\d{0,2}', f'dès {euro(MIN_PRICE)}', c)
     c = re.sub(r'[Pp]izzas? dès \d+\s*€\s*\d{0,2}', f'Pizzas dès {euro(MIN_PRICE)}', c)
+
+    # Price badges on the "best pizzas" list, derived from the menu by name.
+    noms = re.findall(r'class="pizza-name"[^>]*>([^<]+)<', c)
+    if noms and 'class="pizza-price-badge"' in c:
+        file_noms = iter(noms)
+
+        def badge(m):
+            nom = next(file_noms, "")
+            cle = re.sub(r"^(La|Le|Les|L')\s*", "", nom.strip(), flags=re.I).lower()
+            p26, p30 = MENU.get(cle, (None, None))
+            if p30 is None:
+                return m.group(0)
+            neuf = (f'petite dès {euro(p26)}<br>grande dès {euro(p30)}' if p26
+                    else f'grande dès {euro(p30)}')
+            if neuf != m.group(1):
+                log(rel, f"prix {nom} : {re.sub('<br>', ' / ', m.group(1))} -> {neuf.replace('<br>', ' / ')}")
+            return m.group(0).replace(m.group(1), neuf)
+
+        c = re.sub(r'class="pizza-price-badge"[^>]*>(.*?)</div>', badge, c, flags=re.DOTALL)
+
+    # Prose that quotes a starting price for both sizes, markup included.
+    c = re.sub(r'démarrent à\s*(<strong>)?\d+\s*€\s*\d{0,2}(</strong>)?\s*en petite et\s*'
+               r'(<strong>)?\d+\s*€\s*\d{0,2}(</strong>)?\s*en grande',
+               f'démarrent à <strong>{euro(MIN_PRICE)}</strong> en petite et '
+               f'<strong>{euro(MIN_PRICE_30)}</strong> en grande', c)
 
     def fix_card(m):
         nom, prix = m.group(1), m.group(2)
