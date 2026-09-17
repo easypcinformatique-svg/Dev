@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://judocadeneaux-ojm.fr/sitemap.xml
+Sitemap: https://jccadeneaux-ojm.fr/sitemap.xml

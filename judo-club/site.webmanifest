@@ -8,6 +8,7 @@
   "theme_color": "#0b1220",
   "lang": "fr-FR",
   "icons": [
+    { "src": "/images/logo.png", "sizes": "196x196", "type": "image/png", "purpose": "any" },
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

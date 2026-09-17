@@ -11,7 +11,7 @@
     var $ = function (sel, root) { return (root || document).querySelector(sel); };
     var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
     var DAYS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-    var CLUB_EMAIL = 'contact@judocadeneaux-ojm.fr';
+    var CLUB_EMAIL = 'contact@judoclubcadeneaux.fr';
 
     /* ---------- 1. Header, bouton retour en haut, barre mobile ---------- */
     var header = $('#header');
@@ -193,14 +193,16 @@
     // Categories d'age de France Judo : l'age est calcule sur l'annee civile de la saison.
     var CATEGORIES = [
         { max: 3, name: null },
-        { max: 5, name: 'Éveil judo', group: 'eveil', label: 'Éveil judo (4-5 ans)' },
-        { max: 7, name: 'Mini-poussin', group: 'jeunes', label: 'Judo éducatif jeunes' },
-        { max: 9, name: 'Poussin', group: 'jeunes', label: 'Judo éducatif jeunes' },
-        { max: 11, name: 'Benjamin', group: 'jeunes', label: 'Judo éducatif jeunes' },
-        { max: 13, name: 'Minime', group: 'jeunes', label: 'Judo éducatif jeunes' },
-        { max: 16, name: 'Cadet', group: 'competition', label: 'Judo compétition & adultes' },
-        { max: 19, name: 'Junior', group: 'competition', label: 'Judo compétition & adultes' },
-        { max: 999, name: 'Senior', group: 'competition', label: 'Judo compétition & adultes' }
+        { max: 5, name: 'Éveil judo', groups: ['baby'], label: 'Baby judo (4-5 ans)' },
+        { max: 7, name: 'Mini-poussin', groups: ['enfants'], label: 'Section enfants (6-8 ans)' },
+        { max: 8, name: 'Poussin', groups: ['enfants'], label: 'Section enfants (6-8 ans)' },
+        { max: 9, name: 'Poussin', groups: ['ados'], label: 'Section ados (9-13 ans)' },
+        { max: 10, name: 'Benjamin', groups: ['ados'], label: 'Section ados (9-13 ans)' },
+        { max: 11, name: 'Benjamin', groups: ['ados', 'adultes'], label: 'Section ados (9-13 ans), avec accès au créneau du soir' },
+        { max: 13, name: 'Minime', groups: ['ados', 'adultes'], label: 'Section ados (9-13 ans), avec accès au créneau du soir' },
+        { max: 16, name: 'Cadet', groups: ['adultes', 'perf'], label: 'Juniors & seniors, techniques & katas' },
+        { max: 19, name: 'Junior', groups: ['adultes', 'perf', 'self'], label: 'Juniors & seniors, techniques & katas, self-défense' },
+        { max: 999, name: 'Senior', groups: ['adultes', 'perf', 'self'], label: 'Juniors & seniors, techniques & katas, self-défense' }
     ];
 
     function seasonYear() {
@@ -236,15 +238,17 @@
             if (!cat.name) {
                 finderResult.innerHTML =
                     '<p class="cat">Encore un peu de patience</p>' +
-                    '<h3>L\'éveil judo commence à 4 ans</h3>' +
+                    '<h3>Le baby judo commence à 4 ans</h3>' +
                     '<p>Le judoka aura ' + age + ' an' + (age > 1 ? 's' : '') + ' sur la saison. Revenez nous voir dès ses 4 ans, la place l\'attend.</p>';
                 finderResult.hidden = false;
                 return;
             }
 
-            var lines = slots.filter(function (s) { return s.filter === cat.group; }).map(function (s) {
-                return '<li>' + DAYS[s.day] + ' ' + fmt(s.start) + ' → ' + fmt(s.end) + '</li>';
-            });
+            var lines = slots.filter(function (s) { return cat.groups.indexOf(s.filter) !== -1; })
+                .sort(function (a, b) { return a.day - b.day || toMinutes(a.start) - toMinutes(b.start); })
+                .map(function (s) {
+                    return '<li>' + DAYS[s.day] + ' ' + fmt(s.start) + ' → ' + fmt(s.end) + ' · ' + s.name + '</li>';
+                });
 
             finderResult.innerHTML =
                 '<p class="cat">Catégorie ' + escapeHtml(cat.name) + ' · ' + age + ' ans sur la saison</p>' +

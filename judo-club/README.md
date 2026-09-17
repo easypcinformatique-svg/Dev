@@ -20,6 +20,7 @@ Fédération Française de Judo (adresse, disciplines, horaires).
 | `css/style.css` | Feuille unique : design tokens, composants, responsive, impression, `prefers-reduced-motion` |
 | `js/main.js` | Menu mobile, scrollspy, prochain cours, jour courant, filtres, sélecteur de groupe, lightbox, formulaire |
 | `images/picto/*.svg` | Pictogrammes de l'identité visuelle (style olympique) |
+| `images/*.jpg`, `images/logo.png` | Logo et photos repris du site actuel du club (Google Sites) : hero, Raoul Laï, Nicolas Biodore, Yves, dojo, championnat FSGT 2026, article de presse |
 | `images/og-image.svg` | Image de partage réseaux sociaux (1200 × 630) |
 | `favicon.svg`, `site.webmanifest`, `robots.txt`, `sitemap.xml` | Fichiers techniques |
 | `_headers` | En-têtes de sécurité et cache pour Netlify / Cloudflare Pages |
@@ -41,20 +42,21 @@ python3 -m http.server 8080   # puis http://localhost:8080
 
 Ces valeurs sont des **placeholders** ; le contenu factuel du club doit les remplacer.
 
-1. **Domaine** — remplacer `judocadeneaux-ojm.fr` partout (`index.html`, pages
+1. **Domaine** — remplacer `jccadeneaux-ojm.fr` partout (`index.html`, pages
    annexes, `robots.txt`, `sitemap.xml`, `site.webmanifest`).
-2. **Téléphone** — `06 XX XX XX XX` et `+33600000000` (`index.html` : bloc
-   contact, barre mobile, JSON-LD).
-3. **E-mail** — `contact@judocadeneaux-ojm.fr` (`index.html`, `js/main.js`
-   constante `CLUB_EMAIL`, pages légales).
+2. **Téléphone** — 06 63 67 12 83 et 06 61 14 14 61, repris du site actuel
+   du club (bloc contact, barre mobile, JSON-LD).
+3. **E-mail** — `contact@judoclubcadeneaux.fr`, repris du site actuel
+   (`index.html`, `js/main.js` constante `CLUB_EMAIL`, pages légales).
 4. **Tarifs** — 180 / 230 / 250 € sont des exemples, repérables par
    l'attribut `data-price`. Les remises et aides listées sont à confirmer.
-5. **Horaires** — repris des annuaires fédéraux : éveil mardi 17h-18h ; judo
-   éducatif lundi, mercredi, vendredi 17h30-19h ; compétition/adultes 19h-21h.
-   Modifier uniquement les `<li class="slot">` du planning : le prochain cours,
-   le jour courant et le sélecteur de groupe se recalculent à partir de là.
-6. **Ju-jitsu** — la fiche fédérale mentionne la discipline sans créneau
-   dédié : préciser le créneau réel ou retirer la carte.
+5. **Horaires** — repris du planning officiel du club (saison 2026/2027) :
+   baby judo mercredi 17h30 ; enfants mardi et vendredi 18h ; ados lundi et
+   jeudi 18h ; juniors/seniors lundi et jeudi 19h30 ; techniques et katas
+   mercredi et vendredi 19h30 ; self-défense mardi 20h. Modifier uniquement les
+   `<li class="slot">` du planning : le prochain cours, le jour courant et le
+   sélecteur de groupe se recalculent à partir de là.
+6. **Gym seniors** — la carte existe sans horaire : préciser le créneau.
 7. **Le sensei** — la section présente Raoul Laï, 6e dan (fait public, cité
    parmi les grands champions historiques du judo provençal). Les lignes
    « Titres » et « Parcours » du bloc `.palmares` sont à compléter avec le
