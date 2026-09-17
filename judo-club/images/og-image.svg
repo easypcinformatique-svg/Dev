@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Judo Club Cadeneaux OJM">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#16253f"/></linearGradient>
+    <radialGradient id="sun" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#e6304f"/><stop offset=".55" stop-color="#c8102e"/><stop offset="1" stop-color="#8e0b21"/></radialGradient>
+    <pattern id="grid" width="90" height="90" patternUnits="userSpaceOnUse"><path d="M0 0H90M0 0V90" stroke="rgba(255,255,255,.07)" fill="none"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <circle cx="930" cy="300" r="210" fill="url(#sun)"/>
+  <g transform="translate(790 160) scale(1.17)">
+    <g fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="78" cy="112" r="15" fill="#ffffff" stroke="none"/>
+      <path d="M90 126 L118 160"/><path d="M118 160 L94 208"/><path d="M118 160 L150 206"/><path d="M96 134 L146 100"/>
+      <path d="M146 100 C176 86 204 104 206 134"/><circle cx="212" cy="156" r="15" fill="#ffffff" stroke="none"/>
+      <path d="M150 98 L128 46"/><path d="M150 98 L182 40"/><path d="M200 124 L172 176"/>
+    </g>
+  </g>
+  <rect x="640" y="470" width="580" height="30" fill="#ffffff" transform="rotate(-6 930 485)"/>
+  <text x="80" y="200" font-family="Arial Narrow, Arial, sans-serif" font-weight="bold" font-size="96" fill="#ffffff" letter-spacing="1">JUDO CLUB</text>
+  <text x="80" y="300" font-family="Arial Narrow, Arial, sans-serif" font-weight="bold" font-size="96" fill="#ffffff" letter-spacing="1">CADENEAUX</text>
+  <text x="80" y="360" font-family="Arial, sans-serif" font-size="26" fill="#d9a441" letter-spacing="6">OLYMPIC JUDO MÉDITERRANÉE</text>
+  <text x="80" y="450" font-family="Arial, sans-serif" font-size="30" fill="rgba(255,255,255,.85)">Judo &amp; ju-jitsu dès 4 ans · Les Pennes-Mirabeau</text>
+  <text x="80" y="500" font-family="Arial, sans-serif" font-size="26" fill="rgba(255,255,255,.6)">Complexe sportif des Bouroumettes · Premier cours offert</text>
+</svg>
