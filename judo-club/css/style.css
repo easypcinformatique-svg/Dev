@@ -1762,3 +1762,5 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
     .nav-link[href="#inscription"] { display: none; }
     .brand-sub { display: none; }
 }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
