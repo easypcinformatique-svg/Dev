@@ -1825,3 +1825,6 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
     .staff__card { grid-template-columns: 170px 1fr; }
     .staff__photo { min-height: 240px; }
 }
+
+.info-card__cta { margin-top: var(--space-6); }
+.sticky-cta .btn--icon { flex: 0 0 auto; padding: .85rem .95rem; }
