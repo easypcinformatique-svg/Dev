@@ -761,6 +761,23 @@ for path in pages:
             r'transitent par WhatsApp — Meta Platforms Ireland Ltd — pour être transmises à notre '
             r'équipe, et par notre prestataire d’envoi de formulaire.', c)
 
+    # 6y. Order notifications were landing in Gmail's spam folder. Web3Forms
+    # always sends from its own domain — there is no way to align SPF/DKIM with
+    # ours — so the mail cannot be made to look like it comes from us. What we
+    # can do is give the message a stable, ASCII, unambiguous identity: a fixed
+    # subject prefix the inbox can filter on without depending on the sender
+    # address, a sender name instead of the default "Notifications", and a
+    # reply-to that points back at the pizzeria.
+    if "api.web3forms.com/submit" in c:
+        avant = c
+        c = re.sub(r"subject:\s*'[^']*'\s*\+\s*fullNom",
+                   "subject:'COMMANDE SITE - '+fullNom", c)
+        c = re.sub(r"(access_key:\s*'[0-9a-f-]+',)(?!\s*from_name)",
+                   r"\1\nfrom_name:'Commandes Pizza Napoli',\n"
+                   f"replyto:'{EMAIL}',", c)
+        if c != avant:
+            log(rel, "notification de commande : objet filtrable, expéditeur nommé")
+
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
     # phone modal by itself, so one label has to be true in both cases.
