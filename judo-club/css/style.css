@@ -1922,9 +1922,31 @@ body { padding-bottom: 0; }
         gap: var(--space-2);
         box-shadow: 0 -8px 24px rgba(11, 18, 32, .08);
     }
-    .fab { flex: 1; padding: .85rem .5rem; font-size: .85rem; }
-    body { padding-bottom: 72px; }
-    .to-top { bottom: 84px; }
+    /* quatre actions : barre d'onglets, icone au-dessus du libelle */
+    .fab {
+        flex: 1;
+        flex-direction: column;
+        gap: .3rem;
+        padding: .6rem .25rem;
+        font-size: .72rem;
+        letter-spacing: -.01em;
+        border-radius: var(--radius);
+        min-width: 0;
+    }
+    .fab svg { width: 22px; height: 22px; }
+    .fab span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    /* la place reservee a la barre est prise sur le footer, dont le fond est
+       sombre : sinon une bande blanche apparait sous le pied de page, la ou la
+       barre se masque (a l'approche du formulaire de contact). */
+    body { padding-bottom: 0; }
+    .footer { padding-bottom: calc(var(--space-8) + 84px); }
+    .to-top { bottom: 96px; }
+}
+
+/* ecrans les plus etroits : le libelle le plus long doit rester lisible */
+@media (max-width: 360px) {
+    .sticky-cta { padding-inline: var(--space-2); gap: 4px; }
+    .fab { font-size: .68rem; padding: .6rem .15rem; }
 }
 
 /* ---------- Cartes de cours : photos réelles ---------- */
