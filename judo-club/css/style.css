@@ -1887,3 +1887,7 @@ body { padding-bottom: 0; }
     pointer-events: none;
 }
 .discipline__media--photo .discipline__age { z-index: 2; }
+.section-note { margin: var(--space-8) 0 0; text-align: center; font-size: .82rem; color: var(--text-muted); }
+
+/* Titres de cartes de cours : eviter le debordement sur les titres longs */
+.discipline h3 { hyphens: auto; overflow-wrap: anywhere; font-size: clamp(1.15rem, 1.5vw, 1.45rem); }
