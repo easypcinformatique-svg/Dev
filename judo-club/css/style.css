@@ -1872,3 +1872,18 @@ body { padding-bottom: 0; }
     body { padding-bottom: 72px; }
     .to-top { bottom: 84px; }
 }
+
+/* ---------- Cartes de cours : photos réelles ---------- */
+.discipline__media--photo { background: var(--navy-900); }
+.discipline__media--photo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: none;
+}
+.discipline__media--photo::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(11, 18, 32, .28) 0 38%, transparent 60%);
+    pointer-events: none;
+}
+.discipline__media--photo .discipline__age { z-index: 2; }
