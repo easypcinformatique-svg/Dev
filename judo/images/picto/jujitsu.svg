@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="presentation">
+<g fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+
+  <!-- garde de self-defense -->
+  <circle cx="98" cy="66" r="16" fill="#ffffff" stroke="none"/>
+  <path d="M104 86 L112 146"/>
+  <path d="M112 146 L78 198"/>
+  <path d="M112 146 L154 186"/>
+  <path d="M108 100 L160 78 L196 96"/>
+  <path d="M108 104 L74 128 L110 138"/>
+
+</g></svg>
