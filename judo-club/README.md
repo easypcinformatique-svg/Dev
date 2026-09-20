@@ -21,16 +21,31 @@ Fédération Française de Judo (adresse, disciplines, horaires).
 | `js/main.js` | Menu mobile, scrollspy, prochain cours, jour courant, filtres, sélecteur de groupe, lightbox, formulaire |
 | `images/picto/*.svg` | Pictogrammes de l'identité visuelle (style olympique) |
 | `images/*.jpg`, `images/logo.png` | Logo et photos repris du site actuel du club (Google Sites) : hero, Raoul Laï, Nicolas Biodore, Yves, dojo, championnat FSGT 2026, article de presse |
-| `images/og-image.svg` | Image de partage réseaux sociaux (1200 × 630) |
+| `images/og-image.jpg` | Image de partage réseaux sociaux (1200 × 630, JPEG — Facebook et WhatsApp ne savent pas afficher un SVG) |
 | `favicon.svg`, `site.webmanifest`, `robots.txt`, `sitemap.xml` | Fichiers techniques |
 | `_headers` | En-têtes de sécurité et cache pour Netlify / Cloudflare Pages |
 | `.htaccess` | Équivalent Apache (OVH, o2switch, Infomaniak) : HTTPS forcé, cache, 404 |
+| `CNAME` | Domaine servi par GitHub Pages : `jccadeneaux-ojm.fr` |
+| `.nojekyll` | Désactive Jekyll sur GitHub Pages (sinon les fichiers commençant par `_` sont ignorés) |
+| `DEPLOIEMENT.md` | Procédure complète de mise en ligne : dépôt, Pages, DNS, HTTPS |
 
 ## Mise en ligne
 
-Aucune compilation. Déposer le dossier à la racine de l'hébergement.
-Un seul des deux fichiers `_headers` / `.htaccess` sert selon l'hébergeur ;
-l'autre est ignoré sans effet.
+Aucune compilation : le dossier se dépose tel quel à la racine d'un hébergement.
+
+La cible retenue est **GitHub Pages sur le domaine `jccadeneaux-ojm.fr`**, via un
+dépôt dédié `easypcinformatique-svg/jccadeneaux-ojm` (celui de `Dev` héberge déjà
+un autre site Pages, et un dépôt ne peut en servir qu'un).
+→ **[`DEPLOIEMENT.md`](DEPLOIEMENT.md)** détaille chaque étape : création du
+dépôt, activation de Pages, enregistrements DNS, HTTPS, retour arrière.
+
+`Dev` reste la source de vérité : `.github/workflows/deploy-judo-club.yml`
+republie `judo-club/` à chaque push sur `master`.
+
+Sur un hébergement classique, un seul des deux fichiers `_headers` / `.htaccess`
+sert selon l'hébergeur, l'autre est ignoré sans effet. **GitHub Pages ignore les
+deux** : les en-têtes de sécurité qu'ils déclarent n'y sont pas appliqués
+(cf. « Limites connues » dans `DEPLOIEMENT.md`).
 
 Test en local :
 
