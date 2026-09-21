@@ -173,9 +173,10 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <div class="stats-inner">
       <div class="stat"><span class="stat-n" id="s-total">—</span> structures</div>
       <div class="stat"><span class="stat-n" id="s-pres">—</span> présidents renseignés</div>
+      <div class="stat"><span class="stat-n" id="s-mails">—</span> courriels</div>
       <div class="stat"><span class="stat-n" id="s-tel">—</span> téléphones</div>
       <div class="stat"><span class="stat-n" id="s-shown">—</span> affichées</div>
-      <div class="stat" id="version-stat">v.2026.09.21-13h24</div>
+      <div class="stat" id="version-stat">v.2026.09.21-14h15</div>
     </div>
   </div>
 </header>
@@ -240,6 +241,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
           <th>Adresse</th>
           <th onclick="setSort('ca')">Chiffre d'affaires <span class="arr" id="arr-ca"></span></th>
           <th>Téléphone</th>
+          <th onclick="setSort('email')">Courriel <span class="arr" id="arr-email"></span></th>
           <th>Site web</th>
         </tr>
       </thead>
@@ -253,7 +255,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <footer>
   <div class="footer">
     <span>Sources : annuaire des Epl (export 23/02/2026) &bull; API Annuaire des Entreprises &bull; <span class="footer-warn">Non contractuel</span></span>
-    <span>110 structures &bull; v.2026.09.21-13h24 &bull; &copy; <span id="yr"></span></span>
+    <span>110 structures &bull; v.2026.09.21-14h15 &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
 
@@ -449,7 +451,7 @@ function render(){
   const rows=getFiltered();
   const tbody=document.getElementById('tbody');
   if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="empty-ico">🔎</div><p>Aucune structure ne correspond à cette recherche.</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="11"><div class="empty"><div class="empty-ico">🔎</div><p>Aucune structure ne correspond à cette recherche.</p></div></td></tr>';
   } else {
     tbody.innerHTML=rows.map((d,i)=>{
       const ville=[d.cp,d.ville].filter(Boolean).join(' ');
@@ -469,12 +471,14 @@ function render(){
       <td><span class="adresse">${esc(adresse)}</span></td>
       <td class="pop">${euro(d.ca)}</td>
       <td class="tel">${d.tel?`<a href="tel:${d.tel.replace(/\s/g,'')}" style="color:inherit;text-decoration:none">${esc(d.tel)}</a>`:''}</td>
+      <td>${d.email?`<a class="web-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`:'<span class="web-na">Non renseigné</span>'}</td>
       <td>${d.web?`<a class="web-link" href="https://${esc(d.web)}" target="_blank" rel="noopener">${esc(d.web)}</a>`:'<span class="web-na">Non disponible</span>'}</td>
     </tr>`;}).join('');
   }
   document.getElementById('s-total').textContent=fmt(DATA.length);
   document.getElementById('s-shown').textContent=fmt(rows.length);
   document.getElementById('s-pres').textContent=fmt(DATA.filter(d=>d.president).length);
+  document.getElementById('s-mails').textContent=fmt(DATA.filter(d=>d.email).length);
   document.getElementById('s-tel').textContent=fmt(DATA.filter(d=>d.tel).length);
   document.getElementById('count-label').textContent=rows.length===DATA.length
     ?`${fmt(DATA.length)} structures`
@@ -619,7 +623,7 @@ function exportSheets(){
       [''],
       ['Source','Annuaire des Epl — export du 23/02/2026'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
-      ['Version', 'v.2026.09.21-13h24'],
+      ['Version', 'v.2026.09.21-14h15'],
       ['Date export', new Date().toLocaleDateString('fr-FR')],
       ['Structures', rows.length],
       ['Présidents renseignés', rows.filter(d=>d.president).length],
@@ -659,14 +663,14 @@ function exportPDF(){
 
     doc.autoTable({
       startY:23,
-      head:[['#','Structure','Régime','Secteur','Département','Président','Ville','CA','Téléphone']],
+      head:[['#','Structure','Régime','Secteur','Département','Président','Ville','Téléphone','Courriel']],
       body:rows.map((d,i)=>[i+1,d.nom,d.regime,d.secteur,d.dept,d.president||'—',
-                            [d.cp,d.ville].filter(Boolean).join(' '),euro(d.ca)||'—',d.tel||'—']),
+                            [d.cp,d.ville].filter(Boolean).join(' '),d.tel||'—',d.email||'—']),
       styles:{fontSize:6.5,cellPadding:1.4,overflow:'linebreak'},
       headStyles:{fillColor:[0,56,184],textColor:255,fontSize:6.5},
       alternateRowStyles:{fillColor:[250,251,253]},
-      columnStyles:{0:{cellWidth:8},1:{cellWidth:58},2:{cellWidth:14},3:{cellWidth:38},
-                    4:{cellWidth:30},5:{cellWidth:36},6:{cellWidth:32},7:{cellWidth:20},8:{cellWidth:24}},
+      columnStyles:{0:{cellWidth:8},1:{cellWidth:52},2:{cellWidth:14},3:{cellWidth:34},
+                    4:{cellWidth:28},5:{cellWidth:32},6:{cellWidth:28},7:{cellWidth:22},8:{cellWidth:44}},
       margin:{left:10,right:10}
     });
 
