@@ -25,6 +25,12 @@ try:
 except ImportError:
     sys.exit("openpyxl requis : pip install openpyxl")
 
+REGION = "Provence-Alpes-Côte d'Azur"
+# Codes postaux → départements de PACA. L'export ne porte que le nom du
+# département ; le code sert au filtre de la page.
+DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes",
+         "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse"}
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 EXPORT = ROOT / "Export_Annuaire_23022026.xlsx"
 TEMPLATE = pathlib.Path(__file__).resolve().parent / "template_sem_spl.html"
@@ -33,7 +39,7 @@ OUTPUT = ROOT / "annuaire-sem-spl-syndicats.html"
 # Ordre imposé par les regex du workflow de mise à jour (cf. docstring).
 KEY_ORDER = [
     "nom", "sigle", "regime", "secteur", "activite",
-    "adresse", "cp", "ville", "dept", "region",
+    "adresse", "cp", "ville", "dept", "depcode", "region",
     "tel", "email", "web", "capital", "ca", "effectif",
     "president", "siren",
 ]
@@ -69,6 +75,17 @@ def website(value):
     return url if "." in url else ""
 
 
+def depcode(cp, nom_dept):
+    """Code du département, déduit du code postal, recoupé par son nom."""
+    code = re.sub(r"\D", "", str(cp or ""))[:2]
+    if code in DEPTS and DEPTS[code] == clean(nom_dept):
+        return code
+    for c, n in DEPTS.items():          # code postal absent ou incohérent
+        if n == clean(nom_dept):
+            return c
+    return ""
+
+
 def address(row):
     parts = [clean(row[i]) for i in (13, 14, 15)]
     return ", ".join(p for p in parts if p)
@@ -79,7 +96,7 @@ def read_rows():
     sheet = workbook["Données YellowBox"]
     rows = sheet.iter_rows(values_only=True)
     next(rows)  # en-têtes
-    return [r for r in rows if clean(r[3])]
+    return [r for r in rows if clean(r[3]) and clean(r[19]) == REGION]
 
 
 def build_entry(row):
@@ -94,6 +111,7 @@ def build_entry(row):
         "cp": clean(row[16]),
         "ville": clean(row[17]).title(),
         "dept": clean(row[18]),
+        "depcode": depcode(row[16], row[18]),
         "region": clean(row[19]),
         "tel": phone(row[20]),
         "email": "",          # rempli par le workflow hebdomadaire
@@ -116,10 +134,10 @@ def render_entry(entry):
 
 def main():
     entries = [build_entry(row) for row in read_rows()]
-    entries.sort(key=lambda e: (e["region"], e["nom"]))
+    entries.sort(key=lambda e: (e["depcode"], e["nom"]))
 
     data_block = "let DATA = [\n" + ",\n".join(render_entry(e) for e in entries) + "\n];"
-    regions = sorted({e["region"] for e in entries if e["region"]})
+    depts = sorted({e["depcode"] for e in entries if e["depcode"]})
     secteurs = sorted({e["secteur"] for e in entries if e["secteur"]})
     regimes = sorted({e["regime"] for e in entries if e["regime"]})
     now = datetime.datetime.now()
@@ -127,7 +145,7 @@ def main():
     html = TEMPLATE.read_text(encoding="utf-8")
     for placeholder, value in {
         "__DATA__": data_block,
-        "__REGIONS__": json.dumps(regions, ensure_ascii=False),
+        "__DEPTS__": json.dumps({c: DEPTS[c] for c in depts}, ensure_ascii=False),
         "__SECTEURS__": json.dumps(secteurs, ensure_ascii=False),
         "__REGIMES__": json.dumps(regimes, ensure_ascii=False),
         "__COUNT__": str(len(entries)),
@@ -144,8 +162,14 @@ def main():
     OUTPUT.write_text(html, encoding="utf-8")
     with_siren = sum(1 for e in entries if e["siren"])
     with_tel = sum(1 for e in entries if e["tel"])
-    print(f"✅ {OUTPUT.name} — {len(entries)} structures "
+    sans_dept = [e["nom"] for e in entries if not e["depcode"]]
+    print(f"✅ {OUTPUT.name} — {len(entries)} structures en {REGION} "
           f"({with_siren} avec SIREN, {with_tel} avec téléphone)")
+    for code in sorted(DEPTS):
+        n = sum(1 for e in entries if e["depcode"] == code)
+        print(f"   {code} {DEPTS[code]:<26} {n:>3}")
+    if sans_dept:
+        print(f"   ⚠ sans département : {', '.join(sans_dept)}")
 
 
 if __name__ == "__main__":

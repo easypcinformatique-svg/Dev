@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Annuaire des Entreprises Publiques Locales – Sem, Spl, SemOp, Spla</title>
-<meta name="description" content="Annuaire des entreprises publiques locales françaises : sociétés d'économie mixte, sociétés publiques locales et sociétés publiques locales d'aménagement. Recherche, filtres et export CSV, Excel et PDF.">
+<title>Annuaire des Entreprises Publiques Locales de PACA – Sem, Spl, SemOp, Spla</title>
+<meta name="description" content="Annuaire des entreprises publiques locales de Provence-Alpes-Côte d'Azur : sociétés d'économie mixte, sociétés publiques locales et sociétés publiques locales d'aménagement, par département. Recherche, filtres et export CSV, Excel et PDF.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -158,8 +158,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="header-inner">
     <div class="emblem">🏙️</div>
     <div class="header-text">
-      <div class="header-title">Annuaire des Entreprises Publiques Locales</div>
-      <div class="header-sub">Sem &middot; Spl &middot; SemOp &middot; Spla &middot; France et Outre-mer</div>
+      <div class="header-title">Annuaire des Entreprises Publiques Locales de PACA</div>
+      <div class="header-sub">Sem &middot; Spl &middot; SemOp &middot; Spla &middot; Provence-Alpes-C&ocirc;te d'Azur</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -197,8 +197,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <select id="secteur-filter" name="secteur-filter" onchange="render()" aria-label="Filtrer par secteur">
       <option value="">Tous les secteurs</option>
     </select>
-    <select id="region-filter" name="region-filter" onchange="render()" aria-label="Filtrer par région">
-      <option value="">Toutes les régions</option>
+    <select id="dept-filter" name="dept-filter" onchange="render()" aria-label="Filtrer par département">
+      <option value="">Toute la région PACA</option>
     </select>
     <button class="btn btn-primary" onclick="exportCSV()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -229,7 +229,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
           <th onclick="setSort('nom')">Structure <span class="arr" id="arr-nom">↑</span></th>
           <th onclick="setSort('regime')">Régime <span class="arr" id="arr-regime"></span></th>
           <th onclick="setSort('secteur')">Secteur <span class="arr" id="arr-secteur"></span></th>
-          <th onclick="setSort('region')">Région <span class="arr" id="arr-region"></span></th>
+          <th onclick="setSort('depcode')">Département <span class="arr" id="arr-depcode"></span></th>
           <th onclick="setSort('president')">Président <span class="arr" id="arr-president"></span></th>
           <th>Adresse</th>
           <th onclick="setSort('ca')">Chiffre d'affaires <span class="arr" id="arr-ca"></span></th>
@@ -261,12 +261,12 @@ document.getElementById('yr').textContent = new Date().getFullYear();
    ══════════════════════════════════════════ */
 __DATA__
 
-const REGIONS  = __REGIONS__;
+const DEPTS    = __DEPTS__;              /* code -> nom, départements présents */
 const SECTEURS = __SECTEURS__;
 const REGIMES  = __REGIMES__;
 
-const REGIONS_COLOR = {};
-REGIONS.forEach((r,i)=>{REGIONS_COLOR[r]=i%19});
+const DEPT_COULEUR = {};
+Object.keys(DEPTS).sort().forEach((c,i)=>{DEPT_COULEUR[c]=i%19});
 
 const REGIME_CLASS = {'Sem':'g-sem','Spl':'g-spl','SemOp':'g-semop','Spla':'g-spla','Spla-in':'g-splain'};
 
@@ -277,7 +277,11 @@ function fillSelect(id, values){
   const sel=document.getElementById(id);
   values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
 }
-fillSelect('region-filter', REGIONS);
+Object.keys(DEPTS).sort().forEach(c=>{
+  const o=document.createElement('option');
+  o.value=c; o.textContent=`${c} — ${DEPTS[c]}`;
+  document.getElementById('dept-filter').appendChild(o);
+});
 fillSelect('secteur-filter', SECTEURS);
 fillSelect('regime-filter', REGIMES);
 
@@ -303,15 +307,15 @@ function setSort(field){
 /* ══ FILTER + SORT ══ */
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase().trim();
-  const reg=document.getElementById('region-filter').value;
+  const dep=document.getElementById('dept-filter').value;
   const sec=document.getElementById('secteur-filter').value;
   const jur=document.getElementById('regime-filter').value;
   const rows=DATA.filter(d=>{
-    if(reg&&d.region!==reg)return false;
+    if(dep&&d.depcode!==dep)return false;
     if(sec&&d.secteur!==sec)return false;
     if(jur&&d.regime!==jur)return false;
     if(!q)return true;
-    return [d.nom,d.sigle,d.president,d.ville,d.dept,d.region,d.secteur,d.activite,d.siren,d.adresse,d.web]
+    return [d.nom,d.sigle,d.president,d.ville,d.dept,d.depcode,d.secteur,d.activite,d.siren,d.adresse,d.web]
       .some(v=>String(v||'').toLowerCase().includes(q));
   });
   rows.sort((a,b)=>{
@@ -343,7 +347,7 @@ function render(){
       </td>
       <td><span class="gbadge ${REGIME_CLASS[d.regime]||'g-autre'}">${esc(d.regime)}</span></td>
       <td>${esc(d.secteur)}${d.activite?`<span class="activite">${esc(d.activite)}</span>`:''}</td>
-      <td><span class="rbadge r${REGIONS_COLOR[d.region]||0}">${esc(d.region)}</span><br><span class="dept-tag">${esc(d.dept)}</span></td>
+      <td><span class="rbadge r${DEPT_COULEUR[d.depcode]||0}">${esc(d.dept)}</span><br><span class="dept-tag">${esc(d.depcode)}</span></td>
       <td>${d.president?`<span class="pres-name">${esc(d.president)}</span>`:'<span class="pres-empty">À compléter</span>'}</td>
       <td><span class="adresse">${esc(adresse)}</span></td>
       <td class="pop">${euro(d.ca)}</td>
@@ -361,7 +365,7 @@ function render(){
 }
 
 function resetFilters(){
-  ['search','region-filter','secteur-filter','regime-filter'].forEach(id=>document.getElementById(id).value='');
+  ['search','dept-filter','secteur-filter','regime-filter'].forEach(id=>document.getElementById(id).value='');
   sortField='nom';sortDir='asc';
   document.querySelectorAll('.arr').forEach(el=>el.textContent='');
   document.getElementById('arr-nom').textContent='↑';
@@ -387,11 +391,11 @@ function triggerDownload(blob, filename){
   setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},2000);
 }
 
-const COLUMNS=['Rang','Raison sociale','Sigle','Régime','Secteur','Activité principale','Région','Département',
+const COLUMNS=['Rang','Raison sociale','Sigle','Régime','Secteur','Activité principale','Département','Code dép.',
                'Président','Adresse','Code postal','Ville','SIREN','Capital social','Chiffre d\'affaires',
                'Effectif','Téléphone','Email','Site web'];
 function toRow(d,i){
-  return [i+1,d.nom,d.sigle,d.regime,d.secteur,d.activite,d.region,d.dept,
+  return [i+1,d.nom,d.sigle,d.regime,d.secteur,d.activite,d.dept,d.depcode,
           d.president||'',d.adresse,d.cp,d.ville,d.siren,d.capital||'',d.ca||'',
           d.effectif,d.tel||'',d.email||'',d.web||''];
 }
@@ -402,7 +406,7 @@ function exportCSV(){
   const cell=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
   const lines=[COLUMNS.map(cell).join(','), ...rows.map((d,i)=>toRow(d,i).map(cell).join(','))];
   const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-  triggerDownload(blob,'annuaire-epl-sem-spl.csv');
+  triggerDownload(blob,'annuaire-epl-paca.csv');
   showToast('✅ CSV exporté — '+rows.length+' structures','#0D7B52');
 }
 
@@ -424,8 +428,8 @@ function exportSheets(){
     XLSX.utils.book_append_sheet(wb,ws,'Epl');
 
     const meta=XLSX.utils.aoa_to_sheet([
-      ['Annuaire des Entreprises Publiques Locales'],
-      ['Sem, Spl, SemOp, Spla'],
+      ['Annuaire des Entreprises Publiques Locales de PACA'],
+      ['Sem, Spl, SemOp, Spla — Provence-Alpes-Côte d\'Azur'],
       [''],
       ['Source','Annuaire des Epl — export du __EXPORT_DATE__'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
@@ -441,7 +445,7 @@ function exportSheets(){
 
     const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    triggerDownload(blob,'annuaire-epl-sem-spl.xlsx');
+    triggerDownload(blob,'annuaire-epl-paca.xlsx');
     showToast('✅ Fichier Excel exporté — '+rows.length+' structures','#1A7340',5000);
   }catch(e){
     showToast('❌ Erreur export Excel : '+e.message,'#C8001E');
@@ -463,14 +467,14 @@ function exportPDF(){
     doc.rect(0,0,297,18,'F');
     doc.setTextColor(255,255,255);
     doc.setFontSize(13);
-    doc.text('Annuaire des Entreprises Publiques Locales',12,8);
+    doc.text('Annuaire des Entreprises Publiques Locales de PACA',12,8);
     doc.setFontSize(8);
-    doc.text('Sem · Spl · SemOp · Spla — '+rows.length+' structures — '+new Date().toLocaleDateString('fr-FR'),12,14);
+    doc.text('Sem · Spl · SemOp · Spla · PACA — '+rows.length+' structures — '+new Date().toLocaleDateString('fr-FR'),12,14);
 
     doc.autoTable({
       startY:23,
-      head:[['#','Structure','Régime','Secteur','Région','Président','Ville','CA','Téléphone']],
-      body:rows.map((d,i)=>[i+1,d.nom,d.regime,d.secteur,d.region,d.president||'—',
+      head:[['#','Structure','Régime','Secteur','Département','Président','Ville','CA','Téléphone']],
+      body:rows.map((d,i)=>[i+1,d.nom,d.regime,d.secteur,d.dept,d.president||'—',
                             [d.cp,d.ville].filter(Boolean).join(' '),euro(d.ca)||'—',d.tel||'—']),
       styles:{fontSize:6.5,cellPadding:1.4,overflow:'linebreak'},
       headStyles:{fillColor:[0,56,184],textColor:255,fontSize:6.5},
@@ -489,7 +493,7 @@ function exportPDF(){
       doc.text('Page '+p+' / '+pages,270,205);
     }
 
-    triggerDownload(doc.output('blob'),'annuaire-epl-sem-spl.pdf');
+    triggerDownload(doc.output('blob'),'annuaire-epl-paca.pdf');
     showToast('✅ PDF exporté — '+rows.length+' structures','#C8001E');
   }catch(e){
     showToast('❌ Erreur export PDF : '+e.message,'#C8001E');
