@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospection PACA – Communes, EPCI, syndicats, Epl et collectivités</title>
+<meta name="description" content="Annuaire des entreprises publiques locales de Provence-Alpes-Côte d'Azur : sociétés d'économie mixte, sociétés publiques locales et sociétés publiques locales d'aménagement, par département. Recherche, filtres et export CSV, Excel et PDF.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bleu:#00267A;--bleu-l:#0038B8;--bleu-pale:#EEF2FF;
+  --rouge:#C8001E;--rouge-pale:#FEF2F2;
+  --or:#C5A045;--blanc:#fff;
+  --bg:#F0F2F8;--surface:#fff;
+  --border:#D8DCE8;--border-l:#E8EBF4;
+  --text:#1A1F36;--muted:#6B7280;--muted-l:#9CA3AF;
+  --success:#0D7B52;--success-bg:#D1FAE5;
+  --warn:#92400E;--warn-bg:#FEF3C7;
+  --radius:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+
+/* ══ HEADER ══ */
+.header{background:var(--bleu);border-bottom:4px solid var(--rouge);position:sticky;top:0;z-index:200}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:16px 28px}
+.emblem{width:54px;height:54px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.header-text{flex:1}
+.header-title{font-family:'Libre Baskerville',serif;font-size:21px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
+.header-sub{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.tricolor{display:flex;gap:3px;align-items:center}
+.tricolor span{width:4px;height:34px;border-radius:2px}
+
+/* ══ STATS BAR ══ */
+.stats-bar{background:var(--bleu-l);border-bottom:1px solid rgba(255,255,255,.1)}
+.stats-inner{max-width:1440px;margin:0 auto;display:flex;padding:0 28px;flex-wrap:wrap}
+.stat{padding:9px 24px 9px 0;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.85);font-size:12.5px}
+.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.15);margin-right:24px}
+.stat-n{font-size:17px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+#version-stat{font-size:11px;color:rgba(255,255,255,.5);margin-left:auto;align-self:center;padding-right:0;border-right:none}
+
+/* ══ MAIN WRAPPER ══ */
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px}
+
+/* ══ DISCLAIMER ══ */
+.disclaimer{margin:18px 0 0;background:var(--warn-bg);border:1px solid #FCD34D;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--warn);display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+
+/* ══ TOOLBAR ══ */
+.toolbar{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-box{position:relative;flex:1;min-width:200px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-box input{width:100%;padding:9px 10px 9px 34px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13.5px;color:var(--text);background:var(--surface);transition:border .15s}
+.search-box input:focus{outline:none;border-color:var(--bleu-l);box-shadow:0 0 0 3px rgba(0,56,184,.1)}
+select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13px;color:var(--text);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M6 8 0 0h12z'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;transition:border .15s}
+select:focus{outline:none;border-color:var(--bleu-l)}
+.btn{padding:9px 16px;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--bleu);color:#fff;box-shadow:0 2px 6px rgba(0,38,122,.2)}
+.btn-primary:hover:not(:disabled){background:var(--bleu-l)}
+.btn-sheets{background:#1A7340;color:#fff;box-shadow:0 2px 6px rgba(26,115,64,.25)}
+.btn-sheets:hover:not(:disabled){background:#15623A}
+.btn-pdf{background:#C8001E;color:#fff;box-shadow:0 2px 6px rgba(200,0,30,.25)}
+.btn-mails{background:#6D28D9;color:#fff;box-shadow:0 2px 6px rgba(109,40,217,.25)}
+.btn-mails:hover:not(:disabled){background:#5B21B6}
+.btn-pdf:hover:not(:disabled){background:#A50019}
+.btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--bleu-l);color:var(--bleu-l)}
+.btn-ghost{background:transparent;color:var(--muted);font-size:12px}
+.btn-ghost:hover{color:var(--rouge)}
+#count-label{font-size:12.5px;color:var(--muted);white-space:nowrap;align-self:center;margin-left:auto}
+
+/* ══ TABLE ══ */
+.table-wrap{overflow-x:auto;border-radius:10px;box-shadow:var(--shadow);margin-bottom:32px}
+table{width:100%;border-collapse:collapse;background:var(--surface);min-width:1180px}
+thead tr{background:var(--bleu)}
+th{padding:12px 13px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.8);white-space:nowrap;cursor:pointer;user-select:none;transition:color .1s}
+th:hover,th.sorted{color:#fff}
+th .arr{margin-left:4px;opacity:.6;font-size:11px}
+th.sorted .arr{opacity:1}
+tbody tr{border-bottom:1px solid var(--border-l);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F5F7FE}
+tbody tr:nth-child(even){background:#FAFBFD}
+tbody tr:nth-child(even):hover{background:#F3F5FC}
+td{padding:11px 13px;vertical-align:top;font-size:13px}
+.td-rank{color:var(--muted-l);font-size:11.5px;font-weight:700;width:44px}
+.struct{font-weight:600;color:var(--text);font-size:13.5px;line-height:1.3}
+.sigle{display:block;margin-top:2px;font-size:11px;color:var(--muted-l);letter-spacing:.03em}
+.dept-tag{display:inline-block;margin-top:3px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.activite{color:var(--muted);font-size:11.5px;line-height:1.45;display:block;margin-top:3px;max-width:200px}
+.pres-name{font-weight:500;color:var(--text)}
+.pres-empty{color:#CBD5E1;font-style:italic;font-size:12px}
+.adresse{color:var(--muted);font-size:12px;line-height:1.5;max-width:230px;display:block}
+.tel{color:var(--text);font-size:12.5px;white-space:nowrap}
+.web-link{color:var(--bleu-l);text-decoration:none;font-size:12px;word-break:break-all}
+.web-link:hover{text-decoration:underline}
+.web-na{color:#CBD5E1;font-size:11.5px;font-style:italic}
+
+/* ══ BADGES RÉGIME ══ */
+.gbadge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.g-sem{background:#EEF2FF;color:#3730A3}
+.g-spl{background:#ECFDF5;color:#065F46}
+.g-semop{background:#FEF3C7;color:#92400E}
+.g-spla{background:#FDF4FF;color:#7E22CE}
+.g-splain{background:#F0F9FF;color:#0C4A6E}
+.g-autre{background:#F5F5F4;color:#44403C}
+
+/* ══ BADGES RÉGION ══ */
+.rbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.r0{background:#EEF2FF;color:#3730A3}
+.r1{background:#F0FDF4;color:#166534}
+.r2{background:#FFF7ED;color:#9A3412}
+.r3{background:#FDF4FF;color:#7E22CE}
+.r4{background:#F0F9FF;color:#0C4A6E}
+.r5{background:#FEF9C3;color:#713F12}
+.r6{background:#FFF1F2;color:#9F1239}
+.r7{background:#F0FDFA;color:#134E4A}
+.r8{background:#FFF8F1;color:#7C2D12}
+.r9{background:#F5F3FF;color:#4C1D95}
+.r10{background:#ECFDF5;color:#065F46}
+.r11{background:#FEF2F2;color:#7F1D1D}
+.r12{background:#E0F2FE;color:#075985}
+.r13{background:#FEF3C7;color:#92400E}
+.r14{background:#FCE7F3;color:#9D174D}
+.r15{background:#F0FDF4;color:#14532D}
+.r16{background:#FFF7F7;color:#9B1C1C}
+.r17{background:#EEF6FF;color:#1D4ED8}
+.r18{background:#F5F5F4;color:#44403C}
+
+/* ══ TOAST ══ */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:600;padding:11px 20px;border-radius:8px;color:#fff;font-size:13px;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.22);display:none;animation:fadein .25s ease}
+#toast.on{display:block}
+
+/* ══ EMPTY ══ */
+.empty{padding:56px;text-align:center;color:var(--muted)}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.6}
+.empty p{font-size:14px}
+
+/* ══ FOOTER ══ */
+.footer{max-width:1440px;margin:0 auto;padding:0 28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--muted)}
+.footer-warn{color:var(--rouge);font-weight:600}
+
+@media print{
+  .header{position:relative}.toolbar,.disclaimer,.footer,#toast{display:none}
+  table{font-size:10px;min-width:0}.table-wrap{box-shadow:none;overflow:visible}
+  body{background:#fff}
+}
+@keyframes fadein{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="emblem">📇</div>
+    <div class="header-text">
+      <div class="header-title">Fichier de prospection &mdash; Provence-Alpes-C&ocirc;te d'Azur</div>
+      <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; D&eacute;partements &middot; R&eacute;gion</div>
+    </div>
+    <div class="tricolor">
+      <span style="background:#002395"></span>
+      <span style="background:#fff"></span>
+      <span style="background:#ED2939"></span>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat"><span class="stat-n" id="s-total">—</span> organismes</div>
+      <div class="stat"><span class="stat-n" id="s-mails">—</span> adresses e-mail</div>
+      <div class="stat"><span class="stat-n" id="s-tel">—</span> téléphones</div>
+      <div class="stat"><span class="stat-n" id="s-shown">—</span> affichés</div>
+      <div class="stat" id="version-stat">v.2026.09.21-14h07</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <span>⚠️</span>
+    <span>Sources officielles : annuaire de l'administration (DILA) pour les communes, EPCI, d&eacute;partements et R&eacute;gion ;
+    export de l'annuaire des Epl ; BANATIC pour les syndicats. Les adresses manquantes sont celles que l'organisme ne publie pas &mdash;
+    les plus gros renvoient g&eacute;n&eacute;ralement vers un formulaire, dont le lien figure &agrave; la place.
+    <strong>Ces coordonn&eacute;es &eacute;voluent : v&eacute;rifiez-les avant tout envoi.</strong></span>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" name="search" placeholder="Rechercher un organisme, une ville, une adresse…" oninput="render()">
+    </div>
+    <select id="type-filter" name="type-filter" onchange="render()" aria-label="Filtrer par type d'organisme">
+      <option value="">Tous les types d'organisme</option>
+    </select>
+    <select id="mail-filter" name="mail-filter" onchange="render()" aria-label="Filtrer sur la présence d'une adresse">
+      <option value="">Avec ou sans adresse</option>
+      <option value="avec">Seulement avec une adresse</option>
+      <option value="sans">Seulement sans adresse</option>
+    </select>
+    <select id="dept-filter" name="dept-filter" onchange="render()" aria-label="Filtrer par département">
+      <option value="">Toute la région PACA</option>
+    </select>
+    <button class="btn btn-primary" onclick="exportCSV()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
+    <button class="btn btn-sheets" onclick="exportSheets()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Excel
+    </button>
+    <button class="btn btn-pdf" onclick="exportPDF()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      PDF
+    </button>
+    <button class="btn btn-mails" onclick="copierMails()" title="Copie les adresses des organismes affichés, séparées par un point-virgule">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+      Copier les e-mails
+    </button>
+    <button class="btn btn-outline" onclick="window.print()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimer
+    </button>
+    <button class="btn btn-ghost" onclick="resetFilters()">Réinitialiser</button>
+    <span id="count-label"></span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44px">#</th>
+          <th onclick="setSort('nom')">Organisme <span class="arr" id="arr-nom">↑</span></th>
+          <th onclick="setSort('type')">Type <span class="arr" id="arr-type"></span></th>
+          <th onclick="setSort('dept')">Département <span class="arr" id="arr-dept"></span></th>
+          <th>Taille</th>
+          <th>Adresse</th>
+          <th>Téléphone</th>
+          <th onclick="setSort('email')">Courriel ou contact <span class="arr" id="arr-email"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  <div class="footer">
+    <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
+    <span>266 organismes &bull; v.2026.09.21-14h07 &bull; &copy; <span id="yr"></span></span>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ══════════════════════════════════════════
+   DATA — entreprises publiques locales
+   Une entrée par ligne, clés dans l'ordre attendu par
+   .github/workflows/update-sem-spl-sm.yml — ne pas reformater.
+   ══════════════════════════════════════════ */
+const DATA = [
+  {type:"Commune",nom:"Digne-les-Bains",dept:"04",taille:"17 979 hab.",adresse:"1 boulevard Martin-Bret, 04990 Digne-les-Bains",tel:"04 92 30 52 00",email:"cabinet.mairie@dignelesbains.fr",contact:"https://www.dignelesbains.fr/"},
+  {type:"Commune",nom:"Manosque",dept:"04",taille:"22 718 hab.",adresse:"Place de l'Hôtel-de-Ville, 04100 Manosque",tel:"04 92 70 34 00",email:"accueil@ville-manosque.fr",contact:"https://www.ville-manosque.fr/contactez-nous/"},
+  {type:"Commune",nom:"Briançon",dept:"05",taille:"11 411 hab.",adresse:"Cité administrative, Esplanade Alain-Bayrou, 26 avenue du 159e RIA, 05100 Briançon",tel:"04 92 21 20 72",email:"accueil@ccbrianconnais.fr",contact:"https://www.ville-briancon.fr/nous-ecrire"},
+  {type:"Commune",nom:"Gap",dept:"05",taille:"41 293 hab.",adresse:"3 rue Colonel-Roux, 05000 Gap",tel:"04 92 53 24 24",email:"mairie@ville-gap.fr",contact:"https://www.ville-gap.fr/contacter-la-mairie"},
+  {type:"Commune",nom:"Antibes",dept:"06",taille:"77 637 hab.",adresse:"Cours Massena, 06605 Antibes Cedex",tel:"04 92 90 50 00",email:"mairie@ville-antibes.fr",contact:"https://demarches.antibes-juanlespins.com/accueil_contact/"},
+  {type:"Commune",nom:"Beausoleil",dept:"06",taille:"11 936 hab.",adresse:"27 boulevard de la République, 06240 Beausoleil",tel:"04 93 41 71 71",email:"mairie@villedebeausoleil.fr",contact:"http://www.villedebeausoleil.fr"},
+  {type:"Commune",nom:"Biot",dept:"06",taille:"10 511 hab.",adresse:"8-10 route de Valbonne, 06410 Biot",tel:"04 92 91 55 80",email:"accueil@biot.fr",contact:"https://www.biot.fr/contactez-nous/"},
+  {type:"Commune",nom:"Cagnes-sur-Mer",dept:"06",taille:"53 354 hab.",adresse:"Place de l'Hôtel-de-Ville, 06800 Cagnes-sur-Mer",tel:"04 93 22 19 00",email:"nouscontacter@cagnes.fr",contact:"https://ville.cagnes.fr/une-question-nous-contacter/"},
+  {type:"Commune",nom:"Cannes",dept:"06",taille:"74 350 hab.",adresse:"1 Place Cornut-Gentille, 06000 Cannes Cedex",tel:"04 97 06 40 00",email:"mairie@ville-cannes.fr",contact:"https://www.cannes.com/fr/index/contact/formulaire-contact.html"},
+  {type:"Commune",nom:"Carros",dept:"06",taille:"13 803 hab.",adresse:"2 rue de l'Eusière, 06510 Carros",tel:"04 92 08 44 70",email:"mairie@ville-carros.fr",contact:"https://www.ville-carros.fr"},
+  {type:"Commune",nom:"Grasse",dept:"06",taille:"50 970 hab.",adresse:"Place du Petit-Puy, 06131 Grasse",tel:"04 97 05 50 00",email:"accueil.cabinetdumaire@ville-grasse.fr",contact:"http://www.ville-grasse.fr/"},
+  {type:"Commune",nom:"La Trinité",dept:"06",taille:"10 602 hab.",adresse:"19 rue de l'Hôtel-de-Ville, 06340 La Trinité",tel:"04 93 27 64 00",email:"service.courrier@villelt.fr",contact:"https://villedelatrinite.fr/demarches/"},
+  {type:"Commune",nom:"Le Cannet",dept:"06",taille:"41 938 hab.",adresse:"20 boulevard Sadi-Carnot, 06115 Le Cannet",tel:"04 92 18 20 00",email:"contact@mairie-le-cannet.fr",contact:"https://www.lecannet.fr/"},
+  {type:"Commune",nom:"Mandelieu-la-Napoule",dept:"06",taille:"21 640 hab.",adresse:"Avenue de la République, 06210 Mandelieu-la-Napoule",tel:"04 92 97 30 00",email:"maire@mairie-mandelieu.fr",contact:"https://www.mandelieu.fr/15858-nous-contacter.htm"},
+  {type:"Commune",nom:"Menton",dept:"06",taille:"30 604 hab.",adresse:"17 rue de la République, 06500 Menton",tel:"04 92 10 50 00",email:"mairie@ville-menton.fr",contact:"https://www.menton.fr/"},
+  {type:"Commune",nom:"Mouans-Sartoux",dept:"06",taille:"11 015 hab.",adresse:"3 Place du Général-de-Gaulle, 06371 Mouans-Sartoux",tel:"04 92 92 47 00",email:"mairie@mouans-sartoux.net",contact:"http://www.mouans-sartoux.net"},
+  {type:"Commune",nom:"Mougins",dept:"06",taille:"19 782 hab.",adresse:"72 chemin de l'Horizon, 06251 Mougins Cedex",tel:"04 92 92 50 00",email:"cabinet@villedemougins.com",contact:"https://mougins.fr/nous-contacter/"},
+  {type:"Commune",nom:"Nice",dept:"06",taille:"357 737 hab.",adresse:"5 rue de l'Hôtel-de-Ville, 06364 Nice",tel:"03 90 6",email:"",contact:"https://www.nice.fr/fr/contact/"},
+  {type:"Commune",nom:"Roquebrune-Cap-Martin",dept:"06",taille:"12 037 hab.",adresse:"22 avenue Paul-Doumer, 06190 Roquebrune-Cap-Martin",tel:"04 92 10 48 48",email:"",contact:"https://www.roquebrune-cap-martin.fr/16114-contact.htm"},
+  {type:"Commune",nom:"Saint-Laurent-du-Var",dept:"06",taille:"32 172 hab.",adresse:"222 esplanade du Levant, 06700 Saint-Laurent-du-Var",tel:"04 92 12 42 42",email:"cabinet.maire@saintlaurentduvar.fr",contact:"https://saintlaurentduvar.fr/contact"},
+  {type:"Commune",nom:"Valbonne",dept:"06",taille:"11 939 hab.",adresse:"1 place de l'Hôtel-de-Ville, 06902 Valbonne-Sophia-Antipolis Cedex",tel:"04 93 12 31 00",email:"mairie@ville-valbonne.fr",contact:"https://www.ville-valbonne.fr/contacter-un-service/"},
+  {type:"Commune",nom:"Vallauris",dept:"06",taille:"29 259 hab.",adresse:"Place Jacques-Cavasse, 06220 Vallauris",tel:"04 93 64 24 24",email:"groupecabmaire@vallauris.fr",contact:"http://www.vallauris-golfe-juan.fr/Contact.html?lang=fr"},
+  {type:"Commune",nom:"Vence",dept:"06",taille:"19 917 hab.",adresse:"Place Georges-Clemenceau, 06141 Vence Cedex",tel:"04 93 58 41 00",email:"mairie@ville-vence.fr",contact:"https://vence.fr/"},
+  {type:"Commune",nom:"Villeneuve-Loubet",dept:"06",taille:"17 548 hab.",adresse:"Place de la République, 06270 Villeneuve-Loubet",tel:"04 92 02 60 00",email:"cab@villeneuveloubet.fr",contact:"https://www.villeneuveloubet.fr/"},
+  {type:"Commune",nom:"Aix-en-Provence",dept:"13",taille:"149 695 hab.",adresse:"Place de l'Hôtel-de-Ville, 13000 Aix-en-Provence",tel:"04 42 91 90 00",email:"",contact:"https://mesdemarches.mairie-aixenprovence.fr/airform/formulaires/ECRIRE_AUX_SERVICES"},
+  {type:"Commune",nom:"Allauch",dept:"13",taille:"21 443 hab.",adresse:"Place Pierre-Bellot, 13718 Allauch Cedex",tel:"04 91 10 48 00",email:"info@allauch.com",contact:"https://www.allauch.com/"},
+  {type:"Commune",nom:"Arles",dept:"13",taille:"51 811 hab.",adresse:"Place de la République, 13200 Arles",tel:"04 90 49 36 36",email:"administration.generale@ville-arles.fr",contact:"https://arles.fr/"},
+  {type:"Commune",nom:"Aubagne",dept:"13",taille:"47 529 hab.",adresse:"7 boulevard Jean-Jaurès, 13400 Aubagne",tel:"04 42 18 19 19",email:"accueil@aubagne.fr",contact:"https://www.aubagne.fr/"},
+  {type:"Commune",nom:"Auriol",dept:"13",taille:"13 037 hab.",adresse:"1 place de la Libération, 13390 Auriol",tel:"04 42 04 70 06",email:"secretariatdumaire@mairie-auriol.fr",contact:"https://mairie-auriol.fr/nous-contacter?view=form&id=22"},
+  {type:"Commune",nom:"Berre-l'Étang",dept:"13",taille:"13 832 hab.",adresse:"Place Jean-Moulin, 13138 Berre-l'Étang",tel:"04 42 74 93 00",email:"accueil@berreletang.fr",contact:"https://www.berreletang.fr/spip.php?page=contact"},
+  {type:"Commune",nom:"Bouc-Bel-Air",dept:"13",taille:"15 381 hab.",adresse:"Place de l'Hôtel-de-Ville, 13320 Bouc-Bel-Air",tel:"04 42 94 93 93",email:"com@boucbelair.fr",contact:"https://www.boucbelair.fr/contact/"},
+  {type:"Commune",nom:"Cabriès",dept:"13",taille:"10 240 hab.",adresse:"Place Ange-Estève, 13480 Cabriès",tel:"04 42 28 14 00",email:"accueil@cabries.fr",contact:"https://www.cabries.fr/"},
+  {type:"Commune",nom:"Châteauneuf-les-Martigues",dept:"13",taille:"18 455 hab.",adresse:"Place Bellot, 13220 Châteauneuf-les-Martigues",tel:"04 42 76 89 00",email:"direction.generale@chateauneuf-les-martigues.fr",contact:"http://www.chateauneuflesmartigues.fr"},
+  {type:"Commune",nom:"Châteaurenard",dept:"13",taille:"16 545 hab.",adresse:"6 rue Jentelin, 13160 Châteaurenard",tel:"04 90 24 35 35",email:"maire@chateaurenard.com",contact:"https://www.chateaurenard.com/contactez-nous/"},
+  {type:"Commune",nom:"Fos-sur-Mer",dept:"13",taille:"15 862 hab.",adresse:"Avenue René-Cassin, 13771 Fos-sur-Mer",tel:"04 42 47 70 00",email:"courrier@mairie-fos-sur-mer.fr",contact:"https://www.fossurmer.fr/contactez-nous/"},
+  {type:"Commune",nom:"Fuveau",dept:"13",taille:"10 337 hab.",adresse:"26 boulevard Émile-Loubet, 13710 Fuveau",tel:"04 42 65 65 00",email:"mlemaire@mairie-fuveau.com",contact:"https://www.mairiedefuveau.fr/"},
+  {type:"Commune",nom:"Gardanne",dept:"13",taille:"21 597 hab.",adresse:"Cours de la République, 13120 Gardanne",tel:"04 42 51 79 00",email:"accueil@ville-gardanne.fr",contact:"http://www.ville-gardanne.fr"},
+  {type:"Commune",nom:"Gignac-la-Nerthe",dept:"13",taille:"10 343 hab.",adresse:"Place de la Mairie, 13180 Gignac-la-Nerthe",tel:"04 42 77 00 00",email:"",contact:"http://www.gignaclanerthe.fr"},
+  {type:"Commune",nom:"Istres",dept:"13",taille:"44 292 hab.",adresse:"1 esplanade Bernardin-Laugier, 13800 Istres",tel:"04 13 29 50 00",email:"",contact:"https://www.istres.fr/index.php?id=219"},
+  {type:"Commune",nom:"La Ciotat",dept:"13",taille:"38 477 hab.",adresse:"Rond-point des Messageries-Maritimes, 13708 La Ciotat",tel:"04 42 08 88 00",email:"information@mairie-laciotat.fr",contact:"https://www.laciotat.com/contact-mairie"},
+  {type:"Commune",nom:"Lambesc",dept:"13",taille:"10 024 hab.",adresse:"6 boulevard de la République, 13410 Lambesc",tel:"04 42 17 00 50",email:"webmaster@lambesc.fr",contact:"https://www.lambesc.fr/ma-ville/la-vie-municipale/contactez-nous/"},
+  {type:"Commune",nom:"Les Pennes-Mirabeau",dept:"13",taille:"22 537 hab.",adresse:"223 avenue François-Mitterrand, 13170 Les Pennes-Mirabeau",tel:"09 69 36 24 12",email:"dgs@vlpm.com",contact:"https://www.pennes-mirabeau.org/"},
+  {type:"Commune",nom:"Marignane",dept:"13",taille:"33 692 hab.",adresse:"Cours Mirabeau, 13700 Marignane",tel:"04 42 31 11 11",email:"contact@ville-marignane.fr",contact:"https://www.marignane.fr/"},
+  {type:"Commune",nom:"Marseille",dept:"13",taille:"886 040 hab.",adresse:"Quai du Port, 13233 Marseille Cedex 20",tel:"30 13",email:"",contact:"https://mes-demarches.marseille.fr/renseignement/"},
+  {type:"Commune",nom:"Martigues",dept:"13",taille:"48 298 hab.",adresse:"Avenue Louis-Sammut, 13690 Martigues",tel:"04 42 44 33 33",email:"le-maire@ville-martigues.fr",contact:"https://www.ville-martigues.fr/informations-pratiques/contact"},
+  {type:"Commune",nom:"Miramas",dept:"13",taille:"26 203 hab.",adresse:"Place Jean-Jaurès, 13140 Miramas",tel:"08 00 01 31 40",email:"lemaire@mairie-miramas.fr",contact:"https://www.miramas.fr"},
+  {type:"Commune",nom:"Plan-de-Cuques",dept:"13",taille:"11 632 hab.",adresse:"28 avenue Frédéric-Chevillon, 13380 Plan-de-Cuques",tel:"04 91 10 40 40",email:"cabinetdumaire@plandecuques.fr",contact:"https://www.plandecuques.fr/contacter"},
+  {type:"Commune",nom:"Port-de-Bouc",dept:"13",taille:"15 802 hab.",adresse:"13110 Port-de-Bouc",tel:"04 42 40 04 04",email:"secretariatdumaire@portdebouc.fr",contact:"https://www.portdebouc.fr/nous-contacter"},
+  {type:"Commune",nom:"Pélissanne",dept:"13",taille:"11 085 hab.",adresse:"Parc Roux-de-Brignoles, 13330 Pélissanne",tel:"04 90 55 11 52",email:"mairie@ville-pelissanne.fr",contact:"https://www.ville-pelissanne.fr/systeme/nous-contacter/"},
+  {type:"Commune",nom:"Rognac",dept:"13",taille:"12 576 hab.",adresse:"21 avenue Charles-de-Gaulle, 13340 Rognac",tel:"04 42 87 76 00",email:"accueilmairie@mairie-rognac.fr",contact:"https://www.ville-rognac.fr/contact"},
+  {type:"Commune",nom:"Saint-Martin-de-Crau",dept:"13",taille:"14 145 hab.",adresse:"1 place du Docteur-Bagnaninchi, 13310 Saint-Martin-de-Crau Cedex",tel:"04 90 47 17 29",email:"mairie@stmartindecrau.fr",contact:"https://www.saintmartindecrau.fr/"},
+  {type:"Commune",nom:"Salon-de-Provence",dept:"13",taille:"44 194 hab.",adresse:"174 place de l'Hôtel-de-Ville, 13300 Salon-de-Provence",tel:"04 90 44 89 00",email:"webcontact.mairie@salondeprovence.fr",contact:"https://www.salondeprovence.fr/nous-contacter/"},
+  {type:"Commune",nom:"Septèmes-les-Vallons",dept:"13",taille:"11 995 hab.",adresse:"198 Place Didier-Tramoni, 13240 Septèmes-les-Vallons",tel:"04 91 96 31 00",email:"secretariat@ville-septemes.fr",contact:"http://www.ville-septemes.fr"},
+  {type:"Commune",nom:"Tarascon",dept:"13",taille:"15 396 hab.",adresse:"2 place du Marché, 13150 Tarascon",tel:"04 90 91 00 07",email:"courrier@mairie-tarascon13.fr",contact:"https://www.tarascon.fr"},
+  {type:"Commune",nom:"Trets",dept:"13",taille:"10 946 hab.",adresse:"Place du 14-Juillet, 13530 Trets",tel:"04 42 37 55 00",email:"accueil@trets.fr",contact:"https://www.trets.fr/contact/"},
+  {type:"Commune",nom:"Vitrolles",dept:"13",taille:"36 758 hab.",adresse:"Place de Provence, 13127 Vitrolles",tel:"04 42 77 90 00",email:"communication@ville-vitrolles13.fr",contact:"https://www.vitrolles13.fr/nous-contacter/"},
+  {type:"Commune",nom:"Brignoles",dept:"83",taille:"17 850 hab.",adresse:"9 place Carami, 83170 Brignoles",tel:"04 94 86 22 22",email:"contact@brignoles.fr",contact:"https://www.brignoles.fr/contacts/"},
+  {type:"Commune",nom:"Cogolin",dept:"83",taille:"12 301 hab.",adresse:"2 place de la République, 83310 Cogolin",tel:"04 94 56 65 45",email:"mairie@cogolin.fr",contact:"https://www.cogolin.fr/"},
+  {type:"Commune",nom:"Cuers",dept:"83",taille:"13 271 hab.",adresse:"Place du Général-Magnan, 83390 Cuers",tel:"04 94 13 50 70",email:"standard.mairie@cuers.fr",contact:"https://www.cuers.fr/contactez-nous/"},
+  {type:"Commune",nom:"Draguignan",dept:"83",taille:"40 826 hab.",adresse:"28 rue Georges-Cisson, 83300 Draguignan",tel:"04 94 60 31 00",email:"mairie@ville-draguignan.fr",contact:"https://www.ville-draguignan.fr/contact/contacter-un-service/"},
+  {type:"Commune",nom:"Fréjus",dept:"83",taille:"59 719 hab.",adresse:"45 place Camille-Formigé, 83608 Fréjus",tel:"04 94 17 66 00",email:"s.courrier@ville-frejus.fr",contact:"https://www.ville-frejus.fr/mairie/vie-municipale/contactez-nous/"},
+  {type:"Commune",nom:"Hyères",dept:"83",taille:"55 858 hab.",adresse:"12 avenue Joseph-Clotis, 83400 Hyères",tel:"04 94 00 78 78",email:"mairie@ville-hyeres.fr",contact:"https://hyeres.fr/contactez-nous/"},
+  {type:"Commune",nom:"La Crau",dept:"83",taille:"19 556 hab.",adresse:"Boulevard de la République, 83260 La Crau",tel:"04 94 01 56 80",email:"mairie@villedelacrau.fr",contact:"https://www.villedelacrau.fr/contacterlamairie.html"},
+  {type:"Commune",nom:"La Farlède",dept:"83",taille:"10 014 hab.",adresse:"Place de la Liberté, 83210 La Farlède",tel:"04 94 27 85 85",email:"mairie@lafarlede.fr",contact:"https://www.lafarlede.fr/"},
+  {type:"Commune",nom:"La Garde",dept:"83",taille:"26 476 hab.",adresse:"Rue Jean-Baptiste-Lavène, 83130 La Garde",tel:"04 94 08 98 00",email:"contact-mairie@ville-lagarde.fr",contact:"https://www.ville-lagarde.fr/contact"},
+  {type:"Commune",nom:"La Londe-les-Maures",dept:"83",taille:"10 584 hab.",adresse:"Place du 11-Novembre, 83250 La Londe-les-Maures",tel:"04 94 01 55 00",email:"contact@lalondelesmaures.fr",contact:"https://www.ville-lalondelesmaures.fr/"},
+  {type:"Commune",nom:"La Seyne-sur-Mer",dept:"83",taille:"63 732 hab.",adresse:"20 quai Saturnin-Fabre, 83500 La Seyne-sur-Mer",tel:"04 94 06 95 00",email:"mairie@la-seyne.fr",contact:"https://www.la-seyne.fr/contact/"},
+  {type:"Commune",nom:"La Valette-du-Var",dept:"83",taille:"23 719 hab.",adresse:"83167 La Valette-du-Var Cedex",tel:"04 94 61 90 90",email:"cabinet.maire@lavalette83.fr",contact:"https://www.lavalette83.fr/contacter-monsieur-le-maire/"},
+  {type:"Commune",nom:"Le Beausset",dept:"83",taille:"10 219 hab.",adresse:"Place Jean-Jaurès, 83330 Le Beausset",tel:"04 94 98 55 75",email:"accueil@ville-lebeausset.fr",contact:"https://www.ville-lebeausset.fr/"},
+  {type:"Commune",nom:"Le Luc",dept:"83",taille:"11 310 hab.",adresse:"3 place de la Liberté, 83340 Le Luc",tel:"04 94 50 01 00",email:"cab@mairie-leluc.fr",contact:"https://www.mairie-leluc.com/contact/"},
+  {type:"Commune",nom:"Le Muy",dept:"83",taille:"10 118 hab.",adresse:"4 rue de l'Hôtel-de-Ville, 83490 Le Muy",tel:"04 94 19 84 24",email:"info@ville-lemuy.fr",contact:"https://www.ville-lemuy.fr/14090-contact.htm"},
+  {type:"Commune",nom:"Le Pradet",dept:"83",taille:"10 933 hab.",adresse:"Parc Cravero, 83220 Le Pradet",tel:"04 94 08 69 47",email:"accueil@le-pradet.fr",contact:"https://www.le-pradet.fr/"},
+  {type:"Commune",nom:"Ollioules",dept:"83",taille:"14 568 hab.",adresse:"7 avenue du Général-de-Gaulle, 83191 Ollioules",tel:"04 94 30 41 41",email:"contact@ollioules.fr",contact:"https://www.ollioules.fr/"},
+  {type:"Commune",nom:"Roquebrune-sur-Argens",dept:"83",taille:"15 442 hab.",adresse:"Rue Grande-André-Cabasse, 83520 Roquebrune-sur-Argens",tel:"04 94 19 59 59",email:"mairie@mairie-roquebrune-argens.fr",contact:"https://www.roquebrune.com/votre-mairie/nous-contacter/"},
+  {type:"Commune",nom:"Saint-Cyr-sur-Mer",dept:"83",taille:"11 658 hab.",adresse:"Place d'Estienne-d'Orves, 83270 Saint-Cyr-sur-Mer",tel:"04 94 26 26 22",email:"mairie@saintcyrsurmer.fr",contact:"https://www.saintcyrsurmer.fr/saint-cyr-sur-mer-3.html"},
+  {type:"Commune",nom:"Saint-Maximin-la-Sainte-Baume",dept:"83",taille:"17 896 hab.",adresse:"Parvis Charles-II-d'Anjou, 83470 Saint-Maximin-la-Sainte-Baume",tel:"04 94 72 93 00",email:"secretariatgeneral@st-maximin.fr",contact:"https://www.st-maximin.fr"},
+  {type:"Commune",nom:"Saint-Raphaël",dept:"83",taille:"37 113 hab.",adresse:"Hôtel de Ville, Place Sadi-Carnot, 83700 Saint-Raphaël",tel:"04 94 82 15 00",email:"monsieurlemaire@ville-saintraphael.fr",contact:"https://www.ville-saintraphael.fr/"},
+  {type:"Commune",nom:"Sainte-Maxime",dept:"83",taille:"14 118 hab.",adresse:"Boulevard des Mimosas, 83120 Sainte-Maxime",tel:"04 94 79 42 42",email:"mairie@sainte-maxime.fr",contact:"https://www.sainte-maxime.fr/nous-contacter/"},
+  {type:"Commune",nom:"Sanary-sur-Mer",dept:"83",taille:"18 538 hab.",adresse:"1 place de la République, 83110 Sanary-sur-Mer",tel:"04 94 32 97 00",email:"contact@sanarysurmer.fr",contact:"https://www.sanarysurmer.com/contact/"},
+  {type:"Commune",nom:"Six-Fours-les-Plages",dept:"83",taille:"37 109 hab.",adresse:"Place du 18-Juin-1940, 83183 Six-Fours-les-Plages",tel:"04 94 34 93 00",email:"doleances@mairie-six-fours.fr",contact:"https://www.ville-six-fours.fr/allo-6fours/"},
+  {type:"Commune",nom:"Solliès-Pont",dept:"83",taille:"12 521 hab.",adresse:"1 rue de la République, 83210 Solliès-Pont",tel:"04 94 13 58 00",email:"mairie@solliespont.fr",contact:"https://www.ville-sollies-pont.fr/fr/contact.htm"},
+  {type:"Commune",nom:"Toulon",dept:"83",taille:"179 116 hab.",adresse:"Avenue de la République, 83000 Toulon",tel:"04 94 36 30 00",email:"",contact:"https://toulon.fr/contacter-la-ville-de-toulon-0"},
+  {type:"Commune",nom:"Vidauban",dept:"83",taille:"12 608 hab.",adresse:"Place Georges-Clemenceau, 83550 Vidauban",tel:"04 94 99 99 00",email:"accueil@vidauban.fr",contact:"https://www.mairie-vidauban.fr/index.php/nous-contacter"},
+  {type:"Commune",nom:"Apt",dept:"84",taille:"10 143 hab.",adresse:"Place Gabriel-Péri, 84405 Apt",tel:"04 90 74 00 34",email:"mairie@apt.fr",contact:"https://www.apt.fr/contact/"},
+  {type:"Commune",nom:"Avignon",dept:"84",taille:"92 188 hab.",adresse:"Place de l'Horloge, 84000 Avignon",tel:"04 90 80 80 00",email:"contact@mairie-avignon.com",contact:"https://www.avignon.fr/contact/"},
+  {type:"Commune",nom:"Bollène",dept:"84",taille:"14 024 hab.",adresse:"Place Reynaud-de-la-Gardette, 84500 Bollène",tel:"04 90 40 51 00",email:"mairie@ville-bollene.fr",contact:"https://ville-bollene.fr/fr/services/8/accueil-de-la-mairie"},
+  {type:"Commune",nom:"Carpentras",dept:"84",taille:"31 619 hab.",adresse:"Place Maurice-Charretier, 84200 Carpentras",tel:"04 90 60 84 00",email:"mairie@carpentras.fr",contact:"https://www.carpentras.fr/nous-contacter.html"},
+  {type:"Commune",nom:"Cavaillon",dept:"84",taille:"25 636 hab.",adresse:"Place Joseph-Guis, 84300 Cavaillon",tel:"04 90 71 24 18",email:"accueil@ville-cavaillon.fr",contact:"https://www.cavaillon.com"},
+  {type:"Commune",nom:"L'Isle-sur-la-Sorgue",dept:"84",taille:"20 244 hab.",adresse:"Rue Carnot, 84800 L'Isle-sur-la-Sorgue",tel:"04 90 38 06 45",email:"contact@islesurlasorgue.fr",contact:"https://www.islesurlasorgue.fr/"},
+  {type:"Commune",nom:"Le Pontet",dept:"84",taille:"18 386 hab.",adresse:"13 rue de l'Hôtel-de-Ville, 84134 Le Pontet Cedex",tel:"04 90 31 66 00",email:"communication@mairie-lepontet.fr",contact:"https://www.ville-lepontet.com/contact/"},
+  {type:"Commune",nom:"Monteux",dept:"84",taille:"13 301 hab.",adresse:"28 place des Droits-de-l'Homme, 84170 Monteux",tel:"04 90 66 97 00",email:"ville.monteux@monteux.fr",contact:"https://www.monteux.fr/"},
+  {type:"Commune",nom:"Orange",dept:"84",taille:"29 706 hab.",adresse:"Place Georges-Clemenceau, 84106 Orange",tel:"04 90 51 41 41",email:"accueil.guichet@ville-orange.fr",contact:"https://www.ville-orange.fr/article289.html"},
+  {type:"Commune",nom:"Pernes-les-Fontaines",dept:"84",taille:"10 504 hab.",adresse:"Place Aristide-Briand, 84210 Pernes-les-Fontaines",tel:"04 90 61 45 00",email:"contact@perneslesfontaines.fr",contact:"https://www.perneslesfontaines.fr"},
+  {type:"Commune",nom:"Pertuis",dept:"84",taille:"19 548 hab.",adresse:"Rue Voltaire, 84120 Pertuis",tel:"04 90 79 02 74",email:"communication@mairie-pertuis.fr",contact:"https://www.ville-pertuis.fr/contactez-nous?view=form&id=2"},
+  {type:"Commune",nom:"Sorgues",dept:"84",taille:"19 006 hab.",adresse:"80 route d'Entraigues, 84700 Sorgues",tel:"04 90 39 71 00",email:"mairie@sorgues.fr",contact:"https://www.sorgues.fr/nous-contacter.htm"},
+  {type:"Commune",nom:"Vedène",dept:"84",taille:"11 974 hab.",adresse:"11 rue Jean-Moulin, 84270 Vedène",tel:"04 90 23 76 76",email:"mairie@mairie-vedene.fr",contact:"https://www.mairie-vedene.fr/votre-mairie-et-ses-services/vie-municipale/contact"},
+  {type:"Commune",nom:"Monaco",dept:"MC",taille:"38 367 hab.",adresse:"Place de la Mairie, 98000 Monaco",tel:"+377 93 15 28 63",email:"",contact:"https://www.mairie.mc/contacts"},
+  {type:"Département",nom:"Conseil départemental - Alpes-de-Haute-Provence",dept:"04",taille:"",adresse:"13 rue du Docteur-Romieu, 04000 Digne-les-Bains",tel:"04 92 30 04 00",email:"",contact:"https://www.mondepartement04.fr/contacter-les-services-du-departement"},
+  {type:"Département",nom:"Conseil départemental - Hautes-Alpes",dept:"05",taille:"",adresse:"Hôtel du département, Place Saint-Arnoux, 05000 Gap",tel:"04 92 40 38 00",email:"",contact:"https://www.hautes-alpes.fr/3396-contact.htm"},
+  {type:"Département",nom:"Conseil départemental - Alpes-Maritimes",dept:"06",taille:"",adresse:"Centre administratif départemental, 147 boulevard du Mercantour, 06200 Nice",tel:"04 97 18 60 00",email:"",contact:"https://www.departement06.fr/contact-9.html"},
+  {type:"Département",nom:"Conseil départemental - Bouches-du-Rhône",dept:"13",taille:"",adresse:"Hôtel du département, 52 avenue de Saint-Just, 13013 Marseille",tel:"04 13 31 13 13",email:"",contact:"https://formulaires.moncompte.departement13.fr/accueil/contacter-le-departement-13-a-votre-ecoute/"},
+  {type:"Département",nom:"Conseil départemental - Var",dept:"83",taille:"",adresse:"390 avenue des Lices, 83000 Toulon",tel:"04 83 95 00 00",email:"contact@var.fr",contact:"https://www.var.fr/contactez-nous"},
+  {type:"Département",nom:"Conseil départemental - Vaucluse",dept:"84",taille:"",adresse:"Hôtel du département, rue Viala, 84000 Avignon",tel:"04 90 16 15 00",email:"",contact:"https://formulaires.usagers.vaucluse.fr/contact/ecrire-au-departement-de-vaucluse/?cancelurl=https%3A//usagers.vaucluse.fr/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Durance Luberon Verdon Agglomération",dept:"04",taille:"",adresse:"Place de l'Hôtel-de-Ville, 04100 Manosque",tel:"04 92 70 34 00",email:"accueil@dlva.fr",contact:"https://www.dlva.fr/nous-contacter/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Provence Alpes agglomération",dept:"04",taille:"",adresse:"4 rue Klein, 04990 Digne-les-Bains",tel:"04 92 32 05 05",email:"contact@provencealpesagglo.fr",contact:"https://www.provencealpesagglo.fr/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Alpes Provence Verdon Sources de Lumière",dept:"04",taille:"",adresse:"ZA Les Iscles, 04170 Saint-André-les-Alpes",tel:"04 92 83 68 99",email:"contact@ccapv.fr",contact:"https://ccapv.fr/alpes-provence-verdon/contact-acces"},
+  {type:"EPCI",nom:"Communauté de communes - Haute-Provence Pays de Banon",dept:"04",taille:"",adresse:"Place de l'Église, 04300 Mane",tel:"04 92 75 04 13",email:"mairie@mane-en-provence.com",contact:"https://www.cchppb.fr/"},
+  {type:"EPCI",nom:"Communauté de communes - Jabron Lure Vançon Durance",dept:"04",taille:"",adresse:"110 rue de l'École, 04290 Salignac",tel:"04 92 34 46 75",email:"secretariat@ccjlvd.fr",contact:"https://ccjlvd.fr"},
+  {type:"EPCI",nom:"Communauté de communes - Pays Forcalquier et Montagne de Lure",dept:"04",taille:"",adresse:"1 place du Bourguet, 04301 Forcalquier",tel:"04 92 75 33 21",email:"accueil@ville-forcalquier.fr",contact:"https://www.forcalquier-lure.com/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Sisteronais Buëch",dept:"04",taille:"",adresse:"1 place de la République, 04200 Sisteron",tel:"04 92 31 27 52",email:"contact.ccsb@sisteronais-buech.fr",contact:"https://www.sisteronais-buech.fr/nous-contacter/"},
+  {type:"EPCI",nom:"Communauté de communes - Vallée de l'Ubaye Serre Ponçon",dept:"04",taille:"",adresse:"4 avenue des Trois-Frères-Arnaud, 04400 Barcelonnette",tel:"04 92 81 28 23",email:"info@ccvusp.fr",contact:"https://www.ccvusp.fr/contact.html"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Gap Tallard Durance",dept:"05",taille:"",adresse:"Campus des Trois Fontaines, 2 ancienne route de Veynes, 05007 Gap Cedex",tel:"04 92 53 24 24",email:"contact@agglo-gap.fr",contact:"https://www.gap-tallard-durance.fr/"},
+  {type:"EPCI",nom:"Communauté de communes - Briançonnais",dept:"05",taille:"",adresse:"1 rue Aspirant-Jan, 05100 Briançon",tel:"04 92 21 35 97",email:"accueil@ccbrianconnais.fr",contact:"https://www.ccbrianconnais.fr/nous-contacter"},
+  {type:"EPCI",nom:"Communauté de communes - Buëch Dévoluy",dept:"05",taille:"",adresse:"Communauté de communes Buëch-Dévoluy, 7 rue de la Tuilerie, 05400 Veynes",tel:"04 92 58 02 42",email:"accueil@ccbd.fr",contact:"https://www.ccbuechdevoluy.fr/contact.html"},
+  {type:"EPCI",nom:"Communauté de communes - Champsaur Valgaudemar",dept:"05",taille:"",adresse:"5 rue des Lagerons, 05500 Saint-Bonnet-en-Champsaur",tel:"04 92 50 00 20",email:"contact@champsaur-valgaudemar.fr",contact:"https://www.champsaur-valgaudemar.com/accueil-cccv/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Guillestrois et du Queyras",dept:"05",taille:"",adresse:"Passage des Écoles, 05600 Guillestre",tel:"04 92 45 04 62",email:"contact@comcomgq.com",contact:"https://demarches.collectivites.hautes-alpes.fr/contacter-une-collectivite/saisine-par-voie-electronique-du-territoire/"},
+  {type:"EPCI",nom:"Communauté de communes - Pays des Écrins",dept:"05",taille:"",adresse:"1 Rue du Dispensaire, 05120 L'Argentière-la-Bessée",tel:"04 92 23 11 17",email:"info@cc-paysdesecrins.com",contact:"https://www.cc-paysdesecrins.fr/formulaire-de-contact"},
+  {type:"EPCI",nom:"Communauté de communes - Serre-Ponçon",dept:"05",taille:"",adresse:"6 impasse de l'Observatoire, 05200 Embrun",tel:"04 92 43 22 78",email:"contact@ccserreponcon.com",contact:"https://www.ccserreponcon.com/contacter/contacter"},
+  {type:"EPCI",nom:"Communauté de communes - Serre-Ponçon Val d'Avance",dept:"05",taille:"",adresse:"33 rue de la Lauzière, 05230 La Bâtie-Neuve",tel:"04 92 50 20 50",email:"secretariat@ccspva.com",contact:"https://www.cc-serreponconvaldavance.com/fr/nous-connaitre/nous-contacter.html"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Cannes Pays de Lérins",dept:"06",taille:"",adresse:"Place Bernard-Cornut-Gentille, 06414 Cannes",tel:"04 89 82 27 00",email:"contact@cannespaysdelerins.fr",contact:"https://cannespaysdelerins.fr/index.php/contact/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - La Riviera Française",dept:"06",taille:"",adresse:"16 rue Villarey, 06500 Menton",tel:"04 92 41 80 30",email:"direction.generale@carf.fr",contact:"https://www.riviera-francaise.fr/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Pays de Grasse",dept:"06",taille:"",adresse:"57 avenue Pierre-Semard, 06130 Grasse",tel:"04 97 05 22 00",email:"contact@paysdegrasse.fr",contact:"http://www.paysdegrasse.fr"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Sophia Antipolis",dept:"06",taille:"",adresse:"Cours Masséna, 06606 Antibes Cedex",tel:"04 89 87 70 00",email:"info@agglo-casa.fr",contact:"https://casa-infos.fr/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Alpes d'Azur",dept:"06",taille:"",adresse:"Place Conil, 06260 Puget-Théniers",tel:"04 93 05 02 81",email:"secretariat@alpesdazur.fr",contact:""},
+  {type:"EPCI",nom:"Communauté de communes - Pays des Paillons",dept:"06",taille:"",adresse:"55 bis route départementale 2204, 06440 Blausasc",tel:"04 92 00 75 80",email:"info@ccpp06.fr",contact:"https://ccpp06.fr/"},
+  {type:"EPCI",nom:"Métropole - Nice Côte d'Azur",dept:"06",taille:"",adresse:"5 rue de l'Hôtel-de-Ville, 06300 Nice",tel:"04 89 98 10 00",email:"",contact:"https://www.nicecotedazur.org/contact/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Arles Crau Camargue Montagnette",dept:"13",taille:"",adresse:"Cité Yvan-Audouard, 5 rue Yvan-Audouard, 13200 Arles",tel:"04 86 52 60 00",email:"lepresident@agglo-accm.fr",contact:"https://www.agglo-accm.fr/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Terre de Provence",dept:"13",taille:"",adresse:"5 place du Docteur-Marius-Chabrand, 13630 Eyragues",tel:"04 32 61 96 30",email:"accueil@terredeprovence-agglo.com",contact:"https://www.terredeprovence-agglo.com/contact"},
+  {type:"EPCI",nom:"Communauté de communes - Vallée des Baux Alpilles",dept:"13",taille:"",adresse:"23 avenue des Joncades-Basses, 13210 Saint-Remy-de-Provence",tel:"04 90 54 54 20",email:"bienvenue@ccvba.fr",contact:"https://www.vallee-des-baux-alpilles.fr/contactez-nous/"},
+  {type:"EPCI",nom:"Métropole - Aix-Marseille-Provence",dept:"13",taille:"",adresse:"Tour La Marseillaise, 2 bis quai d'Arenc, 13002 Marseille",tel:"04 91 99 99 00",email:"",contact:"https://ampmetropole.fr/nous-contacter/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Dracénoise",dept:"83",taille:"",adresse:"Square Mozart, 83004 Draguignan",tel:"04 94 50 16 20",email:"accueil@dracenie.com",contact:"https://www.dracenie.com/contact"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Provence Verte",dept:"83",taille:"",adresse:"174 route départementale 554, Quartier de Paris, 83170 Brignoles",tel:"04 98 05 27 10",email:"contact@caprovenceverte.fr",contact:"https://www.caprovenceverte.fr/contact/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Sud Sainte Baume",dept:"83",taille:"",adresse:"155 avenue Henri-Jansoulin, 83740 La Cadière-d'Azur",tel:"04 94 98 26 60",email:"agglo@sudsaintebaume.fr",contact:"https://www.agglo-sudsaintebaume.fr/contact/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Var Estérel Méditerranée",dept:"83",taille:"",adresse:"624 chemin Aurélien, 83707 Saint-Raphaël Cedex",tel:"04 94 19 31 00",email:"contact@esterelcotedazur-agglo.fr",contact:"https://esterelcotedazur-agglo.fr/contacter-un-service/"},
+  {type:"EPCI",nom:"Communauté de communes - Coeur du Var",dept:"83",taille:"",adresse:"Route de Toulon, Quartier Précoumin, 83340 Le Luc",tel:"04 98 10 43 50",email:"contact@coeurduvar.com",contact:"https://www.coeurduvar.com/contact-coeur-du-var"},
+  {type:"EPCI",nom:"Communauté de communes - Golfe de Saint-Tropez",dept:"83",taille:"",adresse:"Bâtiment le Grand Sud, 2 rue Blaise-Pascal, 83310 Cogolin",tel:"04 94 55 70 30",email:"contact@cc-golfedesainttropez.fr",contact:"https://www.golfe-sainttropez.fr/nous-contacter/"},
+  {type:"EPCI",nom:"Communauté de communes - Lacs et Gorges du Verdon",dept:"83",taille:"",adresse:"242 avenue Albert-1er, 83630 Aups",tel:"04 94 70 19 12",email:"accueil@cclgv.fr",contact:"https://www.cc-lacsgorgesverdon.fr/contacts-comcom"},
+  {type:"EPCI",nom:"Communauté de communes - Méditerranée Porte des Maures",dept:"83",taille:"",adresse:"1 rue du lotissement Les Migraniers, 83250 La Londe-les-Maures",tel:"04 94 00 05 86",email:"contact@ccmpm.fr",contact:"https://www.ccmpm.fr/nous-contacter/"},
+  {type:"EPCI",nom:"Communauté de communes - Pays de Fayence",dept:"83",taille:"",adresse:"Mas-de-Tassy, 1849 route départementale 19, 83440 Tourrettes",tel:"04 94 76 02 03",email:"contact@cc-paysdefayence.fr",contact:"https://www.cc-paysdefayence.fr/"},
+  {type:"EPCI",nom:"Communauté de communes - Provence Verdon",dept:"83",taille:"",adresse:"38 avenue de la Foux, 83670 Varages",tel:"04 94 77 18 53",email:"accueil@provenceverdon.fr",contact:"https://www.provenceverdon.fr/"},
+  {type:"EPCI",nom:"Communauté de communes - Vallée du Gapeau",dept:"83",taille:"",adresse:"1193 avenue des Sénès, 83210 Solliès-Pont",tel:"04 94 33 78 84",email:"info@ccvg.fr",contact:"https://www.ccvg.fr/nous-contacter-5/"},
+  {type:"EPCI",nom:"Métropole - Toulon Provence Méditerranée",dept:"83",taille:"",adresse:"Hôtel de la métropole, 107 boulevard Henri-Fabre, 83041 Toulon",tel:"04 94 93 83 00",email:"contact@metropoletpm.fr",contact:"https://metropoletpm.fr/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Grand Avignon",dept:"84",taille:"",adresse:"Agroparc, 320 chemin des Meinajariès, 84000 Avignon",tel:"04 90 84 47 00",email:"contact@grandavignon.fr",contact:"https://www.grandavignon.fr/fr/nous-contacter"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Luberon Monts de Vaucluse",dept:"84",taille:"",adresse:"315 avenue Saint-Baldou, 84300 Cavaillon",tel:"04 90 78 82 30",email:"accueil@c-lmv.fr",contact:"https://www.luberonmontsdevaucluse.fr/contactez-nous/"},
+  {type:"EPCI",nom:"Communauté d'agglomération - Ventoux Comtat Venaissin (COVE)",dept:"84",taille:"",adresse:"1171 avenue du Mont-Ventoux, 84203 Carpentras Cedex",tel:"04 90 67 10 13",email:"accueil-cove@lacove.fr",contact:"https://www.lacove.fr/nous-contacter.html"},
+  {type:"EPCI",nom:"Communauté de communes - Aygues Ouvèze en Provence (CCAOP)",dept:"84",taille:"",adresse:"ZAE Joncquier & Morelles, 84850 Camaret-sur-Aygues",tel:"04 90 29 46 10",email:"accueil@ccayguesouveze.com",contact:"http://www.ccayguesouveze.com/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Enclave des Papes Pays de Grignan",dept:"84",taille:"",adresse:"Espace Germain-Aubert, 17A rue de Tourville, 84600 Valréas",tel:"04 90 35 01 52",email:"infos@cceppg.fr",contact:"http://www.cceppg.fr/nous-contacter"},
+  {type:"EPCI",nom:"Communauté de communes - Pays Réuni d'Orange",dept:"84",taille:"",adresse:"307 avenue de l'Arc-de-Triomphe, 84100 Orange",tel:"04 90 03 01 50",email:"contact@ccpro.fr",contact:"https://www.ccpro.fr/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Pays d'Apt Luberon",dept:"84",taille:"",adresse:"Avenue Frédéric-Mistral, 84400 Apt",tel:"04 90 04 49 70",email:"contact@paysapt-luberon.fr",contact:"https://www.paysapt-luberon.fr/contactez-nous/"},
+  {type:"EPCI",nom:"Communauté de communes - Pays des Sorgues et Monts de Vaucluse",dept:"84",taille:"",adresse:"350 avenue de la Petite-Marine, 84800 L'Isle-sur-la-Sorgue",tel:"04 90 21 43 11",email:"contact@ccpsmv.fr",contact:"https://www.paysdessorgues.fr/contact"},
+  {type:"EPCI",nom:"Communauté de communes - Rhône Lez Provence",dept:"84",taille:"",adresse:"1260 avenue Théodore-Aubanel, 84500 Bollène",tel:"04 90 40 01 28",email:"accueil@ccrlp.fr",contact:"http://www.ccrlp.fr"},
+  {type:"EPCI",nom:"Communauté de communes - Sorgues du Comtat",dept:"84",taille:"",adresse:"Communauté d'Agglomération Les Sorgues du Comtat, 340 boulevard d'Avignon, 84170 Monteux",tel:"04 90 61 15 50",email:"accueil@sorguesducomtat.fr",contact:"https://sorguesducomtat.fr/fr/"},
+  {type:"EPCI",nom:"Communauté de communes - Vaison Ventoux",dept:"84",taille:"",adresse:"375 avenue Gabriel-Péri, 84110 Vaison-la-Romaine Cedex 1",tel:"04 90 36 16 29",email:"direction-generale@vaison-ventoux.fr",contact:"https://rdv.vaison-ventoux.fr/contact/"},
+  {type:"EPCI",nom:"Communauté de communes - Ventoux Sud",dept:"84",taille:"",adresse:"186 rue des Péquélets, 84390 Sault",tel:"04 90 64 15 29",email:"accueilsault@ccvs84.fr",contact:"https://ccvs84.fr/nous-contacter.html"},
+  {type:"EPCI",nom:"Communauté territoriale - Sud Luberon",dept:"84",taille:"",adresse:"128 chemin des Vieilles-Vignes, Parc d'activité Le Revol, 84240 La Tour-d'Aigues",tel:"04 90 07 48 12",email:"accueil@cotelub.fr",contact:"https://www.cotelub.fr/"},
+  {type:"Epl · Sem",nom:"SEM DE DEVELOPPEMENT TOURISTIQUE DE MOUSTIERS STE MARIE ET DU VERDON",dept:"04",taille:"2,2 M€ de CA",adresse:"HÔTEL DE VILLE, 04360 Moustiers Ste Marie",tel:"04 92 74 64 90",email:"",contact:"www.moustiers.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE SISTERON",dept:"04",taille:"607 k€ de CA",adresse:"11 ALLEE DES GENETS, P.A. SISTERON-VAL DE DURANCE, 04200 Sisteron",tel:"",email:"",contact:""},
+  {type:"Epl · Sem",nom:"ENERGIE DEVELOPPEMENT SERVICES DU BRIANCONNAIS",dept:"05",taille:"17,3 M€ de CA",adresse:"PLACE MEDECIN GENERAL BLANCHARD, 05100 Briancon",tel:"04 92 21 51 51",email:"clientele@edsb.fr",contact:"www.edsb.fr"},
+  {type:"Epl · Sem",nom:"SAEML ENERGIE DEVELOPPEMENT CERVIERES",dept:"05",taille:"1,1 M€ de CA",adresse:"MAIRIE DE CERVIERES, 186 RUE DE LA MAIRIE, 05100 Cervieres",tel:"04 92 21 09 19",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SEM DEVOLUY",dept:"05",taille:"211 k€ de CA",adresse:"SUPER DEVOLUY, 05250 Le Devoluy",tel:"",email:"",contact:"www.ledevoluy.ski"},
+  {type:"Epl · Sem",nom:"SEM HAUTES ALPES ENERGIES",dept:"05",taille:"57 k€ de CA",adresse:"HOTEL DU DEPARTEMENT, PLACE SAINT-ARNOUX, CS 66005, 05008 Gap",tel:"",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE *LES ECRINS*",dept:"05",taille:"9,3 M€ de CA",adresse:"STATION 1600 DE PUY-SAINT-VINCENT, 05290 Puy St Vincent",tel:"04 92 23 43 43",email:"contact@puysaintvincent.info",contact:"www.puysaintvincent.com"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE LOISIRS D'ORCIERES-MERLETTE",dept:"05",taille:"852 k€ de CA",adresse:"MAISON DU TOURISME MERLETTE, 05170 Orcieres",tel:"04 92 55 89 86",email:"",contact:"www.orcieres.com"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE LOCALE DES ORRES",dept:"05",taille:"15,1 M€ de CA",adresse:"BÂTIMENT ADMINISTRATIF, 05200 Les Orres",tel:"04 92 44 00 39",email:"ot.accueil@lesorres.com",contact:"www.lesorres.com"},
+  {type:"Epl · Sem",nom:"SOCIETE D'EQUIPEMENT ET DU DEVELOPPEMENT DE VARS",dept:"05",taille:"17,2 M€ de CA",adresse:"COURS RÖHNER, LES CLAUX, 05560 Vars",tel:"04 92 46 51 04",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE DE GESTION DES ACTIVITES TOURISTIQUES DE RISOUL",dept:"05",taille:"353 k€ de CA",adresse:"BATIMENT D'ACCUEIL DE RISOUL STATION, 05600 Risoul",tel:"04 92 45 23 63",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOLEIL EAU VENT ENERGIE",dept:"05",taille:"176 k€ de CA",adresse:"MAIRIE DE PUY-SAINT-ANDRE, 05100 Puy St Pierre",tel:"04 92 21 51 61",email:"",contact:"www.seveenergierenouvelable.fr/la-societe"},
+  {type:"Epl · Sem",nom:"EAUX DE MOUANS",dept:"06",taille:"4,3 M€ de CA",adresse:"6 RUE PASTEUR, 3EME ETAGE - MAIRIE ANNEXE, 06370 Mouans Sartoux",tel:"04 92 92 47 12",email:"accueil@eaux-de-mouans.fr",contact:"eaux-de-mouans.fr"},
+  {type:"Epl · Sem",nom:"GREEN ENERGY 06",dept:"06",taille:"13 k€ de CA",adresse:"147 BD DU MERCANTOUR, 06200 Nice",tel:"04 89 04 22 54",email:"",contact:"www.departement06.fr/green-deal-06/sem-green-energy-06-45848.html"},
+  {type:"Epl · Sem",nom:"PAYS DE GRASSE DYNAMIQUES",dept:"06",taille:"58 k€ de CA",adresse:"4 RUE DE LA DÉLIVRANCE, 06130 Grasse",tel:"04 97 05 57 50",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SEM INTERCOMMUNALE POUR L'AMELIORATION DE LA CIRCULATION ET DU STATIONNEMENT",dept:"06",taille:"636 k€ de CA",adresse:"38 BD RAIMBALDI, BP 1539, 06009 Nice Cedex 1",tel:"04 92 17 52 52",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SEM MERCANTOUR DEVELOPPEMENT",dept:"06",taille:"498 k€ de CA",adresse:"PLACE JEAN GAISSA, 06420 Isola",tel:"04 93 23 23 30",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME IMMOBILIERE D'ECONOMIE MIXTE DE SAINT-JEAN CAP FERRAT",dept:"06",taille:"862 k€ de CA",adresse:"C/O HÔTEL DE VILLE, 21, AVENUE DENIS SÉMÉRIA, 06230 St Jean Cap Ferrat",tel:"04 94 39 39 60",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE CANNOISE DE CONSTRUCTION ET D'AMENAGEMENT",dept:"06",taille:"2,1 M€ de CA",adresse:"VILLA MYOSOTIS, 183 AV MICHEL JOURDAN, 06150 Cannes",tel:"04 93 90 46 50",email:"",contact:"www.socaconam.com"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE SAINT-ETIENNE-DE-TINEE-AURON",dept:"06",taille:"672 k€ de CA",adresse:"REMONTEES MECANIQUES, AURON, 06660 St Etienne De Tinee",tel:"04 93 23 00 02",email:"",contact:"isola2000.com/annuaire/services/services-utiles/sem-cimes-mercantour-isola-2000"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE VENCE",dept:"06",taille:"850 k€ de CA",adresse:"2 RUE LOUIS FUNEL, 06140 Vence",tel:"04 93 58 24 44",email:"parking@sem-vence.com",contact:"sem-vence.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE IMMOBILIERE DE LA VILLE DE MENTON",dept:"06",taille:"13 k€ de CA",adresse:"HÔTEL DE VILLE, BP 69, 06502 Menton",tel:"04 92 10 51 06",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE IMMOBILIERE DE PEYRAGUDES",dept:"06",taille:"167 k€ de CA",adresse:"C/O FRANCE LOCATIONS - VACANCES EN RÉS, 73 PARC DE L'ARGILE, 06370 Mouans Sartoux",tel:"05 62 99 92 30",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE LOCALE HABITAT 06",dept:"06",taille:"40,2 M€ de CA",adresse:"IMMEUBLE LE CENTAURE, 64-66 AVENUE VALERY GISCARD D'ESTAING, 06200 Nice",tel:"04 92 26 16 05",email:"",contact:"www.habitat06.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE POUR LES EVENEMENTS CANNOIS",dept:"06",taille:"49,4 M€ de CA",adresse:"PALAIS FESTIVALS ET CONGRES, LA CROISETTE - CS 30051, 06414 Cannes Cedex",tel:"04 93 39 01 01",email:"",contact:"www.palaisdesfestivals.com"},
+  {type:"Epl · Sem",nom:"TERRITOIRE D'AZUR",dept:"06",taille:"",adresse:"367 PROMENADE DES ANGLAIS, 06200 Nice",tel:"",email:"",contact:""},
+  {type:"Epl · Sem",nom:"IMMOBILIER DEVELOPPEMENT AIX-MARSEILLE-PROVENCE",dept:"13",taille:"4,6 M€ de CA",adresse:"220 CHEMIN DU CAMP DE SARLIER, LES PLATEAUX DE L'ALTA BATIMENT A, 13400 Aubagne",tel:"04 42 84 47 98",email:"",contact:"www.faconeo.com"},
+  {type:"Epl · Sem",nom:"MARITIMA MEDIAS",dept:"13",taille:"3,4 M€ de CA",adresse:"LE BATEAU BLANC - BAT C, CHEMIN DE PARADIS - BP 10158, 13694 Martigues Cedex",tel:"04 42 41 36 01",email:"",contact:"www.maritima.info"},
+  {type:"Epl · Sem",nom:"POLE AERONAUTIQUE ISTRES - ETANG DE BERRE",dept:"13",taille:"1,1 M€ de CA",adresse:"CHEMIN DES BELLONS, QUARTIER PRIGNAN, 13800 Istres",tel:"04 42 11 78 07",email:"info@poleaeronautique-istres.fr",contact:"www.poleaeronautique-istres.fr"},
+  {type:"Epl · Sem",nom:"SA DE CONSTRUCTION ET DE GESTION IMMOBILIERE DE LA VILLE D'AIX-EN-PROVENCE",dept:"13",taille:"32,8 M€ de CA",adresse:"6 BIS RUE DE LA MOLLE, CS 70862, 13626 Aix En Provence Cedex 1",tel:"04 65 15 87 10",email:"",contact:"www.sacogiva-immobilier.fr"},
+  {type:"Epl · Sem",nom:"SEM D'ORGANISATION ET DE GESTION D'EQUIPEMENTS TOURISTIQUES DE MARTIGUES",dept:"13",taille:"4,3 M€ de CA",adresse:"LE BATEAU BLANC BAT D, CHEMIN DE PARADIS - BP 20218, 13698 Martigues Cedex",tel:"04 42 41 39 39",email:"",contact:"www.semovim-martigues.com"},
+  {type:"Epl · Sem",nom:"SEMIPORT - HOTEL RESIDENCE LES AIGUADES",dept:"13",taille:"1,2 M€ de CA",adresse:"HÔTEL RESIDENCE LES AIGUADES, 1 RUE GABRIEL PERI, 13110 Port De Bouc",tel:"04 42 40 01 02",email:"contact@hotel-aiguades.com",contact:"www.hotel-aiguades.com"},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME D'ECONOMIE MIXTE AGORA",dept:"13",taille:"1,1 M€ de CA",adresse:"SITE INDUSTRIEL DES PALUDS, AVENUE DES PALUDS - BP 1303, 13784 Aubagne Cedex",tel:"04 42 18 08 08",email:"contact@agora-congres.com",contact:"www.agora-congres.com"},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME D'ECONOMIE MIXTE MARSEILLE HABITAT",dept:"13",taille:"19,8 M€ de CA",adresse:"ESPACE COLBERT, 10 RUE SAINTE-BARBE, CS 92219, 13207 Marseille Cedex 01",tel:"04 91 15 49 49",email:"",contact:"www.marseillehabitat.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME IMMOBILIERE D'ECONOMIE MIXTE D'ISTRES-MIRAMAS-FOS",dept:"13",taille:"9,3 M€ de CA",adresse:"2 RUE CLEMENT TROUILLARD, CS 40020, 13808 Istres Cedex",tel:"04 42 55 72 42",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE D'AMENAGEMENT DE GARDANNE",dept:"13",taille:"9,7 M€ de CA",adresse:"1480 AVENUE D ARMÉNIE, PARC D ACTIVITÉS DU PUITS MORANDAT, 13120 Gardanne",tel:"04 42 65 77 20",email:"accueil@ville-gardanne.fr",contact:"www.ville-gardanne.fr/la-semag"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE D'EQUIPEMENT DU PAYS D'AIX",dept:"13",taille:"9,6 M€ de CA",adresse:"4 RUE LAPIERRE, BP 60170, 13606 Aix En Provence Cedex 1",tel:"04 42 16 04 04",email:"communication@semepa.fr",contact:"www.semepa.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DES SAINTES-MARIES-DE-LA-MER",dept:"13",taille:"9,0 M€ de CA",adresse:"AVENUE THEODORE AUBANEL, 13460 Saintes Maries De La Mer",tel:"04 90 97 88 77",email:"",contact:"www.lessaintesmaries.fr/la-semis"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE IMMOBILIERE DE LA VILLE DE MARTIGUES",dept:"13",taille:"20,5 M€ de CA",adresse:"LE BATEAU BLANC BAT D, AV. DU COMMANDANT L HERMINIER, BP 30228, 13698 Martigues Cedex",tel:"04 42 41 38 01",email:"semivim@semivim.fr",contact:"www.semivim.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE IMMOBILIERE DE LA VILLE DE SALON-DE-PROVENCE",dept:"13",taille:"7,4 M€ de CA",adresse:"321 RUE DE L ADJUDANT CHEF CHAMPION, CS 20163, 13654 Salon De Provence Cedex",tel:"04 90 53 16 81",email:"contact@semisap.fr",contact:"www.semisap.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE DE GESTION IMMOBILIERE DE LA VILLE DE MARSEILLE",dept:"13",taille:"58,2 M€ de CA",adresse:"6 PLACE DU 4 SEPTEMBRE, CS 70025, 13284 Marseille Cedex 07",tel:"04 91 04 90 00",email:"",contact:"www.sogima.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE DU CANAL DE PROVENCE ET D'AMENAGEMENT DE LA REGION PROVENCALE",dept:"13",taille:"131,0 M€ de CA",adresse:"LE THOLONET, CS 70064, 13182 Aix En Provence Cedex 5",tel:"04 42 66 70 00",email:"",contact:"www.canaldeprovence.com"},
+  {type:"Epl · Sem",nom:"SOCIETE MUNICIPALE D'ACCESSION A LA PROPRIETE SOMAP LA PENNOISE",dept:"13",taille:"310 k€ de CA",adresse:"LE CLOS IDEAL, 99 BIS VIEILLE ROUTE GAVOTTE, 13170 Les Pennes Mirabeau",tel:"04 91 51 25 21",email:"",contact:""},
+  {type:"Epl · Sem",nom:"AMENAGEMENT CONSTRUCTION GESTION IMMOBILIER ANIMATION PROMOTION TOURISTIQUE ET COMMERCIALE",dept:"83",taille:"15,4 M€ de CA",adresse:"VILLA BELLEVUE, 5 AVENUE BERTHIE ALBRECHT - BP 31, 83120 Ste Maxime",tel:"04 94 96 20 55",email:"contact@sainte-maxime.com",contact:"www.sainte-maxime.com"},
+  {type:"Epl · Sem",nom:"FREJUS AMENAGEMENT",dept:"83",taille:"69 k€ de CA",adresse:"CAPITAINERIE, 55 PASSAGE DES CARYATIDES, 83600 Frejus",tel:"04 94 51 76 51",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME D'ECONOMIE MIXTE DE CONSTRUCTION DE DRAGUIGNAN",dept:"83",taille:"6,3 M€ de CA",adresse:"247 RUE JEAN AICARD, 83300 Draguignan",tel:"04 94 50 56 56",email:"",contact:"www.saiem-draguignan.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME GARDEENNE D'ECONOMIE MIXTE",dept:"83",taille:"18,3 M€ de CA",adresse:"132 RUE LE CORBUSIER, 83130 La Garde",tel:"04 94 08 63 08",email:"",contact:"www.sagem-lagarde.com"},
+  {type:"Epl · Sem",nom:"SOCIETE ANONYME ROQUEBRUNOISE DE GESTION EVENEMENTIELLE ET TOURISTIQUE",dept:"83",taille:"58 k€ de CA",adresse:"2540 RDN 7, ZA LES GARILLANS, 83520 Roquebrune Sur Argens",tel:"04 94 19 71 71",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE D'EXPANSION DE LA VALETTE-DU-VAR",dept:"83",taille:"1,9 M€ de CA",adresse:"PLACE GENERAL DE GAULLE, IMMEUBLE MÉDIVAL - BÂTIMENT B, 83160 La Valette Du Var",tel:"04 94 14 10 03",email:"",contact:"www.splm-semexval.com"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE GESTION DU PORT DE BANDOL",dept:"83",taille:"4,7 M€ de CA",adresse:"CAPITAINERIE DU PORT, 6 QUAI DU PORT, 83150 Bandol",tel:"04 94 29 42 64",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE LA VILLE DE GRIMAUD",dept:"83",taille:"163 k€ de CA",adresse:"HÔTEL DE VILLE, 83310 Grimaud",tel:"04 94 43 80 04",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE SAINT-TROPEZ",dept:"83",taille:"0 k€ de CA",adresse:"4 RUE DU TEMPLE, BP 222, 83994 Saint Tropez Cedex",tel:"04 94 54 88 78",email:"",contact:""},
+  {type:"Epl · Sem",nom:"VAR AMENAGEMENT DEVELOPPEMENT",dept:"83",taille:"19,7 M€ de CA",adresse:"TOUR L'ALBATROS, RUE D'ENTRECASTEAUX - BP 1406, 83056 Toulon Cedex",tel:"04 94 03 95 95",email:"",contact:"www.var-amenagement-developpement.fr"},
+  {type:"Epl · Sem",nom:"CITADIS - SOCIETE D'EQUIPEMENT, DEVELOPPEMENT ET VALORISATION",dept:"84",taille:"20,2 M€ de CA",adresse:"6 PASSAGE DE L ORATOIRE, 84000 Avignon",tel:"04 90 27 57 00",email:"",contact:"www.citadis.fr"},
+  {type:"Epl · Sem",nom:"SEM POUR LA CONSTRUCTION & L'EXPLOITATION DU MARCHE D'INTERET NATIONAL D'AVIGNON",dept:"84",taille:"4,4 M€ de CA",adresse:"MARCHE D INTERET NATIONAL BATIMENT H1, 135 AVENUE PIERRE SEMARD, 84000 Avignon",tel:"04 90 88 91 02",email:"smina@minavignon.fr",contact:"www.minavignon.fr"},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE DE SORGUES",dept:"84",taille:"2,5 M€ de CA",adresse:"55 AVENUE SAINT MARC, 84700 Sorgues",tel:"04 90 39 94 90",email:"",contact:""},
+  {type:"Epl · Sem",nom:"SOCIETE D'ECONOMIE MIXTE IMMOBILIERE ET D'AMENAGEMENT DE LA VILLE DE BOLLENE ET SA REGION",dept:"84",taille:"2,7 M€ de CA",adresse:"32 AVENUE PASTEUR, 2E ETAGE DE LA MAISON DU TERROIR, 84500 Bollene",tel:"04 90 30 12 54",email:"",contact:""},
+  {type:"Epl · SemOp",nom:"SEANERGIES",dept:"13",taille:"",adresse:"RUE PAUL LOMBARD, 13110 Port De Bouc",tel:"",email:"",contact:""},
+  {type:"Epl · SemOp",nom:"SOCIETE D'EXPLOITATION DES ZONES AERONAUTIQUES ET MECANIQUES D'EYGUIERES - SEZAME",dept:"13",taille:"218 k€ de CA",adresse:"MAIRIE D'EYGUIERES, RUE DU COUVENT, 13430 Eyguieres",tel:"",email:"",contact:""},
+  {type:"Epl · SemOp",nom:"LA SEYNOISE DES EAUX",dept:"83",taille:"8,9 M€ de CA",adresse:"79 RUE DE ROME, 83500 La Seyne Sur Mer",tel:"08 11 90 07 00",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL SISTERONAIS BUECH",dept:"04",taille:"9 k€ de CA",adresse:"11 ALLÉE DES GENÊTS, P.A. SISTERON-VAL DE DURANCE, 04200 Sisteron",tel:"04 92 33 18 00",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL BUECH DEVOLUY EXPLOITATION",dept:"05",taille:"842 k€ de CA",adresse:"MAIRIE DU DÉVOLUY, LE PRÉ SAINT-ETIENNE-EN-DÉVOLUY, 05250 Le Devoluy",tel:"07 68 00 68 07",email:"contact@odycea-devoluy.com",contact:"www.odycea-devoluy.com"},
+  {type:"Epl · Spl",nom:"SPL EAU SERVICES HAUTE DURANCE",dept:"05",taille:"2,9 M€ de CA",adresse:"27 ROUTE DES MAISONS BLANCHES, 05100 Briancon",tel:"04 92 20 57 57",email:"",contact:""},
+  {type:"Epl · Spl",nom:"HYDROPOLIS",dept:"06",taille:"5,1 M€ de CA",adresse:"CITE ARTISANALE BARTHELEMY BEAULEAU, 108 CHEMIN DE SAINTE HELENE, CS 10092, 06902 Sophia Antipolis Cedex",tel:"04 83 88 16 70",email:"contact@hydropolis-sophia.fr",contact:"www.hydropolis-sophia.fr"},
+  {type:"Epl · Spl",nom:"PAYS DE GRASSE TOURISME",dept:"06",taille:"",adresse:"22 COURS HONORE CRESP, PALAIS DES CONGRES, 06130 Grasse",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"PORTS DE MENTON",dept:"06",taille:"5,7 M€ de CA",adresse:"PORT DE MENTON GARAVAN, TERRE PLEIN DU NOUVEAU PORT, 06500 Menton",tel:"04 92 01 07 30",email:"",contact:"www.ports-menton.fr"},
+  {type:"Epl · Spl",nom:"SOCIETE PUBLIQUE LOCALE COTE D'AZUR AMENAGEMENT",dept:"06",taille:"34,6 M€ de CA",adresse:"METROPOLE NICE CÖTE D'AZUR, 455 PROMENADE DES ANGLAIS, IMMEUBLE PHOENIX, 06200 Nice",tel:"04 89 98 20 34",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SOCIETE PUBLIQUE LOCALE DE VALBERG",dept:"06",taille:"3,8 M€ de CA",adresse:"CENTRE ADMINISTRATIF DE VALBERG, PLACE CHARLES GINESY, 06470 Peone",tel:"04 93 23 24 24",email:"ot@valberg.com",contact:"www.valberg.com"},
+  {type:"Epl · Spl",nom:"SPL EAUX DE PEILLE",dept:"06",taille:"",adresse:"HOTEL DE VILLE, 5 PLACE CARNOT, 06440 Peille",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL PAYS DE GRASSE DEVELOPPEMENT",dept:"06",taille:"7,2 M€ de CA",adresse:"4 RUE DE LA DELIVRANCE, 06130 Grasse",tel:"04 97 05 57 50",email:"",contact:"www.paysdegrassedeveloppement.fr"},
+  {type:"Epl · Spl",nom:"THEATRE COMMUNAUTAIRE D'ANTIBES",dept:"06",taille:"3,3 M€ de CA",adresse:"260 AVENUE JULES GREC, 06600 Antibes",tel:"04 83 76 13 13",email:"contact@anthea-antibes.fr",contact:"www.anthea-antibes.fr"},
+  {type:"Epl · Spl",nom:"GRAND MARCHE DE PROVENCE",dept:"13",taille:"7 k€ de CA",adresse:"62 CHEMIN DES CONFIGNES, ZI DES ISCLES, 13160 Chateaurenard",tel:"04 28 70 61 05",email:"",contact:""},
+  {type:"Epl · Spl",nom:"L'EAU DES COLLINES",dept:"13",taille:"14,1 M€ de CA",adresse:"140 AVENUE DU MILLET, ZI LES PALUDS, 13400 Aubagne",tel:"04 42 62 45 00",email:"eau@eaudescollines.fr",contact:"www.eaudescollines.fr"},
+  {type:"Epl · Spl",nom:"LA CIOTAT SHIPYARDS",dept:"13",taille:"18,6 M€ de CA",adresse:"46 QUAI FRANCOIS MITTERRAND, CS 40116, 13600 La Ciotat",tel:"04 42 83 80 26",email:"",contact:"www.laciotat-shipyards.com"},
+  {type:"Epl · Spl",nom:"NAUTISME MER DEVELOPPEMENT PORT-SAINT-LOUIS-PROVENCE",dept:"13",taille:"1,7 M€ de CA",adresse:"QUAI CT FAVIER, CAPITAINERIE PORT PLAISANCE COMMUNAL, 13230 Port St Louis Du Rhone",tel:"04 42 86 39 11",email:"contact@nautismed.fr",contact:"www.nautismed.fr"},
+  {type:"Epl · Spl",nom:"SOCIETE LOCALE D'EQUIPEMENT ET D'AMENAGEMENT DE L'AIRE METROPOLITAINE",dept:"13",taille:"13,0 M€ de CA",adresse:"146 RUE PARADIS, IMMEUBLE LE NOILLY, 13006 Marseille",tel:"04 26 99 72 00",email:"contact@soleam.net",contact:"www.soleam.net"},
+  {type:"Epl · Spl",nom:"SOCIETE PUBLIQUE LOCALE DU PAYS D'ARLES -SPL PA",dept:"13",taille:"25 k€ de CA",adresse:"4 RUE ROBERT SCHUMAN, 13200 Arles",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SOCIETE PUBLIQUE LOCALE SENS URBAIN",dept:"13",taille:"1,9 M€ de CA",adresse:"DOMAINE MERIQUETTE, LA COURBEDONNE NORD, 13270 Fos Sur Mer",tel:"04 42 47 71 68",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL AIX MANOSQUE VAL DE DURANCE",dept:"13",taille:"91 k€ de CA",adresse:"4 RUE LAPIERRE, 13100 Aix En Provence",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL ENERGIES DE PROVENCE",dept:"13",taille:"",adresse:"LE PHARO, 58 BOULEVARD CHARLES LIVON, 13007 Marseille",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL MIN MARCHE MARSEILLE MEDITERRANEE",dept:"13",taille:"8,1 M€ de CA",adresse:"AVENUE DU MARCHE INTERET NATIONAL, 13014 Marseille",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL ONE PROVENCE PROMOTION",dept:"13",taille:"833 k€ de CA",adresse:"220 CHEMIN DE CAMP DE SARLIER, LES PLATEAUX DE L'ALTA - BAT A, 13400 Aubagne",tel:"04 42 84 47 98",email:"",contact:"www.faconeo.com"},
+  {type:"Epl · Spl",nom:"SPL PROVENCE TERRITOIRE D'AVENIR",dept:"13",taille:"",adresse:"HOTEL DE VILLE, COURS DE LA REPUBLIQUE, 13120 Gardanne",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"TOURISTIQUE ET EVENEMENTIELLE DU PAYS DE MARTIGUES",dept:"13",taille:"85 k€ de CA",adresse:"OFFICE DE TOURISME, ROND-POINT DE L HÔTEL DE VILLE, 13500 Martigues",tel:"04 42 42 31 14",email:"info@martigues-tourisme.com",contact:"www.martigues-tourisme.com"},
+  {type:"Epl · Spl",nom:"GOLFE DE SAINT-TROPEZ DEVELOPPEMENT",dept:"83",taille:"597 k€ de CA",adresse:"HOTEL COMMUNAUTAIRE, 2 RUE BLAISE PASCAL, 83310 Cogolin",tel:"04 94 55 22 00",email:"",contact:"www.golfe-saint-tropez-information.com"},
+  {type:"Epl · Spl",nom:"INGENIERIE DEPARTEMENTALE 83",dept:"83",taille:"815 k€ de CA",adresse:"92 AVENUE ERNEST NOGRE, 83000 Toulon",tel:"04 94 46 03 91",email:"",contact:"www.id83.fr"},
+  {type:"Epl · Spl",nom:"MAURES EVENEMENTS",dept:"83",taille:"",adresse:"109 AVENUE GABRIEL PERI, 83240 Cavalaire Sur Mer",tel:"04 94 00 48 00",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SOCIETE D'AMENAGEMENT ET DE GESTION PUBLIQUE",dept:"83",taille:"6,8 M€ de CA",adresse:"132 RUE LE CORBUSIER, 83130 La Garde",tel:"04 94 08 63 08",email:"",contact:"www.sagem-lagarde.com"},
+  {type:"Epl · Spl",nom:"SOCIETE PUBLIQUE LOCALE PORT DE FREJUS",dept:"83",taille:"3,5 M€ de CA",adresse:"CAPITAINERIE, 55 PASSAGE DES CARYATIDES, CS80084, 83606 Frejus Cedex",tel:"04 94 82 63 00",email:"",contact:"www.portfrejus.fr"},
+  {type:"Epl · Spl",nom:"SOCIETE PUBLIQUE LOCALE PORT HERACLEA",dept:"83",taille:"3,0 M€ de CA",adresse:"CAPITAINERIE DU PORT HERACLEA, 59 RUE DE LA DIGUE, 83240 Cavalaire Sur Mer",tel:"04 94 64 17 81",email:"",contact:"port-heraclea.fr"},
+  {type:"Epl · Spl",nom:"SPL LE VALLON DES PINS",dept:"83",taille:"3,6 M€ de CA",adresse:"575 GRANDE RUE, 83600 Bagnols En Foret",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL SUD PLAISANCE",dept:"83",taille:"4,9 M€ de CA",adresse:"VILLA CHARLES, 1 BOULEVARD BEAU SITE, BP 31, 83120 Ste Maxime",tel:"04 15 09 82 91",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL VAR ENERGIES RENOUVELABLES",dept:"83",taille:"",adresse:"HOTEL DU DEPARTEMENT, 390 AVENUE DES LICES, 83000 Toulon",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPORTS LOISIRS ANIMATION JEUNESSE",dept:"83",taille:"978 k€ de CA",adresse:"HÔTEL DE VILLE, PLACE JEAN JAURÈS, 83200 Le Revest Les Eaux",tel:"04 94 98 19 90",email:"",contact:""},
+  {type:"Epl · Spl",nom:"TOULON METROPOLE EVENEMENTS ET CONGRES",dept:"83",taille:"6,0 M€ de CA",adresse:"PALAIS DES CONGRÈS NEPTUNE, PLACE BESAGNE, CS 41201, 83070 Toulon Cedex",tel:"04 98 00 83 83",email:"",contact:"toulon-congres-neptune.com"},
+  {type:"Epl · Spl",nom:"AVIGNON TOURISME",dept:"84",taille:"22,3 M€ de CA",adresse:"6 RUE PENTE RAPIDE CHARLES ANSIDEI, BP 149, 84008 Avignon Cedex 1",tel:"04 90 27 50 00",email:"information@ot-avignon.fr",contact:"www.avignon-tourisme.com"},
+  {type:"Epl · Spl",nom:"CHOREGIES D'ORANGE",dept:"84",taille:"1,4 M€ de CA",adresse:"18 PLACE SILVAIN, 84100 Orange",tel:"04 90 51 83 83",email:"administration@choregies.com",contact:"choregies.fr"},
+  {type:"Epl · Spl",nom:"FRUITIERE NUMERIQUE",dept:"84",taille:"231 k€ de CA",adresse:"AVENUE DU 8 MAI 1945, D943, 84160 Lourmarin",tel:"09 67 46 07 40",email:"",contact:"www.lafruitierenumerique.fr"},
+  {type:"Epl · Spl",nom:"SPL DE DEVELOPPEMENT ET DE PROMOTION DU TOURISME, DE LA CULTURE ET DU TERRITOIRE VENTOUX-PROVENCE",dept:"84",taille:"196 k€ de CA",adresse:"374 AVENUE JEAN JAURÈS, 84200 Carpentras",tel:"04 90 63 00 78",email:"",contact:"www.ventouxprovence.fr"},
+  {type:"Epl · Spl",nom:"SPL DE DEVELOPPEMENT TOURISTIQUE DES STATIONS DU MONT VENTOUX",dept:"84",taille:"428 k€ de CA",adresse:"1171 AVENUE DU MONT VENTOUX, CS 30085, 84200 Carpentras",tel:"04 90 63 42 02",email:"",contact:"www.lacove.fr/mon-quotidien/economie-et-tourisme/les-stations-du-ventoux.html"},
+  {type:"Epl · Spl",nom:"SPL DURANCE PAYS D'AIGUES",dept:"84",taille:"2,7 M€ de CA",adresse:"PARC D'ACTIVITÉS LE REVOL, 128 CHEMIN DES VIEILLES VIGNES, 84240 La Tour D Aigues",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL GRAND AVIGNON AMENAGEMENT",dept:"84",taille:"73 k€ de CA",adresse:"320 CHEMIN DES MEINAJARIÈS - AGROPARC, 84911 Avignon Cedex 9",tel:"04 51 20 84 84",email:"contact@grandavignonamenagement.fr",contact:"www.grandavignonamenagement.fr"},
+  {type:"Epl · Spl",nom:"SPL TECELYS",dept:"84",taille:"46,0 M€ de CA",adresse:"1300 ROUTE DE L'AÉRODROME, 84000 Avignon",tel:"",email:"",contact:""},
+  {type:"Epl · Spl",nom:"SPL TERRITOIRE VAUCLUSE",dept:"84",taille:"6,4 M€ de CA",adresse:"6 PASSAGE DE L'ORATOIRE, 84000 Avignon",tel:"04 90 27 57 00",email:"",contact:"www.splterritoire84.com"},
+  {type:"Epl · Spl",nom:"SPL TRI RHODANIEN",dept:"84",taille:"",adresse:"649 AVENUE MAURICE ET MARGUERITE VIDIER, 84270 Vedene",tel:"",email:"",contact:""},
+  {type:"Epl · Spla",nom:"SPLA RIVIERA FRANCAISE AMENAGEMENT",dept:"06",taille:"-6 k€ de CA",adresse:"25 RUE VILLAREY, 06500 Menton",tel:"",email:"",contact:"www.riviera-francaise-amenagement.fr"},
+  {type:"Epl · Spla",nom:"SPLA PAYS D'AIX TERRITOIRES",dept:"13",taille:"3,2 M€ de CA",adresse:"2 RUE LAPIERRE, 13100 Aix En Provence",tel:"04 42 16 04 04",email:"",contact:"www.paysdaix-territoires.fr"},
+  {type:"Epl · Spla",nom:"SPL MEDITERRANEE",dept:"83",taille:"12,0 M€ de CA",adresse:"PLACE GENERAL DE GAULLE, IMMEUBLE MÉDIVAL - BÂTIMENT B, 83160 La Valette Du Var",tel:"04 94 14 10 03",email:"",contact:""},
+  {type:"Epl · Spla-in",nom:"AIX MARSEILLE PROVENCE",dept:"13",taille:"10,9 M€ de CA",adresse:"143 BOULEVARD DE PARIS, IMMEUBLE EKO ACTIVE, 13003 Marseille",tel:"",email:"",contact:""},
+  {type:"Epl · Spla-in",nom:"SOCIETE PUBLIQUE DES ECOLES MARSEILLAISES",dept:"13",taille:"",adresse:"5 BOULEVARD DE DUNKERQUE, 13002 Marseille",tel:"04 91 55 12 61",email:"",contact:""},
+  {type:"Région",nom:"Conseil régional - Provence-Alpes-Côte d'Azur",dept:"13",taille:"",adresse:"Hôtel de la Région, 27 place Jules-Guesde, 13002 Marseille",tel:"04 91 57 57 57",email:"",contact:"https://www.maregionsud.fr/contacter-la-region/nous-contacter"}
+];
+
+const DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes", "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"};                 /* code -> nom, départements présents */
+const TYPES = ["Commune", "Département", "EPCI", "Epl · Sem", "Epl · SemOp", "Epl · Spl", "Epl · Spla", "Epl · Spla-in", "Région"];                 /* types d'organisme présents */
+
+const DEPT_COULEUR = {};
+Object.keys(DEPTS).sort().forEach((c,i)=>{DEPT_COULEUR[c]=i%19});
+
+/* Une couleur par famille, pour distinguer d'un coup d'œil dans la liste. */
+function classeType(t){
+  if(t.startsWith('Commune'))     return 'g-sem';
+  if(t.startsWith('EPCI'))        return 'g-spl';
+  if(t.startsWith('Syndicat'))    return 'g-semop';
+  if(t.startsWith('Epl'))         return 'g-spla';
+  if(t.startsWith('Département')) return 'g-splain';
+  return 'g-autre';
+}
+
+/* Les contacts collectés n'ont pas tous leur schéma. */
+function lien(u){ return /^https?:\/\//i.test(u) ? u : 'https://'+u; }
+
+let sortField='nom', sortDir='asc';
+
+/* ══ REMPLISSAGE DES FILTRES ══ */
+function fillSelect(id, values){
+  const sel=document.getElementById(id);
+  values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
+}
+Object.keys(DEPTS).sort((a,b)=>(a==='MC')-(b==='MC')||a.localeCompare(b,'fr')).forEach(c=>{
+  const o=document.createElement('option');
+  o.value=c; o.textContent=(c==='MC')?DEPTS[c]:`${c} — ${DEPTS[c]}`;
+  document.getElementById('dept-filter').appendChild(o);
+});
+fillSelect('type-filter', TYPES);
+
+/* ══ HELPERS ══ */
+function fmt(n){return Number(n||0).toLocaleString('fr-FR')}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function euro(n){
+  if(!n) return '';
+  if(n>=1e6) return (n/1e6).toLocaleString('fr-FR',{maximumFractionDigits:1})+' M€';
+  if(n>=1e3) return Math.round(n/1e3).toLocaleString('fr-FR')+' k€';
+  return fmt(n)+' €';
+}
+
+/* ══ SORT ══ */
+function setSort(field){
+  if(sortField===field){sortDir=sortDir==='desc'?'asc':'desc'}else{sortField=field;sortDir='asc'}
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  const arEl=document.getElementById('arr-'+field);
+  if(arEl) arEl.textContent=sortDir==='desc'?'↓':'↑';
+  render();
+}
+
+/* ══ FILTER + SORT ══ */
+function getFiltered(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const dep=document.getElementById('dept-filter').value;
+  const typ=document.getElementById('type-filter').value;
+  const mail=document.getElementById('mail-filter').value;
+  const rows=DATA.filter(d=>{
+    if(dep&&d.dept!==dep)return false;
+    if(typ&&d.type!==typ)return false;
+    if(mail==='avec'&&!d.email)return false;
+    if(mail==='sans'&&d.email)return false;
+    if(!q)return true;
+    return [d.nom,d.type,d.dept,DEPTS[d.dept],d.adresse,d.email,d.tel,d.taille]
+      .some(v=>String(v||'').toLowerCase().includes(q));
+  });
+  rows.sort((a,b)=>{
+    const va=String(a[sortField]||'').toLowerCase();
+    const vb=String(b[sortField]||'').toLowerCase();
+    if(va===vb) return 0;
+    return sortDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  return rows;
+}
+
+/* ══ RENDER ══ */
+function render(){
+  const rows=getFiltered();
+  const tbody=document.getElementById('tbody');
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
+  } else {
+    tbody.innerHTML=rows.map((d,i)=>`
+    <tr>
+      <td class="td-rank">${i+1}</td>
+      <td><div class="struct">${esc(d.nom)}</div></td>
+      <td><span class="gbadge ${classeType(d.type)}">${esc(d.type)}</span></td>
+      <td><span class="rbadge r${DEPT_COULEUR[d.dept]||0}">${esc(DEPTS[d.dept]||d.dept)}</span><br><span class="dept-tag">${esc(d.dept)}</span></td>
+      <td class="pop">${esc(d.taille)}</td>
+      <td><span class="adresse">${esc(d.adresse)}</span></td>
+      <td class="tel">${d.tel?`<a href="tel:${d.tel.replace(/[^0-9+]/g,'')}" style="color:inherit;text-decoration:none">${esc(d.tel)}</a>`:''}</td>
+      <td>${d.email
+        ? `<a class="web-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`
+        : d.contact
+          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">Formulaire de contact ↗</a>`
+          : '<span class="web-na">Non disponible</span>'}</td>
+    </tr>`).join('');
+  }
+  document.getElementById('s-total').textContent=fmt(DATA.length);
+  document.getElementById('s-shown').textContent=fmt(rows.length);
+  document.getElementById('s-mails').textContent=fmt(DATA.filter(d=>d.email).length);
+  document.getElementById('s-tel').textContent=fmt(DATA.filter(d=>d.tel).length);
+  document.getElementById('count-label').textContent=rows.length===DATA.length
+    ?`${fmt(DATA.length)} organismes`
+    :`${fmt(rows.length)} / ${fmt(DATA.length)} organismes`;
+}
+
+function resetFilters(){
+  ['search','dept-filter','type-filter','mail-filter'].forEach(id=>document.getElementById(id).value='');
+  sortField='nom';sortDir='asc';
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  document.getElementById('arr-nom').textContent='↑';
+  render();
+}
+
+/* ══ EXTRACTION DES ADRESSES ══ */
+/* Les adresses des structures actuellement affichées, séparées par « ; » — le
+   séparateur qu'attendent Outlook, Thunderbird et Gmail dans un champ
+   destinataires. Le nombre de structures sans adresse est annoncé pour qu'une
+   liste partielle ne passe pas pour complète. */
+function copierMails(){
+  const lignes=getFiltered();
+  const mails=[...new Set(lignes.filter(d=>d.email).map(d=>d.email))];
+  const sans=lignes.length-lignes.filter(d=>d.email).length;
+
+  if(mails.length===0){
+    showToast(lignes.length===1
+      ? "L'organisme affiché n'a pas d'adresse e-mail renseignée."
+      : "Aucun des "+lignes.length+" organismes affichés n'a d'adresse e-mail renseignée.",
+      '#B45309',5000);
+    return;
+  }
+
+  const texte=mails.join('; ');
+  const compte=mails.length+' adresse'+(mails.length>1?'s':'')+' copiée'+(mails.length>1?'s':'');
+  const reste=sans?' — '+sans+' organisme'+(sans>1?'s':'')+' sans adresse':'';
+
+  const secours=()=>{
+    const z=document.createElement('textarea');
+    z.value=texte; z.setAttribute('readonly','');
+    Object.assign(z.style,{position:'fixed',top:'-1000px',opacity:'0'});
+    document.body.appendChild(z); z.select();
+    let ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    document.body.removeChild(z);
+    if(ok) showToast('✅ '+compte+reste,'#6D28D9',5000);
+    else afficherMails(texte,mails.length,reste);
+  };
+
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texte)
+      .then(()=>showToast('✅ '+compte+reste,'#6D28D9',5000))
+      .catch(secours);
+  } else secours();
+}
+
+/* Dernier recours : la copie est refusée, on montre le texte à sélectionner. */
+function afficherMails(texte,n,reste){
+  const fond=document.createElement('div');
+  Object.assign(fond.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',
+    zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center'});
+  const boite=document.createElement('div');
+  Object.assign(boite.style,{background:'#fff',borderRadius:'12px',padding:'26px',
+    maxWidth:'620px',width:'90%',boxShadow:'0 20px 60px rgba(0,0,0,.25)',fontFamily:'DM Sans,sans-serif'});
+  boite.innerHTML='<div style="font-family:Libre Baskerville,serif;font-size:17px;font-weight:700;'
+    +'color:#00267A;margin-bottom:6px">'+n+' adresse'+(n>1?'s':'')+'</div>'
+    +'<div style="font-size:12.5px;color:#6B7280;margin-bottom:14px">La copie automatique a été refusée '
+    +'par le navigateur. Sélectionnez le texte ci-dessous.'+reste+'</div>';
+  const zone=document.createElement('textarea');
+  zone.value=texte; zone.setAttribute('readonly','');
+  Object.assign(zone.style,{width:'100%',height:'170px',padding:'10px',fontFamily:'monospace',
+    fontSize:'12px',border:'1.5px solid #D8DCE8',borderRadius:'8px',resize:'vertical'});
+  boite.appendChild(zone);
+  const fermer=document.createElement('button');
+  fermer.className='btn btn-outline'; fermer.textContent='Fermer';
+  fermer.style.marginTop='14px'; fermer.style.float='right';
+  fermer.onclick=()=>fond.remove();
+  boite.appendChild(fermer);
+  fond.appendChild(boite);
+  fond.onclick=e=>{ if(e.target===fond) fond.remove(); };
+  document.body.appendChild(fond);
+  zone.select();
+}
+
+/* ══ TOAST ══ */
+let toastTimer=null;
+function showToast(msg,color='#0D7B52',duration=3500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=color;t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('on'),duration);
+}
+
+/* ══ TÉLÉCHARGEMENT CROSS-BROWSER ══ */
+function triggerDownload(blob, filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},2000);
+}
+
+const COLUMNS=['Rang','Organisme','Type','Département','Code dép.','Taille','Adresse',
+               'Téléphone','Courriel','Contact officiel'];
+function toRow(d,i){
+  return [i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.dept,d.taille,d.adresse,
+          d.tel||'',d.email||'',d.contact||''];
+}
+
+/* ══ EXPORT CSV ══ */
+function exportCSV(){
+  const rows=getFiltered();
+  const cell=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines=[COLUMNS.map(cell).join(','), ...rows.map((d,i)=>toRow(d,i).map(cell).join(','))];
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  triggerDownload(blob,'prospection-paca.csv');
+  showToast('✅ CSV exporté — '+rows.length+' structures','#0D7B52');
+}
+
+/* ══ EXPORT EXCEL ══ */
+function exportSheets(){
+  if(typeof XLSX==='undefined'){
+    showToast('⏳ Bibliothèque Excel en cours de chargement, réessayez dans 3 s…','#B45309');
+    return;
+  }
+  try{
+    const rows=getFiltered();
+    const wsData=[COLUMNS,...rows.map((d,i)=>toRow(d,i))];
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=[{wch:5},{wch:46},{wch:22},{wch:24},{wch:9},{wch:16},{wch:44},
+                 {wch:17},{wch:32},{wch:40}];
+    ws['!freeze']={xSplit:0,ySplit:1};
+    XLSX.utils.book_append_sheet(wb,ws,'Prospection');
+
+    const meta=XLSX.utils.aoa_to_sheet([
+      ['Fichier de prospection — Provence-Alpes-Côte d\'Azur'],
+      ['Communes, EPCI, syndicats, Epl, départements et Région'],
+      [''],
+      ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, INSEE'],
+      ['Date d\'export', '21/09/2026'],
+      ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
+      ['Version', 'v.2026.09.21-14h07'],
+      ['Date export', new Date().toLocaleDateString('fr-FR')],
+      ['Organismes', rows.length],
+      ['Avec une adresse e-mail', rows.filter(d=>d.email).length],
+      ['Téléphones', rows.filter(d=>d.tel).length],
+      [''],
+      ['AVERTISSEMENT','Données à vérifier avant tout usage officiel ou contractuel']
+    ]);
+    XLSX.utils.book_append_sheet(wb,meta,'Métadonnées');
+
+    const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    triggerDownload(blob,'prospection-paca.xlsx');
+    showToast('✅ Fichier Excel exporté — '+rows.length+' structures','#1A7340',5000);
+  }catch(e){
+    showToast('❌ Erreur export Excel : '+e.message,'#C8001E');
+  }
+}
+
+/* ══ EXPORT PDF ══ */
+function exportPDF(){
+  if(typeof window.jspdf==='undefined'){
+    showToast('⏳ Bibliothèque PDF en cours de chargement, réessayez dans 3 s…','#B45309');
+    return;
+  }
+  try{
+    const rows=getFiltered();
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+
+    doc.setFillColor(0,38,122);
+    doc.rect(0,0,297,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(13);
+    doc.text('Fichier de prospection — Provence-Alpes-Côte d\'Azur',12,8);
+    doc.setFontSize(8);
+    doc.text('Communes · EPCI · Syndicats · Epl · '+rows.length+' organismes — '+new Date().toLocaleDateString('fr-FR'),12,14);
+
+    doc.autoTable({
+      startY:23,
+      head:[['#','Organisme','Type','Département','Taille','Téléphone','Courriel ou contact']],
+      body:rows.map((d,i)=>[i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.taille||'—',
+                            d.tel||'—',d.email||d.contact||'—']),
+      styles:{fontSize:6.5,cellPadding:1.4,overflow:'linebreak'},
+      headStyles:{fillColor:[0,56,184],textColor:255,fontSize:6.5},
+      alternateRowStyles:{fillColor:[250,251,253]},
+      columnStyles:{0:{cellWidth:8},1:{cellWidth:74},2:{cellWidth:30},3:{cellWidth:32},
+                    4:{cellWidth:24},5:{cellWidth:24},6:{cellWidth:64}},
+      margin:{left:10,right:10}
+    });
+
+    const pages=doc.internal.getNumberOfPages();
+    for(let p=1;p<=pages;p++){
+      doc.setPage(p);
+      doc.setFontSize(7);
+      doc.setTextColor(107,114,128);
+      doc.text('Données non contractuelles — à vérifier avant tout usage officiel',10,205);
+      doc.text('Page '+p+' / '+pages,270,205);
+    }
+
+    triggerDownload(doc.output('blob'),'prospection-paca.pdf');
+    showToast('✅ PDF exporté — '+rows.length+' structures','#C8001E');
+  }catch(e){
+    showToast('❌ Erreur export PDF : '+e.message,'#C8001E');
+  }
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospection PACA – Communes, EPCI, syndicats, Epl et collectivités</title>
+<meta name="description" content="Annuaire des entreprises publiques locales de Provence-Alpes-Côte d'Azur : sociétés d'économie mixte, sociétés publiques locales et sociétés publiques locales d'aménagement, par département. Recherche, filtres et export CSV, Excel et PDF.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bleu:#00267A;--bleu-l:#0038B8;--bleu-pale:#EEF2FF;
+  --rouge:#C8001E;--rouge-pale:#FEF2F2;
+  --or:#C5A045;--blanc:#fff;
+  --bg:#F0F2F8;--surface:#fff;
+  --border:#D8DCE8;--border-l:#E8EBF4;
+  --text:#1A1F36;--muted:#6B7280;--muted-l:#9CA3AF;
+  --success:#0D7B52;--success-bg:#D1FAE5;
+  --warn:#92400E;--warn-bg:#FEF3C7;
+  --radius:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+
+/* ══ HEADER ══ */
+.header{background:var(--bleu);border-bottom:4px solid var(--rouge);position:sticky;top:0;z-index:200}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:16px 28px}
+.emblem{width:54px;height:54px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.header-text{flex:1}
+.header-title{font-family:'Libre Baskerville',serif;font-size:21px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
+.header-sub{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.tricolor{display:flex;gap:3px;align-items:center}
+.tricolor span{width:4px;height:34px;border-radius:2px}
+
+/* ══ STATS BAR ══ */
+.stats-bar{background:var(--bleu-l);border-bottom:1px solid rgba(255,255,255,.1)}
+.stats-inner{max-width:1440px;margin:0 auto;display:flex;padding:0 28px;flex-wrap:wrap}
+.stat{padding:9px 24px 9px 0;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.85);font-size:12.5px}
+.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.15);margin-right:24px}
+.stat-n{font-size:17px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+#version-stat{font-size:11px;color:rgba(255,255,255,.5);margin-left:auto;align-self:center;padding-right:0;border-right:none}
+
+/* ══ MAIN WRAPPER ══ */
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px}
+
+/* ══ DISCLAIMER ══ */
+.disclaimer{margin:18px 0 0;background:var(--warn-bg);border:1px solid #FCD34D;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--warn);display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+
+/* ══ TOOLBAR ══ */
+.toolbar{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-box{position:relative;flex:1;min-width:200px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-box input{width:100%;padding:9px 10px 9px 34px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13.5px;color:var(--text);background:var(--surface);transition:border .15s}
+.search-box input:focus{outline:none;border-color:var(--bleu-l);box-shadow:0 0 0 3px rgba(0,56,184,.1)}
+select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13px;color:var(--text);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M6 8 0 0h12z'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;transition:border .15s}
+select:focus{outline:none;border-color:var(--bleu-l)}
+.btn{padding:9px 16px;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--bleu);color:#fff;box-shadow:0 2px 6px rgba(0,38,122,.2)}
+.btn-primary:hover:not(:disabled){background:var(--bleu-l)}
+.btn-sheets{background:#1A7340;color:#fff;box-shadow:0 2px 6px rgba(26,115,64,.25)}
+.btn-sheets:hover:not(:disabled){background:#15623A}
+.btn-pdf{background:#C8001E;color:#fff;box-shadow:0 2px 6px rgba(200,0,30,.25)}
+.btn-mails{background:#6D28D9;color:#fff;box-shadow:0 2px 6px rgba(109,40,217,.25)}
+.btn-mails:hover:not(:disabled){background:#5B21B6}
+.btn-pdf:hover:not(:disabled){background:#A50019}
+.btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--bleu-l);color:var(--bleu-l)}
+.btn-ghost{background:transparent;color:var(--muted);font-size:12px}
+.btn-ghost:hover{color:var(--rouge)}
+#count-label{font-size:12.5px;color:var(--muted);white-space:nowrap;align-self:center;margin-left:auto}
+
+/* ══ TABLE ══ */
+.table-wrap{overflow-x:auto;border-radius:10px;box-shadow:var(--shadow);margin-bottom:32px}
+table{width:100%;border-collapse:collapse;background:var(--surface);min-width:1180px}
+thead tr{background:var(--bleu)}
+th{padding:12px 13px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.8);white-space:nowrap;cursor:pointer;user-select:none;transition:color .1s}
+th:hover,th.sorted{color:#fff}
+th .arr{margin-left:4px;opacity:.6;font-size:11px}
+th.sorted .arr{opacity:1}
+tbody tr{border-bottom:1px solid var(--border-l);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F5F7FE}
+tbody tr:nth-child(even){background:#FAFBFD}
+tbody tr:nth-child(even):hover{background:#F3F5FC}
+td{padding:11px 13px;vertical-align:top;font-size:13px}
+.td-rank{color:var(--muted-l);font-size:11.5px;font-weight:700;width:44px}
+.struct{font-weight:600;color:var(--text);font-size:13.5px;line-height:1.3}
+.sigle{display:block;margin-top:2px;font-size:11px;color:var(--muted-l);letter-spacing:.03em}
+.dept-tag{display:inline-block;margin-top:3px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.activite{color:var(--muted);font-size:11.5px;line-height:1.45;display:block;margin-top:3px;max-width:200px}
+.pres-name{font-weight:500;color:var(--text)}
+.pres-empty{color:#CBD5E1;font-style:italic;font-size:12px}
+.adresse{color:var(--muted);font-size:12px;line-height:1.5;max-width:230px;display:block}
+.tel{color:var(--text);font-size:12.5px;white-space:nowrap}
+.web-link{color:var(--bleu-l);text-decoration:none;font-size:12px;word-break:break-all}
+.web-link:hover{text-decoration:underline}
+.web-na{color:#CBD5E1;font-size:11.5px;font-style:italic}
+
+/* ══ BADGES RÉGIME ══ */
+.gbadge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.g-sem{background:#EEF2FF;color:#3730A3}
+.g-spl{background:#ECFDF5;color:#065F46}
+.g-semop{background:#FEF3C7;color:#92400E}
+.g-spla{background:#FDF4FF;color:#7E22CE}
+.g-splain{background:#F0F9FF;color:#0C4A6E}
+.g-autre{background:#F5F5F4;color:#44403C}
+
+/* ══ BADGES RÉGION ══ */
+.rbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.r0{background:#EEF2FF;color:#3730A3}
+.r1{background:#F0FDF4;color:#166534}
+.r2{background:#FFF7ED;color:#9A3412}
+.r3{background:#FDF4FF;color:#7E22CE}
+.r4{background:#F0F9FF;color:#0C4A6E}
+.r5{background:#FEF9C3;color:#713F12}
+.r6{background:#FFF1F2;color:#9F1239}
+.r7{background:#F0FDFA;color:#134E4A}
+.r8{background:#FFF8F1;color:#7C2D12}
+.r9{background:#F5F3FF;color:#4C1D95}
+.r10{background:#ECFDF5;color:#065F46}
+.r11{background:#FEF2F2;color:#7F1D1D}
+.r12{background:#E0F2FE;color:#075985}
+.r13{background:#FEF3C7;color:#92400E}
+.r14{background:#FCE7F3;color:#9D174D}
+.r15{background:#F0FDF4;color:#14532D}
+.r16{background:#FFF7F7;color:#9B1C1C}
+.r17{background:#EEF6FF;color:#1D4ED8}
+.r18{background:#F5F5F4;color:#44403C}
+
+/* ══ TOAST ══ */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:600;padding:11px 20px;border-radius:8px;color:#fff;font-size:13px;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.22);display:none;animation:fadein .25s ease}
+#toast.on{display:block}
+
+/* ══ EMPTY ══ */
+.empty{padding:56px;text-align:center;color:var(--muted)}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.6}
+.empty p{font-size:14px}
+
+/* ══ FOOTER ══ */
+.footer{max-width:1440px;margin:0 auto;padding:0 28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--muted)}
+.footer-warn{color:var(--rouge);font-weight:600}
+
+@media print{
+  .header{position:relative}.toolbar,.disclaimer,.footer,#toast{display:none}
+  table{font-size:10px;min-width:0}.table-wrap{box-shadow:none;overflow:visible}
+  body{background:#fff}
+}
+@keyframes fadein{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="emblem">📇</div>
+    <div class="header-text">
+      <div class="header-title">Fichier de prospection &mdash; Provence-Alpes-C&ocirc;te d'Azur</div>
+      <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; D&eacute;partements &middot; R&eacute;gion</div>
+    </div>
+    <div class="tricolor">
+      <span style="background:#002395"></span>
+      <span style="background:#fff"></span>
+      <span style="background:#ED2939"></span>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat"><span class="stat-n" id="s-total">—</span> organismes</div>
+      <div class="stat"><span class="stat-n" id="s-mails">—</span> adresses e-mail</div>
+      <div class="stat"><span class="stat-n" id="s-tel">—</span> téléphones</div>
+      <div class="stat"><span class="stat-n" id="s-shown">—</span> affichés</div>
+      <div class="stat" id="version-stat">__VERSION__</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <span>⚠️</span>
+    <span>Sources officielles : annuaire de l'administration (DILA) pour les communes, EPCI, d&eacute;partements et R&eacute;gion ;
+    export de l'annuaire des Epl ; BANATIC pour les syndicats. Les adresses manquantes sont celles que l'organisme ne publie pas &mdash;
+    les plus gros renvoient g&eacute;n&eacute;ralement vers un formulaire, dont le lien figure &agrave; la place.
+    <strong>Ces coordonn&eacute;es &eacute;voluent : v&eacute;rifiez-les avant tout envoi.</strong></span>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" name="search" placeholder="Rechercher un organisme, une ville, une adresse…" oninput="render()">
+    </div>
+    <select id="type-filter" name="type-filter" onchange="render()" aria-label="Filtrer par type d'organisme">
+      <option value="">Tous les types d'organisme</option>
+    </select>
+    <select id="mail-filter" name="mail-filter" onchange="render()" aria-label="Filtrer sur la présence d'une adresse">
+      <option value="">Avec ou sans adresse</option>
+      <option value="avec">Seulement avec une adresse</option>
+      <option value="sans">Seulement sans adresse</option>
+    </select>
+    <select id="dept-filter" name="dept-filter" onchange="render()" aria-label="Filtrer par département">
+      <option value="">Toute la région PACA</option>
+    </select>
+    <button class="btn btn-primary" onclick="exportCSV()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
+    <button class="btn btn-sheets" onclick="exportSheets()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Excel
+    </button>
+    <button class="btn btn-pdf" onclick="exportPDF()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      PDF
+    </button>
+    <button class="btn btn-mails" onclick="copierMails()" title="Copie les adresses des organismes affichés, séparées par un point-virgule">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+      Copier les e-mails
+    </button>
+    <button class="btn btn-outline" onclick="window.print()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimer
+    </button>
+    <button class="btn btn-ghost" onclick="resetFilters()">Réinitialiser</button>
+    <span id="count-label"></span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44px">#</th>
+          <th onclick="setSort('nom')">Organisme <span class="arr" id="arr-nom">↑</span></th>
+          <th onclick="setSort('type')">Type <span class="arr" id="arr-type"></span></th>
+          <th onclick="setSort('dept')">Département <span class="arr" id="arr-dept"></span></th>
+          <th>Taille</th>
+          <th>Adresse</th>
+          <th>Téléphone</th>
+          <th onclick="setSort('email')">Courriel ou contact <span class="arr" id="arr-email"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  <div class="footer">
+    <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
+    <span>__COUNT__ organismes &bull; __VERSION__ &bull; &copy; <span id="yr"></span></span>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ══════════════════════════════════════════
+   DATA — entreprises publiques locales
+   Une entrée par ligne, clés dans l'ordre attendu par
+   .github/workflows/update-sem-spl-sm.yml — ne pas reformater.
+   ══════════════════════════════════════════ */
+__DATA__
+
+const DEPTS = __DEPTS__;                 /* code -> nom, départements présents */
+const TYPES = __TYPES__;                 /* types d'organisme présents */
+
+const DEPT_COULEUR = {};
+Object.keys(DEPTS).sort().forEach((c,i)=>{DEPT_COULEUR[c]=i%19});
+
+/* Une couleur par famille, pour distinguer d'un coup d'œil dans la liste. */
+function classeType(t){
+  if(t.startsWith('Commune'))     return 'g-sem';
+  if(t.startsWith('EPCI'))        return 'g-spl';
+  if(t.startsWith('Syndicat'))    return 'g-semop';
+  if(t.startsWith('Epl'))         return 'g-spla';
+  if(t.startsWith('Département')) return 'g-splain';
+  return 'g-autre';
+}
+
+/* Les contacts collectés n'ont pas tous leur schéma. */
+function lien(u){ return /^https?:\/\//i.test(u) ? u : 'https://'+u; }
+
+let sortField='nom', sortDir='asc';
+
+/* ══ REMPLISSAGE DES FILTRES ══ */
+function fillSelect(id, values){
+  const sel=document.getElementById(id);
+  values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
+}
+Object.keys(DEPTS).sort((a,b)=>(a==='MC')-(b==='MC')||a.localeCompare(b,'fr')).forEach(c=>{
+  const o=document.createElement('option');
+  o.value=c; o.textContent=(c==='MC')?DEPTS[c]:`${c} — ${DEPTS[c]}`;
+  document.getElementById('dept-filter').appendChild(o);
+});
+fillSelect('type-filter', TYPES);
+
+/* ══ HELPERS ══ */
+function fmt(n){return Number(n||0).toLocaleString('fr-FR')}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function euro(n){
+  if(!n) return '';
+  if(n>=1e6) return (n/1e6).toLocaleString('fr-FR',{maximumFractionDigits:1})+' M€';
+  if(n>=1e3) return Math.round(n/1e3).toLocaleString('fr-FR')+' k€';
+  return fmt(n)+' €';
+}
+
+/* ══ SORT ══ */
+function setSort(field){
+  if(sortField===field){sortDir=sortDir==='desc'?'asc':'desc'}else{sortField=field;sortDir='asc'}
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  const arEl=document.getElementById('arr-'+field);
+  if(arEl) arEl.textContent=sortDir==='desc'?'↓':'↑';
+  render();
+}
+
+/* ══ FILTER + SORT ══ */
+function getFiltered(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const dep=document.getElementById('dept-filter').value;
+  const typ=document.getElementById('type-filter').value;
+  const mail=document.getElementById('mail-filter').value;
+  const rows=DATA.filter(d=>{
+    if(dep&&d.dept!==dep)return false;
+    if(typ&&d.type!==typ)return false;
+    if(mail==='avec'&&!d.email)return false;
+    if(mail==='sans'&&d.email)return false;
+    if(!q)return true;
+    return [d.nom,d.type,d.dept,DEPTS[d.dept],d.adresse,d.email,d.tel,d.taille]
+      .some(v=>String(v||'').toLowerCase().includes(q));
+  });
+  rows.sort((a,b)=>{
+    const va=String(a[sortField]||'').toLowerCase();
+    const vb=String(b[sortField]||'').toLowerCase();
+    if(va===vb) return 0;
+    return sortDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  return rows;
+}
+
+/* ══ RENDER ══ */
+function render(){
+  const rows=getFiltered();
+  const tbody=document.getElementById('tbody');
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
+  } else {
+    tbody.innerHTML=rows.map((d,i)=>`
+    <tr>
+      <td class="td-rank">${i+1}</td>
+      <td><div class="struct">${esc(d.nom)}</div></td>
+      <td><span class="gbadge ${classeType(d.type)}">${esc(d.type)}</span></td>
+      <td><span class="rbadge r${DEPT_COULEUR[d.dept]||0}">${esc(DEPTS[d.dept]||d.dept)}</span><br><span class="dept-tag">${esc(d.dept)}</span></td>
+      <td class="pop">${esc(d.taille)}</td>
+      <td><span class="adresse">${esc(d.adresse)}</span></td>
+      <td class="tel">${d.tel?`<a href="tel:${d.tel.replace(/[^0-9+]/g,'')}" style="color:inherit;text-decoration:none">${esc(d.tel)}</a>`:''}</td>
+      <td>${d.email
+        ? `<a class="web-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`
+        : d.contact
+          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">Formulaire de contact ↗</a>`
+          : '<span class="web-na">Non disponible</span>'}</td>
+    </tr>`).join('');
+  }
+  document.getElementById('s-total').textContent=fmt(DATA.length);
+  document.getElementById('s-shown').textContent=fmt(rows.length);
+  document.getElementById('s-mails').textContent=fmt(DATA.filter(d=>d.email).length);
+  document.getElementById('s-tel').textContent=fmt(DATA.filter(d=>d.tel).length);
+  document.getElementById('count-label').textContent=rows.length===DATA.length
+    ?`${fmt(DATA.length)} organismes`
+    :`${fmt(rows.length)} / ${fmt(DATA.length)} organismes`;
+}
+
+function resetFilters(){
+  ['search','dept-filter','type-filter','mail-filter'].forEach(id=>document.getElementById(id).value='');
+  sortField='nom';sortDir='asc';
+  document.querySelectorAll('.arr').forEach(el=>el.textContent='');
+  document.getElementById('arr-nom').textContent='↑';
+  render();
+}
+
+/* ══ EXTRACTION DES ADRESSES ══ */
+/* Les adresses des structures actuellement affichées, séparées par « ; » — le
+   séparateur qu'attendent Outlook, Thunderbird et Gmail dans un champ
+   destinataires. Le nombre de structures sans adresse est annoncé pour qu'une
+   liste partielle ne passe pas pour complète. */
+function copierMails(){
+  const lignes=getFiltered();
+  const mails=[...new Set(lignes.filter(d=>d.email).map(d=>d.email))];
+  const sans=lignes.length-lignes.filter(d=>d.email).length;
+
+  if(mails.length===0){
+    showToast(lignes.length===1
+      ? "L'organisme affiché n'a pas d'adresse e-mail renseignée."
+      : "Aucun des "+lignes.length+" organismes affichés n'a d'adresse e-mail renseignée.",
+      '#B45309',5000);
+    return;
+  }
+
+  const texte=mails.join('; ');
+  const compte=mails.length+' adresse'+(mails.length>1?'s':'')+' copiée'+(mails.length>1?'s':'');
+  const reste=sans?' — '+sans+' organisme'+(sans>1?'s':'')+' sans adresse':'';
+
+  const secours=()=>{
+    const z=document.createElement('textarea');
+    z.value=texte; z.setAttribute('readonly','');
+    Object.assign(z.style,{position:'fixed',top:'-1000px',opacity:'0'});
+    document.body.appendChild(z); z.select();
+    let ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    document.body.removeChild(z);
+    if(ok) showToast('✅ '+compte+reste,'#6D28D9',5000);
+    else afficherMails(texte,mails.length,reste);
+  };
+
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texte)
+      .then(()=>showToast('✅ '+compte+reste,'#6D28D9',5000))
+      .catch(secours);
+  } else secours();
+}
+
+/* Dernier recours : la copie est refusée, on montre le texte à sélectionner. */
+function afficherMails(texte,n,reste){
+  const fond=document.createElement('div');
+  Object.assign(fond.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',
+    zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center'});
+  const boite=document.createElement('div');
+  Object.assign(boite.style,{background:'#fff',borderRadius:'12px',padding:'26px',
+    maxWidth:'620px',width:'90%',boxShadow:'0 20px 60px rgba(0,0,0,.25)',fontFamily:'DM Sans,sans-serif'});
+  boite.innerHTML='<div style="font-family:Libre Baskerville,serif;font-size:17px;font-weight:700;'
+    +'color:#00267A;margin-bottom:6px">'+n+' adresse'+(n>1?'s':'')+'</div>'
+    +'<div style="font-size:12.5px;color:#6B7280;margin-bottom:14px">La copie automatique a été refusée '
+    +'par le navigateur. Sélectionnez le texte ci-dessous.'+reste+'</div>';
+  const zone=document.createElement('textarea');
+  zone.value=texte; zone.setAttribute('readonly','');
+  Object.assign(zone.style,{width:'100%',height:'170px',padding:'10px',fontFamily:'monospace',
+    fontSize:'12px',border:'1.5px solid #D8DCE8',borderRadius:'8px',resize:'vertical'});
+  boite.appendChild(zone);
+  const fermer=document.createElement('button');
+  fermer.className='btn btn-outline'; fermer.textContent='Fermer';
+  fermer.style.marginTop='14px'; fermer.style.float='right';
+  fermer.onclick=()=>fond.remove();
+  boite.appendChild(fermer);
+  fond.appendChild(boite);
+  fond.onclick=e=>{ if(e.target===fond) fond.remove(); };
+  document.body.appendChild(fond);
+  zone.select();
+}
+
+/* ══ TOAST ══ */
+let toastTimer=null;
+function showToast(msg,color='#0D7B52',duration=3500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=color;t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('on'),duration);
+}
+
+/* ══ TÉLÉCHARGEMENT CROSS-BROWSER ══ */
+function triggerDownload(blob, filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},2000);
+}
+
+const COLUMNS=['Rang','Organisme','Type','Département','Code dép.','Taille','Adresse',
+               'Téléphone','Courriel','Contact officiel'];
+function toRow(d,i){
+  return [i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.dept,d.taille,d.adresse,
+          d.tel||'',d.email||'',d.contact||''];
+}
+
+/* ══ EXPORT CSV ══ */
+function exportCSV(){
+  const rows=getFiltered();
+  const cell=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines=[COLUMNS.map(cell).join(','), ...rows.map((d,i)=>toRow(d,i).map(cell).join(','))];
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  triggerDownload(blob,'prospection-paca.csv');
+  showToast('✅ CSV exporté — '+rows.length+' structures','#0D7B52');
+}
+
+/* ══ EXPORT EXCEL ══ */
+function exportSheets(){
+  if(typeof XLSX==='undefined'){
+    showToast('⏳ Bibliothèque Excel en cours de chargement, réessayez dans 3 s…','#B45309');
+    return;
+  }
+  try{
+    const rows=getFiltered();
+    const wsData=[COLUMNS,...rows.map((d,i)=>toRow(d,i))];
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=[{wch:5},{wch:46},{wch:22},{wch:24},{wch:9},{wch:16},{wch:44},
+                 {wch:17},{wch:32},{wch:40}];
+    ws['!freeze']={xSplit:0,ySplit:1};
+    XLSX.utils.book_append_sheet(wb,ws,'Prospection');
+
+    const meta=XLSX.utils.aoa_to_sheet([
+      ['Fichier de prospection — Provence-Alpes-Côte d\'Azur'],
+      ['Communes, EPCI, syndicats, Epl, départements et Région'],
+      [''],
+      ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, INSEE'],
+      ['Date d\'export', '__EXPORT_DATE__'],
+      ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
+      ['Version', '__VERSION__'],
+      ['Date export', new Date().toLocaleDateString('fr-FR')],
+      ['Organismes', rows.length],
+      ['Avec une adresse e-mail', rows.filter(d=>d.email).length],
+      ['Téléphones', rows.filter(d=>d.tel).length],
+      [''],
+      ['AVERTISSEMENT','Données à vérifier avant tout usage officiel ou contractuel']
+    ]);
+    XLSX.utils.book_append_sheet(wb,meta,'Métadonnées');
+
+    const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    triggerDownload(blob,'prospection-paca.xlsx');
+    showToast('✅ Fichier Excel exporté — '+rows.length+' structures','#1A7340',5000);
+  }catch(e){
+    showToast('❌ Erreur export Excel : '+e.message,'#C8001E');
+  }
+}
+
+/* ══ EXPORT PDF ══ */
+function exportPDF(){
+  if(typeof window.jspdf==='undefined'){
+    showToast('⏳ Bibliothèque PDF en cours de chargement, réessayez dans 3 s…','#B45309');
+    return;
+  }
+  try{
+    const rows=getFiltered();
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+
+    doc.setFillColor(0,38,122);
+    doc.rect(0,0,297,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(13);
+    doc.text('Fichier de prospection — Provence-Alpes-Côte d\'Azur',12,8);
+    doc.setFontSize(8);
+    doc.text('Communes · EPCI · Syndicats · Epl · '+rows.length+' organismes — '+new Date().toLocaleDateString('fr-FR'),12,14);
+
+    doc.autoTable({
+      startY:23,
+      head:[['#','Organisme','Type','Département','Taille','Téléphone','Courriel ou contact']],
+      body:rows.map((d,i)=>[i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.taille||'—',
+                            d.tel||'—',d.email||d.contact||'—']),
+      styles:{fontSize:6.5,cellPadding:1.4,overflow:'linebreak'},
+      headStyles:{fillColor:[0,56,184],textColor:255,fontSize:6.5},
+      alternateRowStyles:{fillColor:[250,251,253]},
+      columnStyles:{0:{cellWidth:8},1:{cellWidth:74},2:{cellWidth:30},3:{cellWidth:32},
+                    4:{cellWidth:24},5:{cellWidth:24},6:{cellWidth:64}},
+      margin:{left:10,right:10}
+    });
+
+    const pages=doc.internal.getNumberOfPages();
+    for(let p=1;p<=pages;p++){
+      doc.setPage(p);
+      doc.setFontSize(7);
+      doc.setTextColor(107,114,128);
+      doc.text('Données non contractuelles — à vérifier avant tout usage officiel',10,205);
+      doc.text('Page '+p+' / '+pages,270,205);
+    }
+
+    triggerDownload(doc.output('blob'),'prospection-paca.pdf');
+    showToast('✅ PDF exporté — '+rows.length+' structures','#C8001E');
+  }catch(e){
+    showToast('❌ Erreur export PDF : '+e.message,'#C8001E');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
