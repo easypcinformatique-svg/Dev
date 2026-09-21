@@ -41,3 +41,4 @@ credentials.json
 *.html.bak
 package-lock.json
 node_modules/
+annuaires/cache/
