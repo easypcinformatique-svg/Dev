@@ -1,0 +1,101 @@
+name: Publier les annuaires sur gh-pages
+
+# Les deux annuaires sont servis depuis la branche gh-pages, et c'est là que
+# les workflows hebdomadaires (update-maires.yml, update-sem-spl-sm.yml) les
+# enrichissent. Un déploiement qui recrée gh-pages à vide les emporte donc
+# avec lui : c'est ce qui s'est produit le 14/04/2026, laissant les deux sites
+# en 404 et les deux mises à jour en échec à chaque exécution.
+#
+# Ce workflow republie les pages depuis master. Par défaut il ne restaure que
+# ce qui manque — jamais d'écrasement de la version enrichie en ligne — ce qui
+# le rend sûr à exécuter chaque semaine en filet de sécurité. `force: true`
+# écrase depuis master, à n'utiliser que pour repartir de la version du dépôt.
+
+on:
+  schedule:
+    # Lundi 05 h UTC, avant la MAJ des maires (06 h) et celle des Epl (mercredi 07 h)
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Écraser la version en ligne par celle de master (sinon : restaurer seulement ce qui manque)"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-annuaires
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer les pages sources (master)
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Récupérer le site publié (gh-pages)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+
+      - name: Copier les annuaires manquants
+        id: copy
+        env:
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          copied=""
+          for page in annuaire-maires-france.html annuaire-sem-spl-syndicats.html; do
+            if [ ! -f "source/$page" ]; then
+              echo "::error::$page absent de master — rien à publier"
+              exit 1
+            fi
+            if [ -f "site/$page" ] && [ "$FORCE" != "true" ]; then
+              echo "= $page déjà en ligne, conservé (la version publiée est la plus à jour)"
+              continue
+            fi
+            cp "source/$page" "site/$page"
+            copied="$copied $page"
+            echo "+ $page publié"
+          done
+          echo "copied=${copied# }" >> "$GITHUB_OUTPUT"
+
+      - name: Commit et push
+        run: |
+          set -euo pipefail
+          cd site
+          if git diff --quiet; then
+            echo "Rien à publier — les deux annuaires sont déjà en ligne."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add annuaire-maires-france.html annuaire-sem-spl-syndicats.html
+          git commit -q -m "Publier les annuaires :${{ steps.copy.outputs.copied }}"
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q origin gh-pages && git push -q origin gh-pages && {
+              echo "Poussé (tentative $i)"; exit 0; }
+            echo "Push rejeté, nouvelle tentative…"; sleep $((i * 5))
+          done
+          echo "::error::Push impossible après 5 tentatives"
+          exit 1
+
+      - name: Récapitulatif
+        run: |
+          {
+            echo "## Annuaires publiés"
+            echo
+            echo "| Page | URL |"
+            echo "|------|-----|"
+            echo "| Maires de France | https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/annuaire-maires-france.html |"
+            echo "| Entreprises publiques locales | https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/annuaire-sem-spl-syndicats.html |"
+            echo
+            echo "Publiées lors de cette exécution : \`${{ steps.copy.outputs.copied || 'aucune (déjà en ligne)' }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
