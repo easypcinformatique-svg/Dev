@@ -15,6 +15,7 @@ Usage : python3 annuaires/collecte_organismes_paca.py SORTIE.json
 """
 import json
 import pathlib
+import re
 import sys
 import time
 import urllib.parse
@@ -27,11 +28,17 @@ CHAMPS = ("nom,siren,adresse,telephone,adresse_courriel,formulaire_contact,"
 UA = {"User-Agent": "annuaire-organismes-bot/1.0"}
 PACA = {"04", "05", "06", "13", "83", "84"}
 
-# (libellé affiché, clause de sélection dans l'annuaire)
+# (libellé, clause de sélection dans l'annuaire, motif de confirmation du nom)
+#
+# La sélection par nom est nécessairement large : l'annuaire n'a pas de pivot
+# pour les collectivités départementales et régionales. Elle ramène donc les
+# ordres professionnels, les conseils départementaux d'accès au droit et les
+# points conseil budget, qui portent le même intitulé. Le motif ne garde que la
+# collectivité elle-même, que l'annuaire nomme « Conseil départemental - <nom> ».
 FAMILLES = [
-    ("EPCI",         'pivot LIKE "epci"'),
-    ("Département",  'nom LIKE "Conseil départemental"'),
-    ("Région",       'nom LIKE "Conseil régional"'),
+    ("EPCI",        'pivot LIKE "epci"',                 None),
+    ("Département", 'nom LIKE "Conseil départemental"',  re.compile(r"^Conseil départemental\s+-\s+")),
+    ("Région",      'nom LIKE "Conseil régional"',       re.compile(r"^Conseil régional\s+-\s+")),
 ]
 
 
@@ -88,7 +95,7 @@ def normalise(rec, famille):
 def main():
     sortie = pathlib.Path(sys.argv[1])
     tout = []
-    for famille, clause in FAMILLES:
+    for famille, clause, motif in FAMILLES:
         page, gardes = 0, 0
         while True:
             url = (f"{BASE}?where={urllib.parse.quote(clause)}"
@@ -101,9 +108,12 @@ def main():
             lots = data.get("results", [])
             for rec in lots:
                 o = normalise(rec, famille)
-                if o["dept"] in PACA and o["nom"]:
-                    tout.append(o)
-                    gardes += 1
+                if not o["nom"] or o["dept"] not in PACA:
+                    continue
+                if motif and not motif.match(o["nom"]):
+                    continue        # homonyme : ordre professionnel, CDAD…
+                tout.append(o)
+                gardes += 1
             if len(lots) < 100 or page * 100 > (data.get("total_count") or 0):
                 break
             page += 1
