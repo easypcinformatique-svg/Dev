@@ -37,9 +37,19 @@ Toutes officielles, aucune donnée générée :
   Mairie. Aucun courriel n'est publié sur sa page de contact : le champ reste
   vide plutôt que d'emprunter celui d'un annuaire tiers.
 
+Le bouton « Copier les e-mails » place dans le presse-papier les adresses des
+communes **actuellement affichées**, séparées par `; ` — le séparateur qu'attendent
+Outlook, Thunderbird et Gmail dans un champ destinataires. Filtrer par
+département avant de cliquer donne donc la liste de ce seul département. Le
+message annonce combien de communes affichées n'ont pas d'adresse, pour que la
+liste ne paraisse pas incomplète par erreur ; si le navigateur refuse la copie,
+le texte s'affiche à sélectionner.
+
 Sept communes ne publient aucun courriel dans l'annuaire officiel, dont les
 quatre plus peuplées — Marseille, Nice, Toulon, Aix-en-Provence — qui passent
-toutes par un formulaire. Avec Monaco, cela fait huit entrées dont le champ
+toutes par un formulaire. Vérifié sur leurs propres sites et non sur le seul
+annuaire : Gignac-la-Nerthe, Roquebrune-Cap-Martin et Istres n'affichent bien
+qu'un formulaire de contact. Avec Monaco, cela fait huit entrées dont le champ
 `email` est vide ; le champ `contact` porte alors le formulaire de contact de
 l'annuaire officiel, ou à défaut le site de la mairie, et la page affiche
 « Formulaire de contact » à la place de l'adresse. Les 97 entrées ont donc une
