@@ -6,6 +6,13 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch: # Permet de lancer manuellement depuis GitHub
 
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-annuaires
+  cancel-in-progress: false
+
 jobs:
   update-and-audit:
     runs-on: ubuntu-latest
@@ -95,7 +102,10 @@ jobs:
               print("❌ DATA introuvable"); exit(0)
 
           data_str = data_match.group(1)
-          json_str = re.sub(r'(\{|,)\s*(\w+)\s*:', r'\1"\2":', data_str)
+          # Le tableau porte des commentaires JS (/* ── PLUS DE 300 000 HAB. ── */)
+          # que json.loads refuse : les retirer avant de guillemeter les clés.
+          json_str = re.sub(r'/\*[\s\S]*?\*/', '', data_str)
+          json_str = re.sub(r'(\{|,)\s*(\w+)\s*:', r'\1"\2":', json_str)
           try:
               data = json.loads(json_str)
           except:
@@ -128,7 +138,7 @@ jobs:
                       v = c.get(k, "")
                       if k == "pop": parts.append(f'{k}:{v}')
                       else:
-                          escaped = str(v).replace("\\", "\\\\").replace("'", "\\'")
+                          escaped = str(v).replace("\\", "").replace('"', "'")
                           parts.append(f'{k}:"{escaped}"')
                   lines.append("  {" + ",".join(parts) + "}")
               new_data = "let DATA = [\n" + ",\n".join(lines) + "\n];"
@@ -233,7 +243,8 @@ jobs:
           # 4. Si erreurs, corriger automatiquement
           if errors:
               data_match = re.search(r"let DATA = (\[[\s\S]*?\]);", html)
-              json_str = re.sub(r'(\{|,)\s*(\w+)\s*:', r'\1"\2":', data_match.group(1))
+              json_str = re.sub(r'/\*[\s\S]*?\*/', '', data_match.group(1))
+              json_str = re.sub(r'(\{|,)\s*(\w+)\s*:', r'\1"\2":', json_str)
               data = json.loads(json_str)
               fixed = 0
               for e in errors:
@@ -250,7 +261,7 @@ jobs:
                           v = c.get(k, "")
                           if k == "pop": parts.append(f'{k}:{v}')
                           else:
-                              escaped = str(v).replace("\\","\\\\").replace("'","\\'")
+                              escaped = str(v).replace("\\", "").replace('"', "'")
                               parts.append(f'{k}:"{escaped}"')
                       lines.append("  {" + ",".join(parts) + "}")
                   new_data = "let DATA = [\n" + ",\n".join(lines) + "\n];"
