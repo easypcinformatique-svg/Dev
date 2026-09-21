@@ -134,7 +134,7 @@ jobs:
               lines = []
               for c in data:
                   parts = []
-                  for k in ["ville","pop","dept","region","maire","adresse","tel","email"]:
+                  for k in ["ville","pop","dept","region","maire","adresse","tel","email","contact"]:
                       v = c.get(k, "")
                       if k == "pop": parts.append(f'{k}:{v}')
                       else:
@@ -257,7 +257,7 @@ jobs:
                   lines = []
                   for c in data:
                       parts = []
-                      for k in ["ville","pop","dept","region","maire","adresse","tel","email"]:
+                      for k in ["ville","pop","dept","region","maire","adresse","tel","email","contact"]:
                           v = c.get(k, "")
                           if k == "pop": parts.append(f'{k}:{v}')
                           else:

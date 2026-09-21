@@ -45,9 +45,12 @@ MONACO = {
     "adresse": "Place de la Mairie, 98000 Monaco",
     "tel": "+377 93 15 28 63",
     "email": "",                               # non publié sur mairie.mc/contacts
+    "contact": "https://www.mairie.mc/contacts",
 }
 
-CLES = ["ville", "pop", "dept", "region", "maire", "adresse", "tel", "email"]
+# Ces clés, dans cet ordre, sont celles que update-maires.yml réécrit : toute
+# clé absente de sa liste serait perdue à la première mise à jour.
+CLES = ["ville", "pop", "dept", "region", "maire", "adresse", "tel", "email", "contact"]
 
 
 def nom_insee(s):
@@ -173,10 +176,21 @@ def coordonnees(cache):
         tels = rec.get("telephone")
         if isinstance(tels, str):
             tels = json.loads(tels)
+
+        # Sept communes, dont les quatre plus peuplées, ne publient aucun
+        # courriel : l'annuaire officiel donne un formulaire de contact, et à
+        # défaut le site de la mairie. Mieux vaut cette voie-là qu'une case vide
+        # ou une adresse récupérée sur un annuaire tiers.
+        sites = rec.get("site_internet")
+        if isinstance(sites, str):
+            sites = json.loads(sites)
+        site = (sites[0].get("valeur", "") if sites else "")
+
         table[code] = {
             "adresse": ", ".join(x for x in (voie, ville) if x),
             "tel": (tels[0].get("valeur", "") if tels else ""),
             "email": rec.get("adresse_courriel") or "",
+            "contact": rec.get("formulaire_contact") or site,
         }
     return table
 
@@ -202,7 +216,8 @@ def construire(cache):
                         "region": REGION, "maire": maire,
                         "adresse": contact.get("adresse", ""),
                         "tel": contact.get("tel", ""),
-                        "email": contact.get("email", "")})
+                        "email": contact.get("email", ""),
+                        "contact": contact.get("contact", "")})
     entrees.append(dict(MONACO))
     entrees.sort(key=lambda e: -e["pop"])
     return entrees, sans_maire, audites
@@ -237,6 +252,8 @@ def main():
     print(f"   adresses          : {sum(1 for e in entrees if e['adresse'])}")
     print(f"   téléphones        : {sum(1 for e in entrees if e['tel'])}")
     print(f"   courriels         : {sum(1 for e in entrees if e['email'])}")
+    print(f"   sans courriel mais avec contact officiel : "
+          f"{sum(1 for e in entrees if not e['email'] and e['contact'])}")
     if audites:
         print(f"   corrigés par l'audit second tour : {len(audites)}")
         for ville, avant, apres in audites:

@@ -36,6 +36,14 @@ Toutes officielles, aucune donnée générée :
 - **Monaco** — recensement IMSEE 2023 (38 367 habitants) et site officiel de la
   Mairie. Aucun courriel n'est publié sur sa page de contact : le champ reste
   vide plutôt que d'emprunter celui d'un annuaire tiers.
+
+Sept communes ne publient aucun courriel dans l'annuaire officiel, dont les
+quatre plus peuplées — Marseille, Nice, Toulon, Aix-en-Provence — qui passent
+toutes par un formulaire. Avec Monaco, cela fait huit entrées dont le champ
+`email` est vide ; le champ `contact` porte alors le formulaire de contact de
+l'annuaire officiel, ou à défaut le site de la mairie, et la page affiche
+« Formulaire de contact » à la place de l'adresse. Les 97 entrées ont donc une
+voie de contact, sans qu'aucune adresse ait été devinée.
 - **Entreprises publiques locales** — export de l'annuaire des Epl
   (`Export_Annuaire_23022026.xlsx`), filtré sur la région.
 
@@ -59,10 +67,11 @@ workflows relisent et réécrivent. Les contraintes sont donc strictes :
 
 - **une entrée par ligne** — les regex des workflows utilisent `.*?`, qui ne
   franchit pas un saut de ligne ;
-- **annuaire des maires** : exactement huit clés, dans l'ordre `ville`, `pop`,
-  `dept`, `region`, `maire`, `adresse`, `tel`, `email`. `update-maires.yml`
-  réécrit chaque entrée à partir de cette liste : toute clé ajoutée serait
-  perdue à la première mise à jour ;
+- **annuaire des maires** : exactement neuf clés, dans l'ordre `ville`, `pop`,
+  `dept`, `region`, `maire`, `adresse`, `tel`, `email`, `contact`.
+  `update-maires.yml` réécrit chaque entrée à partir de cette liste : une clé
+  ajoutée ici sans l'être là-bas serait perdue à la première mise à jour. Les
+  deux listes doivent rester identiques ;
 - **annuaire des Epl** : `nom` en tête, `siren` en dernier, `adresse`, `tel` et
   `president` entre les deux. Ce workflow-là ne réécrit que les entrées qu'il
   modifie, donc les clés supplémentaires y survivent ;

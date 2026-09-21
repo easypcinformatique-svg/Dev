@@ -54,7 +54,8 @@ codes = json.loads(subprocess.run(
     capture_output=True, text=True).stdout or "[]")
 BASE = ("https://api-lannuaire.service-public.fr/api/explore/v2.1/catalog/datasets/"
         "api-lannuaire-administration/records")
-SELECT = "code_insee_commune,nom,adresse,telephone,adresse_courriel,site_internet"
+SELECT = ("code_insee_commune,nom,adresse,telephone,adresse_courriel,"
+          "formulaire_contact,site_internet")
 records = {}
 for i in range(0, len(codes), 14):
     where = 'pivot LIKE "mairie" AND code_insee_commune IN (%s)' % ", ".join(
