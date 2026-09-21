@@ -29,8 +29,23 @@ régénération suivante.
 | Communes | 97 | 89 |
 | EPCI à fiscalité propre | 52 | 50 |
 | Entreprises publiques locales | 110 | 25 |
+| Syndicats (SIVU, SIVOM, SMF, SMO, PETR) | 190 | 0 |
 | Départements | 6 | 1 |
 | Région Sud | 1 | 0 |
+
+Les syndicats viennent de BANATIC, qui ne publie **ni adresse e-mail ni
+téléphone** : ils arrivent avec leur nom, leur type, leur président, leur
+commune de siège et la population desservie, mais sans contact direct. C'est une
+limite de la source, pas une collecte incomplète.
+
+47 syndicats sont écartés parce qu'ils desservent moins de 5 000 habitants avec
+moins de 5 membres — des SIVU d'école ou d'eau entre deux communes, dont les
+emprunts se comptent en dizaines de milliers d'euros. Les seuils sont les
+constantes `SEUIL_POPULATION` et `SEUIL_MEMBRES` de `build_prospection.py`.
+
+Le bouton de copie déduplique : deux organismes partageant une adresse ne la
+produisent qu'une fois, ce qui explique l'écart entre les 165 adresses
+renseignées et les 163 copiées.
 
 Un constat traverse tout le fichier : **plus l'organisme est gros, moins il
 publie d'adresse**. Les quatre plus grandes villes, cinq départements sur six et

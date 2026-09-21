@@ -14,7 +14,6 @@ mise à jour hebdomadaire s'y propage à la régénération suivante.
 Usage : python3 annuaires/build_prospection.py [--organismes X.json] [--banatic Y.csv]
 """
 import argparse
-import csv
 import json
 import pathlib
 import re
@@ -29,10 +28,18 @@ SORTIE = RACINE / "annuaire-prospection-paca.html"
 DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes",
          "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"}
 
-# Natures juridiques BANATIC retenues : celles qui empruntent. Les syndicats de
-# communes et mixtes portent des projets d'eau, d'assainissement, d'énergie ou
-# de transport, donc de la dette ; les autres formes sont écartées.
-NATURES_RETENUES = re.compile(r"(SIVU|SIVOM|syndicat mixte|SMF|SMO|pôle métropolitain)", re.I)
+# Types BANATIC retenus : les syndicats et pôles. Les communautés de communes,
+# d'agglomération et métropoles en sont exclues — elles sont déjà collectées
+# depuis l'annuaire de l'administration, qui donne en plus leurs adresses.
+TYPES_SYNDICAT = {"SIVU", "SIVOM", "SMF", "SMO", "PETR", "POLEM"}
+
+# Seuil de population desservie sous lequel un syndicat est écarté. En PACA, 58
+# des 251 syndicats passent dessous : des SIVU d'école ou d'eau entre deux
+# communes, dont les emprunts se comptent en dizaines de milliers d'euros. Un
+# syndicat à faible population mais à nombreux membres est conservé : la
+# population attribuée à un syndicat d'ingénierie ne reflète pas son activité.
+SEUIL_POPULATION = 5000
+SEUIL_MEMBRES = 5
 
 CLES = ["type", "nom", "dept", "taille", "adresse", "tel", "email", "contact"]
 
@@ -81,38 +88,41 @@ def depuis_organismes(chemin):
                "email": o["email"], "contact": o["contact"]}
 
 
-def depuis_banatic(chemin):
-    """Syndicats et groupements BANATIC situés en PACA.
+def depuis_banatic(chemin, ecartes=None):
+    """Syndicats de PACA, depuis BANATIC via le portail OpenDataSoft public.
 
-    Le fichier couvre la France entière ; le rattachement se fait par le
-    département du siège. Les EPCI à fiscalité propre y figurent aussi mais
-    sont déjà collectés avec leurs adresses : on ne garde ici que ce que
-    l'annuaire de l'administration ne couvre pas.
+    BANATIC ne publie ni adresse e-mail ni téléphone : ces entrées arrivent donc
+    avec le nom, le type, le président, la commune de siège et la population
+    desservie, mais sans contact direct. C'est une limite de la source, pas une
+    collecte incomplète.
+
+    Les EPCI à fiscalité propre y figurent aussi et sont ignorés ici : ils sont
+    déjà collectés depuis l'annuaire de l'administration, avec leurs adresses.
+    Les deux sources en comptent 52 de part et d'autre, ce qui les recoupe.
     """
     if not chemin or not chemin.exists():
         return
-    texte = chemin.read_text(encoding="utf-8", errors="replace")
-    separateur = ";" if texte[:2000].count(";") > texte[:2000].count(",") else ","
-    for ligne in csv.DictReader(texte.splitlines(), delimiter=separateur):
-        colonnes = {k.lower().strip(): (v or "").strip() for k, v in ligne.items() if k}
-        nature = colonnes.get("nature juridique") or colonnes.get("nature_juridique") or ""
-        if not NATURES_RETENUES.search(nature):
+    for r in json.loads(chemin.read_text(encoding="utf-8")):
+        if r.get("legal_type_code") not in TYPES_SYNDICAT:
             continue
-        dept = (colonnes.get("département siège") or colonnes.get("departement")
-                or colonnes.get("dept") or "")[:2]
-        if dept not in DEPTS:
+        dept = str(r.get("dep_code_office") or "")
+        nom = (r.get("intercommunalite_name") or "").strip()
+        if dept not in DEPTS or not nom:
             continue
-        nom = colonnes.get("nom du groupement") or colonnes.get("raison sociale") or ""
-        if not nom:
+        population = r.get("intercommunalite_pop_tot") or 0
+        membres = r.get("member_count") or 0
+        if population < SEUIL_POPULATION and membres < SEUIL_MEMBRES:
+            if ecartes is not None:
+                ecartes.append(nom)
             continue
-        yield {"type": f"Syndicat · {nature}", "nom": nom, "dept": dept, "taille": "",
-               "adresse": " ".join(x for x in (colonnes.get("adresse", ""),
-                                               colonnes.get("code postal", ""),
-                                               colonnes.get("ville", "")) if x),
-               "tel": colonnes.get("téléphone", "") or colonnes.get("telephone", ""),
-               "email": colonnes.get("mél", "") or colonnes.get("mel", "")
-                        or colonnes.get("courriel", ""),
-               "contact": colonnes.get("site internet", "")}
+        president = " ".join(x for x in (r.get("president_firstname"),
+                                         r.get("president_lastname")) if x).strip()
+        taille = f'{population:,}'.replace(",", " ") + " hab. desservis" if population else ""
+        siege = (r.get("com_name_office") or "").strip()
+        yield {"type": f'Syndicat · {r.get("legal_type_code")}', "nom": nom, "dept": dept,
+               "taille": taille,
+               "adresse": f"Siège : {siege}" + (f" — président {president}" if president else ""),
+               "tel": "", "email": "", "contact": ""}
 
 
 def main():
@@ -123,7 +133,9 @@ def main():
 
     entrees = list(depuis_communes()) + list(depuis_epl())
     entrees += list(depuis_organismes(pathlib.Path(args.organismes) if args.organismes else None))
-    entrees += list(depuis_banatic(pathlib.Path(args.banatic) if args.banatic else None))
+    ecartes = []
+    entrees += list(depuis_banatic(pathlib.Path(args.banatic) if args.banatic else None,
+                                   ecartes))
 
     # Un organisme peut figurer dans deux sources : on garde la mieux renseignée.
     unique = {}
@@ -162,6 +174,9 @@ def main():
 
     avec = sum(1 for e in entrees if e["email"])
     print(f"✅ {SORTIE.name} — {len(entrees)} organismes, {avec} avec une adresse")
+    if ecartes:
+        print(f"   {len(ecartes)} syndicats écartés (moins de {SEUIL_POPULATION} hab. "
+              f"desservis et moins de {SEUIL_MEMBRES} membres)")
     from collections import Counter
     for t, n in sorted(Counter(e["type"] for e in entrees).items()):
         m = sum(1 for e in entrees if e["type"] == t and e["email"])
