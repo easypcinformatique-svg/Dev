@@ -16,6 +16,32 @@ Le seuil de population de l'annuaire des maires est la constante `SEUIL` de
 `build_maires_paca.py`, que `codes_paca.py` importe : le changer d'un côté
 suffit, et les deux scripts ne peuvent pas diverger.
 
+## La page de prospection
+
+`annuaire-prospection-paca.html` réunit les organismes publics de la région dans
+une seule liste, avec un filtre par type et par département, et le bouton de
+copie des adresses. Elle est **assemblée à partir des deux annuaires**, qu'elle
+relit plutôt que de dupliquer : une mise à jour hebdomadaire s'y propage à la
+régénération suivante.
+
+| Type | Nombre | Avec une adresse |
+|------|--------|------------------|
+| Communes | 97 | 89 |
+| EPCI à fiscalité propre | 52 | 50 |
+| Entreprises publiques locales | 110 | 25 |
+| Départements | 6 | 1 |
+| Région Sud | 1 | 0 |
+
+Un constat traverse tout le fichier : **plus l'organisme est gros, moins il
+publie d'adresse**. Les quatre plus grandes villes, cinq départements sur six et
+la Région renvoient vers un formulaire — dont le lien figure alors à la place de
+l'adresse. Le filtre « seulement avec une adresse » permet de ne voir que ce qui
+est directement adressable.
+
+Les syndicats et bailleurs sociaux viennent de BANATIC, qui n'est pas exposé par
+l'annuaire de l'administration ; le générateur les intègre dès que le fichier
+est fourni en `--banatic`.
+
 ## Sources
 
 Toutes officielles, aucune donnée générée :
