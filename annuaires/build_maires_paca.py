@@ -26,7 +26,7 @@ import unicodedata
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PAGE = ROOT / "annuaire-maires-france.html"
-SEUIL = 30000
+SEUIL = 10000        # seuil de population ; source unique, importée par codes_paca.py
 
 DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes",
          "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"}
@@ -50,9 +50,23 @@ MONACO = {
 CLES = ["ville", "pop", "dept", "region", "maire", "adresse", "tel", "email"]
 
 
+def nom_insee(s):
+    """Nom de commune tel qu'il s'écrit.
+
+    L'INSEE fait suivre l'article élidé d'une espace — « L' Isle-sur-la-Sorgue »,
+    « L' Escale » — sur 81 communes du fichier. Le Répertoire National des Élus
+    ne la met pas, et c'est sur ce nom que le workflow hebdomadaire apparie
+    chaque commune : la conserver empêcherait toute mise à jour de ces
+    communes-là, en plus de s'afficher de travers.
+    """
+    return re.sub(r"(\w')\s+", r"\1", str(s).strip())
+
+
 def sans_accents(s):
+    """Clé d'appariement : sans accents, sans ponctuation, en capitales."""
     s = unicodedata.normalize("NFD", str(s))
-    return re.sub(r"[̀-ͯ]", "", s).upper().strip()
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r"[^A-Za-z0-9]+", " ", s).upper().strip()
 
 
 def titre(s):
@@ -79,7 +93,7 @@ def communes_insee(cache):
     for r in lignes:
         if not r or not r[6]:
             continue
-        nom, dep, pop = str(r[6]).strip(), str(r[2]), int(r[7])
+        nom, dep, pop = nom_insee(r[6]), str(r[2]), int(r[7])
         if ARRONDISSEMENT.match(nom):
             if nom.lower().startswith("marseille"):
                 marseille += pop
