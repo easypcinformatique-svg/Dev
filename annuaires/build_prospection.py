@@ -125,10 +125,38 @@ def depuis_banatic(chemin, ecartes=None):
                "tel": "", "email": "", "contact": ""}
 
 
+def depuis_bailleurs(chemin):
+    """Bailleurs sociaux de PACA, depuis SIRENE via le portail OpenDataSoft public.
+
+    SIRENE ne marque pas les organismes de logement social : le repérage croise
+    l'activité (location de logements) et la catégorie juridique (office public
+    de l'habitat, SA et coopératives de HLM). La catégorie « autre SA » est
+    volontairement exclue — avec la seule activité, elle ramenait 741 « bailleurs »
+    dont des SCI nommées COUCOU ou BACCARA.
+
+    La liste qui fait foi est le répertoire des organismes de logement social du
+    ministère, qui n'est pas en accès ouvert : quelques SA bailleurs dont la
+    forme juridique ne mentionne ni HLM ni habitat peuvent manquer.
+    """
+    if not chemin or not chemin.exists():
+        return
+    for r in json.loads(chemin.read_text(encoding="utf-8")):
+        dept = str(r.get("codedepartementetablissement") or "")
+        nom = (r.get("denominationunitelegale") or "").strip()
+        if dept not in DEPTS or not nom:
+            continue
+        adresse = " ".join(x for x in (r.get("adresseetablissement"),
+                                       r.get("codepostaletablissement"),
+                                       r.get("libellecommuneetablissement")) if x)
+        yield {"type": "Bailleur social", "nom": nom, "dept": dept, "taille": "",
+               "adresse": adresse, "tel": "", "email": "", "contact": ""}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--organismes", default=None)
     ap.add_argument("--banatic", default=None)
+    ap.add_argument("--bailleurs", default=None)
     args = ap.parse_args()
 
     entrees = list(depuis_communes()) + list(depuis_epl())
@@ -136,6 +164,7 @@ def main():
     ecartes = []
     entrees += list(depuis_banatic(pathlib.Path(args.banatic) if args.banatic else None,
                                    ecartes))
+    entrees += list(depuis_bailleurs(pathlib.Path(args.bailleurs) if args.bailleurs else None))
 
     # Un organisme peut figurer dans deux sources : on garde la mieux renseignée.
     unique = {}

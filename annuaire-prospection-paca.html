@@ -175,7 +175,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <div class="stat"><span class="stat-n" id="s-mails">—</span> adresses e-mail</div>
       <div class="stat"><span class="stat-n" id="s-tel">—</span> téléphones</div>
       <div class="stat"><span class="stat-n" id="s-shown">—</span> affichés</div>
-      <div class="stat" id="version-stat">v.2026.09.21-14h12</div>
+      <div class="stat" id="version-stat">v.2026.09.21-14h23</div>
     </div>
   </div>
 </header>
@@ -256,7 +256,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <footer>
   <div class="footer">
     <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
-    <span>456 organismes &bull; v.2026.09.21-14h12 &bull; &copy; <span id="yr"></span></span>
+    <span>473 organismes &bull; v.2026.09.21-14h23 &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
 
@@ -269,6 +269,23 @@ document.getElementById('yr').textContent = new Date().getFullYear();
    .github/workflows/update-sem-spl-sm.yml — ne pas reformater.
    ══════════════════════════════════════════ */
 const DATA = [
+  {type:"Bailleur social",nom:"OFFICE PUBLIC DE L HABITAT DES HAUTES ALPES",dept:"05",taille:"",adresse:"23 Boulevard GEORGES POMPIDOU 05000 GAP",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"BATIGERE HABITAT",dept:"06",taille:"",adresse:"208 Boulevard DU MERCANTOUR 06200 NICE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"BATIGERE RHONE ALPES SOCIETE ANONYME D'HABITATIONS A LOYER MODERE",dept:"06",taille:"",adresse:"208 Boulevard DU MERCANTOUR 06200 NICE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"COTE D'AZUR HABITAT",dept:"06",taille:"",adresse:"53 Boulevard RENE CASSIN 06200 NICE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"GAMBETTA SUD EST SOCIETE ANONYME COOPERATIVE D 'INTERET COLLECTIF D 'HABITATIONS A LOYER MODERE SOCIETE A CAPITAL VARIAB",dept:"06",taille:"",adresse:"400 Promenade DES ANGLAIS 06000 NICE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"POSTE HABITAT PROVENCE",dept:"06",taille:"",adresse:"41 Rue GOUNOD 06000 NICE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"13 HABITAT",dept:"13",taille:"",adresse:"80 Rue ALBE 13004 MARSEILLE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"3F SUD SOCIETE ANONYME D'HABITATIONS A LOYER MODERE",dept:"13",taille:"",adresse:"38 Avenue DE NICE 13120 GARDANNE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"COOP HLM LE FOYER DE PROVENCE",dept:"13",taille:"",adresse:"Boulevard FERDINAND DE LESSEPS 13090 AIX-EN-PROVENCE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"ICF HABITAT SOCIAL",dept:"13",taille:"",adresse:"40 Boulevard DE DUNKERQUE 13002 MARSEILLE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"NEOLIA",dept:"13",taille:"",adresse:"27 Avenue ROBERT SCHUMAN 13002 MARSEILLE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"PROVENCE METROPOLE LOGEMENT",dept:"13",taille:"",adresse:"25 Avenue DE FRAIS VALLON 13013 MARSEILLE 13",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"SOCIETE FRANCAISE DES HABITATIONS ECONOMIQUES - SOCIETE ANONYME D'HABITATIONS A LOYER MODERE",dept:"13",taille:"",adresse:"4 Rue FREDERIC ROSA 13090 AIX-EN-PROVENCE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"UNICIL SOCIETE ANONYME D'HABITATION A LOYER MODERE",dept:"13",taille:"",adresse:"11 Rue ARMENY 13006 MARSEILLE",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"IMMOBILIERE RHONE ALPES SA D'HLM",dept:"83",taille:"",adresse:"Résidence LES TROIS COTEAUX 83300 DRAGUIGNAN",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"OFFICE PUBLIC DE L'HABITAT DU VAR",dept:"83",taille:"",adresse:"Avenue PABLO PICASSO 83160 LA VALETTE-DU-VAR",tel:"",email:"",contact:""},
+  {type:"Bailleur social",nom:"TOULON HABITAT MEDITERRANEE",dept:"83",taille:"",adresse:"Avenue FRANKLIN ROOSEVELT 83000 TOULON",tel:"",email:"",contact:""},
   {type:"Commune",nom:"Digne-les-Bains",dept:"04",taille:"17 979 hab.",adresse:"1 boulevard Martin-Bret, 04990 Digne-les-Bains",tel:"04 92 30 52 00",email:"cabinet.mairie@dignelesbains.fr",contact:"https://www.dignelesbains.fr/"},
   {type:"Commune",nom:"Manosque",dept:"04",taille:"22 718 hab.",adresse:"Place de l'Hôtel-de-Ville, 04100 Manosque",tel:"04 92 70 34 00",email:"accueil@ville-manosque.fr",contact:"https://www.ville-manosque.fr/contactez-nous/"},
   {type:"Commune",nom:"Briançon",dept:"05",taille:"11 411 hab.",adresse:"Cité administrative, Esplanade Alain-Bayrou, 26 avenue du 159e RIA, 05100 Briançon",tel:"04 92 21 20 72",email:"accueil@ccbrianconnais.fr",contact:"https://www.ville-briancon.fr/nous-ecrire"},
@@ -728,7 +745,7 @@ const DATA = [
 ];
 
 const DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes", "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"};                 /* code -> nom, départements présents */
-const TYPES = ["Commune", "Département", "EPCI", "Epl · Sem", "Epl · SemOp", "Epl · Spl", "Epl · Spla", "Epl · Spla-in", "Région", "Syndicat · PETR", "Syndicat · POLEM", "Syndicat · SIVOM", "Syndicat · SIVU", "Syndicat · SMF", "Syndicat · SMO"];                 /* types d'organisme présents */
+const TYPES = ["Bailleur social", "Commune", "Département", "EPCI", "Epl · Sem", "Epl · SemOp", "Epl · Spl", "Epl · Spla", "Epl · Spla-in", "Région", "Syndicat · PETR", "Syndicat · POLEM", "Syndicat · SIVOM", "Syndicat · SIVU", "Syndicat · SMF", "Syndicat · SMO"];                 /* types d'organisme présents */
 
 const DEPT_COULEUR = {};
 Object.keys(DEPTS).sort().forEach((c,i)=>{DEPT_COULEUR[c]=i%19});
@@ -971,7 +988,7 @@ function exportSheets(){
       ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, INSEE'],
       ['Date d\'export', '21/09/2026'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
-      ['Version', 'v.2026.09.21-14h12'],
+      ['Version', 'v.2026.09.21-14h23'],
       ['Date export', new Date().toLocaleDateString('fr-FR')],
       ['Organismes', rows.length],
       ['Avec une adresse e-mail', rows.filter(d=>d.email).length],
