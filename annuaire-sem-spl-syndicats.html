@@ -65,6 +65,8 @@ select:focus{outline:none;border-color:var(--bleu-l)}
 .btn-sheets{background:#1A7340;color:#fff;box-shadow:0 2px 6px rgba(26,115,64,.25)}
 .btn-sheets:hover:not(:disabled){background:#15623A}
 .btn-pdf{background:#C8001E;color:#fff;box-shadow:0 2px 6px rgba(200,0,30,.25)}
+.btn-mails{background:#6D28D9;color:#fff;box-shadow:0 2px 6px rgba(109,40,217,.25)}
+.btn-mails:hover:not(:disabled){background:#5B21B6}
 .btn-pdf:hover:not(:disabled){background:#A50019}
 .btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
 .btn-outline:hover{border-color:var(--bleu-l);color:var(--bleu-l)}
@@ -173,7 +175,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <div class="stat"><span class="stat-n" id="s-pres">—</span> présidents renseignés</div>
       <div class="stat"><span class="stat-n" id="s-tel">—</span> téléphones</div>
       <div class="stat"><span class="stat-n" id="s-shown">—</span> affichées</div>
-      <div class="stat" id="version-stat">v.2026.09.21-12h37</div>
+      <div class="stat" id="version-stat">v.2026.09.21-13h24</div>
     </div>
   </div>
 </header>
@@ -212,6 +214,10 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       PDF
     </button>
+    <button class="btn btn-mails" onclick="copierMails()" title="Copie les adresses des structures affichées, séparées par un point-virgule">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+      Copier les e-mails
+    </button>
     <button class="btn btn-outline" onclick="window.print()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
@@ -247,7 +253,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <footer>
   <div class="footer">
     <span>Sources : annuaire des Epl (export 23/02/2026) &bull; API Annuaire des Entreprises &bull; <span class="footer-warn">Non contractuel</span></span>
-    <span>110 structures &bull; v.2026.09.21-12h37 &bull; &copy; <span id="yr"></span></span>
+    <span>110 structures &bull; v.2026.09.21-13h24 &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
 
@@ -483,6 +489,75 @@ function resetFilters(){
   render();
 }
 
+/* ══ EXTRACTION DES ADRESSES ══ */
+/* Les adresses des structures actuellement affichées, séparées par « ; » — le
+   séparateur qu'attendent Outlook, Thunderbird et Gmail dans un champ
+   destinataires. Le nombre de structures sans adresse est annoncé pour qu'une
+   liste partielle ne passe pas pour complète. */
+function copierMails(){
+  const lignes=getFiltered();
+  const mails=[...new Set(lignes.filter(d=>d.email).map(d=>d.email))];
+  const sans=lignes.length-lignes.filter(d=>d.email).length;
+
+  if(mails.length===0){
+    showToast(lignes.length===1
+      ? "La structure affichée n'a pas d'adresse e-mail renseignée."
+      : "Aucune des "+lignes.length+" structures affichées n'a d'adresse e-mail renseignée.",
+      '#B45309',5000);
+    return;
+  }
+
+  const texte=mails.join('; ');
+  const compte=mails.length+' adresse'+(mails.length>1?'s':'')+' copiée'+(mails.length>1?'s':'');
+  const reste=sans?' — '+sans+' structure'+(sans>1?'s':'')+' sans adresse':'';
+
+  const secours=()=>{
+    const z=document.createElement('textarea');
+    z.value=texte; z.setAttribute('readonly','');
+    Object.assign(z.style,{position:'fixed',top:'-1000px',opacity:'0'});
+    document.body.appendChild(z); z.select();
+    let ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    document.body.removeChild(z);
+    if(ok) showToast('✅ '+compte+reste,'#6D28D9',5000);
+    else afficherMails(texte,mails.length,reste);
+  };
+
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texte)
+      .then(()=>showToast('✅ '+compte+reste,'#6D28D9',5000))
+      .catch(secours);
+  } else secours();
+}
+
+/* Dernier recours : la copie est refusée, on montre le texte à sélectionner. */
+function afficherMails(texte,n,reste){
+  const fond=document.createElement('div');
+  Object.assign(fond.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',
+    zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center'});
+  const boite=document.createElement('div');
+  Object.assign(boite.style,{background:'#fff',borderRadius:'12px',padding:'26px',
+    maxWidth:'620px',width:'90%',boxShadow:'0 20px 60px rgba(0,0,0,.25)',fontFamily:'DM Sans,sans-serif'});
+  boite.innerHTML='<div style="font-family:Libre Baskerville,serif;font-size:17px;font-weight:700;'
+    +'color:#00267A;margin-bottom:6px">'+n+' adresse'+(n>1?'s':'')+'</div>'
+    +'<div style="font-size:12.5px;color:#6B7280;margin-bottom:14px">La copie automatique a été refusée '
+    +'par le navigateur. Sélectionnez le texte ci-dessous.'+reste+'</div>';
+  const zone=document.createElement('textarea');
+  zone.value=texte; zone.setAttribute('readonly','');
+  Object.assign(zone.style,{width:'100%',height:'170px',padding:'10px',fontFamily:'monospace',
+    fontSize:'12px',border:'1.5px solid #D8DCE8',borderRadius:'8px',resize:'vertical'});
+  boite.appendChild(zone);
+  const fermer=document.createElement('button');
+  fermer.className='btn btn-outline'; fermer.textContent='Fermer';
+  fermer.style.marginTop='14px'; fermer.style.float='right';
+  fermer.onclick=()=>fond.remove();
+  boite.appendChild(fermer);
+  fond.appendChild(boite);
+  fond.onclick=e=>{ if(e.target===fond) fond.remove(); };
+  document.body.appendChild(fond);
+  zone.select();
+}
+
 /* ══ TOAST ══ */
 let toastTimer=null;
 function showToast(msg,color='#0D7B52',duration=3500){
@@ -544,7 +619,7 @@ function exportSheets(){
       [''],
       ['Source','Annuaire des Epl — export du 23/02/2026'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
-      ['Version', 'v.2026.09.21-12h37'],
+      ['Version', 'v.2026.09.21-13h24'],
       ['Date export', new Date().toLocaleDateString('fr-FR')],
       ['Structures', rows.length],
       ['Présidents renseignés', rows.filter(d=>d.president).length],
