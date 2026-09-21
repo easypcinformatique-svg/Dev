@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: '0 7 * * 3'
   workflow_dispatch:
+  # Déclenchement à la demande par commit : le jeton de l'app GitHub n'a pas le
+  # droit « actions: write » et ne peut donc pas lancer un workflow_dispatch.
+  # Toucher ce fichier témoin lance la mise à jour, sans la déclencher à chaque
+  # push puisque le chemin est filtré.
+  push:
+    branches: [master]
+    paths:
+      - '.github/declencheurs/maj-epl'
 
 permissions:
   contents: write
