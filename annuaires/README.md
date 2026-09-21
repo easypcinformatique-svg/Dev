@@ -5,12 +5,16 @@ Deux pages autonomes publiées sur la branche `gh-pages`, toutes deux limitées 
 
 | Page | URL publique | Contenu | Mise à jour |
 |------|--------------|---------|-------------|
-| `annuaire-maires-france.html` | `/Dev/annuaire-maires-france.html` | 28 communes PACA de plus de 30 000 hab. + Monaco | `update-maires.yml` — lundi 06 h UTC |
+| `annuaire-maires-france.html` | `/Dev/annuaire-maires-france.html` | 96 communes PACA de plus de 10 000 hab. + Monaco | `update-maires.yml` — lundi 06 h UTC |
 | `annuaire-sem-spl-syndicats.html` | `/Dev/annuaire-sem-spl-syndicats.html` | 110 entreprises publiques locales de PACA | `update-sem-spl-sm.yml` — mercredi 07 h UTC |
 
 Les deux offrent le même filtre par département, avec une entrée « toute la
 région PACA ». Monaco n'est pas en PACA — c'est un État souverain frontalier du
 06 — et figure à part dans le filtre de l'annuaire des maires.
+
+Le seuil de population de l'annuaire des maires est la constante `SEUIL` de
+`build_maires_paca.py`, que `codes_paca.py` importe : le changer d'un côté
+suffit, et les deux scripts ne peuvent pas diverger.
 
 ## Sources
 
@@ -18,10 +22,13 @@ Toutes officielles, aucune donnée générée :
 
 - **Populations** — INSEE, populations de référence 2023, authentifiées par le
   décret du 26 décembre 2025, en vigueur au 1er janvier 2026.
-  Attention : la feuille « Communes » du fichier d'ensemble éclate Paris, Lyon
-  et Marseille en arrondissements municipaux et **ne contient pas** les communes
-  elles-mêmes. Compter les lignes sans les retirer donne 41 communes PACA au
-  lieu de 28.
+  Deux pièges de ce fichier, tous deux traités par le générateur :
+  sa feuille « Communes » éclate Paris, Lyon et Marseille en arrondissements
+  municipaux et **ne contient pas** les communes elles-mêmes (Marseille est
+  reconstituée par la somme de ses arrondissements) ; et l'article élidé y est
+  suivi d'une espace — « L' Isle-sur-la-Sorgue » — sur 81 communes, graphie que
+  le RNE n'emploie pas et qui empêcherait donc toute mise à jour de
+  celles-là.
 - **Maires** — Répertoire National des Élus, audité contre les résultats
   officiels du second tour des municipales 2026.
 - **Coordonnées des mairies** — Annuaire de l'administration (DILA),

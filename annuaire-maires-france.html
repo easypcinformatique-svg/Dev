@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Annuaire des Maires de PACA – Communes +30 000 hab. et Monaco</title>
+<title>Annuaire des Maires de PACA – Communes +10 000 hab. et Monaco</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -185,7 +185,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <div class="emblem">🏛️</div>
     <div class="header-text">
       <div class="header-title">Annuaire des Maires de PACA</div>
-      <div class="header-sub">Provence-Alpes-C&ocirc;te d'Azur et Monaco &middot; Communes de plus de 30 000 habitants</div>
+      <div class="header-sub">Provence-Alpes-C&ocirc;te d'Azur et Monaco &middot; Communes de plus de 10 000 habitants</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -348,8 +348,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 /* ══════════════════════════════════════════
-   DATA — 235 communes françaises > 30 000 hab.
-   Sources : INSEE 2022-2023, Wikipedia, mairies.net
+   DATA — communes de PACA de plus de 10 000 habitants, plus Monaco.
+   Régénéré par annuaires/build_maires_paca.py ; voir annuaires/README.md
+   pour les contraintes de format imposées par update-maires.yml.
    ══════════════════════════════════════════ */
 let DATA = [
   {ville:"Marseille",pop:886040,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Benoît Payan",adresse:"Quai du Port, 13233 Marseille Cedex 20",tel:"30 13",email:""},
@@ -380,7 +381,75 @@ let DATA = [
   {ville:"Marignane",pop:33692,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Eric Le Disses",adresse:"Cours Mirabeau, 13700 Marignane",tel:"04 42 31 11 11",email:"contact@ville-marignane.fr"},
   {ville:"Saint-Laurent-du-Var",pop:32172,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Joseph Segura",adresse:"222 esplanade du Levant, 06700 Saint-Laurent-du-Var",tel:"04 92 12 42 42",email:"cabinet.maire@saintlaurentduvar.fr"},
   {ville:"Carpentras",pop:31619,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Hervé De Lépinau",adresse:"Place Maurice-Charretier, 84200 Carpentras",tel:"04 90 60 84 00",email:"mairie@carpentras.fr"},
-  {ville:"Menton",pop:30604,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Alexandra Masson",adresse:"17 rue de la République, 06500 Menton",tel:"04 92 10 50 00",email:"mairie@ville-menton.fr"}
+  {ville:"Menton",pop:30604,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Alexandra Masson",adresse:"17 rue de la République, 06500 Menton",tel:"04 92 10 50 00",email:"mairie@ville-menton.fr"},
+  {ville:"Orange",pop:29706,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Jean-Dominique Artaud",adresse:"Place Georges-Clemenceau, 84106 Orange",tel:"04 90 51 41 41",email:"accueil.guichet@ville-orange.fr"},
+  {ville:"Vallauris",pop:29259,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Kevin Luciano",adresse:"Place Jacques-Cavasse, 06220 Vallauris",tel:"04 93 64 24 24",email:"groupecabmaire@vallauris.fr"},
+  {ville:"La Garde",pop:26476,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Hélène Arnaud Bill",adresse:"Rue Jean-Baptiste-Lavène, 83130 La Garde",tel:"04 94 08 98 00",email:"contact-mairie@ville-lagarde.fr"},
+  {ville:"Miramas",pop:26203,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Frédéric Vigouroux",adresse:"Place Jean-Jaurès, 13140 Miramas",tel:"08 00 01 31 40",email:"lemaire@mairie-miramas.fr"},
+  {ville:"Cavaillon",pop:25636,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Gérard Daudet",adresse:"Place Joseph-Guis, 84300 Cavaillon",tel:"04 90 71 24 18",email:"accueil@ville-cavaillon.fr"},
+  {ville:"La Valette-du-Var",pop:23719,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Julien Argento",adresse:"83167 La Valette-du-Var Cedex",tel:"04 94 61 90 90",email:"cabinet.maire@lavalette83.fr"},
+  {ville:"Manosque",pop:22718,dept:"04",region:"Provence-Alpes-Côte d'Azur",maire:"Camille Galtier",adresse:"Place de l'Hôtel-de-Ville, 04100 Manosque",tel:"04 92 70 34 00",email:"accueil@ville-manosque.fr"},
+  {ville:"Les Pennes-Mirabeau",pop:22537,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Romain Amaro",adresse:"223 avenue François-Mitterrand, 13170 Les Pennes-Mirabeau",tel:"09 69 36 24 12",email:"dgs@vlpm.com"},
+  {ville:"Mandelieu-la-Napoule",pop:21640,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Sebastien Leroy",adresse:"Avenue de la République, 06210 Mandelieu-la-Napoule",tel:"04 92 97 30 00",email:"maire@mairie-mandelieu.fr"},
+  {ville:"Gardanne",pop:21597,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Hervé Granier",adresse:"Cours de la République, 13120 Gardanne",tel:"04 42 51 79 00",email:"accueil@ville-gardanne.fr"},
+  {ville:"Allauch",pop:21443,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Lionel De Cala",adresse:"Place Pierre-Bellot, 13718 Allauch Cedex",tel:"04 91 10 48 00",email:"info@allauch.com"},
+  {ville:"L'Isle-sur-la-Sorgue",pop:20244,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Pierre Gonzalvez",adresse:"Rue Carnot, 84800 L'Isle-sur-la-Sorgue",tel:"04 90 38 06 45",email:"contact@islesurlasorgue.fr"},
+  {ville:"Vence",pop:19917,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Anne Sattonnet",adresse:"Place Georges-Clemenceau, 06141 Vence Cedex",tel:"04 93 58 41 00",email:"mairie@ville-vence.fr"},
+  {ville:"Mougins",pop:19782,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Christophe Ulivieri",adresse:"72 chemin de l'Horizon, 06251 Mougins Cedex",tel:"04 92 92 50 00",email:"cabinet@villedemougins.com"},
+  {ville:"La Crau",pop:19556,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Christian Simon",adresse:"Boulevard de la République, 83260 La Crau",tel:"04 94 01 56 80",email:"mairie@villedelacrau.fr"},
+  {ville:"Pertuis",pop:19548,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Aurélien Auclair",adresse:"Rue Voltaire, 84120 Pertuis",tel:"04 90 79 02 74",email:"communication@mairie-pertuis.fr"},
+  {ville:"Sorgues",pop:19006,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Thierry Lagneau",adresse:"80 route d'Entraigues, 84700 Sorgues",tel:"04 90 39 71 00",email:"mairie@sorgues.fr"},
+  {ville:"Sanary-sur-Mer",pop:18538,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Philippe Heno",adresse:"1 place de la République, 83110 Sanary-sur-Mer",tel:"04 94 32 97 00",email:"contact@sanarysurmer.fr"},
+  {ville:"Châteauneuf-les-Martigues",pop:18455,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Roland Mouren",adresse:"Place Bellot, 13220 Châteauneuf-les-Martigues",tel:"04 42 76 89 00",email:"direction.generale@chateauneuf-les-martigues.fr"},
+  {ville:"Le Pontet",pop:18386,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Joris Hebrard",adresse:"13 rue de l'Hôtel-de-Ville, 84134 Le Pontet Cedex",tel:"04 90 31 66 00",email:"communication@mairie-lepontet.fr"},
+  {ville:"Digne-les-Bains",pop:17979,dept:"04",region:"Provence-Alpes-Côte d'Azur",maire:"Julien Di Benedetto",adresse:"1 boulevard Martin-Bret, 04990 Digne-les-Bains",tel:"04 92 30 52 00",email:"cabinet.mairie@dignelesbains.fr"},
+  {ville:"Saint-Maximin-la-Sainte-Baume",pop:17896,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Vesselina Garello",adresse:"Parvis Charles-II-d'Anjou, 83470 Saint-Maximin-la-Sainte-Baume",tel:"04 94 72 93 00",email:"secretariatgeneral@st-maximin.fr"},
+  {ville:"Brignoles",pop:17850,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Didier Bremond",adresse:"9 place Carami, 83170 Brignoles",tel:"04 94 86 22 22",email:"contact@brignoles.fr"},
+  {ville:"Villeneuve-Loubet",pop:17548,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Lionnel Luca",adresse:"Place de la République, 06270 Villeneuve-Loubet",tel:"04 92 02 60 00",email:"cab@villeneuveloubet.fr"},
+  {ville:"Châteaurenard",pop:16545,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Marcel Martel",adresse:"6 rue Jentelin, 13160 Châteaurenard",tel:"04 90 24 35 35",email:"maire@chateaurenard.com"},
+  {ville:"Fos-sur-Mer",pop:15862,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Philippe Maurizot",adresse:"Avenue René-Cassin, 13771 Fos-sur-Mer",tel:"04 42 47 70 00",email:"courrier@mairie-fos-sur-mer.fr"},
+  {ville:"Port-de-Bouc",pop:15802,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Laurent Belsola",adresse:"13110 Port-de-Bouc",tel:"04 42 40 04 04",email:"secretariatdumaire@portdebouc.fr"},
+  {ville:"Roquebrune-sur-Argens",pop:15442,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Jean Cayron",adresse:"Rue Grande-André-Cabasse, 83520 Roquebrune-sur-Argens",tel:"04 94 19 59 59",email:"mairie@mairie-roquebrune-argens.fr"},
+  {ville:"Tarascon",pop:15396,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Alexandre Ducouret",adresse:"2 place du Marché, 13150 Tarascon",tel:"04 90 91 00 07",email:"courrier@mairie-tarascon13.fr"},
+  {ville:"Bouc-Bel-Air",pop:15381,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Mathieu Pietri",adresse:"Place de l'Hôtel-de-Ville, 13320 Bouc-Bel-Air",tel:"04 42 94 93 93",email:"com@boucbelair.fr"},
+  {ville:"Ollioules",pop:14568,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Robert Beneventi",adresse:"7 avenue du Général-de-Gaulle, 83191 Ollioules",tel:"04 94 30 41 41",email:"contact@ollioules.fr"},
+  {ville:"Saint-Martin-de-Crau",pop:14145,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Séverine Dellanegra",adresse:"1 place du Docteur-Bagnaninchi, 13310 Saint-Martin-de-Crau Cedex",tel:"04 90 47 17 29",email:"mairie@stmartindecrau.fr"},
+  {ville:"Sainte-Maxime",pop:14118,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Vincent Morisse",adresse:"Boulevard des Mimosas, 83120 Sainte-Maxime",tel:"04 94 79 42 42",email:"mairie@sainte-maxime.fr"},
+  {ville:"Bollène",pop:14024,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Anthony Zilio",adresse:"Place Reynaud-de-la-Gardette, 84500 Bollène",tel:"04 90 40 51 00",email:"mairie@ville-bollene.fr"},
+  {ville:"Berre-l'Étang",pop:13832,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Mario Martinet",adresse:"Place Jean-Moulin, 13138 Berre-l'Étang",tel:"04 42 74 93 00",email:"accueil@berreletang.fr"},
+  {ville:"Carros",pop:13803,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Stephane Revello",adresse:"2 rue de l'Eusière, 06510 Carros",tel:"04 92 08 44 70",email:"mairie@ville-carros.fr"},
+  {ville:"Monteux",pop:13301,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Patrice De Camaret",adresse:"28 place des Droits-de-l'Homme, 84170 Monteux",tel:"04 90 66 97 00",email:"ville.monteux@monteux.fr"},
+  {ville:"Cuers",pop:13271,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Bernard Mouttet",adresse:"Place du Général-Magnan, 83390 Cuers",tel:"04 94 13 50 70",email:"standard.mairie@cuers.fr"},
+  {ville:"Auriol",pop:13037,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Véronique Miquelly",adresse:"1 place de la Libération, 13390 Auriol",tel:"04 42 04 70 06",email:"secretariatdumaire@mairie-auriol.fr"},
+  {ville:"Vidauban",pop:12608,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Claude Pianetti",adresse:"Place Georges-Clemenceau, 83550 Vidauban",tel:"04 94 99 99 00",email:"accueil@vidauban.fr"},
+  {ville:"Rognac",pop:12576,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Christophe Gonzalez",adresse:"21 avenue Charles-de-Gaulle, 13340 Rognac",tel:"04 42 87 76 00",email:"accueilmairie@mairie-rognac.fr"},
+  {ville:"Solliès-Pont",pop:12521,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"André Garron",adresse:"1 rue de la République, 83210 Solliès-Pont",tel:"04 94 13 58 00",email:"mairie@solliespont.fr"},
+  {ville:"Cogolin",pop:12301,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Isabelle Farnet Risso",adresse:"2 place de la République, 83310 Cogolin",tel:"04 94 56 65 45",email:"mairie@cogolin.fr"},
+  {ville:"Roquebrune-Cap-Martin",pop:12037,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Patrick Cesari",adresse:"22 avenue Paul-Doumer, 06190 Roquebrune-Cap-Martin",tel:"04 92 10 48 48",email:""},
+  {ville:"Septèmes-les-Vallons",pop:11995,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"André Molino",adresse:"198 Place Didier-Tramoni, 13240 Septèmes-les-Vallons",tel:"04 91 96 31 00",email:"secretariat@ville-septemes.fr"},
+  {ville:"Vedène",pop:11974,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Joël Guin",adresse:"11 rue Jean-Moulin, 84270 Vedène",tel:"04 90 23 76 76",email:"mairie@mairie-vedene.fr"},
+  {ville:"Valbonne",pop:11939,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Joseph Cesaro",adresse:"1 place de l'Hôtel-de-Ville, 06902 Valbonne-Sophia-Antipolis Cedex",tel:"04 93 12 31 00",email:"mairie@ville-valbonne.fr"},
+  {ville:"Beausoleil",pop:11936,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Gerard Spinelli",adresse:"27 boulevard de la République, 06240 Beausoleil",tel:"04 93 41 71 71",email:"mairie@villedebeausoleil.fr"},
+  {ville:"Saint-Cyr-sur-Mer",pop:11658,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Pierre Luciano",adresse:"Place d'Estienne-d'Orves, 83270 Saint-Cyr-sur-Mer",tel:"04 94 26 26 22",email:"mairie@saintcyrsurmer.fr"},
+  {ville:"Plan-de-Cuques",pop:11632,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Laurent Simon",adresse:"28 avenue Frédéric-Chevillon, 13380 Plan-de-Cuques",tel:"04 91 10 40 40",email:"cabinetdumaire@plandecuques.fr"},
+  {ville:"Briançon",pop:11411,dept:"05",region:"Provence-Alpes-Côte d'Azur",maire:"Arnaud Murgia",adresse:"Cité administrative, Esplanade Alain-Bayrou, 26 avenue du 159e RIA, 05100 Briançon",tel:"04 92 21 20 72",email:"accueil@ccbrianconnais.fr"},
+  {ville:"Le Luc",pop:11310,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Elisabeth Mariottini",adresse:"3 place de la Liberté, 83340 Le Luc",tel:"04 94 50 01 00",email:"cab@mairie-leluc.fr"},
+  {ville:"Pélissanne",pop:11085,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Pascal Montécot",adresse:"Parc Roux-de-Brignoles, 13330 Pélissanne",tel:"04 90 55 11 52",email:"mairie@ville-pelissanne.fr"},
+  {ville:"Mouans-Sartoux",pop:11015,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Pierre Aschieri",adresse:"3 Place du Général-de-Gaulle, 06371 Mouans-Sartoux",tel:"04 92 92 47 00",email:"mairie@mouans-sartoux.net"},
+  {ville:"Trets",pop:10946,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Pascal Chauvin",adresse:"Place du 14-Juillet, 13530 Trets",tel:"04 42 37 55 00",email:"accueil@trets.fr"},
+  {ville:"Le Pradet",pop:10933,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Hervé Stassinos",adresse:"Parc Cravero, 83220 Le Pradet",tel:"04 94 08 69 47",email:"accueil@le-pradet.fr"},
+  {ville:"La Trinité",pop:10602,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Ladislas Polski",adresse:"19 rue de l'Hôtel-de-Ville, 06340 La Trinité",tel:"04 93 27 64 00",email:"service.courrier@villelt.fr"},
+  {ville:"La Londe-les-Maures",pop:10584,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"François De Canson",adresse:"Place du 11-Novembre, 83250 La Londe-les-Maures",tel:"04 94 01 55 00",email:"contact@lalondelesmaures.fr"},
+  {ville:"Biot",pop:10511,dept:"06",region:"Provence-Alpes-Côte d'Azur",maire:"Jean-Pierre Dermit",adresse:"8-10 route de Valbonne, 06410 Biot",tel:"04 92 91 55 80",email:"accueil@biot.fr"},
+  {ville:"Pernes-les-Fontaines",pop:10504,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Didier Carle",adresse:"Place Aristide-Briand, 84210 Pernes-les-Fontaines",tel:"04 90 61 45 00",email:"contact@perneslesfontaines.fr"},
+  {ville:"Gignac-la-Nerthe",pop:10343,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Jerome Gouiran",adresse:"Place de la Mairie, 13180 Gignac-la-Nerthe",tel:"04 42 77 00 00",email:""},
+  {ville:"Fuveau",pop:10337,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Béatrice Bonfillon Chiavassa",adresse:"26 boulevard Émile-Loubet, 13710 Fuveau",tel:"04 42 65 65 00",email:"mlemaire@mairie-fuveau.com"},
+  {ville:"Cabriès",pop:10240,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Amapola Ventron",adresse:"Place Ange-Estève, 13480 Cabriès",tel:"04 42 28 14 00",email:"accueil@cabries.fr"},
+  {ville:"Le Beausset",pop:10219,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Claude Alimi",adresse:"Place Jean-Jaurès, 83330 Le Beausset",tel:"04 94 98 55 75",email:"accueil@ville-lebeausset.fr"},
+  {ville:"Apt",pop:10143,dept:"84",region:"Provence-Alpes-Côte d'Azur",maire:"Jean Aillaud",adresse:"Place Gabriel-Péri, 84405 Apt",tel:"04 90 74 00 34",email:"mairie@apt.fr"},
+  {ville:"Le Muy",pop:10118,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Romain Vacquier",adresse:"4 rue de l'Hôtel-de-Ville, 83490 Le Muy",tel:"04 94 19 84 24",email:"info@ville-lemuy.fr"},
+  {ville:"Lambesc",pop:10024,dept:"13",region:"Provence-Alpes-Côte d'Azur",maire:"Philippe Razeyre",adresse:"6 boulevard de la République, 13410 Lambesc",tel:"04 42 17 00 50",email:"webmaster@lambesc.fr"},
+  {ville:"La Farlède",pop:10014,dept:"83",region:"Provence-Alpes-Côte d'Azur",maire:"Yves Palmieri",adresse:"Place de la Liberté, 83210 La Farlède",tel:"04 94 27 85 85",email:"mairie@lafarlede.fr"}
 ];
 
 /* ══ SORT STATE ══ */
@@ -550,7 +619,7 @@ function exportSheets(){
 
     const meta = XLSX.utils.aoa_to_sheet([
       ['Annuaire des Maires de France'],
-      ['Communes de plus de 30 000 habitants'],
+      ['Communes de plus de 10 000 habitants, plus Monaco'],
       [''],
       ['Source','Données IA + INSEE 2022-2023'],
       ['Date export', new Date().toLocaleDateString('fr-FR')],
@@ -595,7 +664,7 @@ function exportPDF(){
     doc.setFontSize(7);
     doc.setFont('helvetica','normal');
     doc.setTextColor(200,215,255);
-    doc.text('Communes +30 000 hab.  |  Mandats 2020-2026  |  INSEE 2022-2023',14,16.5);
+    doc.text('Communes +10 000 hab. et Monaco  |  INSEE, populations 2023  |  RNE',14,16.5);
     doc.text('Exporté le '+new Date().toLocaleDateString('fr-FR')+' — '+rows.length+' communes',230,16.5);
 
     /* Tableau */

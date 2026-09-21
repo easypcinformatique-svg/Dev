@@ -6,13 +6,16 @@ Usage : python3 annuaires/codes_paca.py RÉPERTOIRE_CACHE
 """
 import json
 import pathlib
-import re
 import sys
 
 import openpyxl
 
-PACA = {"04", "05", "06", "13", "83", "84"}
-ARRONDISSEMENT = re.compile(r"^(Paris|Lyon|Marseille)\s+\d+\w*\s+Arrondissement$", re.I)
+# Le seuil et la liste des départements viennent du générateur : deux
+# définitions divergentes produiraient des coordonnées de mairies pour des
+# communes absentes de la page, ou l'inverse.
+from build_maires_paca import ARRONDISSEMENT, DEPTS, SEUIL
+
+PACA = {c for c in DEPTS if c != "MC"}
 
 cache = pathlib.Path(sys.argv[1])
 wb = openpyxl.load_workbook(cache / "insee_pop2023.xlsx", read_only=True)
@@ -22,7 +25,7 @@ for r in list(wb["Communes"].iter_rows(values_only=True))[8:]:
         continue
     if ARRONDISSEMENT.match(str(r[6]).strip()):
         continue
-    if str(r[2]) in PACA and int(r[7]) > 30000:
+    if str(r[2]) in PACA and int(r[7]) > SEUIL:
         codes.append(str(r[2])[:2] + str(r[5]).zfill(3))
 codes.append("13055")          # Marseille, éclatée en arrondissements dans la feuille
 print(json.dumps(sorted(set(codes))))
