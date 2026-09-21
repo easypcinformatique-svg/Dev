@@ -5,6 +5,13 @@ on:
     - cron: '0 7 * * 3'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-annuaires
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
