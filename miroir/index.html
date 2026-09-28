@@ -1,0 +1,561 @@
+<title>Le Miroir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --ink: #121a26;
+    --muted: #5b6678;
+    --line: #d7dde6;
+    --accent: #2b45c4;
+    --accent-ink: #ffffff;
+    --me: #2b45c4;
+    --me-ink: #ffffff;
+    --code-bg: #e6eaf1;
+    --danger: #b3261e;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e131b;
+      --surface: #161d28;
+      --ink: #e7ecf3;
+      --muted: #97a2b4;
+      --line: #273142;
+      --accent: #8ea2ff;
+      --accent-ink: #0e131b;
+      --me: #3550d6;
+      --me-ink: #ffffff;
+      --code-bg: #1f2835;
+      --danger: #ff8a80;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e131b;
+    --surface: #161d28;
+    --ink: #e7ecf3;
+    --muted: #97a2b4;
+    --line: #273142;
+    --accent: #8ea2ff;
+    --accent-ink: #0e131b;
+    --me: #3550d6;
+    --me-ink: #ffffff;
+    --code-bg: #1f2835;
+    --danger: #ff8a80;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .app {
+    height: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-block: 18px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand h1 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+  }
+  /* the mirrored second word is the one flourish */
+  .brand h1 .mirror {
+    display: inline-block;
+    transform: scaleX(-1);
+    color: var(--accent);
+  }
+  .brand small {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .controls { display: flex; gap: 8px; align-items: center; }
+  select, .ghost {
+    font: 500 13px var(--body);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .ghost:hover, select:hover { border-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  #log {
+    overflow-y: auto;
+    padding-block: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .msg { display: flex; flex-direction: column; gap: 4px; max-width: 88%; }
+  .msg .who {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .msg .bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    overflow-wrap: anywhere;
+  }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.user .bubble {
+    background: var(--me);
+    color: var(--me-ink);
+    border-bottom-right-radius: 4px;
+    white-space: pre-wrap;
+  }
+  .msg.claude { align-self: flex-start; }
+  .msg.claude .bubble {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+  }
+  .bubble p { margin: 0 0 0.6em; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul, .bubble ol { margin: 0 0 0.6em; padding-left: 1.3em; }
+  .bubble code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .bubble pre {
+    background: var(--code-bg);
+    padding: 10px 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0 0 0.6em;
+  }
+  .bubble pre code { background: none; padding: 0; }
+  .bubble h3 { font-family: var(--display); font-size: 17px; margin: 0.4em 0; }
+  .thinking { color: var(--muted); font-style: italic; }
+  .note { font-size: 12px; color: var(--danger); }
+
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .welcome h2 {
+    margin: 0;
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 500;
+    text-wrap: balance;
+  }
+  .welcome p { margin: 0; color: var(--muted); max-width: 60ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font: 500 13px var(--body);
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .chip:hover { background: var(--accent); color: var(--accent-ink); }
+
+  form {
+    padding-block: 12px 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .composer {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 8px;
+  }
+  .composer:focus-within { border-color: var(--accent); }
+  textarea {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font: 15px/1.5 var(--body);
+    max-height: 180px;
+    padding: 4px 6px;
+  }
+  .send {
+    font: 600 14px var(--body);
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 0;
+    border-radius: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .send:disabled { opacity: 0.5; cursor: default; }
+  .send.stop { background: var(--danger); color: #fff; }
+  .hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .unavailable {
+    padding: 14px 16px;
+    border: 1px dashed var(--danger);
+    border-radius: 12px;
+    color: var(--ink);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .msg { animation: rise 0.18s ease-out; }
+    @keyframes rise { from { transform: translateY(4px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+  }
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>Le <span class="mirror">Miroir</span></h1>
+      <small>Discussion avec Claude</small>
+    </div>
+    <div class="controls">
+      <label for="tier" hidden>Mode de réponse</label>
+      <select id="tier" title="Mode de réponse">
+        <option value="quick">Rapide</option>
+        <option value="default" selected>Équilibré</option>
+        <option value="complex">Approfondi</option>
+      </select>
+      <button type="button" class="ghost" id="clear">Nouvelle discussion</button>
+    </div>
+  </header>
+
+  <main id="log" aria-live="polite"></main>
+
+  <form id="form">
+    <div class="composer">
+      <label for="box" hidden>Votre message</label>
+      <textarea id="box" rows="1" placeholder="Écrivez votre message…"></textarea>
+      <button type="submit" class="send" id="send">Envoyer</button>
+    </div>
+    <div class="hint">
+      <span>Entrée pour envoyer · Maj+Entrée pour aller à la ligne</span>
+      <span id="status"></span>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  var RULES =
+    "Tu es Claude, l'assistant d'EasyPC Informatique, sur la page « Le Miroir ». " +
+    "Réponds en français par défaut (ou dans la langue de l'utilisateur), de façon claire et directe. " +
+    "Tu peux utiliser un Markdown simple : **gras**, `code`, blocs ```, listes à puces ou numérotées, titres ###.";
+  var STORE_KEY = "miroir.conversation.v1";
+  var MAX_BYTES = 56000;
+
+  var log = document.getElementById("log");
+  var form = document.getElementById("form");
+  var box = document.getElementById("box");
+  var sendBtn = document.getElementById("send");
+  var clearBtn = document.getElementById("clear");
+  var tierSel = document.getElementById("tier");
+  var statusEl = document.getElementById("status");
+
+  var turns = load();
+  var sample = null;
+  var ready = false;
+  var disabled = false;
+  var ctl = null;
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      var t = raw ? JSON.parse(raw) : [];
+      return Array.isArray(t) ? t.filter(function (m) { return m && m.content; }) : [];
+    } catch (e) { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(turns)); } catch (e) {}
+  }
+
+  // ---- tiny, safe markdown ----
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function inline(s) {
+    return s
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+  }
+  function md(src) {
+    var parts = esc(src).split(/```/);
+    var out = "";
+    parts.forEach(function (part, i) {
+      if (i % 2 === 1) {
+        var code = part.replace(/^[\w+-]*\n/, "");
+        out += "<pre><code>" + code.replace(/\n$/, "") + "</code></pre>";
+        return;
+      }
+      part.split(/\n{2,}/).forEach(function (block) {
+        block = block.replace(/^\n+|\n+$/g, "");
+        if (!block) return;
+        var lines = block.split("\n");
+        if (lines.every(function (l) { return /^\s*[-*•]\s+/.test(l); })) {
+          out += "<ul>" + lines.map(function (l) { return "<li>" + inline(l.replace(/^\s*[-*•]\s+/, "")) + "</li>"; }).join("") + "</ul>";
+        } else if (lines.every(function (l) { return /^\s*\d+[.)]\s+/.test(l); })) {
+          out += "<ol>" + lines.map(function (l) { return "<li>" + inline(l.replace(/^\s*\d+[.)]\s+/, "")) + "</li>"; }).join("") + "</ol>";
+        } else if (/^#{1,6}\s/.test(block) && lines.length === 1) {
+          out += "<h3>" + inline(block.replace(/^#{1,6}\s+/, "")) + "</h3>";
+        } else {
+          out += "<p>" + lines.map(inline).join("<br>") + "</p>";
+        }
+      });
+    });
+    return out;
+  }
+
+  // ---- rendering ----
+  function bubble(role, text) {
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + (role === "user" ? "user" : "claude");
+    var who = document.createElement("span");
+    who.className = "who";
+    who.textContent = role === "user" ? "Vous" : "Claude";
+    var b = document.createElement("div");
+    b.className = "bubble";
+    if (role === "user") b.textContent = text; else b.innerHTML = md(text);
+    wrap.append(who, b);
+    log.append(wrap);
+    return { wrap: wrap, body: b };
+  }
+
+  function welcome() {
+    var w = document.createElement("section");
+    w.className = "welcome";
+    w.innerHTML =
+      "<h2>Écrivez ici, Claude vous répond ici.</h2>" +
+      "<p>Chaque message part vers Claude et la réponse s'affiche au fil de l'écriture. " +
+      "La discussion reste enregistrée dans ce navigateur jusqu'à ce que vous en commenciez une nouvelle.</p>";
+    var chips = document.createElement("div");
+    chips.className = "chips";
+    [
+      "Explique-moi la différence entre un SSD SATA et un SSD NVMe",
+      "Rédige un devis type pour un remplacement d'écran de portable",
+      "Aide-moi à diagnostiquer un PC qui redémarre tout seul"
+    ].forEach(function (q) {
+      var c = document.createElement("button");
+      c.type = "button";
+      c.className = "chip";
+      c.textContent = q;
+      c.onclick = function () { box.value = q; autosize(); send(); };
+      chips.append(c);
+    });
+    w.append(chips);
+    log.append(w);
+  }
+
+  function renderAll() {
+    log.textContent = "";
+    if (!turns.length) welcome();
+    turns.forEach(function (t) { bubble(t.role, t.content); });
+    if (disabled) showUnavailable();
+    scrollDown();
+  }
+  function scrollDown() { log.scrollTop = log.scrollHeight; }
+
+  function showUnavailable() {
+    if (log.querySelector(".unavailable")) return;
+    var d = document.createElement("div");
+    d.className = "unavailable";
+    d.textContent = "Claude n'est pas disponible sur cette page pour le moment. Ouvrez-la depuis claude.ai, connecté à votre compte, puis autorisez la page à utiliser Claude.";
+    log.append(d);
+    scrollDown();
+  }
+
+  function setBusy(busy) {
+    sendBtn.textContent = busy ? "Arrêter" : "Envoyer";
+    sendBtn.classList.toggle("stop", busy);
+    sendBtn.type = busy ? "button" : "submit";
+    clearBtn.disabled = busy;
+  }
+  function updateSendState() {
+    sendBtn.disabled = disabled || (!ctl && !box.value.trim());
+  }
+
+  function errorText(code) {
+    switch (code) {
+      case "rate_limited": return "Trop de messages d'un coup ou limite d'usage atteinte. Réessayez dans un moment.";
+      case "session_expired": return "Votre session a expiré. Reconnectez-vous à claude.ai puis réessayez.";
+      case "prompt_too_large": return "La discussion est trop longue. Commencez une nouvelle discussion.";
+      case "refused": return "Claude n'a pas répondu à ce message. Reformulez-le.";
+      case "empty_completion": return "Réponse vide. Reformulez ou simplifiez la question.";
+      default: return "La réponse a été interrompue. Renvoyez le message pour réessayer.";
+    }
+  }
+  var FATAL = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+
+  // keep the prompt under the size cap by dropping the oldest turns
+  function history() {
+    var h = turns.slice();
+    var size = function () { return new Blob([RULES + h.map(function (t) { return t.content; }).join("")]).size; };
+    while (h.length > 1 && size() > MAX_BYTES) h.shift();
+    while (h.length && h[0].role !== "user") h.shift();
+    return [{ role: "user", content: RULES }].concat(h);
+  }
+
+  async function send() {
+    var text = box.value.trim();
+    if (!text || ctl || disabled) return;
+    if (!ready) { statusEl.textContent = "Connexion à Claude…"; return; }
+
+    var w = log.querySelector(".welcome");
+    if (w) w.remove();
+
+    turns.push({ role: "user", content: text });
+    save();
+    bubble("user", text);
+    box.value = "";
+    autosize();
+
+    var reply = bubble("claude", "");
+    reply.body.innerHTML = '<span class="thinking">Claude réfléchit…</span>';
+    scrollDown();
+
+    ctl = new AbortController();
+    setBusy(true);
+    updateSendState();
+    statusEl.textContent = "";
+
+    try {
+      var res = await sample(history(), {
+        cache: false,
+        signal: ctl.signal,
+        modelTier: tierSel.value,
+        onText: function (u) { reply.body.innerHTML = md(u.text); scrollDown(); }
+      });
+      reply.body.innerHTML = md(res.text);
+      turns.push({ role: "assistant", content: res.text });
+      save();
+      if (res.truncated) addNote(reply, "Réponse coupée car trop longue. Demandez la suite.");
+    } catch (e) {
+      var partial = e && e.text;
+      if (partial) {
+        reply.body.innerHTML = md(partial);
+        turns.push({ role: "assistant", content: partial });
+        save();
+      } else {
+        reply.wrap.remove();
+      }
+      var code = e && e.code;
+      if (FATAL.indexOf(code) !== -1) {
+        disabled = true;
+        showUnavailable();
+      } else if (code !== "cancelled") {
+        statusEl.textContent = errorText(code);
+      }
+    } finally {
+      ctl = null;
+      setBusy(false);
+      updateSendState();
+      scrollDown();
+      box.focus();
+    }
+  }
+
+  function addNote(reply, text) {
+    var n = document.createElement("span");
+    n.className = "note";
+    n.textContent = text;
+    reply.wrap.append(n);
+  }
+
+  function autosize() {
+    box.style.height = "auto";
+    box.style.height = Math.min(box.scrollHeight, 180) + "px";
+    updateSendState();
+  }
+
+  form.addEventListener("submit", function (e) { e.preventDefault(); send(); });
+  sendBtn.addEventListener("click", function () { if (ctl) ctl.abort(); });
+  box.addEventListener("input", autosize);
+  box.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
+  });
+  clearBtn.addEventListener("click", function () {
+    if (ctl) return;
+    turns = [];
+    save();
+    statusEl.textContent = "";
+    renderAll();
+    box.focus();
+  });
+  try {
+    var t = localStorage.getItem("miroir.tier");
+    if (t) tierSel.value = t;
+  } catch (e) {}
+  tierSel.addEventListener("change", function () {
+    try { localStorage.setItem("miroir.tier", tierSel.value); } catch (e) {}
+  });
+
+  renderAll();
+  updateSendState();
+
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("sample").then(function (s) {
+      if (!s) { disabled = true; showUnavailable(); updateSendState(); return; }
+      sample = s;
+      ready = true;
+      if (statusEl.textContent === "Connexion à Claude…") statusEl.textContent = "";
+    }, function () { disabled = true; showUnavailable(); updateSendState(); });
+  } else {
+    disabled = true;
+    showUnavailable();
+    updateSendState();
+  }
+})();
+</script>
