@@ -137,8 +137,8 @@
     border-bottom-right-radius: 4px;
     white-space: pre-wrap;
   }
-  .msg.claude { align-self: flex-start; }
-  .msg.claude .bubble {
+  .msg.reply { align-self: flex-start; }
+  .msg.reply .bubble {
     background: var(--surface);
     border: 1px solid var(--line);
     border-bottom-left-radius: 4px;
@@ -260,7 +260,7 @@
   <header>
     <div class="brand">
       <h1>Le <span class="mirror">Miroir</span></h1>
-      <small>Discussion avec Claude</small>
+      <small>Espace de discussion</small>
     </div>
     <div class="controls">
       <label for="tier" hidden>Mode de réponse</label>
@@ -291,7 +291,7 @@
 <script>
 (function () {
   var RULES =
-    "Tu es Claude, l'assistant d'EasyPC Informatique, sur la page « Le Miroir ». " +
+    "Tu es l'assistant d'EasyPC Informatique, sur la page « Le Miroir ». " +
     "Réponds en français par défaut (ou dans la langue de l'utilisateur), de façon claire et directe. " +
     "Tu peux utiliser un Markdown simple : **gras**, `code`, blocs ```, listes à puces ou numérotées, titres ###.";
   var STORE_KEY = "miroir.conversation.v1";
@@ -362,10 +362,10 @@
   // ---- rendering ----
   function bubble(role, text) {
     var wrap = document.createElement("div");
-    wrap.className = "msg " + (role === "user" ? "user" : "claude");
+    wrap.className = "msg " + (role === "user" ? "user" : "reply");
     var who = document.createElement("span");
     who.className = "who";
-    who.textContent = role === "user" ? "Vous" : "Claude";
+    who.textContent = role === "user" ? "Vous" : "Miroir";
     var b = document.createElement("div");
     b.className = "bubble";
     if (role === "user") b.textContent = text; else b.innerHTML = md(text);
@@ -378,8 +378,8 @@
     var w = document.createElement("section");
     w.className = "welcome";
     w.innerHTML =
-      "<h2>Écrivez ici, Claude vous répond ici.</h2>" +
-      "<p>Chaque message part vers Claude et la réponse s'affiche au fil de l'écriture. " +
+      "<h2>Écrivez ici, la réponse s'affiche ici.</h2>" +
+      "<p>Chaque message est envoyé et la réponse s'affiche au fil de l'écriture. " +
       "La discussion reste enregistrée dans ce navigateur jusqu'à ce que vous en commenciez une nouvelle.</p>";
     var chips = document.createElement("div");
     chips.className = "chips";
@@ -412,7 +412,7 @@
     if (log.querySelector(".unavailable")) return;
     var d = document.createElement("div");
     d.className = "unavailable";
-    d.textContent = "Claude n'est pas disponible sur cette page pour le moment. Ouvrez-la depuis claude.ai, connecté à votre compte, puis autorisez la page à utiliser Claude.";
+    d.textContent = "Les réponses ne sont pas disponibles pour le moment. Ouvrez la page en étant connecté à votre compte, puis autorisez-la à répondre.";
     log.append(d);
     scrollDown();
   }
@@ -430,9 +430,9 @@
   function errorText(code) {
     switch (code) {
       case "rate_limited": return "Trop de messages d'un coup ou limite d'usage atteinte. Réessayez dans un moment.";
-      case "session_expired": return "Votre session a expiré. Reconnectez-vous à claude.ai puis réessayez.";
+      case "session_expired": return "Votre session a expiré. Reconnectez-vous puis réessayez.";
       case "prompt_too_large": return "La discussion est trop longue. Commencez une nouvelle discussion.";
-      case "refused": return "Claude n'a pas répondu à ce message. Reformulez-le.";
+      case "refused": return "Pas de réponse à ce message. Reformulez-le.";
       case "empty_completion": return "Réponse vide. Reformulez ou simplifiez la question.";
       default: return "La réponse a été interrompue. Renvoyez le message pour réessayer.";
     }
@@ -451,7 +451,7 @@
   async function send() {
     var text = box.value.trim();
     if (!text || ctl || disabled) return;
-    if (!ready) { statusEl.textContent = "Connexion à Claude…"; return; }
+    if (!ready) { statusEl.textContent = "Connexion…"; return; }
 
     var w = log.querySelector(".welcome");
     if (w) w.remove();
@@ -462,8 +462,8 @@
     box.value = "";
     autosize();
 
-    var reply = bubble("claude", "");
-    reply.body.innerHTML = '<span class="thinking">Claude réfléchit…</span>';
+    var reply = bubble("reply", "");
+    reply.body.innerHTML = '<span class="thinking">Réflexion en cours…</span>';
     scrollDown();
 
     ctl = new AbortController();
@@ -550,7 +550,7 @@
       if (!s) { disabled = true; showUnavailable(); updateSendState(); return; }
       sample = s;
       ready = true;
-      if (statusEl.textContent === "Connexion à Claude…") statusEl.textContent = "";
+      if (statusEl.textContent === "Connexion…") statusEl.textContent = "";
     }, function () { disabled = true; showUnavailable(); updateSendState(); });
   } else {
     disabled = true;
