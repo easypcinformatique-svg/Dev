@@ -60,17 +60,23 @@ function isValidIso_(v) {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0,10) === v;
 }
 function isValidTime_(v) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v || '')); }
+// Google Sheets convertit « 08:00 » en heure : on relit la valeur affichée (« 8:00:00 », « 08:00 »…).
+function hhmm_(display, fallback) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(display || '').trim());
+  return m ? m[1].padStart(2,'0') + ':' + m[2] : fallback;
+}
 function toDate_(v) { return new Date(v+'T12:00:00'); }
 
 function getInitialState() {
   const sh = dataSheet_();
-  const rows = sh.getRange(2,1,CONFIG.MAX_ARTISANS,8).getValues();
+  const range = sh.getRange(2,1,CONFIG.MAX_ARTISANS,8);
+  const rows = range.getValues(), shown = range.getDisplayValues();
   return {
     email: authorizedEmail_(),
     users: rows.map((r,i) => ({
       slot:i, name:String(r[0]||''),phone:String(r[1]||''),
       start:isoDate_(r[2]),end:isoDate_(r[3]),
-      from:String(r[4]||'08:00'),to:String(r[5]||'20:00'),
+      from:hhmm_(shown[i][4],'08:00'),to:hhmm_(shown[i][5],'20:00'),
       active:String(r[6]||'NON').toUpperCase()==='OUI',
       notes:String(r[7]||'')
     }))
@@ -91,18 +97,24 @@ function saveArtisan(record) {
   if (!name || !phone) throw new Error('Nom et numéro français valides obligatoires.');
   if (!isValidIso_(start) || !isValidIso_(end) || start>end) throw new Error('Dates invalides.');
   if (!isValidTime_(from) || !isValidTime_(to) || from>=to) throw new Error('Créneau horaire invalide.');
-  const all = sh.getRange(2,2,CONFIG.MAX_ARTISANS,1).getDisplayValues();
-  if (all.some((r,i)=>i!==slot && normalizePhone_(r[0])===phone)) throw new Error('Numéro déjà autorisé dans un autre emplacement.');
   const lock = LockService.getDocumentLock() || LockService.getScriptLock();
   lock.waitLock(5000);
   try {
+    const all = sh.getRange(2,2,CONFIG.MAX_ARTISANS,1).getDisplayValues();
+    if (all.some((r,i)=>i!==slot && normalizePhone_(r[0])===phone)) throw new Error('Numéro déjà autorisé dans un autre emplacement.');
     const values=[name,phone,toDate_(start),toDate_(end),from,to,record.active===true?'OUI':'NON',notes];
     const range=sh.getRange(slot+2,1,1,8);
-    sh.getRange(slot+2,2).setNumberFormat('@');
+    textFormat_(sh,slot);
     range.setValues([values]);
     sh.getRange(slot+2,3,1,2).setNumberFormat('dd/MM/yyyy');
   } finally { lock.releaseLock(); }
   return getInitialState();
+}
+
+// Numéro (B) et horaires (E:F) en texte brut, sinon Sheets les transforme en nombre / heure.
+function textFormat_(sh, slot) {
+  sh.getRange(slot+2,2).setNumberFormat('@');
+  sh.getRange(slot+2,5,1,2).setNumberFormat('@');
 }
 
 function revokeArtisan(slot) {
@@ -115,6 +127,7 @@ function deleteArtisan(slot) {
   const sh=dataSheet_(); slot=Number(slot);
   if (!Number.isInteger(slot)||slot<0||slot>=CONFIG.MAX_ARTISANS) throw new Error('Emplacement invalide.');
   sh.getRange(slot+2,1,1,8).clearContent();
+  textFormat_(sh,slot);
   sh.getRange(slot+2,5,1,3).setValues([['08:00','20:00','NON']]);
   return getInitialState();
 }

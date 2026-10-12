@@ -3,10 +3,21 @@
 Version prototype à déployer et tester avant usage réel. Créée pour 2 administrateurs (easypc.informatique@gmail.com et scognamiglio.julie@gmail.com) et 5 artisans. Base de données existante :
 https://docs.google.com/spreadsheets/d/1yo7wxGTL28P_C0l7emcZRDn7Y-6XN7ljbNUOkW-DKAA/edit
 
+Fichiers de ce dossier :
+
+| Fichier | Projet Apps Script | Rôle |
+|---|---|---|
+| `Code_Admin.gs` | 1 — Administration | `Code.gs` de l'interface administrateur |
+| `Index.html` | 1 — Administration | fichier HTML « Index » |
+| `appsscript_admin.json` | 1 — Administration | manifeste (People API, web app « utilisateur accédant ») |
+| `Code_Validation.gs` | 2 — Validation | `Code.gs` du service ALLOW/DENY |
+| `appsscript_validation.json` | 2 — Validation | manifeste (web app « Moi » / « Tout le monde ») |
+
 ## 1. Ce qui existe déjà
 
 - Google Sheets « Accès Portail PL — Autorisations artisans », avec les onglets « Artisans » et « Journal ».
 - Julie a l'accès de modification.
+- Les colonnes de l'onglet « Artisans » (ligne 1 = en-têtes, lignes 2 à 6 = 5 artisans) : A Nom · B Téléphone · C Début · D Fin · E De (HH:MM) · F À (HH:MM) · G Actif (OUI/NON) · H Note. L'application force B, E et F en texte brut ; si tu modifies le tableau à la main, garder des heures au format `08:00`.
 - Le Galaxy Note9 avec SIM Free détecte les appels autorisés pour les propriétaires et commande le Shelly localement. **Ne pas modifier cette macro**.
 - L'application d'administration et le service de validation fournis ici ne sont **pas encore publiés**.
 

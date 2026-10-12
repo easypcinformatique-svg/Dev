@@ -35,6 +35,11 @@ function iso_(value) {
   const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
   return m?`${m[3]}-${m[2]}-${m[1]}`:'';
 }
+// Google Sheets convertit « 08:00 » en heure : on relit la valeur affichée (« 8:00:00 », « 08:00 »…).
+function hhmm_(display) {
+  const m=/^(\d{1,2}):(\d{2})/.exec(String(display||'').trim());
+  return m?m[1].padStart(2,'0')+':'+m[2]:'';
+}
 function response_(txt) {return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.TEXT);}
 function audit_(sh,phone,result,detail) {
   try {
@@ -52,17 +57,19 @@ function doPost(e) {
     const phone=normalizePhone_(body.phone);
     if(!phone) return response_('DENY');
     const sh=SpreadsheetApp.openById(SHEET_ID).getSheetByName('Artisans');
-    const rows=sh.getRange(2,1,MAX_USERS,8).getValues();
+    const range=sh.getRange(2,1,MAX_USERS,8);
+    const rows=range.getValues(), shown=range.getDisplayValues();
     const date=Utilities.formatDate(new Date(),TZ,'yyyy-MM-dd');
     const time=Utilities.formatDate(new Date(),TZ,'HH:mm');
     let verdict='DENY', detail='non autorisé';
-    for (const r of rows) {
+    for (let i=0;i<rows.length;i++) {
+      const r=rows[i];
       if (normalizePhone_(r[1])!==phone) continue;
       const start=iso_(r[2]),end=iso_(r[3]);
-      const from=String(r[4]||''),to=String(r[5]||'');
+      const from=hhmm_(shown[i][4]),to=hhmm_(shown[i][5]);
       if (String(r[6]).trim().toUpperCase()!=='OUI'){detail='désactivé';break;}
       if (!start || !end || date<start || date>end){detail='hors dates';break;}
-      if (!/^\d\d:\d\d$/.test(from)||!/^\d\d:\d\d$/.test(to)||time<from||time>=to){detail='hors horaires';break;}
+      if (!from||!to||time<from||time>=to){detail='hors horaires';break;}
       const key='recent_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,phone)).slice(0,30);
       const cache=CacheService.getScriptCache();
       if(cache.get(key)){detail='temporisation anti-doublon';break;}
