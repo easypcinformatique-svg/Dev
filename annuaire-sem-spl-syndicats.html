@@ -176,7 +176,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <div class="stat"><span class="stat-n" id="s-mails">—</span> courriels</div>
       <div class="stat"><span class="stat-n" id="s-tel">—</span> téléphones</div>
       <div class="stat"><span class="stat-n" id="s-shown">—</span> affichées</div>
-      <div class="stat" id="version-stat">v.2026.10.07-14h13</div>
+      <div class="stat" id="version-stat">v.2026.10.14-12h39</div>
     </div>
   </div>
 </header>
@@ -255,7 +255,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 <footer>
   <div class="footer">
     <span>Sources : annuaire des Epl (export 23/02/2026) &bull; API Annuaire des Entreprises &bull; <span class="footer-warn">Non contractuel</span></span>
-    <span>110 structures &bull; v.2026.10.07-14h13 &bull; &copy; <span id="yr"></span></span>
+    <span>110 structures &bull; v.2026.10.14-12h39 &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
 
@@ -278,7 +278,7 @@ let DATA = [
   {nom:"SOCIETE D'ECONOMIE MIXTE *LES ECRINS*",sigle:"LES ECRINS",regime:"Sem",secteur:"Tourisme",activite:"Remontées mécaniques",adresse:"STATION 1600 DE PUY-SAINT-VINCENT",cp:"05290",ville:"Puy St Vincent",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 23 43 43",email:"contact@puysaintvincent.info",web:"www.puysaintvincent.com",capital:1216488,ca:9310485,effectif:"De 50 à 99 salariés",president:"Gauthier",siren:"350527651"},
   {nom:"SOCIETE D'ECONOMIE MIXTE DE LOISIRS D'ORCIERES-MERLETTE",sigle:"SEMILOM",regime:"Sem",secteur:"Tourisme",activite:"Offices de tourisme",adresse:"MAISON DU TOURISME MERLETTE",cp:"05170",ville:"Orcieres",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 55 89 86",email:"",web:"www.orcieres.com",capital:782080,ca:852224,effectif:"De 10 à 19 salariés",president:"Colombani",siren:"383550621"},
   {nom:"SOCIETE D'ECONOMIE MIXTE LOCALE DES ORRES",sigle:"SEMLORE",regime:"Sem",secteur:"Tourisme",activite:"Remontées mécaniques",adresse:"BÂTIMENT ADMINISTRATIF",cp:"05200",ville:"Les Orres",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 44 00 39",email:"ot.accueil@lesorres.com",web:"www.lesorres.com",capital:8223300,ca:15083872,effectif:"De 50 à 99 salariés",president:"",siren:"509289054"},
-  {nom:"SOCIETE D'EQUIPEMENT ET DU DEVELOPPEMENT DE VARS",sigle:"SEDEV",regime:"Sem",secteur:"Tourisme",activite:"Remontées mécaniques",adresse:"COURS RÖHNER, LES CLAUX",cp:"05560",ville:"Vars",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 46 51 04",email:"",web:"",capital:4485880,ca:17235236,effectif:"De 50 à 99 salariés",president:"",siren:"386250211"},
+  {nom:"SOCIETE D'EQUIPEMENT ET DU DEVELOPPEMENT DE VARS",sigle:"SEDEV",regime:"Sem",secteur:"Tourisme",activite:"Remontées mécaniques",adresse:"COURS RÖHNER, LES CLAUX",cp:"05560",ville:"Vars",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 46 51 04",email:"",web:"",capital:4485880,ca:17235236,effectif:"De 50 à 99 salariés",president:"Thelene",siren:"386250211"},
   {nom:"SOCIETE DE GESTION DES ACTIVITES TOURISTIQUES DE RISOUL",sigle:"SGATRIS",regime:"Sem",secteur:"Tourisme",activite:"Offices de tourisme",adresse:"BATIMENT D'ACCUEIL DE RISOUL STATION",cp:"05600",ville:"Risoul",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 45 23 63",email:"",web:"",capital:200000,ca:353004,effectif:"De 20 à 49 salariés",president:"Esmieu",siren:"789272069"},
   {nom:"SOLEIL EAU VENT ENERGIE",sigle:"SEVE",regime:"Sem",secteur:"Environnement et Réseaux",activite:"Production d'energie [Photovoltaique]",adresse:"MAIRIE DE PUY-SAINT-ANDRE",cp:"05100",ville:"Puy St Pierre",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"04 92 21 51 61",email:"",web:"www.seveenergierenouvelable.fr/la-societe",capital:871500,ca:176006,effectif:"0 salarié",president:"Bard",siren:"529535247"},
   {nom:"SPL BUECH DEVOLUY EXPLOITATION",sigle:"SPL BUECH DEVOLUY EXPLOITATION",regime:"Spl",secteur:"Loisirs",activite:"Thermoludisme et bien-être",adresse:"MAIRIE DU DÉVOLUY, LE PRÉ SAINT-ETIENNE-EN-DÉVOLUY",cp:"05250",ville:"Le Devoluy",dept:"Hautes-Alpes",depcode:"05",region:"Provence-Alpes-Côte d'Azur",tel:"07 68 00 68 07",email:"contact@odycea-devoluy.com",web:"www.odycea-devoluy.com",capital:119720,ca:841798,effectif:"De 10 à 19 salariés",president:"Butel",siren:"832428668"},
@@ -623,7 +623,7 @@ function exportSheets(){
       [''],
       ['Source','Annuaire des Epl — export du 23/02/2026'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
-      ['Version', 'v.2026.10.07-14h13'],
+      ['Version', 'v.2026.10.14-12h39'],
       ['Date export', new Date().toLocaleDateString('fr-FR')],
       ['Structures', rows.length],
       ['Présidents renseignés', rows.filter(d=>d.president).length],
