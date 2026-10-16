@@ -1,0 +1,8 @@
+{
+  "baux": [
+    {"nom": "T2 SCI JGR", "montant": 800.00, "payeurs": ["DUPONT", "CAF"]},
+    {"nom": "T2 Chartreux", "montant": 800.00, "payeurs": ["MARTIN"]},
+    {"nom": "Local Chartreux", "montant": 651.40, "payeurs": ["NOM DU COMMERCE"]},
+    {"nom": "Villa La Pomme", "montant": 1200.00, "payeurs": ["DURAND"]}
+  ]
+}

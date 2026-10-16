@@ -42,3 +42,7 @@ credentials.json
 package-lock.json
 node_modules/
 annuaires/cache/
+
+# Alerte loyers : données personnelles, jamais dans le dépôt public
+alerte-loyers/baux.json
+*.pem
