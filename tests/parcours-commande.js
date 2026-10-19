@@ -12,6 +12,14 @@ const CAS = [
   { n: '8 petites · Mazan (min 4)',                 v: '5 avenue de la Republique, 84380 Mazan', t: '26', q: 8, att: 'PASSE'  },
   { n: '4 petites · Monteux (min 3)',               v: '8 cours des Platanes, 84170 Monteux', t: '26', q: 4, att: 'BLOQUE' },
   { n: '6 petites · Monteux (min 3)',               v: '8 cours des Platanes, 84170 Monteux', t: '26', q: 6, att: 'PASSE'  },
+  { n: '3 grandes · Caromb (min 4)',                v: '2 place du 4 Septembre, 84330 Caromb', t: '30', q: 3, att: 'BLOQUE' },
+  { n: '4 grandes · Caromb (min 4)',                v: '2 place du 4 Septembre, 84330 Caromb', t: '30', q: 4, att: 'PASSE'  },
+  { n: '3 grandes · Loriol-du-Comtat (min 4)',      v: '1 rue de la Mairie, 84870 Loriol-du-Comtat', t: '30', q: 3, att: 'BLOQUE' },
+  { n: '4 grandes · Loriol-du-Comtat (min 4)',      v: '1 rue de la Mairie, 84870 Loriol-du-Comtat', t: '30', q: 4, att: 'PASSE'  },
+  { n: '4 grandes · Pernes-les-Fontaines (min 5)',  v: '3 place Aristide Briand, 84210 Pernes-les-Fontaines', t: '30', q: 4, att: 'BLOQUE' },
+  { n: '5 grandes · Pernes-les-Fontaines (min 5)',  v: '3 place Aristide Briand, 84210 Pernes-les-Fontaines', t: '30', q: 5, att: 'PASSE'  },
+  { n: '8 petites · Saint-Didier (min 5)',          v: '6 route de Venasque, 84210 Saint-Didier', t: '26', q: 8, att: 'BLOQUE' },
+  { n: '10 petites · Saint-Didier (min 5)',         v: '6 route de Venasque, 84210 Saint-Didier', t: '26', q: 10, att: 'PASSE' },
   { n: '2 petites · A EMPORTER hors zone',          v: '25 rue Paradis, 13001 Marseille', t: '26', q: 2, att: 'PASSE', emporter: true },
 ];
 

@@ -1,0 +1,394 @@
+{
+ "source": "Depliant_Pizza_Napoli_A3_plie_A4_noir_6.pdf, prix en vigueur en octobre 2026",
+ "renommages": {
+  "Raviole Basilic": "Raviole"
+ },
+ "hors_depliant_conservees": [
+  "Dessert du Jour",
+  "Glaces Häagen-Dazs",
+  "Mousse au Chocolat",
+  "Tiramisu"
+ ],
+ "pizzas": {
+  "3 Fro": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, mozzarella, chèvre"
+  },
+  "4 Fro": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, mozzarella, roquefort, chèvre"
+  },
+  "4 Saisons": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, jambon, champignons, poivrons, artichaut"
+  },
+  "Acropolis": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, aubergines, poivrons, mozzarella"
+  },
+  "Anchois": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, anchois"
+  },
+  "Aphrodite": {
+   "petite": 8.5,
+   "grande": 14.9,
+   "ingredients": "Tomate, fromage, viande hachée, bacon, poulet, merguez, poivrons, sauce BBQ"
+  },
+  "Arménienne": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, viande hachée, oignons, poivrons"
+  },
+  "Baraka": {
+   "petite": 7.9,
+   "grande": 13.9,
+   "ingredients": "Fromage, crème, jambon cru, champignons, mozzarella, raclette"
+  },
+  "Barako": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, viande hachée, bacon, oignons"
+  },
+  "Bergère": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Fromage, crème, chèvre, champignons"
+  },
+  "Bolognaise": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, viande hachée, oignons, champignons"
+  },
+  "Buffalo": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Tomate, fromage, viande hachée, oignons"
+  },
+  "Burger": {
+   "petite": 8.0,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, viande hachée, oignons, cheddar, cornichons, sauce burger"
+  },
+  "Camembert": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Fromage, crème, jambon, pomme de terre, oignons, camembert"
+  },
+  "Campagnarde": {
+   "petite": 8.5,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, lardons, oignons, champignons, chèvre, filet de crème"
+  },
+  "Canadienne": {
+   "petite": 7.9,
+   "grande": 11.5,
+   "ingredients": "Tomate, fromage, bacon, œuf"
+  },
+  "Catalane": {
+   "petite": null,
+   "grande": 11.5,
+   "ingredients": "Tomate, fromage, thon"
+  },
+  "Ch'ti": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Fromage, crème, lardons, oignons, champignons, maroilles"
+  },
+  "Chilienne": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, poulet, poivrons, sauce curry"
+  },
+  "Chocoananas": {
+   "petite": null,
+   "grande": 9.5,
+   "ingredients": "Nutella, ananas, sucre fantaisie, coco râpée"
+  },
+  "Chocobanane": {
+   "petite": null,
+   "grande": 9.5,
+   "ingredients": "Nutella, banane, sucre fantaisie, coco râpée"
+  },
+  "Chocopoire": {
+   "petite": null,
+   "grande": 9.5,
+   "ingredients": "Nutella, poire, sucre fantaisie, coco râpée"
+  },
+  "Chorizo": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, chorizo"
+  },
+  "Chèvre": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, chèvre"
+  },
+  "Chèvre-Miel": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Tomate, fromage, chèvre, miel"
+  },
+  "Circus": {
+   "petite": 7.9,
+   "grande": 13.9,
+   "ingredients": "Tomate, fromage, viande hachée, chorizo, merguez, oignons"
+  },
+  "Cochonaille": {
+   "petite": 7.9,
+   "grande": 13.9,
+   "ingredients": "Tomate, fromage, jambon, bacon, lardons, jambon cru, moutarde"
+  },
+  "Dame Blanche": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Fromage, crème, chèvre, mozzarella"
+  },
+  "Dauphinoise": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Fromage, crème, viande hachée, pomme de terre, lardons, oignons"
+  },
+  "Délicieuse": {
+   "petite": 7.9,
+   "grande": 12.9,
+   "ingredients": "Fromage, crème, jambon, champignons, mozzarella"
+  },
+  "El Paso": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, chorizo, poivrons"
+  },
+  "Far West": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, poulet, oignons, poivrons, champignons, sauce BBQ"
+  },
+  "Flamkeuch": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Fromage, crème, lardons, oignons"
+  },
+  "Forestière": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Tomate, fromage, lardons, oignons, champignons"
+  },
+  "Fruits de Mer": {
+   "petite": 7.9,
+   "grande": 11.5,
+   "ingredients": "Tomate, fromage, fruits de mer"
+  },
+  "Grandiosa": {
+   "petite": null,
+   "grande": 13.5,
+   "ingredients": "Tomate, jambon, champignons, mozza, huile de truffe"
+  },
+  "Hawaïenne": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, poulet, poivrons, ananas, curry"
+  },
+  "Indiana": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, pomme de terre, poulet, sauce curry"
+  },
+  "Kebab": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, kebab, oignons, sauce blanche"
+  },
+  "Kidechire": {
+   "petite": 7.9,
+   "grande": 12.9,
+   "ingredients": "Tomate, fromage, chorizo, merguez, Tabasco"
+  },
+  "Manhattan": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, viande hachée, oignons, chèvre"
+  },
+  "Margherita": {
+   "petite": 7.0,
+   "grande": 9.9,
+   "ingredients": "Tomate, fromage"
+  },
+  "Merguez": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Tomate, fromage, merguez"
+  },
+  "Mexicaine": {
+   "petite": 7.9,
+   "grande": 12.9,
+   "ingredients": "Tomate, fromage, chorizo, poulet, cheddar, Tabasco"
+  },
+  "Milano": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, aubergines, fromage, chèvre"
+  },
+  "Mont Blanc": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Fromage, crème, jambon, bacon, pomme de terre, raclette"
+  },
+  "Montagnarde": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, raclette, reblochon"
+  },
+  "Moussaka": {
+   "petite": 7.9,
+   "grande": 13.9,
+   "ingredients": "Tomate, aubergines, viande hachée, fromage, mozzarella"
+  },
+  "Mozza": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, mozzarella"
+  },
+  "Mozza di Bufala": {
+   "petite": null,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, mozza di bufala"
+  },
+  "Mégafro": {
+   "petite": 8.0,
+   "grande": 13.9,
+   "ingredients": "Tomate, fromage, mozzarella, roquefort, chèvre, raclette"
+  },
+  "Mégaroyale": {
+   "petite": 7.9,
+   "grande": 13.9,
+   "ingredients": "Tomate, fromage, pommes de terre, jambon, champignons, oignons, œuf"
+  },
+  "Napoli": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Fromage, crème, chèvre, mozzarella, roquefort"
+  },
+  "Nordiste": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, jambon, champignons, maroilles"
+  },
+  "Orientale": {
+   "petite": 7.9,
+   "grande": 12.9,
+   "ingredients": "Tomate, fromage, merguez, oignons, poivrons"
+  },
+  "Parmesane": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Tomate, parmesan, fromage, mozzarella, crème"
+  },
+  "Paysanne": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, chèvre, lardons, jambon cru"
+  },
+  "Pissaladière": {
+   "petite": 7.9,
+   "grande": 11.5,
+   "ingredients": "Tomate, fromage, anchois, oignons"
+  },
+  "Pyrénéenne": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, jambon, jambon cru, raclette"
+  },
+  "Raclon": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, jambon, bacon, pomme de terre, raclette"
+  },
+  "Raviole": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Fromage, crème, ravioles (comté, fromage frais, persil)"
+  },
+  "Raviole Saumon": {
+   "petite": 7.9,
+   "grande": 13.9,
+   "ingredients": "Fromage, crème, ravioles, saumon"
+  },
+  "Reine": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Tomate, fromage, jambon, champignons"
+  },
+  "Romaine": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, jambon"
+  },
+  "Royale": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, jambon, champignons, œuf"
+  },
+  "Saint Jacques": {
+   "petite": 8.0,
+   "grande": 13.9,
+   "ingredients": "Tomate, fromage, fruits de mer, noix de Saint-Jacques"
+  },
+  "Saumon": {
+   "petite": 7.9,
+   "grande": 12.5,
+   "ingredients": "Fromage, crème, saumon"
+  },
+  "Savoyarde": {
+   "petite": 7.9,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, jambon cru, reblochon"
+  },
+  "Sweet Chorizo": {
+   "petite": 8.5,
+   "grande": 13.0,
+   "ingredients": "Tomate, fromage, chorizo, champignons, poivrons, oignons"
+  },
+  "Sweety-Chèvre": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Fromage, crème, chèvre, lardons, oignons, miel"
+  },
+  "Tartiflette": {
+   "petite": 8.0,
+   "grande": 13.9,
+   "ingredients": "Fromage, crème, pomme de terre, lardons, oignons, reblochon"
+  },
+  "Tartufo": {
+   "petite": null,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, jambon, mozza di bufala, huile de truffe"
+  },
+  "Thoncapre": {
+   "petite": 7.9,
+   "grande": 12.0,
+   "ingredients": "Tomate, fromage, thon, câpres"
+  },
+  "Végétarienne": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, aubergines, fromage, champignons, poivrons, artichaut"
+  },
+  "Wanabie": {
+   "petite": 7.9,
+   "grande": 13.5,
+   "ingredients": "Tomate, fromage, viande hachée, oignons, champignons, sauce BBQ"
+  },
+  "Xena": {
+   "petite": 7.9,
+   "grande": 12.9,
+   "ingredients": "Fromage, crème, viande hachée, merguez, oignons, Tabasco"
+  }
+ }
+}
