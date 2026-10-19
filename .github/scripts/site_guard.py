@@ -13,7 +13,7 @@ Invariants:
   7. foundingDate 2008 everywhere
   8. One Facebook URL
 """
-import re, os, sys, glob, json, subprocess
+import re, os, sys, glob, json, subprocess, unicodedata
 from datetime import date
 from html import unescape
 
@@ -22,6 +22,10 @@ from serres_page import CORPS as CORPS_SERRES, DESCRIPTION as DESC_SERRES
 
 SITE = sys.argv[1] if len(sys.argv) > 1 else "site"
 HOST = "https://pizzanapolicarpentras.fr"
+# The printed flyer is the menu customers hold, so it is the reference for
+# recipes and prices. Extracted from the October 2026 edition; see carte.json.
+CARTE = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "..", "data", "carte.json"), encoding="utf-8"))
 FACEBOOK = "https://www.facebook.com/PizzaNapoliCarpentras/"
 FOUNDED = "2008"
 DUPLICATES = {  # page -> canonical target (content cannibalization)
@@ -35,14 +39,19 @@ CONTROL_LABELS = {"size-select": "Taille de la pizza", "qty-select": "Quantité"
 COMMUNES = {
     "carpentras": ("Carpentras", "84200", 2, "carpentras"),
     "serres": ("Serres", "84200", 2, "serres"),
-    "pernes-les-fontaines": ("Pernes-les-Fontaines", "84210", 3, "pernes"),
     "monteux": ("Monteux", "84170", 3, "monteux"),
     "aubignan": ("Aubignan", "84810", 3, "aubignan"),
-    "loriol-du-comtat": ("Loriol-du-Comtat", "84870", 3, "loriol"),
-    "caromb": ("Caromb", "84330", 3, "caromb"),
     "mazan": ("Mazan", "84380", 4, "mazan"),
-    "saint-didier": ("Saint-Didier", "84210", 4, "saint-didier"),
+    "loriol-du-comtat": ("Loriol-du-Comtat", "84870", 4, "loriol"),
+    "caromb": ("Caromb", "84330", 4, "caromb"),
+    "pernes-les-fontaines": ("Pernes-les-Fontaines", "84210", 5, "pernes"),
+    "saint-didier": ("Saint-Didier", "84210", 5, "saint-didier"),
 }
+# Monteux village is 3, the lake area and the outskirts are 4. An address
+# string cannot tell them apart, so the form applies 3 — it never turns away a
+# village order — and the zone table on the homepage states both, the team
+# settling the case on the call back.
+SECTEURS = {("monteux", "lac / périphérie"): 4}
 STRUCTURAL = ("div", "nav", "main", "header", "footer", "section", "ul", "table")
 
 
@@ -61,12 +70,23 @@ GALLERY = '<div class="galerie-grid"> ' + " ".join([
     _gal("20240123_201507.jpg", "🍕", "Pizza Mozza di Bufala jambon Carpentras"),
     _gal("20230926_203901.jpg", "🌿", "Pizza Végétarienne champignons Carpentras"),
 ]) + " </div>"
-# Must stay in step with getMinPizzasForCity() in the order form.
+# Derived from COMMUNES so the answer can never drift from the form's own
+# rule, which is itself generated from the same table (see rule 6z).
+def _liste(noms):
+    return noms[0] if len(noms) == 1 else ", ".join(noms[:-1]) + " et " + noms[-1]
+
+
+_paliers = {}
+for _slug, (_nom, _cp, _mini, _guide) in COMMUNES.items():
+    _paliers.setdefault(_mini, []).append(_nom)
+_bouts = []
+for _i, _mini in enumerate(sorted(_paliers)):
+    _quoi = f"{_mini} grandes pizzas (ou {_mini * 2} petites)" if _i == 0 else str(_mini)
+    _bouts.append(f"{_quoi} sur {_liste(_paliers[_mini])}")
 DELIVERY_ANSWER = (
     "sur Carpentras et les communes environnantes, "
     "tous les soirs de 19h00 à 22h00 (commandes dès 17h30). Le minimum varie selon la commune : "
-    "2 grandes pizzas (ou 4 petites) sur Carpentras et Serres, 3 sur Pernes-les-Fontaines, Monteux, "
-    "Aubignan, Loriol-du-Comtat et Caromb, 4 sur Mazan et Saint-Didier. Appelez le 07 61 08 36 08."
+    + ", ".join(_bouts) + ". Appelez le 07 61 08 36 08."
 )
 IMG_EXT = (".webp", ".png", ".jpg", ".jpeg", ".svg", ".gif")
 # The address that answers: it is the one on the legal pages.
@@ -232,11 +252,10 @@ RATING, COUNT = m_r.group(1), m_c.group(1)
 RATING_COMMA = RATING.replace(".", ",")
 
 # ---------- source of truth: the menu itself ----------
-_menu = re.search(r'const PIZZAS\s*=\s*\[(.*?)\];', home_html, re.DOTALL)
-MENU = {}
-for _n, _p26, _p30 in re.findall(r"name:'([^']+)'.*?p26:([\d.]+|null),p30:([\d.]+|null)", _menu.group(1)):
-    MENU[_n.lower()] = (None if _p26 == "null" else float(_p26),
-                        None if _p30 == "null" else float(_p30))
+# Prices and recipes come from the printed flyer (carte.json), not from the
+# page the guard is about to rewrite: reading the page would make every
+# correction lag one run behind.
+MENU = {n.lower(): (d["petite"], d["grande"]) for n, d in CARTE["pizzas"].items()}
 MIN_PRICE = min(p for p26, p30 in MENU.values() for p in (p26,) if p)
 # Cheapest large, counting only items sold in both sizes: the desserts are
 # large-only and start at 3.50, which is not a pizza price.
@@ -245,6 +264,15 @@ MIN_PRICE_30 = min(p30 for p26, p30 in MENU.values() if p26 and p30)
 
 def euro(p):
     return f"{int(p)}€" if abs(p - int(p)) < 0.005 else f"{int(p)}€{round((p - int(p)) * 100):02d}"
+
+
+def sans_accent(nom):
+    """Match menu names across apostrophes, accents and hyphens."""
+    base = unicodedata.normalize("NFKD", nom.lower()).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", " ", base).strip()
+
+
+CARTE_PAR_CLE = {sans_accent(n): (n, d) for n, d in CARTE["pizzas"].items()}
 
 
 FAVICONS = "\n".join(
@@ -295,9 +323,13 @@ for path in pages:
 
     # 2c. the delivery minimum varies by town; no page may promise the lowest one
     # for towns that need more, or the order form rejects a customer it invited.
+    # The second alternative is this rule's own output: anchored only on the
+    # original wording, it stopped enforcing the moment it had fired once, and
+    # the answer froze with the minimums of the day.
     c = re.sub(
-        r'dès 2 grandes pizzas commandées sur Carpentras et communes environnantes[^"<]*?'
-        r'Appelez le 07 61 08 36 08\.',
+        r'(?:dès 2 grandes pizzas commandées sur Carpentras et communes environnantes'
+        r'|sur Carpentras et les communes environnantes)'
+        r'[^"<]*?Appelez le 07 61 08 36 08\.',
         DELIVERY_ANSWER, c)
 
     # 2d. delivery runs 19h-22h; orders are taken from 17h30. Don't conflate the two.
@@ -406,7 +438,9 @@ for path in pages:
     # 6e. prices quoted in prose must match the menu. The negative lookbehind
     # matters: an earlier version rewrote "grande dès 12€50" to "dès 7€90" as
     # well, advertising every large pizza at the small-size price.
-    c = re.sub(r'(?<!petite )(?<!grande )dès\s*\d+\s*€\s*\d{0,2}', f'dès {euro(MIN_PRICE)}', c)
+    # `\s*\d{0,2}` used to swallow the space before the next word whenever the
+    # price had no cents, so "dès 7€ la petite" lost its space on the next run.
+    c = re.sub(r'(?<!petite )(?<!grande )dès\s*\d+\s*€(?:\s*\d{2})?', f'dès {euro(MIN_PRICE)}', c)
     c = re.sub(r'[Pp]izzas? dès \d+\s*€\s*\d{0,2}', f'Pizzas dès {euro(MIN_PRICE)}', c)
 
     # Price badges on the "best pizzas" list, derived from the menu by name.
@@ -719,6 +753,43 @@ for path in pages:
                 c = c.replace("<footer", bloc + "\n<footer", 1)
             log(rel, f"minimum de commande annoncé ({mini} grandes)")
 
+    # 6t2. The minimum is written out in three shapes across the site, and all
+    # three carry the town name, so COMMUNES can correct them wherever they
+    # sit: the block above, the prose on the guides, and the zone table.
+    if seg and seg.startswith("livraison-pizza-") and seg[len("livraison-pizza-"):] in COMMUNES:
+        _mini = COMMUNES[seg[len("livraison-pizza-"):]][2]
+        c = re.sub(r'Minimum de commande : \d+ grandes pizzas \(ou \d+ petites\)',
+                   f'Minimum de commande : {_mini} grandes pizzas (ou {_mini * 2} petites)', c)
+
+    NOM_VERS_MIN = {sans_accent(n): m for n, _cp, m, _g in COMMUNES.values()}
+    NOM_VERS_MIN.update({cp: m for _n, cp, m, _g in COMMUNES.values()})
+
+    def _prose(m):
+        mini = NOM_VERS_MIN.get(sans_accent(m.group("ou")))
+        fort = "<strong>" if m.group("o") else ""
+        return m.group(0) if mini is None else (
+            f'minimum est de {fort}{mini} grandes pizzas{"</strong>" if fort else ""} '
+            f'pour une livraison {m.group("prep")} {m.group("ou")}')
+
+    c = re.sub(r'minimum est de (?P<o><strong>)?\d+ grandes pizzas(?:</strong>)? '
+               r'pour une livraison (?P<prep>à|en) (?P<ou>[^.<]+)', _prose, c)
+
+    def _tableau(m):
+        secteur = (m.group("sect") or "").strip().lower()
+        cle = sans_accent(m.group("ville"))
+        mini = SECTEURS.get((cle, secteur)) or NOM_VERS_MIN.get(cle)
+        return m.group(0) if mini is None else (
+            f'{m.group("tete")}{mini} grandes (ou {mini * 2} petites)')
+
+    c = re.sub(r'(?P<tete>📍\s*(?P<ville>[^<]+?)\s*(?:<span[^>]*>\((?P<sect>[^)]*)\)</span>\s*)?'
+               r'</td>\s*<td[^>]*>)\d+ grandes \(ou \d+ petites\)', _tableau, c)
+
+    _bornes = sorted({m for _n, _cp, m, _g in COMMUNES.values()
+                      if m != COMMUNES["carpentras"][2]})
+    c = re.sub(r'autres communes dès [\d,\s]*(?:ou|et)\s*\d+',
+               "autres communes dès " + ", ".join(str(b) for b in _bornes[:-1])
+               + f" ou {_bornes[-1]}", c)
+
     # 6u. Sarrians. Four pages told four different stories; the arbiter is the
     # order form, and getMinPizzasForCity() does not list Sarrians, so an order
     # there is refused. The pages that promised delivery were the wrong ones.
@@ -777,6 +848,126 @@ for path in pages:
                    f"replyto:'{EMAIL}',", c)
         if c != avant:
             log(rel, "notification de commande : objet filtrable, expéditeur nommé")
+
+    # 6z. The order form's menu is aligned on the printed flyer: a recipe that
+    # reads differently on paper and on screen is a complaint waiting to be
+    # made. Names, ingredients and prices all come from carte.json. Entries are
+    # corrected in place; one that exists on only one side is reported, never
+    # added or deleted by a regular expression.
+    if "const PIZZAS" in c:
+        for ancien, neuf in CARTE["renommages"].items():
+            if f"name:'{ancien}'" in c:
+                c = c.replace(f"name:'{ancien}'", f"name:'{neuf}'")
+                log(rel, f"carte : « {ancien} » renommée « {neuf} » (nom du dépliant)")
+
+        vus, corriges = set(), [0]
+
+        def _aligner(m):
+            nom = m.group("nom1") or m.group("nom2")
+            cle = sans_accent(nom)
+            vus.add(cle)
+            if cle not in CARTE_PAR_CLE:
+                return m.group(0)
+            _, ref = CARTE_PAR_CLE[cle]
+            bout = m.group(0)
+            if "'" not in ref["ingredients"]:
+                bout = re.sub(r"ingr:'[^']*'", "ingr:'" + ref["ingredients"] + "'", bout)
+            for champ, prix in (("p26", ref["petite"]), ("p30", ref["grande"])):
+                val = "null" if prix is None else f"{prix:.2f}"
+                bout = re.sub(rf"{champ}:(?:[\d.]+|null)", f"{champ}:{val}", bout)
+            if bout != m.group(0):
+                corriges[0] += 1
+            return bout
+
+        motif = (r"\{cat:'[^']*',\s*name:(?:'(?P<nom1>[^']*)'|\"(?P<nom2>[^\"]*)\"),"
+                 r"\s*ingr:'[^']*',\s*p26:(?:[\d.]+|null),\s*p30:(?:[\d.]+|null)\}")
+        c = re.sub(motif, _aligner, c)
+        if corriges[0]:
+            log(rel, f"carte alignée sur le dépliant ({corriges[0]} recette(s) corrigée(s))")
+        manquantes = [CARTE_PAR_CLE[k][0] for k in CARTE_PAR_CLE if k not in vus]
+        if manquantes:
+            log(rel, f"ALERTE recettes du dépliant absentes du formulaire : {', '.join(manquantes)}")
+        hors = [k for k in vus if k not in CARTE_PAR_CLE
+                and k not in {sans_accent(n) for n in CARTE["hors_depliant_conservees"]}]
+        if hors:
+            log(rel, f"ALERTE recettes du formulaire absentes du dépliant : {', '.join(hors)}")
+
+    # 6z2. The delivery rule was written out three times: this table,
+    # getMinPizzasForCity(), and a third copy inlined in envoyerWhatsApp() —
+    # and it is that third copy, not the named function, that actually decides
+    # whether an order goes through. They had drifted. All of them are now
+    # generated from COMMUNES, so they cannot. Names are tested before
+    # postcodes because 84210 covers both Pernes-les-Fontaines and
+    # Saint-Didier, and 84200 both Carpentras and Serres.
+    ALIAS = {"saint-didier": ("saint-didier", "st-didier", "st didier"),
+             "pernes-les-fontaines": ("pernes",),
+             "loriol-du-comtat": ("loriol",)}
+    PAR_CP = {}
+    for _slug, (_nom, _cp, _mini, _g) in COMMUNES.items():
+        PAR_CP.setdefault(_cp, set()).add(_mini)
+
+    def _conditions(var):
+        """One (condition, minimum) per line, strictest town first, postcodes last."""
+        sortie = []
+        for slug, (nom, cp, mini, _g) in sorted(COMMUNES.items(), key=lambda kv: -kv[1][2]):
+            cond = " || ".join(f"{var}.indexOf('{m}') !== -1" for m in ALIAS.get(slug, (slug,)))
+            if slug == "pernes-les-fontaines":     # Les Pennes-Mirabeau is 100 km away
+                cond = f"({cond}) && {var}.indexOf('pennes') === -1"
+            sortie.append((cond, mini))
+        for cp, minis in sorted(PAR_CP.items(), key=lambda kv: -max(kv[1])):
+            if len(minis) == 1:        # a postcode shared by two minimums decides nothing
+                sortie.append((f"{var}.indexOf('{cp}') !== -1", next(iter(minis))))
+        return sortie
+
+    VILLES = ", ".join(n for n, _cp, _m, _g in COMMUNES.values())
+
+    if "function getMinPizzasForCity" in c:
+        corps = "\n".join(f"  if ({cond}) return {mini};" for cond, mini in _conditions("a"))
+        neuve = ("function getMinPizzasForCity(addr) {\n  var a = addr.toLowerCase();\n"
+                 + corps + "\n  return -1;\n}")
+        avant = c
+        c = re.sub(r"function getMinPizzasForCity\(addr\) \{.*?\n\}", neuve, c, flags=re.DOTALL)
+        if c != avant:
+            log(rel, "getMinPizzasForCity régénérée depuis COMMUNES")
+        c = re.sub(r"Villes desservies : [^\\']*", f"Villes desservies : {VILLES}.", c)
+
+    # The copy that actually gates the order, inside envoyerWhatsApp().
+    if "/* === ZONE VALIDATION === */" in c:
+        lignes = [f"    {'if' if i == 0 else 'else if'} ({cond}) _min = {mini};"
+                  for i, (cond, mini) in enumerate(_conditions("_a"))]
+        bloc = "var _min = -1;\n" + "\n".join(lignes) + "\n    if (_min === -1) {"
+        avant = c
+        c = re.sub(r"var _min = -1;.*?if \(_min === -1\) \{", bloc, c, flags=re.DOTALL)
+        c = re.sub(r"Nous livrons uniquement a : [^\\']*", f"Nous livrons uniquement a : {VILLES}.", c)
+        if c != avant:
+            log(rel, "contrôle de zone de la commande régénéré depuis COMMUNES")
+
+    # 6z3. The banner promised a free 1.5 L bottle from 3 pizzas. The flyer
+    # sells a soda for 0,50 € from 3 and gives one from 5. The site was the
+    # generous one, and the customer reads both.
+    c = c.replace("3 pizzas achetées = 1 bouteille offerte",
+                  "3 pizzas = soda à 0,50 € · 5 pizzas = soda ou rosé offert")
+    if "free-bottle-popup" in c:
+        c = re.sub(r'\d+ pizzas achet[ée]es = 1 (?:bouteille 1\.5L offerte|soda ou 1 ros[ée] offert)\.',
+                   "5 pizzas achetées = 1 soda ou 1 rosé offert.", c)
+        c = c.replace("<p style=\"color:#999;font-size:.75rem;margin-top:.8rem;\">1 bouteille offerte par commande</p>",
+                      "<p style=\"color:#999;font-size:.75rem;margin-top:.8rem;\">Une offre par commande. "
+                      "Dès 3 pizzas : soda à 0,50 €.</p>")
+        # The counter read .qty-value, a class the form does not use, so the
+        # offer never appeared at all. pizzaOrders is what the order itself
+        # reads. A second block further down counts the same dead class to
+        # score "pizza points"; it is equally inert and the real minimum check
+        # lives in envoyerWhatsApp(), so it is left alone rather than woken up
+        # into a second, competing validation path.
+        avant = c
+        c = c.replace(
+            "var qtyEls = document.querySelectorAll('.qty-value');\n"
+            "      qtyEls.forEach(function(el) { totalPizzas += parseInt(el.textContent) || 0; });",
+            "Object.values(pizzaOrders || {}).forEach(function(o) { totalPizzas += o.qty || 0; });")
+        if c != avant:
+            log(rel, "offre boisson : compteur de pizzas réparé")
+        c = c.replace("if (totalPizzas >= 3 && !selectedFreeBottle) {",
+                      "if (totalPizzas >= 5 && !selectedFreeBottle) {")
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
