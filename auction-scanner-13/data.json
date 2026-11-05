@@ -14,7 +14,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Adjuge",
-      "scanned_at": "2026-11-05T04:37:16.142401"
+      "scanned_at": "2026-11-05T13:49:18.165532"
     },
     {
       "id": "b6d8051c30eb",
@@ -30,7 +30,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore - ADJUGE 400 000 EUR",
-      "scanned_at": "2026-11-05T04:37:14.022832"
+      "scanned_at": "2026-11-05T13:49:15.267748"
     },
     {
       "id": "72ac24854c27",
@@ -46,7 +46,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore - ADJUGE 110 000 EUR",
-      "scanned_at": "2026-11-05T04:37:14.022734"
+      "scanned_at": "2026-11-05T13:49:15.267680"
     },
     {
       "id": "83ac06fe2cd6",
@@ -62,7 +62,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore - ADJUGE 383 000 EUR",
-      "scanned_at": "2026-11-05T04:37:14.022807"
+      "scanned_at": "2026-11-05T13:49:15.267728"
     },
     {
       "id": "e1a2796b6091",
@@ -78,7 +78,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession communale via Agorastore - ADJUGE 595 000 EUR",
-      "scanned_at": "2026-11-05T04:37:14.022770"
+      "scanned_at": "2026-11-05T13:49:15.267708"
     },
     {
       "id": "b90bb49ecca5",
@@ -94,7 +94,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375771"
+      "scanned_at": "2026-11-05T13:49:04.242137"
     },
     {
       "id": "c6653110be9f",
@@ -110,7 +110,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375810"
+      "scanned_at": "2026-11-05T13:49:04.242155"
     },
     {
       "id": "04849a0e16ce",
@@ -126,7 +126,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375837"
+      "scanned_at": "2026-11-05T13:49:04.242168"
     },
     {
       "id": "ab57200df463",
@@ -142,7 +142,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375864"
+      "scanned_at": "2026-11-05T13:49:04.242179"
     },
     {
       "id": "3618df92af6b",
@@ -158,7 +158,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375889"
+      "scanned_at": "2026-11-05T13:49:04.242189"
     },
     {
       "id": "995c49fdcb1e",
@@ -174,7 +174,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375917"
+      "scanned_at": "2026-11-05T13:49:04.242200"
     },
     {
       "id": "13f2f12e3ca8",
@@ -190,7 +190,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375945"
+      "scanned_at": "2026-11-05T13:49:04.242210"
     },
     {
       "id": "45391d80b62e",
@@ -206,7 +206,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.375971"
+      "scanned_at": "2026-11-05T13:49:04.242221"
     },
     {
       "id": "e185097db45c",
@@ -222,7 +222,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.761944"
+      "scanned_at": "2026-11-05T13:49:16.308060"
     },
     {
       "id": "c0b2ddd0b34e",
@@ -238,7 +238,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.761974"
+      "scanned_at": "2026-11-05T13:49:16.308091"
     },
     {
       "id": "fe24eb775e51",
@@ -254,7 +254,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.761993"
+      "scanned_at": "2026-11-05T13:49:16.308107"
     },
     {
       "id": "2616c7e2f29e",
@@ -270,7 +270,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente notariale en ligne",
-      "scanned_at": "2026-11-05T04:37:03.376001"
+      "scanned_at": "2026-11-05T13:49:04.242234"
     },
     {
       "id": "b7a78b22ed98",
@@ -286,7 +286,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Saisie - TJ Aix-en-Provence",
-      "scanned_at": "2026-11-05T04:37:03.376029"
+      "scanned_at": "2026-11-05T13:49:04.242244"
     },
     {
       "id": "45371e1d6930",
@@ -302,7 +302,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Saisie - TJ Aix-en-Provence",
-      "scanned_at": "2026-11-05T04:37:03.376056"
+      "scanned_at": "2026-11-05T13:49:04.242254"
     },
     {
       "id": "6ca6c7737182",
@@ -318,7 +318,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques - 2 lots",
-      "scanned_at": "2026-11-05T04:37:14.762013"
+      "scanned_at": "2026-11-05T13:49:16.308126"
     },
     {
       "id": "719aa6c2eaee",
@@ -334,7 +334,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762030"
+      "scanned_at": "2026-11-05T13:49:16.308143"
     },
     {
       "id": "4ff12bc1f6a1",
@@ -350,7 +350,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376084"
+      "scanned_at": "2026-11-05T13:49:04.242264"
     },
     {
       "id": "a3c7dcc9c3af",
@@ -366,7 +366,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376112"
+      "scanned_at": "2026-11-05T13:49:04.242284"
     },
     {
       "id": "7ef538ee6f41",
@@ -382,7 +382,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376139"
+      "scanned_at": "2026-11-05T13:49:04.242294"
     },
     {
       "id": "80a84574a37a",
@@ -398,7 +398,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376166"
+      "scanned_at": "2026-11-05T13:49:04.242304"
     },
     {
       "id": "d3b2ed646a5a",
@@ -414,7 +414,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376193"
+      "scanned_at": "2026-11-05T13:49:04.242315"
     },
     {
       "id": "ea8f464319ce",
@@ -430,7 +430,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376216"
+      "scanned_at": "2026-11-05T13:49:04.242325"
     },
     {
       "id": "4892208b73db",
@@ -446,7 +446,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762054"
+      "scanned_at": "2026-11-05T13:49:16.308164"
     },
     {
       "id": "2e21d24c786c",
@@ -462,7 +462,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762071"
+      "scanned_at": "2026-11-05T13:49:16.308179"
     },
     {
       "id": "1a08634e0526",
@@ -478,7 +478,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762090"
+      "scanned_at": "2026-11-05T13:49:16.308196"
     },
     {
       "id": "885dedf80e23",
@@ -494,7 +494,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762108"
+      "scanned_at": "2026-11-05T13:49:16.308212"
     },
     {
       "id": "4c816fa36669",
@@ -510,7 +510,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376239"
+      "scanned_at": "2026-11-05T13:49:04.242335"
     },
     {
       "id": "e1c8fa296777",
@@ -526,7 +526,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376260"
+      "scanned_at": "2026-11-05T13:49:04.242343"
     },
     {
       "id": "254f81f4d895",
@@ -542,7 +542,7 @@
       "category": "parking",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762126"
+      "scanned_at": "2026-11-05T13:49:16.308227"
     },
     {
       "id": "af5ee2732b1f",
@@ -558,7 +558,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762143"
+      "scanned_at": "2026-11-05T13:49:16.308243"
     },
     {
       "id": "0fe54c299a7a",
@@ -574,7 +574,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762158"
+      "scanned_at": "2026-11-05T13:49:16.308255"
     },
     {
       "id": "c49fb2cc0d0b",
@@ -590,7 +590,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762179"
+      "scanned_at": "2026-11-05T13:49:16.308274"
     },
     {
       "id": "2c21b7855c81",
@@ -606,7 +606,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376284"
+      "scanned_at": "2026-11-05T13:49:04.242353"
     },
     {
       "id": "f0b50fac0e66",
@@ -622,7 +622,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Saisie - TJ Marseille",
-      "scanned_at": "2026-11-05T04:37:03.376338"
+      "scanned_at": "2026-11-05T13:49:04.242363"
     },
     {
       "id": "9e2b24666ab9",
@@ -638,7 +638,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762196"
+      "scanned_at": "2026-11-05T13:49:16.308289"
     },
     {
       "id": "a3c701760ea3",
@@ -654,7 +654,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762212"
+      "scanned_at": "2026-11-05T13:49:16.308303"
     },
     {
       "id": "4a23be5e8398",
@@ -670,7 +670,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente aux encheres publiques",
-      "scanned_at": "2026-11-05T04:37:14.762231"
+      "scanned_at": "2026-11-05T13:49:16.308320"
     },
     {
       "id": "028d5f6db5c1",
@@ -686,7 +686,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527143"
+      "scanned_at": "2026-11-05T13:49:14.853721"
     },
     {
       "id": "4bf64f4f4a5b",
@@ -702,7 +702,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527179"
+      "scanned_at": "2026-11-05T13:49:14.853752"
     },
     {
       "id": "67fce2222f5f",
@@ -718,7 +718,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527197"
+      "scanned_at": "2026-11-05T13:49:14.853767"
     },
     {
       "id": "2066a3026e5b",
@@ -734,7 +734,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527214"
+      "scanned_at": "2026-11-05T13:49:14.853780"
     },
     {
       "id": "1cc048675e57",
@@ -750,7 +750,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527232"
+      "scanned_at": "2026-11-05T13:49:14.853795"
     },
     {
       "id": "7509c9ac3392",
@@ -766,7 +766,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527249"
+      "scanned_at": "2026-11-05T13:49:14.853808"
     },
     {
       "id": "878ec7054e89",
@@ -782,7 +782,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527268"
+      "scanned_at": "2026-11-05T13:49:14.853822"
     },
     {
       "id": "583ced8417c2",
@@ -798,7 +798,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Appel a candidature - Limite 29/05/2026",
-      "scanned_at": "2026-11-05T04:37:13.527289"
+      "scanned_at": "2026-11-05T13:49:14.853840"
     },
     {
       "id": "f3c655010e06",
@@ -814,7 +814,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-11-05T04:37:03.300924"
+      "scanned_at": "2026-11-05T13:49:04.149544"
     },
     {
       "id": "8af55bb631ea",
@@ -830,7 +830,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-11-05T04:37:03.300859"
+      "scanned_at": "2026-11-05T13:49:04.149499"
     },
     {
       "id": "5c3ca797bd74",
@@ -846,7 +846,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-11-05T04:37:03.758125"
+      "scanned_at": "2026-11-05T13:49:05.200800"
     },
     {
       "id": "5396fd8245d6",
@@ -862,7 +862,7 @@
       "category": "local",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-11-05T04:37:03.758210"
+      "scanned_at": "2026-11-05T13:49:05.200865"
     },
     {
       "id": "39b44f7eec7e",
@@ -878,7 +878,7 @@
       "category": "maison",
       "lot_count": null,
       "auction_type": "Vente judiciaire",
-      "scanned_at": "2026-11-05T04:37:03.300897"
+      "scanned_at": "2026-11-05T13:49:04.149525"
     },
     {
       "id": "d6fa8b3b449e",
@@ -894,7 +894,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-11-05T04:37:03.758160"
+      "scanned_at": "2026-11-05T13:49:05.200827"
     },
     {
       "id": "ff35009e87e9",
@@ -910,7 +910,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Encheres volontaires",
-      "scanned_at": "2026-11-05T04:37:03.300947"
+      "scanned_at": "2026-11-05T13:49:04.149560"
     },
     {
       "id": "81808c05c41a",
@@ -926,7 +926,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-11-05T04:37:14.584476"
+      "scanned_at": "2026-11-05T13:49:15.575426"
     },
     {
       "id": "2d9ee5b44b8f",
@@ -942,7 +942,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Cession bien public",
-      "scanned_at": "2026-11-05T04:37:03.758185"
+      "scanned_at": "2026-11-05T13:49:05.200846"
     },
     {
       "id": "db6fca0fe86c",
@@ -958,7 +958,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente sur licitation",
-      "scanned_at": "2026-11-05T04:37:03.300971"
+      "scanned_at": "2026-11-05T13:49:04.149577"
     },
     {
       "id": "6a7f19b46a3e",
@@ -974,7 +974,7 @@
       "category": "autre",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-11-05T04:37:14.584401"
+      "scanned_at": "2026-11-05T13:49:15.575336"
     },
     {
       "id": "ea250f7d11cd",
@@ -990,7 +990,7 @@
       "category": "appartement",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-11-05T04:37:14.584439"
+      "scanned_at": "2026-11-05T13:49:15.575361"
     },
     {
       "id": "76b2a364bd05",
@@ -1006,7 +1006,7 @@
       "category": "terrain",
       "lot_count": null,
       "auction_type": "Vente domaniale",
-      "scanned_at": "2026-11-05T04:37:14.584502"
+      "scanned_at": "2026-11-05T13:49:15.575448"
     }
   ],
   "stats": {
@@ -1049,5 +1049,5 @@
       "France Domaine": 4
     }
   },
-  "generated_at": "2026-11-05T04:37:16.142696"
+  "generated_at": "2026-11-05T13:49:18.165742"
 }
