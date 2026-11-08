@@ -63,6 +63,9 @@ DOSSIER_RACINE = "Pizza Napoli"
 SOUS_DOSSIERS = ["Caisse", "Factures", "Banque", "Comptable", "Légal", "Personnel", "Rapports"]
 DOSSIER_A_TRAITER = "À traiter"          # dans Factures/
 CLASSEUR = "Pizza Napoli — Agent"        # tableur Google Sheets de l'agent
+# Identifiant d'un tableur existant à utiliser (celui que lit le tableau de bord), partagé
+# en modification avec le compte de la pizzeria. Vide : l'agent crée le sien dans Drive.
+CLASSEUR_ID = _env("CLASSEUR_ID", "")
 ONGLETS = {
     "Factures": ["Reçue le", "Fournisseur", "N° facture", "Date facture", "Échéance",
                  "HT", "TVA", "TTC", "Statut", "Catégorie", "Fichier", "Source"],
@@ -73,6 +76,8 @@ ONGLETS = {
     "Obligations": ["Libellé", "Échéance", "Récurrence", "Notes", "Agenda"],
     "Banque": ["Date", "Libellé", "Montant", "Type", "Relevé"],
     "Exercices": ["Exercice", "Début", "Fin", "CA HT", "Résultat", "Objectif CA HT", "Source"],
+    "Comptes annuels": ["Exercice", "CA HT", "Achats matières", "Charges de personnel", "Valeur ajoutée",
+                        "EBE", "Résultat d'exploitation", "Résultat net", "Disponibilités"],
     "Journal": ["Horodatage", "Module", "Action", "Détail"],
 }
 

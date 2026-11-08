@@ -51,6 +51,7 @@ jobs:
           OFFERTS_INCLUENT_BOISSONS: ${{ vars.OFFERTS_INCLUENT_BOISSONS }}
           AGENT_MODELE: ${{ vars.AGENT_MODELE }}
           OBJECTIF_CROISSANCE: ${{ vars.OBJECTIF_CROISSANCE }}
+          CLASSEUR_ID: ${{ vars.CLASSEUR_ID }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || '' }}
         run: |
           case "$MODE" in

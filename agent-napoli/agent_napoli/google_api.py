@@ -267,7 +267,7 @@ class Google:
         if self._classeur:
             return self._classeur
         racine = self.dossier()
-        id_ = self._trouver(config.CLASSEUR, racine, _TABLEUR)
+        id_ = config.CLASSEUR_ID or self._trouver(config.CLASSEUR, racine, _TABLEUR)
         if id_ is None and not self.essai:
             id_ = self.drive.files().create(
                 body={"name": config.CLASSEUR, "mimeType": _TABLEUR, "parents": [racine]},

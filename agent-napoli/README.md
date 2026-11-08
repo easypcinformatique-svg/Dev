@@ -117,6 +117,7 @@ Variables (onglet *Variables*) :
 | `GERANTS_EMAILS` | `toi@gmail.com,associe@gmail.com` | destinataires du rapport |
 | `JOURS_FERMES` | `0` | jours sans Z attendu (0 = lundi … 6 = dimanche) |
 | `JOURS_HISTORIQUE` | `30` | au tout premier passage, profondeur de tri ; remettre `3` ensuite |
+| `CLASSEUR_ID` | identifiant du tableur | le tableur « Pizza Napoli — Agent » que lit le tableau de bord (à partager en modification avec le compte de la pizzeria) |
 | `LIBELLE_Z` / `LIBELLE_FACTURES` | `Ticket Z` / `Factures` | vos libellés pour les Z et les factures, s'ils portent un autre nom |
 | `AGENT_NAPOLI_ACTIF` | `true` | **interrupteur** : tout autre valeur arrête l'agent |
 
