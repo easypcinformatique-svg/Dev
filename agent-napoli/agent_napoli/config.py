@@ -1,0 +1,89 @@
+"""Réglages de l'agent Pizza Napoli.
+
+Les secrets (clés API, jetons Google) viennent des variables d'environnement,
+jamais du code. Les seuils et listes ci-dessous sont ceux validés dans le plan
+d'attaque ; on les modifie ici.
+"""
+
+import os
+from zoneinfo import ZoneInfo
+
+PARIS = ZoneInfo("Europe/Paris")
+
+
+def _env(nom: str, defaut: str) -> str:
+    """Variable d'environnement ; une valeur vide (variable GitHub non renseignée) vaut le défaut."""
+    return os.getenv(nom, "").strip() or defaut
+
+
+# --- Comptes -----------------------------------------------------------------
+BOITE_PIZZERIA = _env("BOITE_PIZZERIA", "carpentraspizzanapoli@gmail.com")
+# Les deux gérants : reçoivent le rapport de 9h. Séparés par des virgules.
+GERANTS = [a.strip() for a in _env("GERANTS_EMAILS", BOITE_PIZZERIA).split(",") if a.strip()]
+# Le comptable : destinataire du brouillon mensuel (jamais envoyé sans validation).
+COMPTABLE = _env("COMPTABLE_EMAIL", "")
+
+# --- IA ----------------------------------------------------------------------
+MODELE = _env("AGENT_MODELE", "claude-opus-5-5")
+
+# --- L'Addition --------------------------------------------------------------
+Z_EXPEDITEUR = "noreply@laddition.com"
+Z_OBJET = "Votre Z quotidien"
+
+# --- Seuils d'alerte (plan d'attaque, phase 2) ---------------------------------
+SEUIL_ANNULATIONS = 0.03        # annulations après ticket > 3 % du CA TTC
+SEUIL_OFFERTS = 0.05            # offerts hors offre boissons > 5 % du CA TTC
+SEUIL_CORRECTIONS = 0.10        # corrections > 10 % du CA TTC (provisoire : à revoir après 1 mois)
+SEUIL_BAISSE_CA = 0.20          # CA > 20 % sous le même jour de la semaine précédente
+SEUIL_BAISSE_TICKET = 0.15      # ticket moyen > 15 % sous la moyenne du mois
+JOURS_SANS_VENTE = 14           # pizza non vendue depuis 14 jours
+
+# Catégories du Z qui ne sont pas des pizzas (exclues de l'alerte « pizza qui ne se vend plus »).
+CATEGORIES_HORS_PIZZA = {"BOISSONS", "VIN", "BIÈRE", "BIERE", "DESSERT", "DESSERTS"}
+
+# Offre du flyer : « 5 pizzas = soda ou rosé offert ». Ces produits passent à 0 € dans le Z.
+# Prix de carte pour estimer leur valeur. À tenir à jour si la carte change.
+OFFRE_BOISSONS = {
+    "COCA COLA 1,25L": 3.00,
+    "ICE TEA 1,5L": 3.00,
+    "FANTA 1,5L": 3.00,
+    "PETITE BALADE ROSÉ": 6.00,
+}
+# Le montant « Offerts » du Z inclut-il ces boissons à 0 € ? À confirmer sur
+# l'export des lignes de ventes ; tant que ce n'est pas confirmé, on ne retire rien.
+OFFERTS_INCLUENT_BOISSONS = _env("OFFERTS_INCLUENT_BOISSONS", "non") == "oui"
+
+# --- Google Drive ------------------------------------------------------------
+DOSSIER_RACINE = "Pizza Napoli"
+SOUS_DOSSIERS = ["Caisse", "Factures", "Légal", "Personnel", "Rapports"]
+DOSSIER_A_TRAITER = "À traiter"          # dans Factures/
+CLASSEUR = "Pizza Napoli — Agent"        # tableur Google Sheets de l'agent
+ONGLETS = {
+    "Factures": ["Reçue le", "Fournisseur", "N° facture", "Date facture", "Échéance",
+                 "HT", "TVA", "TTC", "Statut", "Catégorie", "Fichier", "Source"],
+    "Ventes": ["Date", "CA TTC", "CA HT", "Ticket moyen", "Tickets (estim.)", "Offerts",
+               "Corrections avant cuisine", "Corrections après cuisine", "Annulations après ticket"],
+    "Ventes produits": ["Date", "Catégorie", "Produit", "Quantité", "TTC", "HT"],
+    "Obligations": ["Libellé", "Échéance", "Récurrence", "Notes", "Agenda"],
+    "Journal": ["Horodatage", "Module", "Action", "Détail"],
+}
+
+# --- Gmail -------------------------------------------------------------------
+LIBELLE_TRAITE = "Agent/Traité"
+LIBELLES = {
+    "facture": "Agent/Factures",
+    "z_caisse": "Agent/Caisse",
+    "administratif": "Agent/Administratif",
+    "client": "Agent/Clients",
+    "fournisseur": "Agent/Fournisseurs",
+    "publicite": "Agent/Publicité",
+    "autre": "Agent/Autre",
+}
+# Au premier passage, on ne remonte pas plus loin que ce nombre de jours.
+JOURS_HISTORIQUE = int(_env("JOURS_HISTORIQUE", "3"))
+
+# --- Rapport -----------------------------------------------------------------
+# Jours de fermeture (pas d'alerte « Z manquant ») : 0 = lundi ... 6 = dimanche, ex. "0" ou "0,1".
+JOURS_FERMES = {int(j) for j in _env("JOURS_FERMES", "").split(",") if j.strip().isdigit()}
+HEURE_RAPPORT = 9                  # heure de Paris
+RAPPEL_JOURS = (7, 1)              # rappels d'échéance à J-7 et J-1
