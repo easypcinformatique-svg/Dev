@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'essai = ne rien modifier, rapport [ESSAI] envoyé aux gérants ; forcer = passage complet maintenant'
+        description: 'essai = ne rien modifier, rapport [ESSAI] envoyé aux gérants ; forcer = passage complet maintenant ; historique = relire une fois tous les anciens Z'
         type: choice
-        options: [essai, forcer]
+        options: [essai, forcer, historique]
         default: essai
 
 concurrency:
@@ -24,7 +24,7 @@ jobs:
     # Tant qu'elle ne vaut pas « true », l'agent ne tourne pas.
     if: vars.AGENT_NAPOLI_ACTIF == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60   # la relecture de l'historique peut être longue ; un passage normal dure quelques minutes
     defaults:
       run:
         working-directory: agent-napoli
@@ -50,11 +50,13 @@ jobs:
           JOURS_HISTORIQUE: ${{ vars.JOURS_HISTORIQUE }}
           OFFERTS_INCLUENT_BOISSONS: ${{ vars.OFFERTS_INCLUENT_BOISSONS }}
           AGENT_MODELE: ${{ vars.AGENT_MODELE }}
+          OBJECTIF_CROISSANCE: ${{ vars.OBJECTIF_CROISSANCE }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || '' }}
         run: |
           case "$MODE" in
             essai)  python -m agent_napoli --essai --forcer ;;
             forcer) python -m agent_napoli --forcer ;;
+            historique) python -m agent_napoli --historique ;;
             *)      python -m agent_napoli ;;
           esac
 

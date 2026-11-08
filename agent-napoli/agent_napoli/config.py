@@ -51,6 +51,13 @@ OFFRE_BOISSONS = {
 # l'export des lignes de ventes ; tant que ce n'est pas confirmé, on ne retire rien.
 OFFERTS_INCLUENT_BOISSONS = _env("OFFERTS_INCLUENT_BOISSONS", "non") == "oui"
 
+# --- Exercice comptable --------------------------------------------------------
+EXERCICE_DEBUT_MOIS = 7          # exercice du 1er juillet au 30 juin
+# Objectif de croissance du CA par rapport à la dernière liasse, sauf si un objectif
+# en euros est saisi dans l'onglet « Exercices ». 0 = pas d'objectif.
+OBJECTIF_CROISSANCE = float(_env("OBJECTIF_CROISSANCE", "0.10"))
+DOSSIER_LIASSES = ("Légal", "Liasses")
+
 # --- Google Drive ------------------------------------------------------------
 DOSSIER_RACINE = "Pizza Napoli"
 SOUS_DOSSIERS = ["Caisse", "Factures", "Banque", "Comptable", "Légal", "Personnel", "Rapports"]
@@ -65,6 +72,7 @@ ONGLETS = {
     "Ventes produits": ["Date", "Catégorie", "Produit", "Quantité", "TTC", "HT"],
     "Obligations": ["Libellé", "Échéance", "Récurrence", "Notes", "Agenda"],
     "Banque": ["Date", "Libellé", "Montant", "Type", "Relevé"],
+    "Exercices": ["Exercice", "Début", "Fin", "CA HT", "Résultat", "Objectif CA HT", "Source"],
     "Journal": ["Horodatage", "Module", "Action", "Détail"],
 }
 

@@ -15,6 +15,7 @@ et envoie aux deux gérants un rapport par mail.
 | Échéances de paiement | Les signale à J-7 dans le rapport, en alerte à J-1 et en retard | Payer |
 | Obligations légales | Les place dans Google Agenda avec rappels à J-7 et J-1 | Les saisir une fois dans l'onglet « Obligations » |
 | Relevé de compte | Lit le relevé déposé dans Drive `Pizza Napoli/Banque/À traiter` (PDF, CSV ou Excel), passe à « payée » les factures retrouvées sur le relevé, liste les débits sans facture, compare les remises CB aux paiements CB des tickets Z, range le relevé et le rapprochement dans le dossier Cegid | Déposer le relevé chaque début de mois, retrouver les pièces manquantes |
+| Chiffre d'affaires | Chaque matin : CA HT cumulé depuis le 1er juillet comparé à la même période de l'exercice précédent, projection au 30 juin, avance ou retard sur l'objectif (+10 % par défaut). Le 1er du mois : bilan du mois écoulé contre le même mois un an plus tôt | Déposer chaque nouvelle liasse fiscale dans Drive |
 | Comptable (Cegid) | Le 1er du mois, prépare dans Drive le dossier `Pizza Napoli/Comptable/AAAA-MM à déposer sur Cegid` : copie des factures du mois et deux CSV (factures, ventes) | Glisser le dossier sur Cegid |
 
 **L'agent n'envoie jamais rien à l'extérieur** : le seul mail qu'il envoie lui-même
@@ -39,6 +40,23 @@ Tant qu'il n'est pas arrivé, le rapport de 9h le rappelle. Au passage suivant, 
 - compare les remises CB du relevé aux paiements par carte des tickets Z du mois ;
 - range le relevé dans `Banque/AAAA-MM` et l'ajoute, avec `rapprochement_AAAA-MM.csv`,
   au dossier Cegid du mois.
+
+### Suivi du chiffre d'affaires (exercice du 1er juillet au 30 juin)
+
+1. **Liasses fiscales** : dépose les liasses (versions définitives, PDF) dans Drive
+   `Pizza Napoli/Légal/Liasses`. L'agent lit chacune une seule fois et inscrit le CA net HT et
+   le résultat de l'exercice et de l'exercice précédent dans l'onglet **Exercices**.
+2. **Historique des Z** : une seule fois, lance **Actions > Agent Pizza Napoli > Run workflow**,
+   mode `historique`. L'agent relit tous les anciens mails « Votre Z quotidien » (sans IA, donc
+   gratuit) et remplit l'onglet Ventes jour par jour. C'est ce qui permet de comparer chaque
+   jour et chaque mois à l'année précédente.
+3. **Objectif** : par défaut +10 % sur le CA de la dernière liasse (variable `OBJECTIF_CROISSANCE`,
+   par exemple `0.10`). Pour un objectif en euros, saisis-le dans la colonne « Objectif CA HT » de
+   la ligne de l'exercice en cours, dans l'onglet Exercices.
+
+La projection applique l'évolution mesurée sur la caisse (Z) au CA de la liasse : les deux ne sont
+pas strictement égaux (remises, écritures du comptable), mais leur évolution l'est. Sans historique
+de l'année précédente, la projection est linéaire et le rapport le signale.
 
 ### Saisir les obligations légales
 

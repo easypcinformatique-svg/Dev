@@ -54,6 +54,7 @@ def test_passage_complet(monde):
         assert attendu in html, attendu
     assert "Z manquant" not in html
     assert "En attente : le relevé de compte de 09/2026" in html
+    assert "exercice 2026-2027" in html and "estimation linéaire" in html
 
     # Caisse : 5 exports + 30 Z archivés, chiffres inscrits.
     assert len(g.telechargements) == 35

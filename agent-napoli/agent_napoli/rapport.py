@@ -14,6 +14,7 @@ from .factures import Echeance, Resultat
 from .obligations import Obligation
 from .tri_mails import PREFIXE_RAPPORT, MailImportant
 from .z_laddition import Alerte, Z, _eur
+from .exercice import BilanMois, Suivi, fin_exercice
 from .z_pdf import DetailZ
 
 _JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -42,6 +43,8 @@ class DonneesRapport:
     nb_brouillons: int = 0
     comptable: str | None = None
     banque: list[str] = field(default_factory=list)     # phrases déjà en HTML sûr
+    suivi_ca: Suivi | None = None
+    bilan_mois: BilanMois | None = None
     erreurs: list[str] = field(default_factory=list)
     lien_classeur: str = ""
 
@@ -81,6 +84,38 @@ def _section(titre: str, contenu: str) -> str:
 
 def _liste(items: list[str]) -> str:
     return "<ul style='padding-left:20px;margin:4px 0'>" + "".join(f"<li style='margin:4px 0'>{i}</li>" for i in items) + "</ul>"
+
+
+def _pct(x: float) -> str:
+    return f"{x * 100:+.1f} %".replace(".", ",")
+
+
+def lignes_suivi(s: Suivi) -> list[str]:
+    lignes = [f"CA HT cumulé du {s.depuis:%d/%m/%Y} au {s.jusqu_au:%d/%m/%Y} : <b>{_eur(s.cumul)}</b>"]
+    if s.cumul_n1:
+        lignes.append(f"Même période de l'exercice précédent : {_eur(s.cumul_n1)} ({_pct(s.evolution)})")
+    if s.projection:
+        base = f" (exercice précédent : {_eur(s.ca_n1_liasse)})" if s.ca_n1_liasse else ""
+        methode = "" if s.projection_methode == "saisonnière" else " — estimation linéaire, faute d'historique N-1"
+        lignes.append(f"Projection au {fin_exercice(s.depuis):%d/%m/%Y} : {_eur(s.projection)}{base}{methode}")
+    if s.objectif:
+        ecart = s.ecart_objectif
+        sens = "avance" if ecart >= 0 else "retard"
+        couleur = "#27ae60" if ecart >= 0 else "#c0392b"
+        lignes.append(f"Objectif {_eur(s.objectif)} : <b style='color:{couleur}'>{sens} de {_eur(abs(ecart))}</b> "
+                      f"sur la projection ({_pct(ecart / s.objectif)})")
+    return lignes
+
+
+def lignes_bilan(b: BilanMois) -> list[str]:
+    lignes = [f"CA HT : <b>{_eur(b.ca_ht)}</b> sur {b.jours} jour(s) d'ouverture"
+              + (f", contre {_eur(b.ca_ht_n1)} un an plus tôt ({_pct((b.ca_ht - b.ca_ht_n1) / b.ca_ht_n1)})"
+                 if b.ca_ht_n1 else "")]
+    if b.ticket_moyen:
+        lignes.append(f"Ticket moyen : {_eur(b.ticket_moyen)}")
+    if b.part_livraison is not None:
+        lignes.append(f"Livraison : {b.part_livraison * 100:.0f} % du CA — à emporter : {(1 - b.part_livraison) * 100:.0f} %")
+    return lignes
 
 
 def construire(d: DonneesRapport) -> str:
@@ -124,6 +159,12 @@ def construire(d: DonneesRapport) -> str:
         parties.append(_section("Ventes de la veille", "<p>Jour de fermeture.</p>"))
     elif d.etat_z == "deja_traite":
         parties.append(_section("Ventes de la veille", "<p>Z déjà traité lors d'un passage précédent (voir le tableur).</p>"))
+
+    # 2 bis. Chiffre d'affaires de l'exercice
+    if d.suivi_ca:
+        parties.append(_section(f"Chiffre d'affaires de l'exercice {d.suivi_ca.exercice}", _liste(lignes_suivi(d.suivi_ca))))
+    if d.bilan_mois:
+        parties.append(_section(f"Bilan de {d.bilan_mois.nom}", _liste(lignes_bilan(d.bilan_mois))))
 
     # 3. Administratif à traiter
     admin = []

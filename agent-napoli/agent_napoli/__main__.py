@@ -14,7 +14,8 @@ import sys
 import traceback
 from datetime import datetime, timedelta
 
-from . import banque, caisse, comptable, config, factures, obligations, rapport, tri_mails, z_laddition
+from . import (banque, caisse, comptable, config, exercice, factures, liasses, obligations, rapport,
+               tri_mails, z_laddition)
 from .journal import Journal, deja_fait
 
 
@@ -51,6 +52,7 @@ def passage(essai: bool, forcer: bool) -> int:
         g.dossier(sous)
     g.dossier("Factures", config.DOSSIER_A_TRAITER)
     g.dossier("Banque", config.DOSSIER_A_TRAITER)
+    g.dossier(*config.DOSSIER_LIASSES)
 
     # Factures déjà connues (anti-doublon)
     lignes_factures = g.lignes("Factures")
@@ -93,6 +95,17 @@ def passage(essai: bool, forcer: bool) -> int:
     else:
         etat_z = "manquant"
 
+    # 3 bis. Chiffre d'affaires de l'exercice (1er juillet - 30 juin)
+    lignes_exercices = g.lignes("Exercices")
+    phrases_liasses, erreurs_liasses = liasses.traiter(g, lignes_exercices)
+    erreurs += erreurs_liasses
+    ventes = exercice.lire_ventes(lignes_ventes)
+    suivi_ca = exercice.suivre(veille, ventes, exercice.lire_exercices(lignes_exercices))
+    bilan_mois = None
+    if aujourdhui.day == 1:
+        a_m, m_m = comptable.mois_precedent(aujourdhui)
+        bilan_mois = exercice.bilan_mois(a_m, m_m, ventes)
+
     # 4. Échéances : factures et obligations légales
     lignes_factures = g.lignes("Factures") if not essai else lignes_factures
     echeances = factures.echeances_a_payer(lignes_factures, aujourdhui)
@@ -129,7 +142,8 @@ def passage(essai: bool, forcer: bool) -> int:
         ca_semaine_precedente=ca_s7, alertes=alertes, factures=bilan.factures,
         echeances=echeances, obligations=[o for o in obligs if o.jours_restants(aujourdhui) <= 7],
         mails_importants=bilan.importants, nb_brouillons=g.nb_brouillons(),
-        comptable=message_comptable, banque=lignes_banque, erreurs=erreurs,
+        comptable=message_comptable, banque=lignes_banque + phrases_liasses, erreurs=erreurs,
+        suivi_ca=suivi_ca, bilan_mois=bilan_mois,
         lien_classeur=g.lien_classeur(),
     )
     html = rapport.construire(donnees)
@@ -139,20 +153,32 @@ def passage(essai: bool, forcer: bool) -> int:
     return 0
 
 
+def historique() -> int:
+    """Relecture unique de tous les anciens Z (à lancer une fois, puis plus besoin)."""
+    from .google_api import Google
+    journal = Journal()
+    g = Google(essai=False, journal=journal)
+    caisse.rattraper_historique(g, journal)
+    journal.sauver(g)
+    return 0
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="agent_napoli")
     p.add_argument("--essai", action="store_true", help="ne rien écrire, afficher le rapport")
     p.add_argument("--forcer", action="store_true", help="ignorer l'heure et le « déjà fait »")
     p.add_argument("--z", nargs=2, metavar=("FICHIER", "OBJET"), help="lire un Z enregistré")
+    p.add_argument("--historique", action="store_true", help="relire une fois tous les anciens Z")
     a = p.parse_args(argv)
     if a.z:
         return tester_z(*a.z)
+    action = historique if a.historique else (lambda: passage(a.essai, a.forcer))
     if os.getenv("GITHUB_ACTIONS") != "true":
-        return passage(a.essai, a.forcer)
+        return action()
     # Logs publics : on montre où l'erreur s'est produite, jamais son message (qui peut
     # contenir l'objet d'un mail ou un montant).
     try:
-        return passage(a.essai, a.forcer)
+        return action()
     except Exception as e:
         print(f"ERREUR {type(e).__name__} — détail masqué (dépôt public). Pile :", file=sys.stderr)
         for f in traceback.extract_tb(e.__traceback__):

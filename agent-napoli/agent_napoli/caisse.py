@@ -65,20 +65,69 @@ def deja_enregistre(lignes_ventes: list[list[str]], jour: date) -> bool:
     return any(l and lire_date(l[0]) == jour for l in lignes_ventes)
 
 
+def ligne_vente(z: Z, detail: z_pdf.DetailZ | None) -> list:
+    tickets = detail.tickets if detail and detail.tickets else z.tickets
+    complement = ([z_pdf.total_cb(detail), z_pdf.salle(detail, "livraison"), z_pdf.salle(detail, "emporter")]
+                  if detail else ["", "", ""])
+    return [z.jour.isoformat(), z.ca_ttc, z.ca_ht, z.ticket_moyen, tickets, z.offerts,
+            z.corrections_avant, z.corrections_apres, z.annulations,
+            *["" if v is None else v for v in complement]]
+
+
+def lignes_produits(z: Z) -> list[list]:
+    return [[z.jour.isoformat(), v.categorie, v.produit, v.quantite, v.ttc, v.ht] for v in z.ventes]
+
+
 def enregistrer(g, z: Z, lignes_ventes: list[list[str]], detail: z_pdf.DetailZ | None = None) -> bool:
     """Inscrit le Z dans le tableur, une seule fois par jour. Renvoie True si inscrit."""
     if deja_enregistre(lignes_ventes, z.jour):
         return False
-    tickets = detail.tickets if detail and detail.tickets else z.tickets
-    complement = ([z_pdf.total_cb(detail), z_pdf.salle(detail, "livraison"), z_pdf.salle(detail, "emporter")]
-                  if detail else ["", "", ""])
-    g.ajouter("Ventes", [[z.jour.isoformat(), z.ca_ttc, z.ca_ht, z.ticket_moyen, tickets, z.offerts,
-                          z.corrections_avant, z.corrections_apres, z.annulations,
-                          *["" if v is None else v for v in complement]]])
-    g.ajouter("Ventes produits", [[z.jour.isoformat(), v.categorie, v.produit, v.quantite, v.ttc, v.ht]
-                                  for v in z.ventes])
-    lignes_ventes.append([z.jour.isoformat()])
+    ligne = ligne_vente(z, detail)
+    g.ajouter("Ventes", [ligne])
+    g.ajouter("Ventes produits", lignes_produits(z))
+    lignes_ventes.append(ligne)
     return True
+
+
+def rattraper_historique(g, journal, telecharger_pdf: bool = True) -> int:
+    """Relit une fois tous les anciens mails de Z et remplit les onglets Ventes.
+
+    Sans IA (gratuit). Les jours déjà présents sont ignorés. Les exports ne sont pas
+    archivés ; le PDF du Z du jour est seulement lu (livraison, paiements) s'il est
+    encore téléchargeable. Écrit par lots pour respecter les quotas de Google Sheets.
+    """
+    from .z_laddition import lire_z
+    connus = {lire_date(l[0]) for l in g.lignes("Ventes") if l}
+    ventes, produits, lus = [], [], 0
+    for id_ in g.chercher(f'from:{config.Z_EXPEDITEUR} subject:"{config.Z_OBJET}"', maximum=5000):
+        msg = g.lire(id_)
+        try:
+            z = lire_z(msg.html or msg.texte, msg.objet)
+        except ValueError:
+            continue
+        if z.jour in connus:
+            continue
+        detail = None
+        if telecharger_pdf:
+            for url in z_pdf.liens_du_jour(z.z_pdf, z.jour)[:1]:
+                try:
+                    donnees, _, _ = _telecharger(url)
+                    if donnees[:4] == b"%PDF":
+                        detail = z_pdf.lire_pdf(donnees)
+                except Exception:      # lien expiré ou PDF illisible : on garde les chiffres du mail
+                    pass
+        ventes.append(ligne_vente(z, detail))
+        produits += lignes_produits(z)
+        connus.add(z.jour)
+        lus += 1
+    ventes.sort(key=lambda l: l[0])
+    for i in range(0, len(ventes), 500):
+        g.ajouter("Ventes", ventes[i:i + 500])
+    produits.sort(key=lambda l: l[0])
+    for i in range(0, len(produits), 2000):
+        g.ajouter("Ventes produits", produits[i:i + 2000])
+    journal("historique", "Z relus", f"{lus} jour(s) ajouté(s)")
+    return lus
 
 
 def historique(lignes_ventes: list[list[str]]) -> list[JourHistorique]:
