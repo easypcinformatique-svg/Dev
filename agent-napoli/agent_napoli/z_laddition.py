@@ -108,6 +108,16 @@ def lire_z(html: str, objet: str) -> Z:
         categorie = " ".join(cellules[-5].split())
         z.ventes.append(LigneVente(categorie, cellules[-4], qte, ttc, ht))
 
+    # Version texte du mail (sans HTML) : colonnes séparées par des tabulations.
+    if not z.ventes:
+        for ligne in texte.splitlines():
+            cellules = [c.strip() for c in re.split(r"\t+| {2,}", ligne.strip()) if c.strip()]
+            if len(cellules) < 5:
+                continue
+            qte, ttc, ht = (_nombre(c) for c in cellules[-3:])
+            if None not in (qte, ttc, ht):
+                z.ventes.append(LigneVente(" ".join(cellules[-5].split()), cellules[-4], qte, ttc, ht))
+
     # Liens : chaque « Télécharger » prend le libellé qui le précède.
     for a in soup.find_all("a"):
         if a.get_text(strip=True).lower() != "télécharger" or not a.get("href"):

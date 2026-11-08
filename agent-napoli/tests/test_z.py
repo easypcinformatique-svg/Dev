@@ -126,3 +126,16 @@ def test_mail_mis_en_page_avec_tableaux_imbriques(html_z):
                  "</table></body></html>")
     z = z_laddition.lire_z(enveloppe, OBJET_Z)
     assert len(z.ventes) == 41 and z.ca_ttc == 875.0
+
+
+def test_version_texte_du_vrai_mail():
+    """Texte du Z du 17/10/2026 tel qu'affiché par Gmail (copié depuis la boîte de la pizzeria)."""
+    from conftest import FIXTURES
+    texte = (FIXTURES / "z_2026-10-17_texte.txt").read_text(encoding="utf-8")
+    z = z_laddition.lire_z(texte, OBJET_Z)
+    assert (z.ca_ttc, z.offerts, z.annulations, z.ticket_moyen) == (875.0, 95.4, 115.9, 27.34)
+    assert len(z.ventes) == 41
+    assert z.ventes[-1] == LigneVente("BOISSONS", "FANTA 1,5L", 1.0, 3.0, 2.84)
+    assert z.ventes[38] == LigneVente("VIN", "Petite balade rosé", 1.0, 6.0, 5.0)
+    assert sum(v.ttc for v in z.ventes) == pytest.approx(875.0)
+    assert len(z_laddition.controler(z)) == 3
