@@ -17,7 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from agent import AkmsAgent
+from agent import AkmsAgent, GestionAgent
+from gestion_tools import GestionTools
 from store import Store
 from tools import GarageTools
 
@@ -37,9 +38,11 @@ class ChatIn(BaseModel):
     message: str = Field(max_length=4000)
 
 
-def build_app(agent: AkmsAgent | None = None, store: Store | None = None) -> FastAPI:
+def build_app(agent: AkmsAgent | None = None, store: Store | None = None,
+              gestion: GestionAgent | None = None) -> FastAPI:
     store = store or Store(DB)
     agent = agent or AkmsAgent(GarageTools(CONFIG, STOCK, store))
+    gestion = gestion or GestionAgent(GestionTools(CONFIG, STOCK, store), client=agent.client)
     app = FastAPI(title="AKMS AUTOS - Agent IA")
     app.add_middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET", "POST"],
                        allow_headers=["*"])
@@ -81,6 +84,27 @@ def build_app(agent: AkmsAgent | None = None, store: Store | None = None) -> Fas
     def reset(body: ChatIn):
         agent.reset(body.session_id)
         return {"ok": True}
+
+    @app.get("/gestion")
+    def page_gestion():
+        return FileResponse(BASE / "static" / "gestion.html")
+
+    @app.post("/api/gestion/chat", dependencies=[Depends(admin), Depends(limiter)])
+    def chat_gestion(body: ChatIn):
+        return gestion.repondre("g-" + body.session_id, body.message)
+
+    @app.post("/api/gestion/reset", dependencies=[Depends(admin)])
+    def reset_gestion(body: ChatIn):
+        gestion.reset("g-" + body.session_id)
+        return {"ok": True}
+
+    @app.get("/admin/ventes", dependencies=[Depends(admin)])
+    def liste_ventes():
+        return store.lister("ventes")
+
+    @app.get("/admin/journal", dependencies=[Depends(admin)])
+    def liste_journal():
+        return store.lister("journal")
 
     @app.get("/admin/rendez-vous", dependencies=[Depends(admin)])
     def liste_rdv():

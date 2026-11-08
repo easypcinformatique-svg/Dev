@@ -13,6 +13,9 @@ from store import Store
 JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 
 
+CHAMPS_INTERNES = {"prix_achat", "vendu", "entree_stock"}
+
+
 class OutilError(Exception):
     """Erreur renvoyee au modele comme tool_result is_error (message lisible)."""
 
@@ -169,7 +172,7 @@ class GarageTools:
     def t_rechercher_vehicules(self, marque=None, modele=None, carburant=None, boite=None,
                                prix_max=None, km_max=None, annee_min=None, places_min=None) -> dict:
         def ok(v: dict) -> bool:
-            if not v.get("disponible", True):
+            if not v.get("disponible", True) or v.get("vendu"):
                 return False
             if marque and marque.lower() not in v["marque"].lower():
                 return False
@@ -199,10 +202,12 @@ class GarageTools:
     def t_details_vehicule(self, ref: str) -> dict:
         for v in self.stock:
             if v["ref"].lower() == ref.strip().lower():
-                return {k: val for k, val in v.items() if not k.startswith("_")}
+                if v.get("vendu"):
+                    raise OutilError(f"Le vehicule {ref} a ete vendu.")
+                return {k: val for k, val in v.items() if not k.startswith("_") and k not in CHAMPS_INTERNES}
         raise OutilError(f"Aucun vehicule avec la reference {ref}.")
 
-    def _creneaux_jour(self, jour: date, duree: int) -> list[datetime]:
+    def _creneaux_jour(self, jour: date, duree: int, exclure_rdv: int | None = None) -> list[datetime]:
         cfg = self.config
         planning = cfg.get("planning", {})
         pas = int(planning.get("pas_creneau_min", 30))
@@ -210,7 +215,7 @@ class GarageTools:
         plages = _plages(cfg["horaires"].get(JOURS[jour.weekday()], "ferme"))
         maintenant = self.now()
         debut_jour = datetime.combine(jour, datetime.min.time())
-        pris = self.store.rdv_entre(debut_jour, debut_jour + timedelta(days=1))
+        pris = [r for r in self.store.rdv_entre(debut_jour, debut_jour + timedelta(days=1)) if r["id"] != exclure_rdv]
         libres = []
         for a, b in plages:
             m = a

@@ -59,6 +59,14 @@ class Session:
 
 
 class AkmsAgent:
+    """Agent clients par defaut ; reutilise pour l'agent de gestion via les parametres."""
+
+    system_prompt = SYSTEM_PROMPT
+    tool_defs = TOOLS
+    actions_outils = frozenset({"prendre_rendez_vous", "enregistrer_demande"})
+    msg_refus = ("Je ne peux pas vous aider sur ce point. Pour toute question sur nos vehicules ou notre "
+                 "atelier, je suis a votre disposition.")
+
     def __init__(self, tools: GarageTools, client: Any | None = None,
                  model: str = MODEL, effort: str = EFFORT):
         self.tools = tools
@@ -87,14 +95,14 @@ class AkmsAgent:
     # --- appel API ---------------------------------------------------------
     def _call(self, messages: list[dict[str, Any]]):
         system = [
-            {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": self.system_prompt, "cache_control": {"type": "ephemeral"}},
             {"type": "text", "text": _contexte_date(self.tools.now())},
         ]
         return self.client.beta.messages.create(
             model=self.model,
             max_tokens=16000,
             system=system,
-            tools=TOOLS,
+            tools=self.tool_defs,
             messages=messages,
             output_config={"effort": self.effort},
             betas=[FALLBACK_BETA],
@@ -131,8 +139,7 @@ class AkmsAgent:
                     resp = self._call(msgs)
                     if resp.stop_reason == "refusal":
                         del msgs[depart:]  # retire uniquement ce tour (fin d'historique)
-                        return {"reponse": "Je ne peux pas vous aider sur ce point. Pour toute question sur nos vehicules ou notre atelier, je suis a votre disposition.",
-                                "actions": []}
+                        return {"reponse": self.msg_refus, "actions": []}
                     msgs.append({"role": "assistant", "content": resp.content})
                     if resp.stop_reason == "pause_turn":
                         continue
@@ -143,7 +150,7 @@ class AkmsAgent:
                         return {"reponse": texte or "Pouvez-vous preciser votre demande ?", "actions": actions}
                     resultats = [self._executer(b) for b in appels]
                     for b, r in zip(appels, resultats):
-                        if b.name in ("prendre_rendez_vous", "enregistrer_demande") and not r.get("is_error"):
+                        if b.name in self.actions_outils and not r.get("is_error"):
                             actions.append({"outil": b.name, "resultat": json.loads(r["content"])})
                     msgs.append({"role": "user", "content": resultats})
                 log.warning("session %s : trop d'appels d'outils", session_id)
@@ -155,3 +162,33 @@ class AkmsAgent:
                 del msgs[depart:]
                 return {"reponse": "Le service est momentanement indisponible. Merci de reessayer dans un instant ou d'appeler le garage.",
                         "actions": actions, "erreur": True}
+
+
+GESTION_PROMPT = """Tu es l'assistant de gestion interne du garage AKMS AUTOS. Tu travailles pour l'equipe (gerant, vendeurs, atelier), pas pour les clients.
+
+Ce que tu fais avec tes outils :
+- tableau de bord de l'activite (RDV, demandes, ventes, chiffre d'affaires, stock) ;
+- planning : consulter, creer, confirmer, deplacer, annuler les rendez-vous ;
+- suivi des demandes clients (devis, reprises, financement, rappels) : lister, changer le statut, noter ce qui a ete fait ;
+- stock : ajouter un vehicule, modifier prix/km/options, enregistrer une vente ;
+- mettre a jour les infos publiques (horaires, coordonnees) et les prestations (prix indicatif, duree).
+
+Regles :
+- Reponds en francais, de facon directe et concise, comme un collegue efficace. Utilise des listes courtes ou des tableaux quand il y a plusieurs elements. Montants en euros.
+- Appuie-toi uniquement sur les resultats des outils ; n'invente aucun chiffre.
+- Avant toute modification (creation, changement de statut, deplacement, vente, prix, horaires), resume exactement ce qui va changer et attends un "oui" explicite, sauf si l'utilisateur a deja donne une instruction precise et complete (ex : "confirme le RDV 12"). Pour une vente ou une modification d'horaires, demande toujours confirmation.
+- N'utilise forcer=true que si l'utilisateur demande expressement de passer outre un creneau indisponible.
+- Si une demande depasse tes outils (facturation, comptabilite, commandes de pieces), dis-le simplement.
+- Le prix d'achat et la marge sont des donnees internes : tu peux les donner a l'equipe.
+"""
+
+
+class GestionAgent(AkmsAgent):
+    system_prompt = GESTION_PROMPT
+    msg_refus = "Je ne peux pas traiter cette demande. Reformulez-la, s'il vous plait."
+
+    def __init__(self, tools, client: Any | None = None, model: str = MODEL, effort: str = EFFORT):
+        from gestion_tools import ACTIONS_ECRITURE, GESTION_TOOLS
+        super().__init__(tools, client=client, model=model, effort=effort)
+        self.tool_defs = GESTION_TOOLS
+        self.actions_outils = frozenset(ACTIONS_ECRITURE)
