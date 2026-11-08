@@ -140,6 +140,12 @@ class Google:
             self._libelles[nom] = r["id"]
         return self._libelles[nom]
 
+    def libelles_utilisateur(self) -> list[str]:
+        """Libellés créés par les gérants (hors libellés système et hors « Agent/ »)."""
+        r = self.gmail.users().labels().list(userId="me").execute()
+        return sorted(l["name"] for l in r.get("labels", [])
+                      if l.get("type") == "user" and not l["name"].startswith("Agent/"))
+
     def etiqueter(self, msg: Message, noms: list[str]) -> None:
         if self.essai:
             self.journal("gmail", "étiquettes (essai)", f"{msg.objet[:60]} -> {', '.join(noms)}")
@@ -168,9 +174,9 @@ class Google:
         return corps
 
     def envoyer(self, a: list[str], objet: str, html: str) -> None:
+        """Envoie le rapport. En essai aussi (seule écriture de l'essai), marqué [ESSAI]."""
         if self.essai:
-            self.journal("gmail", "envoi (essai)", f"{objet} -> {', '.join(a)}")
-            return
+            objet = f"[ESSAI] {objet}"
         self.gmail.users().messages().send(userId="me", body=self._mail(a, objet, html)).execute()
 
     def brouillon(self, a: list[str], objet: str, texte: str, html: str = "",
@@ -228,6 +234,12 @@ class Google:
             media_body=MediaInMemoryUpload(donnees, mimetype=mime),
             fields="id, webViewLink").execute()
         return f["webViewLink"]
+
+    def copier(self, id_: str, dossier: str) -> None:
+        if self.essai:
+            self.journal("drive", "copie (essai)", id_)
+            return
+        self.drive.files().copy(fileId=id_, body={"parents": [dossier]}, fields="id").execute()
 
     def lister(self, dossier: str) -> list[dict]:
         r = self.drive.files().list(

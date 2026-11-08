@@ -7,17 +7,17 @@ et envoie aux deux gérants un rapport par mail.
 
 | Tâche | Ce que fait l'agent | Ce qui reste aux gérants |
 | --- | --- | --- |
-| Z de caisse L'Addition | Lit le mail du Z, télécharge les exports (liens valables 24h) dans Drive `Pizza Napoli/Caisse/AAAA-MM/`, inscrit les chiffres dans le tableur | Clôturer le service chaque soir |
+| Z de caisse L'Addition | Lit le mail du Z et le ticket Z en PDF (livraison / à emporter, moyens de paiement, nombre de tickets), télécharge les exports dans Drive `Pizza Napoli/Caisse/AAAA-MM/`, inscrit les chiffres dans le tableur | Clôturer le service chaque soir |
 | Contrôles de caisse | Alerte si annulations > 3 % du CA, offerts > 5 %, corrections élevées, Z manquant, CA en baisse, ticket moyen en baisse, pizza non vendue depuis 14 jours, record | Vérifier les alertes |
-| Tri de Gmail | Étiquette chaque mail (`Agent/Factures`, `Agent/Clients`, `Agent/Administratif`…) et résume les mails importants | Lire le rapport |
+| Tri de Gmail | Range chaque mail dans **vos libellés existants** (Ticket Z, Factures, HYGIENES…), sans jamais en créer, et résume les mails importants. Seul « Agent/Traité » est ajouté, pour ne pas relire un mail | Lire le rapport |
 | Réponses | Prépare un **brouillon** de réponse dans le fil Gmail | Relire, compléter les `[À COMPLÉTER]`, envoyer |
 | Factures | Lit les PDF et photos, les range dans `Pizza Napoli/Factures/AAAA-MM/`, les inscrit dans le tableur, repère les doublons | Payer, puis écrire « payée » dans la colonne Statut du tableur |
 | Échéances de paiement | Les signale à J-7 dans le rapport, en alerte à J-1 et en retard | Payer |
 | Obligations légales | Les place dans Google Agenda avec rappels à J-7 et J-1 | Les saisir une fois dans l'onglet « Obligations » |
-| Comptable | Le 1er du mois, prépare un **brouillon** avec les factures du mois et deux CSV (factures, ventes) | Relire et envoyer |
+| Comptable (Cegid) | Le 1er du mois, prépare dans Drive le dossier `Pizza Napoli/Comptable/AAAA-MM à déposer sur Cegid` : copie des factures du mois et deux CSV (factures, ventes) | Glisser le dossier sur Cegid |
 
 **L'agent n'envoie jamais rien à l'extérieur** : le seul mail qu'il envoie lui-même
-est le rapport aux gérants. Il n'a aucun accès bancaire.
+est le rapport aux gérants. Il ne dépose rien sur Cegid et n'a aucun accès bancaire.
 
 ### Déposer une facture papier
 
@@ -81,16 +81,16 @@ Variables (onglet *Variables*) :
 | Nom | Exemple | Rôle |
 | --- | --- | --- |
 | `GERANTS_EMAILS` | `toi@gmail.com,associe@gmail.com` | destinataires du rapport |
-| `COMPTABLE_EMAIL` | `cabinet@exemple.fr` | destinataire du brouillon mensuel |
 | `JOURS_FERMES` | `0` | jours sans Z attendu (0 = lundi … 6 = dimanche) |
 | `JOURS_HISTORIQUE` | `30` | au tout premier passage, profondeur de tri ; remettre `3` ensuite |
+| `LIBELLE_Z` / `LIBELLE_FACTURES` | `Ticket Z` / `Factures` | vos libellés pour les Z et les factures, s'ils portent un autre nom |
 | `AGENT_NAPOLI_ACTIF` | `true` | **interrupteur** : tout autre valeur arrête l'agent |
 
 ### 4. Essai à blanc
 
 1. Mets `AGENT_NAPOLI_ACTIF` à `true`.
 2. Onglet **Actions > Agent Pizza Napoli (rapport de 9h) > Run workflow**, mode `essai`.
-3. L'agent lit tout mais n'écrit rien : ni étiquette, ni brouillon, ni fichier. Le rapport est disponible dans les « Artifacts » du passage. Les appels à Claude, eux, ont bien lieu.
+3. L'agent lit tout mais ne modifie rien : ni libellé, ni brouillon, ni fichier, ni tableur. Il envoie seulement le rapport aux gérants, avec « [ESSAI] » dans l'objet. Les appels à Claude, eux, ont bien lieu.
 
 Si le rapport est correct, il n'y a plus rien à faire : le passage de 9h tourne tout seul.
 
@@ -100,8 +100,12 @@ Variable `AGENT_NAPOLI_ACTIF` à `false`. Effet immédiat, plus aucun passage.
 
 ## Journal
 
-Chaque action est inscrite dans l'onglet **Journal** du tableur, et dans les
-logs du passage (onglet Actions de GitHub).
+Chaque action est inscrite dans l'onglet **Journal** du tableur.
+
+Le dépôt GitHub est public, donc les logs des passages (onglet Actions) sont visibles
+par tous. L'agent n'y écrit que le type d'action (« mails triés », « Z enregistré »),
+jamais d'objet de mail, de nom de fournisseur ni de montant. En cas d'erreur, seul
+l'emplacement dans le code est affiché.
 
 ## Coûts estimés (approximatifs)
 

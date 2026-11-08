@@ -9,7 +9,9 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import traceback
 from datetime import datetime, timedelta
 
 from . import caisse, comptable, config, factures, obligations, rapport, tri_mails, z_laddition
@@ -66,15 +68,16 @@ def passage(essai: bool, forcer: bool) -> int:
     lignes_ventes = g.lignes("Ventes")
     lignes_produits = g.lignes("Ventes produits")
     histo = caisse.historique(lignes_ventes)
-    z_veille, alertes, ca_s7 = None, [], None
+    z_veille, alertes, ca_s7, detail_veille = None, [], None, None
     for z in sorted(bilan.z, key=lambda z: z.jour):
-        erreurs += [f"Z du {z.jour} : {e}" for e in caisse.archiver(g, z)]
+        erreurs_z, detail = caisse.archiver(g, z)
+        erreurs += [f"Z du {z.jour} : {e}" for e in erreurs_z]
         alertes_z = z_laddition.controler(z) + z_laddition.controler_tendances(
             z, histo, caisse.dernieres_ventes(lignes_produits, z.jour))
         if caisse.enregistrer(g, z, lignes_ventes):
             journal("caisse", "Z enregistré", f"{z.jour} : {z.ca_ttc:.2f} € TTC")
         if z.jour == veille:
-            z_veille, alertes = z, alertes_z
+            z_veille, alertes, detail_veille = z, alertes_z, detail
             s7 = [h for h in histo if h.jour == veille - timedelta(days=7)]
             ca_s7 = s7[0].ca_ttc if s7 else None
         else:
@@ -96,18 +99,18 @@ def passage(essai: bool, forcer: bool) -> int:
     erreurs += erreurs_oblig
     obligations.synchroniser_agenda(g, [o for o in obligs if o.jours_restants(aujourdhui) <= 60])
 
-    # 5. Comptable, le 1er du mois
+    # 5. Comptable, le 1er du mois : dossier à déposer sur Cegid
     message_comptable = None
     annee_c, mois_c = comptable.mois_precedent(aujourdhui)
     mois = f"{annee_c}-{mois_c:02d}"
-    if aujourdhui.day == 1 and not deja_fait(lignes_journal, "brouillon comptable", mois):
-        message_comptable = comptable.preparer(g, lignes_factures, lignes_ventes, aujourdhui)
-        journal("comptable", "brouillon comptable", mois)
+    if aujourdhui.day == 1 and not deja_fait(lignes_journal, "dossier Cegid", mois):
+        message_comptable = comptable.preparer_depot(g, lignes_factures, lignes_ventes, aujourdhui)
+        journal("comptable", "dossier Cegid", mois)
 
     # 6. Rapport
     donnees = rapport.DonneesRapport(
         aujourdhui=aujourdhui, veille=veille,
-        z=z_veille, etat_z=etat_z,
+        z=z_veille, etat_z=etat_z, detail_z=detail_veille,
         top=caisse.top_produits(z_veille) if z_veille else [],
         ca_semaine_precedente=ca_s7, alertes=alertes, factures=bilan.factures,
         echeances=echeances, obligations=[o for o in obligs if o.jours_restants(aujourdhui) <= 7],
@@ -118,10 +121,6 @@ def passage(essai: bool, forcer: bool) -> int:
     html = rapport.construire(donnees)
     g.envoyer(config.GERANTS, rapport.objet(donnees), html)
     journal("rapport", "rapport envoyé", marqueur)
-    if essai:
-        chemin = f"rapport-essai-{marqueur}.html"
-        open(chemin, "w", encoding="utf-8").write(html)
-        print(f"Rapport d'essai écrit dans {chemin}")
     journal.sauver(g)
     return 0
 
@@ -134,7 +133,17 @@ def main(argv=None) -> int:
     a = p.parse_args(argv)
     if a.z:
         return tester_z(*a.z)
-    return passage(a.essai, a.forcer)
+    if os.getenv("GITHUB_ACTIONS") != "true":
+        return passage(a.essai, a.forcer)
+    # Logs publics : on montre où l'erreur s'est produite, jamais son message (qui peut
+    # contenir l'objet d'un mail ou un montant).
+    try:
+        return passage(a.essai, a.forcer)
+    except Exception as e:
+        print(f"ERREUR {type(e).__name__} — détail masqué (dépôt public). Pile :", file=sys.stderr)
+        for f in traceback.extract_tb(e.__traceback__):
+            print(f"  {os.path.basename(f.filename)}:{f.lineno} dans {f.name}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

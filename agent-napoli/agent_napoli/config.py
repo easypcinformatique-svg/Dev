@@ -20,8 +20,6 @@ def _env(nom: str, defaut: str) -> str:
 BOITE_PIZZERIA = _env("BOITE_PIZZERIA", "carpentraspizzanapoli@gmail.com")
 # Les deux gérants : reçoivent le rapport de 9h. Séparés par des virgules.
 GERANTS = [a.strip() for a in _env("GERANTS_EMAILS", BOITE_PIZZERIA).split(",") if a.strip()]
-# Le comptable : destinataire du brouillon mensuel (jamais envoyé sans validation).
-COMPTABLE = _env("COMPTABLE_EMAIL", "")
 
 # --- IA ----------------------------------------------------------------------
 MODELE = _env("AGENT_MODELE", "claude-opus-5-5")
@@ -55,7 +53,7 @@ OFFERTS_INCLUENT_BOISSONS = _env("OFFERTS_INCLUENT_BOISSONS", "non") == "oui"
 
 # --- Google Drive ------------------------------------------------------------
 DOSSIER_RACINE = "Pizza Napoli"
-SOUS_DOSSIERS = ["Caisse", "Factures", "Légal", "Personnel", "Rapports"]
+SOUS_DOSSIERS = ["Caisse", "Factures", "Comptable", "Légal", "Personnel", "Rapports"]
 DOSSIER_A_TRAITER = "À traiter"          # dans Factures/
 CLASSEUR = "Pizza Napoli — Agent"        # tableur Google Sheets de l'agent
 ONGLETS = {
@@ -69,16 +67,15 @@ ONGLETS = {
 }
 
 # --- Gmail -------------------------------------------------------------------
+# Seul libellé créé par l'agent : il marque les mails déjà vus.
 LIBELLE_TRAITE = "Agent/Traité"
-LIBELLES = {
-    "facture": "Agent/Factures",
-    "z_caisse": "Agent/Caisse",
-    "administratif": "Agent/Administratif",
-    "client": "Agent/Clients",
-    "fournisseur": "Agent/Fournisseurs",
-    "publicite": "Agent/Publicité",
-    "autre": "Agent/Autre",
-}
+# Le reste du classement utilise les libellés existants des gérants (Ticket Z, Factures,
+# HYGIENES...) : l'agent n'en crée jamais. Ces deux-là sont posés sans passer par l'IA.
+LIBELLE_Z = _env("LIBELLE_Z", "Ticket Z")
+LIBELLE_FACTURES = _env("LIBELLE_FACTURES", "Factures")
+# Catégories internes (aiguillage des traitements), distinctes des libellés Gmail.
+CATEGORIES = ["facture", "z_caisse", "administratif", "client", "fournisseur", "publicite", "autre"]
+AUCUN_LIBELLE = "(aucun)"
 # Au premier passage, on ne remonte pas plus loin que ce nombre de jours.
 JOURS_HISTORIQUE = int(_env("JOURS_HISTORIQUE", "3"))
 

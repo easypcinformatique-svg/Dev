@@ -14,6 +14,7 @@ from .factures import Echeance, Resultat
 from .obligations import Obligation
 from .tri_mails import PREFIXE_RAPPORT, MailImportant
 from .z_laddition import Alerte, Z, _eur
+from .z_pdf import DetailZ
 
 _JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 _MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
@@ -30,6 +31,7 @@ class DonneesRapport:
     veille: date
     z: Z | None = None
     etat_z: str = "manquant"     # recu, manquant, ferme, deja_traite
+    detail_z: DetailZ | None = None
     top: list[tuple[str, float]] = field(default_factory=list)
     ca_semaine_precedente: float | None = None
     alertes: list[Alerte] = field(default_factory=list)
@@ -101,11 +103,19 @@ def construire(d: DonneesRapport) -> str:
         if d.ca_semaine_precedente:
             ecart = (z.ca_ttc - d.ca_semaine_precedente) / d.ca_semaine_precedente * 100
             comparaison = f" ({ecart:+.0f} % par rapport à {_JOURS[z.jour.weekday()]} dernier)".replace(".", ",")
+        dz = d.detail_z
+        tickets = f"{dz.tickets}" if dz and dz.tickets else f"environ {z.tickets}"
         lignes = [
             f"CA TTC : <b>{_eur(z.ca_ttc)}</b>{e(comparaison)} — HT : {_eur(z.ca_ht)}",
-            f"Tickets : environ {z.tickets} — ticket moyen : {_eur(z.ticket_moyen)}",
+            f"Tickets : {tickets} — ticket moyen : {_eur(z.ticket_moyen)}",
             f"Offerts : {_eur(z.offerts)} — remises : {_eur(z.remises)} — annulations après ticket : {_eur(z.annulations)}",
         ]
+        if dz and dz.salles:
+            total = sum(dz.salles.values()) or 1
+            lignes.append(" — ".join(f"{e(s)} : {_eur(m)} ({m / total * 100:.0f} %)" for s, m in dz.salles.items()))
+        if dz and dz.reglements:
+            lignes.append("Paiements : " + " — ".join(
+                f"{e(mode)} {_eur(m)} ({n})" for mode, (n, m) in dz.reglements.items()))
         if d.top:
             lignes.append("Top pizzas : " + ", ".join(f"{e(p)} ({q:g})" for p, q in d.top))
         parties.append(_section("Ventes de la veille", _liste(lignes)))

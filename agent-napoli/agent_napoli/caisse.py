@@ -11,7 +11,7 @@ import re
 import urllib.request
 from datetime import date
 
-from . import config
+from . import config, z_pdf
 from .outils import lire_date, lire_nombre
 from .z_laddition import JourHistorique, Z
 
@@ -35,13 +35,17 @@ def _telecharger(url: str) -> tuple[bytes, str, str]:
     return donnees, mime, ext
 
 
-def archiver(g, z: Z) -> list[str]:
-    """Télécharge les exports du Z dans Drive. Renvoie les erreurs éventuelles."""
+def archiver(g, z: Z) -> tuple[list[str], z_pdf.DetailZ | None]:
+    """Télécharge dans Drive les exports et le ticket Z du jour, et lit ce dernier.
+
+    Le mail contient une trentaine de liens « Z » ; seuls ceux du jour du Z sont gardés.
+    Renvoie les erreurs éventuelles et le détail lu dans le PDF (salles, paiements).
+    """
     dossier = g.dossier("Caisse", f"{z.jour:%Y-%m}")
-    erreurs = []
+    erreurs, detail = [], None
     liens = dict(z.exports)
-    for i, url in enumerate(z.z_pdf, 1):
-        liens[f"z-service-{i}"] = url
+    for i, url in enumerate(z_pdf.liens_du_jour(z.z_pdf, z.jour), 1):
+        liens[f"z-{i}"] = url
     for nom, url in liens.items():
         try:
             donnees, mime, ext = _telecharger(url)
@@ -49,7 +53,12 @@ def archiver(g, z: Z) -> list[str]:
             erreurs.append(f"{nom} : téléchargement impossible ({e})")
             continue
         g.deposer(dossier, f"{z.jour.isoformat()}_{nom}.{ext}", donnees, mime)
-    return erreurs
+        if nom.startswith("z-") and detail is None and donnees[:4] == b"%PDF":
+            try:
+                detail = z_pdf.lire_pdf(donnees)
+            except Exception as e:   # PDF illisible : on garde l'archive, on le signale
+                erreurs.append(f"{nom} : lecture du PDF impossible ({e})")
+    return erreurs, detail
 
 
 def deja_enregistre(lignes_ventes: list[list[str]], jour: date) -> bool:

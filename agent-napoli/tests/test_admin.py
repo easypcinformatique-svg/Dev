@@ -26,8 +26,9 @@ def ia_factice(monkeypatch):
             raise r
         return dict(r)
 
-    def trier_mail(expediteur, objet, corps, pieces):
+    def trier_mail(expediteur, objet, corps, pieces, libelles):
         appels["tri"].append(objet)
+        appels.setdefault("libelles", libelles)
         return dict(reponses["tri"])
 
     monkeypatch.setattr(ia, "lire_facture", lire_facture)
@@ -116,7 +117,7 @@ def test_obligations_et_agenda():
 
 
 # -------------------------------------------------------------------- tri
-TRI_CLIENT = {"categorie": "client", "important": True, "resume": "Un client demande si vous livrez à Mazan.",
+TRI_CLIENT = {"categorie": "client", "libelle": "NOUVELLE COMMANDE", "important": True, "resume": "Un client demande si vous livrez à Mazan.",
               "action": "Confirmer la zone de livraison", "brouillon_reponse": "Bonjour ! Oui, on livre à Mazan…"}
 
 
@@ -141,7 +142,11 @@ def test_tri_complet(ia_factice, html_z):
     assert g.brouillons[0]["objet"] == "Re: Livraison à Mazan ?"
     assert bilan.importants[0].brouillon is True
     assert "deja" not in g.etiquetes
-    assert g.etiquetes["z"] == ["Agent/Caisse", config.LIBELLE_TRAITE]
+    # Uniquement les libellés existants des gérants, plus « Agent/Traité ».
+    assert appels["libelles"] == FauxGoogle.LIBELLES
+    assert g.etiquetes["z"] == ["Ticket Z", config.LIBELLE_TRAITE]
+    assert g.etiquetes["photo"] == ["Factures", config.LIBELLE_TRAITE]
+    assert g.etiquetes["client"] == ["NOUVELLE COMMANDE", config.LIBELLE_TRAITE]
     assert g.etiquetes["rapport"] == [config.LIBELLE_TRAITE]
     assert bilan.par_categorie == {"z_caisse": 1, "facture": 1, "client": 1}
 
@@ -154,6 +159,14 @@ def test_pas_de_brouillon_pour_un_noreply(ia_factice):
     assert not g.brouillons and bilan.importants and not bilan.importants[0].brouillon
 
 
+def test_libelle_inconnu_ou_aucun_n_est_jamais_cree(ia_factice):
+    _, reponses = ia_factice
+    g = FauxGoogle([mail("a", objet="Pub"), mail("b", objet="Autre")])
+    reponses["tri"] = {**TRI_CLIENT, "categorie": "publicite", "libelle": "Libellé inventé", "brouillon_reponse": None}
+    tri_mails.trier(g, set(), lambda *a: None)
+    assert g.etiquetes["a"] == [config.LIBELLE_TRAITE]
+
+
 def test_erreur_ia_laisse_le_mail_pour_demain(monkeypatch):
     def echec(*a):
         raise ia.ErreurIA("connexion à l'API impossible")
@@ -164,26 +177,20 @@ def test_erreur_ia_laisse_le_mail_pour_demain(monkeypatch):
 
 
 # -------------------------------------------------------------- comptable
-def test_brouillon_comptable(monkeypatch):
-    monkeypatch.setattr(config, "COMPTABLE", "cabinet@example.com")
+def test_dossier_cegid():
     assert comptable.mois_precedent(date(2027, 1, 1)) == (2026, 12)
-    lignes = [["2026-10-02", "Metro", "1", "2026-10-01", "", "10", "1", "11", "à payer", "", "https://drive.google.com/file/d/AAA/view", ""],
-              ["2026-11-02", "Metro", "2", "2026-11-01", "", "10", "1", "11", "à payer", "", "https://drive.google.com/file/d/BBB/view", ""]]
+    lignes = [["2026-10-02", "Metro", "1", "2026-10-01", "", "10", "1", "11,50", "à payer", "", "https://drive.google.com/file/d/AAA/view", ""],
+              ["2026-10-03", "Boulangerie", "2", "05/10/2026", "", "", "", "4", "payée", "", "", ""],
+              ["2026-11-02", "Metro", "3", "2026-11-01", "", "10", "1", "11", "à payer", "", "https://drive.google.com/file/d/BBB/view", ""]]
     g = FauxGoogle()
-    phrase = comptable.preparer(g, lignes, [["2026-10-17", "875"], ["2026-11-01", "900"]], date(2026, 11, 1))
-    assert "1 facture(s) de octobre 2026" in phrase
-    b = g.brouillons[0]
-    assert b["a"] == ["cabinet@example.com"] and "octobre 2026" in b["objet"]
-    noms = [p[0] for p in b["pieces"]]
-    assert noms == ["factures_2026-10.csv", "ventes_2026-10.csv", "2026-10-01_Metro.pdf"]
-    assert "total TTC 11.00 €" in b["texte"]
-
-
-def test_pas_de_comptable_renseigne(monkeypatch):
-    monkeypatch.setattr(config, "COMPTABLE", "")
-    g = FauxGoogle()
-    assert "non renseignée" in comptable.preparer(g, [], [], date(2026, 11, 1))
-    assert not g.brouillons
+    phrase = comptable.preparer_depot(g, lignes, [["2026-10-17", "875"], ["17/10/2026", "1"], ["2026-11-01", "900"]],
+                                      date(2026, 11, 1))
+    dossier = "Comptable/2026-10 à déposer sur Cegid"
+    assert g.copies == [("AAA", dossier)]
+    assert [d[1] for d in g.depots] == ["factures_2026-10.csv", "ventes_2026-10.csv"]
+    assert "Dossier Cegid de octobre 2026" in phrase and "1 facture(s), total TTC 15,50 €" in phrase
+    assert "Fichier introuvable pour : Boulangerie" in phrase
+    assert not g.brouillons and not g.envois     # rien n'est envoyé au comptable
 
 
 # ---------------------------------------------------------------- rapport

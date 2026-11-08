@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'essai = ne rien écrire ; forcer = passage complet maintenant'
+        description: 'essai = ne rien modifier, rapport [ESSAI] envoyé aux gérants ; forcer = passage complet maintenant'
         type: choice
         options: [essai, forcer]
         default: essai
@@ -46,7 +46,6 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
           GERANTS_EMAILS: ${{ vars.GERANTS_EMAILS }}
-          COMPTABLE_EMAIL: ${{ vars.COMPTABLE_EMAIL }}
           JOURS_FERMES: ${{ vars.JOURS_FERMES }}
           JOURS_HISTORIQUE: ${{ vars.JOURS_HISTORIQUE }}
           OFFERTS_INCLUENT_BOISSONS: ${{ vars.OFFERTS_INCLUENT_BOISSONS }}
@@ -59,11 +58,3 @@ jobs:
             *)      python -m agent_napoli ;;
           esac
 
-      - name: Rapport d'essai
-        if: always() && github.event_name == 'workflow_dispatch' && inputs.mode == 'essai'
-        uses: actions/upload-artifact@v4
-        with:
-          name: rapport-essai
-          path: agent-napoli/rapport-essai-*.html
-          if-no-files-found: ignore
-          retention-days: 7

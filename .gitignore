@@ -44,5 +44,5 @@ node_modules/
 annuaires/cache/
 
 # Agent Pizza Napoli
-agent-napoli/rapport-essai-*.html
+
 agent-napoli/client_secret*.json

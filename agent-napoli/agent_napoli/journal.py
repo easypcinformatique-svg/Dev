@@ -3,6 +3,7 @@ l'onglet « Journal » du tableur à la fin de chaque passage."""
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
 
 from . import config
@@ -15,7 +16,10 @@ class Journal:
     def __call__(self, module: str, action: str, detail: str = "") -> None:
         horodatage = datetime.now(config.PARIS).strftime("%Y-%m-%d %H:%M:%S")
         self.lignes.append([horodatage, module, action, detail])
-        print(f"{horodatage}  [{module}] {action}" + (f" — {detail}" if detail else ""), flush=True)
+        # Dans GitHub Actions, les logs d'un dépôt public sont lisibles par tous : on n'y écrit
+        # que le type d'action. Le détail (objets de mails, montants) va seulement dans le tableur.
+        public = os.getenv("GITHUB_ACTIONS") == "true"
+        print(f"{horodatage}  [{module}] {action}" + (f" — {detail}" if detail and not public else ""), flush=True)
 
     def sauver(self, g) -> None:
         g.ajouter("Journal", self.lignes)

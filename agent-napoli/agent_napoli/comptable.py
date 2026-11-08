@@ -1,8 +1,9 @@
-"""Envoi mensuel au comptable : préparé le 1er du mois, envoyé par un gérant.
+"""Préparation mensuelle des pièces pour le comptable (dépôt sur Cegid).
 
-L'agent crée un BROUILLON dans Gmail avec les factures du mois écoulé en pièces
-jointes, un récapitulatif CSV des factures et un CSV des ventes jour par jour.
-Un gérant relit et clique sur « Envoyer » : c'est la validation.
+Le 1er du mois, l'agent prépare dans Drive le dossier
+« Pizza Napoli/Comptable/AAAA-MM à déposer sur Cegid » : une copie de chaque
+facture du mois écoulé, un récapitulatif CSV des factures et un CSV des ventes
+jour par jour. Un gérant glisse le dossier sur Cegid : l'agent ne dépose rien.
 """
 
 from __future__ import annotations
@@ -16,13 +17,16 @@ from . import config
 from .factures import COL, factures_du_mois
 from .outils import lire_date, lire_nombre
 
-LIMITE_PIECES = 18 * 1024 * 1024   # Gmail refuse au-delà de 25 Mo encodés
 _MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
          "septembre", "octobre", "novembre", "décembre"]
 
 
 def mois_precedent(aujourdhui: date) -> tuple[int, int]:
     return (aujourdhui.year - 1, 12) if aujourdhui.month == 1 else (aujourdhui.year, aujourdhui.month - 1)
+
+
+def nom_dossier(annee: int, mois: int) -> str:
+    return f"{annee}-{mois:02d} à déposer sur Cegid"
 
 
 def _csv(entetes: list[str], lignes: list[list]) -> bytes:
@@ -42,46 +46,30 @@ def _total(lignes, colonne) -> float:
     return sum(lire_nombre(l[COL[colonne]]) or 0.0 for l in lignes)
 
 
-def preparer(g, lignes_factures: list[list[str]], lignes_ventes: list[list[str]], aujourdhui: date) -> str:
-    """Crée le brouillon. Renvoie une phrase pour le rapport."""
-    if not config.COMPTABLE:
-        return "Adresse du comptable non renseignée (COMPTABLE_EMAIL) : brouillon non préparé."
+def preparer_depot(g, lignes_factures: list[list[str]], lignes_ventes: list[list[str]],
+                   aujourdhui: date) -> str:
+    """Prépare le dossier du mois écoulé. Renvoie une phrase pour le rapport."""
     annee, mois = mois_precedent(aujourdhui)
     nom_mois = f"{_MOIS[mois - 1]} {annee}"
+    dossier = g.dossier("Comptable", nom_dossier(annee, mois))
     du_mois = factures_du_mois(lignes_factures, annee, mois)
     ventes = [l for l in lignes_ventes if l and (d := lire_date(l[0])) and (d.year, d.month) == (annee, mois)]
 
-    pieces = [
-        (f"factures_{annee}-{mois:02d}.csv", "text/csv", _csv(config.ONGLETS["Factures"], du_mois)),
-        (f"ventes_{annee}-{mois:02d}.csv", "text/csv", _csv(config.ONGLETS["Ventes"], ventes)),
-    ]
-    taille, non_jointes = 0, []
+    g.deposer(dossier, f"factures_{annee}-{mois:02d}.csv", _csv(config.ONGLETS["Factures"], du_mois), "text/csv")
+    g.deposer(dossier, f"ventes_{annee}-{mois:02d}.csv", _csv(config.ONGLETS["Ventes"], ventes), "text/csv")
+
+    copiees, absentes = 0, []
     for l in du_mois:
-        lien = l[COL["Fichier"]]
-        id_ = id_drive(lien)
+        id_ = id_drive(l[COL["Fichier"]])
         if not id_:
-            non_jointes.append(l)
+            absentes.append(l[COL["Fournisseur"]] or "?")
             continue
-        donnees = g.telecharger(id_)
-        if taille + len(donnees) > LIMITE_PIECES:
-            non_jointes.append(l)
-            continue
-        taille += len(donnees)
-        ext = "pdf" if donnees[:4] == b"%PDF" else "jpg"
-        mime = "application/pdf" if ext == "pdf" else "image/jpeg"
-        pieces.append((f"{l[COL['Date facture']] or l[COL['Reçue le']]}_{l[COL['Fournisseur']]}.{ext}", mime, donnees))
+        g.copier(id_, dossier)
+        copiees += 1
 
-    texte = (
-        f"Bonjour,\n\nVeuillez trouver ci-joint les pièces de Pizza Napoli pour {nom_mois} :\n"
-        f"- {len(du_mois)} facture(s) fournisseurs, total TTC {_total(du_mois, 'TTC'):.2f} € "
-        f"(récapitulatif dans factures_{annee}-{mois:02d}.csv) ;\n"
-        f"- les ventes jour par jour issues des Z de caisse (ventes_{annee}-{mois:02d}.csv).\n"
-    )
-    if non_jointes:
-        texte += "\nFactures trop volumineuses pour être jointes, accessibles ici :\n" + "".join(
-            f"- {l[COL['Fournisseur']]} {l[COL['Date facture']]} : {l[COL['Fichier']]}\n" for l in non_jointes)
-    texte += "\nBien cordialement,\nPizza Napoli Carpentras"
-
-    g.brouillon([config.COMPTABLE], f"Pizza Napoli — pièces comptables de {nom_mois}", texte, pieces=pieces)
-    return (f"Brouillon pour le comptable prêt dans Gmail : {len(du_mois)} facture(s) de {nom_mois}. "
-            "Relisez-le puis cliquez sur « Envoyer ».")
+    total = f"{_total(du_mois, 'TTC'):.2f}".replace(".", ",")
+    phrase = (f"Dossier Cegid de {nom_mois} prêt dans Drive (Pizza Napoli/Comptable/{nom_dossier(annee, mois)}) : "
+              f"{copiees} facture(s), total TTC {total} €, et les ventes du mois. Glissez-le sur Cegid.")
+    if absentes:
+        phrase += f" Fichier introuvable pour : {', '.join(absentes)}."
+    return phrase

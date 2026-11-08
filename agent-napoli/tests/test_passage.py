@@ -29,8 +29,8 @@ def monde(monkeypatch, html_z):
     monkeypatch.setattr(google_api, "Google", lambda essai, journal: g)
     monkeypatch.setattr(principal, "datetime", Horloge)
     monkeypatch.setattr(ia, "lire_facture", lambda *a, **k: dict(FACTURE_METRO))
-    monkeypatch.setattr(ia, "trier_mail", lambda e, o, c, p: dict(
-        {"categorie": "facture", "important": False, "resume": "Facture Metro", "action": None,
+    monkeypatch.setattr(ia, "trier_mail", lambda e, o, c, p, l: dict(
+        {"categorie": "facture", "libelle": "Factures", "important": False, "resume": "Facture Metro", "action": None,
          "brouillon_reponse": None} if "facture" in o.lower() else TRI_CLIENT))
     telechargements = []
     monkeypatch.setattr(caisse, "_telecharger", lambda url: (telechargements.append(url), (b"a;b", "text/csv", "csv"))[1])

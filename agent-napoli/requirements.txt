@@ -2,3 +2,4 @@ anthropic>=2.6,<3
 google-api-python-client>=2.201,<3
 google-auth>=2.62,<3
 beautifulsoup4>=4.15,<5
+pypdf>=6.17,<7

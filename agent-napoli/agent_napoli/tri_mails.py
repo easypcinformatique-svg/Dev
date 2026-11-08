@@ -62,6 +62,7 @@ def adresse(expediteur: str) -> str:
 def trier(g, vues_factures: set, journal) -> BilanTri:
     bilan = BilanTri()
     traite = g.libelle(config.LIBELLE_TRAITE)
+    libelles = g.libelles_utilisateur()
     ids = g.chercher(f"newer_than:{config.JOURS_HISTORIQUE}d -in:drafts -in:chats")
     for id_ in ids:
         etiquettes = g.etiquettes(id_)
@@ -72,29 +73,31 @@ def trier(g, vues_factures: set, journal) -> BilanTri:
             g.etiqueter(msg, [config.LIBELLE_TRAITE])
             continue
         try:
-            categorie = _traiter(g, msg, bilan, vues_factures)
+            categorie, libelle = _traiter(g, msg, bilan, vues_factures, libelles)
         except ia.ErreurIA as e:
             bilan.erreurs.append(f"« {msg.objet[:60]} » : {e} (nouvel essai demain)")
             continue
         except ValueError as e:
             bilan.erreurs.append(f"« {msg.objet[:60]} » : {e}")
-            categorie = "z_caisse" if est_z(msg) else "autre"
+            categorie, libelle = ("z_caisse", config.LIBELLE_Z) if est_z(msg) else ("autre", None)
         bilan.compter(categorie)
-        g.etiqueter(msg, [config.LIBELLES[categorie], config.LIBELLE_TRAITE])
+        # Jamais de libellé inventé : seulement ceux qui existent déjà chez les gérants.
+        poses = [libelle] if libelle in libelles else []
+        g.etiqueter(msg, poses + [config.LIBELLE_TRAITE])
     journal("tri", "mails triés", ", ".join(f"{k} : {v}" for k, v in sorted(bilan.par_categorie.items())) or "aucun")
     return bilan
 
 
-def _traiter(g, msg, bilan: BilanTri, vues_factures: set) -> str:
+def _traiter(g, msg, bilan: BilanTri, vues_factures: set, libelles: list[str]) -> tuple[str, str | None]:
     if est_z(msg):
         bilan.z.append(z_laddition.lire_z(msg.html or msg.texte, msg.objet))
-        return "z_caisse"
+        return "z_caisse", config.LIBELLE_Z
     if est_facture_deposee(msg):
         bilan.factures += factures.traiter_mail(g, msg, vues_factures)
-        return "facture"
+        return "facture", config.LIBELLE_FACTURES
 
     pieces = [p.nom for p in msg.pieces]
-    tri = ia.trier_mail(msg.expediteur, msg.objet, texte_du_mail(msg), pieces)
+    tri = ia.trier_mail(msg.expediteur, msg.objet, texte_du_mail(msg), pieces, libelles)
     categorie = tri["categorie"]
     if categorie == "facture" and factures.pieces_facture(msg):
         bilan.factures += factures.traiter_mail(g, msg, vues_factures)
@@ -107,4 +110,5 @@ def _traiter(g, msg, bilan: BilanTri, vues_factures: set) -> str:
         brouillon = True
     if tri.get("important") or brouillon:
         bilan.importants.append(MailImportant(msg.expediteur, msg.objet, tri["resume"], tri.get("action"), brouillon))
-    return categorie
+    libelle = tri.get("libelle")
+    return categorie, None if libelle == config.AUCUN_LIBELLE else libelle

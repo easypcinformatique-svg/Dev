@@ -14,6 +14,9 @@ OBJET_Z = "L'Addition - Votre Z quotidien (PIZZA NAPOLI CARPENTRAS | 2026-10-17)
 class FauxGoogle:
     """Remplace Google : garde en mémoire tout ce que l'agent écrit."""
 
+    LIBELLES = ["Bulletins de paie", "Candidatures LIVREURS", "Factures", "HYGIENES",
+                "NOUVELLE COMMANDE", "Ticket Z", "Tickets restaurants"]
+
     def __init__(self, messages=(), etiquettes=None, fichiers_a_traiter=()):
         self.messages = {m.id: m for m in messages}
         self._etiquettes = etiquettes or {}
@@ -27,9 +30,16 @@ class FauxGoogle:
         self.ajouts = {}
         self.cellules = []
         self.evenements = []
+        self.copies = []
 
     def libelle(self, nom):
         return f"id:{nom}"
+
+    def libelles_utilisateur(self):
+        return list(self.LIBELLES)
+
+    def copier(self, id_, dossier):
+        self.copies.append((id_, dossier))
 
     def chercher(self, requete, maximum=200):
         return list(self.messages)
