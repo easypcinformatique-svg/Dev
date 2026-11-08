@@ -14,7 +14,7 @@ import sys
 import traceback
 from datetime import datetime, timedelta
 
-from . import caisse, comptable, config, factures, obligations, rapport, tri_mails, z_laddition
+from . import banque, caisse, comptable, config, factures, obligations, rapport, tri_mails, z_laddition
 from .journal import Journal, deja_fait
 
 
@@ -50,6 +50,7 @@ def passage(essai: bool, forcer: bool) -> int:
     for sous in config.SOUS_DOSSIERS[1:]:
         g.dossier(sous)
     g.dossier("Factures", config.DOSSIER_A_TRAITER)
+    g.dossier("Banque", config.DOSSIER_A_TRAITER)
 
     # Factures déjà connues (anti-doublon)
     lignes_factures = g.lignes("Factures")
@@ -74,7 +75,7 @@ def passage(essai: bool, forcer: bool) -> int:
         erreurs += [f"Z du {z.jour} : {e}" for e in erreurs_z]
         alertes_z = z_laddition.controler(z) + z_laddition.controler_tendances(
             z, histo, caisse.dernieres_ventes(lignes_produits, z.jour))
-        if caisse.enregistrer(g, z, lignes_ventes):
+        if caisse.enregistrer(g, z, lignes_ventes, detail):
             journal("caisse", "Z enregistré", f"{z.jour} : {z.ca_ttc:.2f} € TTC")
         if z.jour == veille:
             z_veille, alertes, detail_veille = z, alertes_z, detail
@@ -99,7 +100,20 @@ def passage(essai: bool, forcer: bool) -> int:
     erreurs += erreurs_oblig
     obligations.synchroniser_agenda(g, [o for o in obligs if o.jours_restants(aujourdhui) <= 60])
 
-    # 5. Comptable, le 1er du mois : dossier à déposer sur Cegid
+    # 5. Relevé de compte déposé par un gérant : rapprochement avec les factures
+    lignes_banque: list[str] = []
+    for b in banque.traiter_dossier(g, lignes_factures, g.lignes("Ventes") if not essai else lignes_ventes):
+        erreurs += b.erreurs
+        lignes_banque += b.lignes_rapport
+        if b.mois:
+            journal("banque", "relevé traité", b.mois)
+    annee_r, mois_r = comptable.mois_precedent(aujourdhui)
+    attendu = f"{annee_r}-{mois_r:02d}"
+    if not deja_fait(lignes_journal + journal.lignes, "relevé traité", attendu):
+        lignes_banque.append(f"En attente : le relevé de compte de {attendu[5:]}/{attendu[:4]}, à déposer dans "
+                             "Drive « Pizza Napoli/Banque/À traiter » avant le dépôt Cegid.")
+
+    # 6. Comptable, le 1er du mois : dossier à déposer sur Cegid
     message_comptable = None
     annee_c, mois_c = comptable.mois_precedent(aujourdhui)
     mois = f"{annee_c}-{mois_c:02d}"
@@ -107,7 +121,7 @@ def passage(essai: bool, forcer: bool) -> int:
         message_comptable = comptable.preparer_depot(g, lignes_factures, lignes_ventes, aujourdhui)
         journal("comptable", "dossier Cegid", mois)
 
-    # 6. Rapport
+    # 7. Rapport
     donnees = rapport.DonneesRapport(
         aujourdhui=aujourdhui, veille=veille,
         z=z_veille, etat_z=etat_z, detail_z=detail_veille,
@@ -115,7 +129,7 @@ def passage(essai: bool, forcer: bool) -> int:
         ca_semaine_precedente=ca_s7, alertes=alertes, factures=bilan.factures,
         echeances=echeances, obligations=[o for o in obligs if o.jours_restants(aujourdhui) <= 7],
         mails_importants=bilan.importants, nb_brouillons=g.nb_brouillons(),
-        comptable=message_comptable, erreurs=erreurs,
+        comptable=message_comptable, banque=lignes_banque, erreurs=erreurs,
         lien_classeur=g.lien_classeur(),
     )
     html = rapport.construire(donnees)

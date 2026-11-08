@@ -53,16 +53,18 @@ OFFERTS_INCLUENT_BOISSONS = _env("OFFERTS_INCLUENT_BOISSONS", "non") == "oui"
 
 # --- Google Drive ------------------------------------------------------------
 DOSSIER_RACINE = "Pizza Napoli"
-SOUS_DOSSIERS = ["Caisse", "Factures", "Comptable", "Légal", "Personnel", "Rapports"]
+SOUS_DOSSIERS = ["Caisse", "Factures", "Banque", "Comptable", "Légal", "Personnel", "Rapports"]
 DOSSIER_A_TRAITER = "À traiter"          # dans Factures/
 CLASSEUR = "Pizza Napoli — Agent"        # tableur Google Sheets de l'agent
 ONGLETS = {
     "Factures": ["Reçue le", "Fournisseur", "N° facture", "Date facture", "Échéance",
                  "HT", "TVA", "TTC", "Statut", "Catégorie", "Fichier", "Source"],
     "Ventes": ["Date", "CA TTC", "CA HT", "Ticket moyen", "Tickets (estim.)", "Offerts",
-               "Corrections avant cuisine", "Corrections après cuisine", "Annulations après ticket"],
+               "Corrections avant cuisine", "Corrections après cuisine", "Annulations après ticket",
+               "CB (Z)", "Livraison", "A emporter"],
     "Ventes produits": ["Date", "Catégorie", "Produit", "Quantité", "TTC", "HT"],
     "Obligations": ["Libellé", "Échéance", "Récurrence", "Notes", "Agenda"],
+    "Banque": ["Date", "Libellé", "Montant", "Type", "Relevé"],
     "Journal": ["Horodatage", "Module", "Action", "Détail"],
 }
 

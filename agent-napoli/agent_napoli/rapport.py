@@ -41,6 +41,7 @@ class DonneesRapport:
     mails_importants: list[MailImportant] = field(default_factory=list)
     nb_brouillons: int = 0
     comptable: str | None = None
+    banque: list[str] = field(default_factory=list)     # phrases déjà en HTML sûr
     erreurs: list[str] = field(default_factory=list)
     lien_classeur: str = ""
 
@@ -140,6 +141,7 @@ def construire(d: DonneesRapport) -> str:
         admin.append(f"Mail de {e(m.expediteur)} : <i>{e(m.objet)}</i> — {e(m.resume)}{detail}")
     if d.comptable:
         admin.append(e(d.comptable))
+    admin += d.banque
     parties.append(_section("Administratif à traiter", _liste(admin) if admin else "<p>Rien de nouveau.</p>"))
 
     # 4. Validations en attente

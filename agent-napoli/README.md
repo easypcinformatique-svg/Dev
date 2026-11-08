@@ -14,6 +14,7 @@ et envoie aux deux gérants un rapport par mail.
 | Factures | Lit les PDF et photos, les range dans `Pizza Napoli/Factures/AAAA-MM/`, les inscrit dans le tableur, repère les doublons | Payer, puis écrire « payée » dans la colonne Statut du tableur |
 | Échéances de paiement | Les signale à J-7 dans le rapport, en alerte à J-1 et en retard | Payer |
 | Obligations légales | Les place dans Google Agenda avec rappels à J-7 et J-1 | Les saisir une fois dans l'onglet « Obligations » |
+| Relevé de compte | Lit le relevé déposé dans Drive `Pizza Napoli/Banque/À traiter` (PDF, CSV ou Excel), passe à « payée » les factures retrouvées sur le relevé, liste les débits sans facture, compare les remises CB aux paiements CB des tickets Z, range le relevé et le rapprochement dans le dossier Cegid | Déposer le relevé chaque début de mois, retrouver les pièces manquantes |
 | Comptable (Cegid) | Le 1er du mois, prépare dans Drive le dossier `Pizza Napoli/Comptable/AAAA-MM à déposer sur Cegid` : copie des factures du mois et deux CSV (factures, ventes) | Glisser le dossier sur Cegid |
 
 **L'agent n'envoie jamais rien à l'extérieur** : le seul mail qu'il envoie lui-même
@@ -23,6 +24,21 @@ est le rapport aux gérants. Il ne dépose rien sur Cegid et n'a aucun accès ba
 
 - soit une photo envoyée à carpentraspizzanapoli@gmail.com avec **« FACTURE »** dans l'objet ;
 - soit une photo ou un scan déposé dans Drive `Pizza Napoli/Factures/À traiter` (appli Google Drive du téléphone, bouton « + » puis « Numériser »).
+
+### Déposer le relevé de compte (avant la TVA)
+
+Chaque début de mois, télécharge le relevé du mois écoulé depuis la banque en ligne
+(PDF, ou export CSV / Excel) et dépose-le dans Drive `Pizza Napoli/Banque/À traiter`.
+Tant qu'il n'est pas arrivé, le rapport de 9h le rappelle. Au passage suivant, l'agent :
+
+- vérifie que les opérations lues retombent sur le solde final (sinon il le signale) ;
+- passe à « payée » chaque facture dont le montant correspond à un débit (même montant,
+  débit entre 7 jours avant et 90 jours après la facture ; à montant égal, le nom du
+  fournisseur dans le libellé départage) ;
+- liste les débits sans facture : ce sont les pièces à retrouver avant la déclaration de TVA ;
+- compare les remises CB du relevé aux paiements par carte des tickets Z du mois ;
+- range le relevé dans `Banque/AAAA-MM` et l'ajoute, avec `rapprochement_AAAA-MM.csv`,
+  au dossier Cegid du mois.
 
 ### Saisir les obligations légales
 

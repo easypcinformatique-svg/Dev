@@ -53,6 +53,7 @@ def test_passage_complet(monde):
                     "Livraison à Mazan", "1 brouillon(s)"]:
         assert attendu in html, attendu
     assert "Z manquant" not in html
+    assert "En attente : le relevé de compte de 09/2026" in html
 
     # Caisse : 5 exports + 30 Z archivés, chiffres inscrits.
     assert len(g.telechargements) == 35

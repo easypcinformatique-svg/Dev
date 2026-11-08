@@ -24,6 +24,19 @@ class DetailZ:
     tickets: int | None = None
 
 
+def total_cb(detail: DetailZ) -> float:
+    """Montant payé par carte bancaire (lignes « CB », « Carte bancaire »...)."""
+    return round(sum(m for mode, (_, m) in detail.reglements.items()
+                     if "CB" in mode.upper().split() or "CARTE" in mode.upper()), 2)
+
+
+def salle(detail: DetailZ, mot: str) -> float | None:
+    for nom, montant in detail.salles.items():
+        if mot in nom.lower():
+            return montant
+    return None
+
+
 def date_du_lien(url: str) -> date | None:
     q = parse_qs(urlparse(url).query)
     try:

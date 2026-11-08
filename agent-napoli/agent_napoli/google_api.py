@@ -247,7 +247,9 @@ class Google:
             fields="files(id, name, mimeType, webViewLink, createdTime)", pageSize=200).execute()
         return r.get("files", [])
 
-    def telecharger(self, id_: str) -> bytes:
+    def telecharger(self, id_: str, mime: str = "") -> bytes:
+        if mime == "application/vnd.google-apps.spreadsheet":
+            return self.drive.files().export(fileId=id_, mimeType="text/csv").execute()
         return self.drive.files().get_media(fileId=id_).execute()
 
     def deplacer(self, id_: str, vers: str, nouveau_nom: str) -> str:

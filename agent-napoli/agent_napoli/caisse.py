@@ -65,12 +65,16 @@ def deja_enregistre(lignes_ventes: list[list[str]], jour: date) -> bool:
     return any(l and lire_date(l[0]) == jour for l in lignes_ventes)
 
 
-def enregistrer(g, z: Z, lignes_ventes: list[list[str]]) -> bool:
+def enregistrer(g, z: Z, lignes_ventes: list[list[str]], detail: z_pdf.DetailZ | None = None) -> bool:
     """Inscrit le Z dans le tableur, une seule fois par jour. Renvoie True si inscrit."""
     if deja_enregistre(lignes_ventes, z.jour):
         return False
-    g.ajouter("Ventes", [[z.jour.isoformat(), z.ca_ttc, z.ca_ht, z.ticket_moyen, z.tickets, z.offerts,
-                          z.corrections_avant, z.corrections_apres, z.annulations]])
+    tickets = detail.tickets if detail and detail.tickets else z.tickets
+    complement = ([z_pdf.total_cb(detail), z_pdf.salle(detail, "livraison"), z_pdf.salle(detail, "emporter")]
+                  if detail else ["", "", ""])
+    g.ajouter("Ventes", [[z.jour.isoformat(), z.ca_ttc, z.ca_ht, z.ticket_moyen, tickets, z.offerts,
+                          z.corrections_avant, z.corrections_apres, z.annulations,
+                          *["" if v is None else v for v in complement]]])
     g.ajouter("Ventes produits", [[z.jour.isoformat(), v.categorie, v.produit, v.quantite, v.ttc, v.ht]
                                   for v in z.ventes])
     lignes_ventes.append([z.jour.isoformat()])

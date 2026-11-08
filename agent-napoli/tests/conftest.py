@@ -74,7 +74,7 @@ class FauxGoogle:
     def lister(self, dossier):
         return self.fichiers_a_traiter
 
-    def telecharger(self, id_):
+    def telecharger(self, id_, mime=""):
         return self.contenus_drive.get(id_, b"%PDF-1.4 faux")
 
     def deplacer(self, id_, vers, nom):
