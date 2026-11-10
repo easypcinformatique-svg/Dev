@@ -1013,6 +1013,73 @@ for path in pages:
             f.write(c)
         log(rel, "normalisée")
 
+# ---------- politique de confidentialité ----------
+# Exigée par Google pour publier l'application « Agent Pizza Napoli » (accès Gmail,
+# Drive, Sheets, Agenda du compte de la pizzeria) ; couvre aussi le site lui-même.
+# Créée seulement si absente : une version retouchée à la main n'est pas écrasée.
+confid = os.path.join(SITE, "confidentialite.html")
+if not os.path.exists(confid):
+    with open(confid, "w", encoding="utf-8") as f:
+        f.write(f'''<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Politique de confidentialité — Pizza Napoli Carpentras</title>
+<meta name="description" content="Données personnelles traitées par Pizza Napoli Carpentras : commandes, mesure d'audience, et outil interne de gestion.">
+<link rel="canonical" href="{HOST}/confidentialite.html">
+<style>
+body{{margin:0;font-family:system-ui,sans-serif;background:#FFFDF7;color:#3D3328;line-height:1.7;}}
+main{{max-width:760px;margin:0 auto;padding:32px 20px 64px;}}
+h1{{color:#A8202A;font-size:clamp(1.6rem,4vw,2.1rem);line-height:1.25;}}
+h2{{font-size:1.15rem;margin-top:2rem;}}
+a{{color:#A8202A;}}
+.r{{font-size:.85rem;color:#5A5248;}}
+</style></head>
+<body><main>
+<p class="r"><a href="{HOST}/">← Retour à l'accueil</a></p>
+<h1>Politique de confidentialité</h1>
+<p class="r">Dernière mise à jour : novembre 2026</p>
+
+<h2>Qui sommes-nous</h2>
+<p>Le responsable du traitement est la SARL Pizza Napoli Carpentras, 209 avenue Pierre Sémard,
+84200 Carpentras (SIRET 952 676 310 00016). Contact : carpentraspizzanapoli@gmail.com,
+07 61 08 36 08.</p>
+
+<h2>Commandes passées sur le site</h2>
+<p>Quand vous commandez, nous recevons votre nom, votre téléphone, votre adresse de livraison et le
+contenu de la commande, transmis par e-mail via le service Web3Forms, ou par WhatsApp si vous
+choisissez ce canal. Ces informations servent uniquement à préparer et livrer votre commande. Elles
+sont conservées le temps nécessaire à la gestion des commandes et aux obligations comptables.</p>
+
+<h2>Mesure d'audience</h2>
+<p>Le site utilise Google Analytics uniquement si vous l'acceptez dans le bandeau de consentement.
+Sans votre accord, aucun cookie de mesure n'est déposé. Vous pouvez changer d'avis à tout moment en
+effaçant les données du site dans votre navigateur.</p>
+
+<h2>Outil interne de gestion « Agent Pizza Napoli »</h2>
+<p>Pizza Napoli utilise un outil interne, « Agent Pizza Napoli », qui accède avec son autorisation
+au seul compte Google de la pizzeria (carpentraspizzanapoli@gmail.com) : Gmail, Google Drive,
+Google Sheets et Google Agenda. Il sert exclusivement à la gestion de l'entreprise : lecture des
+tickets de caisse et des factures fournisseurs, classement des e-mails, préparation de brouillons de
+réponse, archivage des documents, suivi du chiffre d'affaires et des échéances. Il n'est ni proposé
+ni accessible au public.</p>
+<p>Les e-mails et documents lus peuvent être analysés par le service d'intelligence artificielle
+Claude (Anthropic) pour être classés et résumés. Ces données ne sont ni vendues, ni cédées, ni
+utilisées à des fins publicitaires.</p>
+<p>L'utilisation et le transfert vers toute autre application des informations reçues des API
+Google respectent la <a href="https://developers.google.com/terms/api-services-user-data-policy">politique
+relative aux données utilisateur des services API Google</a>, y compris les exigences d'utilisation
+limitée (« Limited Use »).</p>
+<p>Cet accès peut être retiré à tout moment depuis
+<a href="https://myaccount.google.com/permissions">les autorisations du compte Google</a>.</p>
+
+<h2>Vos droits</h2>
+<p>Vous disposez d'un droit d'accès, de rectification, d'effacement, d'opposition et de limitation
+du traitement de vos données. Écrivez-nous à carpentraspizzanapoli@gmail.com. Vous pouvez aussi
+adresser une réclamation à la CNIL (<a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+</main></body></html>
+''')
+    print("  [confidentialite.html] politique de confidentialité créée")
+
 # ---------- custom 404 ----------
 # GitHub Pages serves its own English "Page not found" otherwise: no branding,
 # no navigation, no phone number.
