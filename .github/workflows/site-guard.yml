@@ -39,7 +39,7 @@ jobs:
       - name: Commit and push (rebase + retry)
         run: |
           cd site
-          if git diff --quiet; then echo "Site conforme, rien à pousser"; exit 0; fi
+          if [ -z "$(git status --porcelain)" ]; then echo "Site conforme, rien à pousser"; exit 0; fi
           git add -A
           git commit -q -m "Site guard: normalisation automatique (rating, canonicals, sitemap, images)"
           for i in 1 2 3 4 5; do
