@@ -1,0 +1,2 @@
+date;jour_semaine;ca_ttc;ca_ht;tickets;ticket_moyen;corr_avant;corr_avant_pct;corr_apres;corr_apres_pct;annulations;annulations_pct;offerts;offerts_pct;remises;total_ecarts;total_ecarts_pct;alertes
+2026-08-14;vendredi;928.6;843.81;27;34.39;150.1;16.16;0.0;0.0;65.8;7.09;186.5;20.08;0.0;402.4;43.33;corr_avant annulations offerts
