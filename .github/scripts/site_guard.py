@@ -540,13 +540,23 @@ for path in pages:
     # so it must not promise one channel.
     c = c.replace("🍕 Commander par WhatsApp", "🍕 Commander")
 
-    # La photo de bannière, fournie par la pizzeria. Le voile sombre doit suivre
-    # la photo : celle d'avant était foncée, celle-ci est claire au milieu, et
-    # un voile à 15 % y laissait le sous-titre illisible (2,9:1 mesuré, sous le
-    # seuil de 3:1 pour du grand texte). À 44 % il passe à 5,7:1.
+    # La photo de bannière, fournie par la pizzeria. Un voile uniforme rendait
+    # bien le texte lisible mais éteignait la pizza sur toute la largeur. Il est
+    # remplacé par un voile localisé : sombre là où se trouve le texte, presque
+    # nul sur les bords, où la photo reste vive. Mesuré : 6,35:1 derrière le
+    # sous-titre contre 5,64 avec le voile uniforme, et un bord deux fois plus
+    # lumineux. Le pseudo-élément qui assombrissait les bords faisait l'inverse
+    # de ce qu'on cherche ; il part.
     c = c.replace("hero1.webp", "hero-mozza.webp").replace("hero1.jpg", "hero-mozza.jpg")
-    c = c.replace("linear-gradient(to bottom,rgba(0,0,0,.50) 0%,rgba(0,0,0,.15) 40%,rgba(0,0,0,.60) 100%)",
-                  "linear-gradient(to bottom,rgba(0,0,0,.58) 0%,rgba(0,0,0,.44) 40%,rgba(0,0,0,.66) 100%)")
+    for _plat in ("linear-gradient(to bottom,rgba(0,0,0,.50) 0%,rgba(0,0,0,.15) 40%,rgba(0,0,0,.60) 100%)",
+                  "linear-gradient(to bottom,rgba(0,0,0,.58) 0%,rgba(0,0,0,.44) 40%,rgba(0,0,0,.66) 100%)"):
+        c = c.replace(_plat,
+                      "radial-gradient(ellipse 58% 48% at 50% 48%,rgba(0,0,0,.72) 0%,"
+                      "rgba(0,0,0,.5) 55%,rgba(0,0,0,.12) 82%,rgba(0,0,0,.05) 100%)")
+    c = c.replace(".hero::before{content:'';position:absolute;inset:0;"
+                  "background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.35) 100%);}",
+                  ".hero::before{content:'';position:absolute;inset:0;"
+                  "background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.12) 100%);}")
 
     # L'écran d'intro au drapeau bloquait la page 2 secondes à chaque visite :
     # 1,2 s d'attente puis 0,8 s de fondu. Ramené à 0,7 s au total. Les textes
