@@ -469,6 +469,31 @@ for path in pages:
         t = re.sub(r'\s*\|\s*Pizza Napoli\s*—\s*Pâte Maison dès 7€90\s*$', ' | Pizza Napoli', t)
         t = re.sub(r'\s*\|\s*La Meilleure Pizza du Vaucluse depuis 2008\s*$', ' | Depuis 2008', t)
         t = re.sub(r'\s{2,}', ' ', t).strip(" |—-")
+
+        # Au-delà de 60 caractères Google coupe, et c'est la marque en fin de
+        # titre qui disparaît. On retire d'abord les segments de queue, puis
+        # les tournures décoratives, et on remet une marque courte s'il reste
+        # de la place. Aucun mot-clé de recherche n'est retiré.
+        if len(unescape(t)) > 60:
+            bouts = [x for x in re.split(r'\s*[|—]\s*', t) if x.strip()]
+            while len(bouts) > 1 and len(unescape(" | ".join(bouts))) > 60:
+                bouts.pop()
+            t = " | ".join(bouts)
+            if len(unescape(t)) > 60:
+                for deco in (" ? Sorties, Patrimoine + Pizza", " ? Sorties &amp; Pizza",
+                             " ? Marchés, Sorties &amp; Pizza", " ? Sorties, Patrimoine &amp; Pizza",
+                             " — Toutes Vos Questions", " — Guide Pratique",
+                             " : Pourquoi Ça Change Tout"):
+                    if deco in t:
+                        t = t.replace(deco, " ?" if deco.startswith(" ?") else "")
+            # Titre d'un seul tenant : la partie après le deux-points est une
+            # glose, le mot-clé est avant.
+            if len(unescape(t)) > 60 and " : " in t:
+                t = t.split(" : ")[0].strip()
+            if "Pizza Napoli" not in t and len(unescape(t)) + 15 <= 60:
+                t += " | Pizza Napoli"
+            t = re.sub(r'\s{2,}', ' ', t).strip(" |—-")
+
         # Measure what the reader sees: &amp; is one character, not five.
         shown, was = len(unescape(t)), len(unescape(old))
         if t != old and shown <= 65:
@@ -477,6 +502,21 @@ for path in pages:
         return m.group(0)
 
     c = re.sub(r'<title>([^<]*)</title>', trim_title, c)
+
+    # Une description de plus de 165 caractères est coupée dans les résultats,
+    # et c'est la fin — souvent l'appel à l'action — qui saute. On coupe sur
+    # une frontière de phrase ou de mot, jamais au milieu.
+    def trim_desc(m):
+        avant, d = m.group(1), unescape(m.group(2))
+        if len(d) <= 165:
+            return m.group(0)
+        coupe = d[:158]
+        point = max(coupe.rfind(". "), coupe.rfind(" · "), coupe.rfind(" — "))
+        d2 = (coupe[:point + 1] if point > 90 else coupe[:coupe.rfind(" ")] + "…").strip()
+        log(rel, f"meta description {len(d)} -> {len(d2)} car.")
+        return f'{avant}{d2}"'
+
+    c = re.sub(r'(<meta name="description" content=")([^"]*)"', trim_desc, c)
 
     # Pizzas must be named as the menu names them: "Margharita" appeared 18
     # times against 10 correct spellings, including in a title. This runs
