@@ -50,4 +50,5 @@ jobs:
           done
           echo "::error::Push impossible après 5 tentatives"; exit 1
       - name: Récapitulatif
-        run: echo "Site en ligne : https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/amks-autos/" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Site en ligne : https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/amks-autos/" >> "$GITHUB_STEP_SUMMARY"
