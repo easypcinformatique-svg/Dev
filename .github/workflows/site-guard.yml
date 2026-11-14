@@ -54,7 +54,7 @@ jobs:
         run: |
           echec=0
           for t in bouton-commande offres-boisson parcours-commande carte \
-                   notification-commande consentement dom-rendu acces-commande; do
+                   notification-commande consentement dom-rendu acces-commande banniere; do
             echo "::group::$t"
             if node "tests/$t.js"; then echo "$t : OK"; else echo "::error::$t a échoué"; echec=1; fi
             echo "::endgroup::"

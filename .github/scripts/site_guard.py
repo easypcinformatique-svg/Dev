@@ -13,7 +13,7 @@ Invariants:
   7. foundingDate 2008 everywhere
   8. One Facebook URL
 """
-import re, os, sys, glob, json, subprocess, unicodedata
+import re, os, sys, glob, json, shutil, subprocess, unicodedata
 from datetime import date
 from html import unescape
 
@@ -320,6 +320,16 @@ FAVICONS = "\n".join(
 
 print(f"Source of truth: {RATING}/5 — {COUNT} avis · {len(MENU)} pizzas, dès {euro(MIN_PRICE)}\n")
 
+# ---------- médias fournis par la pizzeria ----------
+# Le guard travaille sur un clone de la production, où ces fichiers n'existent
+# pas encore : ils sont versionnés ici et déposés dans le site au passage.
+MEDIAS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "medias")
+for _src in sorted(glob.glob(os.path.join(MEDIAS, "*"))):
+    _dst = os.path.join(SITE, os.path.basename(_src))
+    if not os.path.exists(_dst) or os.path.getsize(_dst) != os.path.getsize(_src):
+        shutil.copy2(_src, _dst)
+        log(os.path.basename(_src), "média déposé dans le site")
+
 # ---------- per-page invariants ----------
 pages = sorted(glob.glob(os.path.join(SITE, "**", "*.html"), recursive=True))
 for path in pages:
@@ -529,6 +539,14 @@ for path in pages:
     # 6g. the CTA opens the online form before 17h30 and the phone modal after,
     # so it must not promise one channel.
     c = c.replace("🍕 Commander par WhatsApp", "🍕 Commander")
+
+    # La photo de bannière, fournie par la pizzeria. Le voile sombre doit suivre
+    # la photo : celle d'avant était foncée, celle-ci est claire au milieu, et
+    # un voile à 15 % y laissait le sous-titre illisible (2,9:1 mesuré, sous le
+    # seuil de 3:1 pour du grand texte). À 44 % il passe à 5,7:1.
+    c = c.replace("hero1.webp", "hero-mozza.webp").replace("hero1.jpg", "hero-mozza.jpg")
+    c = c.replace("linear-gradient(to bottom,rgba(0,0,0,.50) 0%,rgba(0,0,0,.15) 40%,rgba(0,0,0,.60) 100%)",
+                  "linear-gradient(to bottom,rgba(0,0,0,.58) 0%,rgba(0,0,0,.44) 40%,rgba(0,0,0,.66) 100%)")
 
     # 6h. accents dropped by a generator that transliterated to ASCII.
     # Text nodes only: attributes carry file names and URLs, and accenting
