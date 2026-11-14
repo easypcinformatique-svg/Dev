@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /gerance.html
+Sitemap: https://amks-autos.fr/sitemap.xml

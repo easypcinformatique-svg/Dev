@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Échéances AMKS Autos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Tableau de bord des échéances : synthèse en tête, puis liste groupée par urgence. */
+:root {
+  --ink: #050506; --signal: #C9A45C; --signal-ink: #0A0908;
+  --bg: #F3F5F7; --card: #FFFFFF; --tint: #E7ECF0; --fg: #12202D; --muted: #5A6976; --line: #D5DCE3;
+  --ok: #1F8A4C; --warn: #A86400; --bad: #C0362C; --info: #2B5FAE;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0B131C; --card: #13202C; --tint: #0F1A25; --fg: #E4EAF0; --muted: #94A3B1; --line: #233343;
+  --ok: #4CC17E; --warn: #E5A33B; --bad: #EF6B60; --info: #7FA8EA; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0B131C; --card: #13202C; --tint: #0F1A25; --fg: #E4EAF0; --muted: #94A3B1; --line: #233343;
+  --ok: #4CC17E; --warn: #E5A33B; --bad: #EF6B60; --info: #7FA8EA; color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--f-body); }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
+header.top { background: var(--ink); color: #EEF2F5; }
+.top-in { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding-block: 18px; }
+.top h1 { margin: 0; font: 800 1.35rem/1.1 var(--f-display); font-stretch: 96%; }
+.top small { display: block; color: #A9B6C2; font: 400 .82rem/1.3 var(--f-body); margin-top: 4px; }
+.top-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--card); color: var(--fg); font: 600 .88rem/1 var(--f-body); cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--signal); }
+.btn-signal { background: var(--signal); border-color: var(--signal); color: var(--signal-ink); }
+.top .btn:not(.btn-signal) { background: transparent; color: #EEF2F5; border-color: rgba(255,255,255,.22); }
+main { padding-block: 24px 64px; display: grid; gap: 22px; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.kpi b { font: 700 1.9rem/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: .84rem; }
+.kpi.bad b { color: var(--bad); } .kpi.warn b { color: var(--warn); } .kpi.ok b { color: var(--ok); }
+.kpi[aria-pressed="true"] { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); }
+.bar { height: 8px; border-radius: 99px; background: var(--tint); overflow: hidden; margin-top: 6px; }
+.bar i { display: block; height: 100%; background: var(--ok); border-radius: 99px; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tools input, .tools select, .form input, .form select, .form textarea, .import textarea { min-height: 40px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); font: 400 .92rem/1.3 var(--f-body); }
+.tools input { flex: 1 1 220px; min-width: 0; }
+.tools select { flex: 0 1 180px; min-width: 0; }
+.group { display: grid; gap: 8px; }
+.group h2 { margin: 6px 0 2px; font: 700 .78rem/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.group h2 em { font-style: normal; font-family: var(--f-mono); background: var(--tint); padding: 3px 7px; border-radius: 99px; color: var(--fg); }
+.item { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 10px; display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 4px 16px; padding: 14px 16px; align-items: start; }
+.item.bad { border-left-color: var(--bad); } .item.warn { border-left-color: var(--warn); } .item.ok { border-left-color: var(--ok); opacity: .78; } .item.info { border-left-color: var(--info); }
+.date { font-family: var(--f-mono); text-align: center; line-height: 1.05; padding-top: 2px; }
+.date b { display: block; font-size: 1.5rem; }
+.date span { font-size: .72rem; text-transform: uppercase; color: var(--muted); }
+.date.none { font-size: .72rem; color: var(--muted); font-family: var(--f-body); }
+.main { min-width: 0; display: grid; gap: 6px; }
+.main h3 { margin: 0; font: 600 1rem/1.35 var(--f-body); }
+.ok .main h3 { text-decoration: line-through; text-decoration-color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .8rem; color: var(--muted); }
+.tag { padding: 3px 8px; border-radius: 6px; background: var(--tint); color: var(--fg); font-weight: 500; }
+.tag.p1 { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.tag.p2 { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+.tag.cat { background: color-mix(in srgb, var(--info) 14%, transparent); color: var(--info); }
+.due { font-weight: 600; }
+.bad .due { color: var(--bad); } .warn .due { color: var(--warn); }
+details.det summary { cursor: pointer; color: var(--muted); font-size: .84rem; width: fit-content; }
+details.det p { margin: 6px 0 0; font-size: .88rem; color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; max-width: 85ch; }
+.side { display: grid; gap: 6px; justify-items: end; }
+.side select { min-height: 36px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--card); color: var(--fg); font: 500 .84rem var(--f-body); }
+.link { background: none; border: 0; color: var(--muted); cursor: pointer; font: 500 .8rem var(--f-body); text-decoration: underline; padding: 4px 0; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; }
+.panel h2 { margin: 0; font: 700 1.1rem/1.2 var(--f-display); }
+.form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.form label { display: grid; gap: 4px; font: 600 .8rem var(--f-body); min-width: 0; }
+.form .wide { grid-column: span 2; } .form .full { grid-column: 1 / -1; }
+.import textarea { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: .8rem; }
+.note { color: var(--muted); font-size: .85rem; margin: 0; max-width: 80ch; }
+.empty { border: 1.5px dashed var(--line); border-radius: 12px; padding: 28px; color: var(--muted); display: grid; gap: 10px; justify-items: start; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 16px); opacity: 0; transition: .2s; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; pointer-events: none; z-index: 20; max-width: calc(100% - 32px); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpis .kpi:first-child { grid-column: 1 / -1; } .form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .item { grid-template-columns: 56px minmax(0, 1fr); }
+  .side { grid-column: 1 / -1; justify-items: start; grid-auto-flow: column; justify-content: start; align-items: center; gap: 12px; }
+  .form { grid-template-columns: minmax(0, 1fr); } .form .wide { grid-column: auto; }
+  .top-actions { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <div><h1>Échéances AMKS Autos</h1><small id="sub">Espace gérance · données conservées dans ce navigateur uniquement</small></div>
+    <div class="top-actions">
+      <button class="btn btn-signal" type="button" id="b-add">Ajouter une échéance</button>
+      <button class="btn" type="button" id="b-import">Importer du tableur</button>
+      <button class="btn" type="button" id="b-copy">Copier pour le tableur</button>
+      <a class="btn" id="b-ics">Exporter vers l'agenda</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="kpis" id="kpis" aria-label="Synthèse"></section>
+
+  <section class="panel" id="p-add" hidden>
+    <h2 id="f-title">Nouvelle échéance</h2>
+    <form class="form" id="form">
+      <label class="wide">Tâche<input id="f-tache" required></label>
+      <label>Responsable<input id="f-resp" list="resps"></label>
+      <label>Échéance<input id="f-date" type="date"></label>
+      <label>Priorité<select id="f-prio"><option value="1">1 Urgent</option><option value="2" selected>2 Important</option><option value="3">3 Ensuite</option></select></label>
+      <label>Statut<select id="f-statut"></select></label>
+      <label>Catégorie<input id="f-cat" list="cats" placeholder="Fiscal, Banque, Bailleur…"></label>
+      <label>Récurrence<select id="f-rec"><option value="">Unique</option><option value="1">Mensuelle</option><option value="3">Trimestrielle</option><option value="12">Annuelle</option></select></label>
+      <label class="full">Détail<textarea id="f-detail" rows="3"></textarea></label>
+      <div class="full" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-signal" type="submit">Enregistrer</button><button class="btn" type="button" id="f-cancel">Annuler</button><button class="btn" type="button" id="f-del" hidden>Supprimer</button></div>
+    </form>
+    <datalist id="resps"></datalist><datalist id="cats"></datalist>
+  </section>
+
+  <section class="panel import" id="p-import" hidden>
+    <h2>Importer depuis Google Sheets</h2>
+    <p class="note">Dans l'onglet « To do redressement », sélectionnez les lignes à partir de l'en-tête (N°, Priorité, Tâche, Responsable, Échéance, Statut, Fait le, Détail), copiez, puis collez ci-dessous. Les colonnes sont reconnues par leur nom. L'import remplace la liste actuelle.</p>
+    <label for="imp-txt" class="note">Lignes copiées</label>
+    <textarea id="imp-txt" placeholder="N°&#9;Priorité&#9;Tâche&#9;Responsable&#9;Échéance&#9;Statut&#9;Fait le&#9;Détail"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-signal" type="button" id="imp-go">Importer</button><button class="btn" type="button" id="imp-cancel">Annuler</button></div>
+    <p class="note" id="imp-msg" role="status"></p>
+  </section>
+
+  <section class="tools" aria-label="Filtres">
+    <label class="sr" for="q" hidden>Rechercher</label>
+    <input id="q" type="search" placeholder="Rechercher une tâche, un organisme, un montant…" aria-label="Rechercher">
+    <select id="fr" aria-label="Responsable"><option value="">Tous les responsables</option></select>
+    <select id="fp" aria-label="Priorité"><option value="">Toutes priorités</option><option value="1">1 Urgent</option><option value="2">2 Important</option><option value="3">3 Ensuite</option></select>
+  </section>
+
+  <div id="list" style="display:grid;gap:20px"></div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "amks-echeances-v1";
+  var STATUTS = ["À faire", "En cours", "En attente", "À vérifier", "Terminé"];
+  var MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  var $ = function (s) { return document.querySelector(s); };
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  var iso = function (d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+  var parseIso = function (v) { if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null; var p = v.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); };
+  var frToIso = function (v) { var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((v || "").trim()); return m ? m[3] + "-" + pad(+m[2]) + "-" + pad(+m[1]) : ""; };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var filtre = "", items = [], editId = null;
+
+  function toast(m) { var t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove("on"); }, 2400); }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
+  function load() {
+    try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (Array.isArray(s) && s.length) return s; } catch (e) {}
+    if (Array.isArray(window.ECHEANCES_INITIALES)) return JSON.parse(JSON.stringify(window.ECHEANCES_INITIALES));
+    return [];
+  }
+  var uid = function () { return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); };
+
+  function etat(it) {
+    if (it.statut === "Terminé") return { cls: "ok", grp: "fait", txt: it.faitLe ? "Fait le " + it.faitLe : "Terminé" };
+    var d = parseIso(it.echeance);
+    if (!d) return { cls: "info", grp: "sans", txt: it.echeanceTexte || "Sans date" };
+    var j = Math.round((d - today) / 864e5);
+    if (j < 0) return { cls: "bad", grp: "retard", txt: "En retard de " + (-j) + " j", j: j };
+    if (j <= 7) return { cls: "warn", grp: "semaine", txt: j === 0 ? "Aujourd'hui" : j === 1 ? "Demain" : "Dans " + j + " jours", j: j };
+    return { cls: "", grp: "plus", txt: "Dans " + j + " jours", j: j };
+  }
+
+  function kpis() {
+    var c = { retard: 0, semaine: 0, plus: 0, sans: 0, fait: 0 };
+    items.forEach(function (it) { c[etat(it).grp]++; });
+    var tot = items.length, pct = tot ? Math.round(c.fait / tot * 100) : 0;
+    var K = [
+      { k: "", cls: "", v: pct + " %", l: c.fait + " terminées sur " + tot, bar: pct },
+      { k: "retard", cls: c.retard ? "bad" : "ok", v: c.retard, l: "en retard" },
+      { k: "semaine", cls: c.semaine ? "warn" : "", v: c.semaine, l: "dans les 7 jours" },
+      { k: "plus", cls: "", v: c.plus + c.sans, l: "à venir ou sans date" },
+      { k: "fait", cls: "ok", v: c.fait, l: "terminées" }
+    ];
+    $("#kpis").innerHTML = K.map(function (x) {
+      return '<button type="button" class="kpi ' + x.cls + '" data-k="' + x.k + '" aria-pressed="' + (filtre === x.k && x.k !== "") + '"><b>' + x.v + "</b><span>" + x.l + "</span>" +
+        (x.bar != null ? '<div class="bar"><i style="width:' + x.bar + '%"></i></div>' : "") + "</button>";
+    }).join("");
+  }
+
+  var GROUPES = [["retard", "En retard"], ["semaine", "Cette semaine"], ["plus", "À venir"], ["sans", "Date à fixer"], ["fait", "Terminées"]];
+  function render() {
+    kpis();
+    var q = $("#q").value.trim().toLowerCase(), fr = $("#fr").value, fp = $("#fp").value;
+    var resps = {}, cats = {};
+    items.forEach(function (it) { (it.resp || "").split(/\s*[+\/]\s*/).forEach(function (r) { if (r) resps[r] = 1; }); if (it.cat) cats[it.cat] = 1; });
+    var cur = fr; $("#fr").innerHTML = '<option value="">Tous les responsables</option>' + Object.keys(resps).sort().map(function (r) { return "<option" + (r === cur ? " selected" : "") + ">" + esc(r) + "</option>"; }).join("");
+    $("#resps").innerHTML = Object.keys(resps).map(function (r) { return "<option>" + esc(r) + "</option>"; }).join("");
+    $("#cats").innerHTML = Object.keys(cats).map(function (r) { return "<option>" + esc(r) + "</option>"; }).join("");
+
+    var vis = items.filter(function (it) {
+      var e = etat(it);
+      if (filtre === "plus" ? (e.grp !== "plus" && e.grp !== "sans") : (filtre && e.grp !== filtre)) return false;
+      if (fr && (it.resp || "").indexOf(fr) < 0) return false;
+      if (fp && String(it.prio) !== fp) return false;
+      if (q && (it.tache + " " + it.detail + " " + it.resp + " " + (it.cat || "")).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    var L = $("#list");
+    if (!items.length) {
+      L.innerHTML = '<div class="empty"><strong>Aucune échéance enregistrée.</strong><span>Importez le plan d\'actions depuis le tableur Google Sheets, ou ajoutez une première échéance. Les données restent dans ce navigateur : rien n\'est envoyé sur Internet.</span><button class="btn btn-signal" type="button" onclick="document.getElementById(\'b-import\').click()">Importer du tableur</button></div>';
+      return;
+    }
+    L.innerHTML = "";
+    GROUPES.forEach(function (g) {
+      var rows = vis.filter(function (it) { return etat(it).grp === g[0]; }).sort(function (a, b) {
+        return (a.echeance || "9") < (b.echeance || "9") ? -1 : (a.echeance || "9") > (b.echeance || "9") ? 1 : a.prio - b.prio;
+      });
+      if (!rows.length) return;
+      var sec = document.createElement("section"); sec.className = "group";
+      sec.innerHTML = "<h2>" + g[1] + " <em>" + rows.length + "</em></h2>";
+      rows.forEach(function (it) {
+        var e = etat(it), d = parseIso(it.echeance), el = document.createElement("article");
+        el.className = "item " + e.cls;
+        el.innerHTML = (d ? '<div class="date"><b>' + pad(d.getDate()) + "</b><span>" + MOIS[d.getMonth()] + "<br>" + d.getFullYear() + "</span></div>" : '<div class="date none">' + esc(it.echeanceTexte || "Sans date") + "</div>") +
+          '<div class="main"><h3>' + esc(it.tache) + '</h3><div class="meta"><span class="tag p' + it.prio + '">' + ["", "Urgent", "Important", "Ensuite"][it.prio] + "</span>" +
+          (it.cat ? '<span class="tag cat">' + esc(it.cat) + "</span>" : "") + (it.resp ? "<span>" + esc(it.resp) + "</span>" : "") + '<span class="due">· ' + esc(e.txt) + "</span>" +
+          (it.rec ? "<span>· " + { 1: "mensuelle", 3: "trimestrielle", 12: "annuelle" }[it.rec] + "</span>" : "") + "</div>" +
+          (it.detail ? '<details class="det"><summary>Détail et pièces</summary><p>' + esc(it.detail) + "</p></details>" : "") + "</div>" +
+          '<div class="side"><select aria-label="Statut">' + STATUTS.map(function (s) { return "<option" + (s === it.statut ? " selected" : "") + ">" + s + "</option>"; }).join("") + '</select><button class="link" type="button">Modifier</button></div>';
+        el.querySelector("select").addEventListener("change", function (ev) { setStatut(it, ev.target.value); });
+        el.querySelector(".link").addEventListener("click", function () { openForm(it); });
+        sec.appendChild(el);
+      });
+      L.appendChild(sec);
+    });
+    if (!vis.length) L.innerHTML = '<div class="empty">Aucune échéance ne correspond à ces filtres.</div>';
+  }
+
+  function addMonths(d, n) { var r = new Date(d), day = r.getDate(); r.setDate(1); r.setMonth(r.getMonth() + n); r.setDate(Math.min(day, new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate())); return r; }
+  function setStatut(it, s) {
+    it.statut = s;
+    if (s === "Terminé") {
+      var t = new Date(); it.faitLe = pad(t.getDate()) + "/" + pad(t.getMonth() + 1) + "/" + t.getFullYear();
+      if (it.rec && it.echeance) { // échéance récurrente : la suivante est créée
+        var n = JSON.parse(JSON.stringify(it)); n.id = uid(); n.statut = "À faire"; n.faitLe = ""; n.echeance = iso(addMonths(parseIso(it.echeance), +it.rec));
+        items.push(n); toast("Terminé. Prochaine échéance créée au " + n.echeance.split("-").reverse().join("/") + ".");
+      } else toast("Marquée comme terminée.");
+    } else { it.faitLe = ""; toast("Statut : " + s + "."); }
+    save(); render();
+  }
+
+  /* Formulaire */
+  $("#f-statut").innerHTML = STATUTS.map(function (s) { return "<option>" + s + "</option>"; }).join("");
+  function openForm(it) {
+    editId = it ? it.id : null; $("#p-import").hidden = true; $("#p-add").hidden = false;
+    $("#f-title").textContent = it ? "Modifier l'échéance" : "Nouvelle échéance"; $("#f-del").hidden = !it;
+    $("#f-tache").value = it ? it.tache : ""; $("#f-resp").value = it ? it.resp : ""; $("#f-date").value = it ? (it.echeance || "") : "";
+    $("#f-prio").value = it ? it.prio : 2; $("#f-statut").value = it ? it.statut : "À faire"; $("#f-cat").value = it ? (it.cat || "") : "";
+    $("#f-rec").value = it ? (it.rec || "") : ""; $("#f-detail").value = it ? it.detail : "";
+    $("#p-add").scrollIntoView({ block: "start", behavior: "smooth" }); $("#f-tache").focus();
+  }
+  $("#b-add").addEventListener("click", function () { openForm(null); });
+  $("#f-cancel").addEventListener("click", function () { $("#p-add").hidden = true; });
+  var delArm = false;
+  $("#f-del").addEventListener("click", function () {
+    if (!delArm) { delArm = true; this.textContent = "Confirmer la suppression"; var b = this; setTimeout(function () { delArm = false; b.textContent = "Supprimer"; }, 4000); return; }
+    items = items.filter(function (x) { return x.id !== editId; }); save(); $("#p-add").hidden = true; render(); toast("Échéance supprimée.");
+  });
+  $("#form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = { tache: $("#f-tache").value.trim(), resp: $("#f-resp").value.trim(), echeance: $("#f-date").value, prio: +$("#f-prio").value, statut: $("#f-statut").value,
+      cat: $("#f-cat").value.trim(), rec: $("#f-rec").value ? +$("#f-rec").value : 0, detail: $("#f-detail").value.trim() };
+    if (!v.tache) { $("#f-tache").focus(); return; }
+    if (editId) { var it = items.filter(function (x) { return x.id === editId; })[0]; var was = it.statut; Object.assign(it, v); if (v.statut === "Terminé" && was !== "Terminé") { it.statut = was; setStatut(it, "Terminé"); } }
+    else { v.id = uid(); v.faitLe = ""; items.push(v); }
+    save(); $("#p-add").hidden = true; render(); toast("Échéance enregistrée.");
+  });
+
+  /* Import depuis le tableur (copier-coller TSV) */
+  $("#b-import").addEventListener("click", function () { $("#p-add").hidden = true; $("#p-import").hidden = false; $("#imp-txt").focus(); });
+  $("#imp-cancel").addEventListener("click", function () { $("#p-import").hidden = true; });
+  function parseTSV(t) { // gère les cellules entre guillemets contenant des retours à la ligne
+    var rows = [], row = [], cell = "", q = false;
+    for (var i = 0; i < t.length; i++) {
+      var c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"' && cell === "") q = true;
+      else if (c === "\t") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  $("#imp-go").addEventListener("click", function () {
+    var rows = parseTSV($("#imp-txt").value), h = -1;
+    for (var i = 0; i < rows.length; i++) if (rows[i].some(function (c) { return /^t[âa]che$/i.test(c.trim()); })) { h = i; break; }
+    if (h < 0) { $("#imp-msg").textContent = "En-tête introuvable : copiez aussi la ligne qui contient « Tâche », « Échéance », « Statut »."; return; }
+    var H = rows[h].map(function (c) { return c.trim().toLowerCase(); });
+    var col = function (re) { for (var k = 0; k < H.length; k++) if (re.test(H[k])) return k; return -1; };
+    var C = { prio: col(/^priorit/), tache: col(/^t[âa]che/), resp: col(/^respons/), ech: col(/^[ée]ch[ée]ance/), statut: col(/^statut/), fait: col(/^fait/), det: col(/^d[ée]tail/), cat: col(/^cat[ée]g/) };
+    var out = rows.slice(h + 1).filter(function (r) { return C.tache >= 0 && (r[C.tache] || "").trim(); }).map(function (r) {
+      var g = function (k) { return C[k] >= 0 ? (r[C[k]] || "").trim() : ""; };
+      var st = g("statut"); if (STATUTS.indexOf(st) < 0) st = /termin/i.test(st) ? "Terminé" : "À faire";
+      var e = g("ech"), ei = frToIso(e);
+      return { id: uid(), prio: +(g("prio").charAt(0)) || 2, tache: g("tache"), resp: g("resp"), echeance: ei, echeanceTexte: ei ? "" : e, statut: st, faitLe: g("fait"), detail: g("det"), cat: g("cat"), rec: 0 };
+    });
+    if (!out.length) { $("#imp-msg").textContent = "Aucune ligne de tâche trouvée sous l'en-tête."; return; }
+    items = out; save(); $("#p-import").hidden = true; $("#imp-txt").value = ""; render(); toast(out.length + " échéances importées.");
+  });
+
+  /* Export */
+  $("#b-copy").addEventListener("click", function () {
+    var lines = [["Priorité", "Tâche", "Responsable", "Échéance", "Statut", "Fait le", "Détail"].join("\t")].concat(items.map(function (it) {
+      return [["", "1 Urgent", "2 Important", "3 Ensuite"][it.prio], it.tache, it.resp, it.echeance ? it.echeance.split("-").reverse().join("/") : (it.echeanceTexte || ""), it.statut, it.faitLe || "",
+        '"' + (it.detail || "").replace(/"/g, '""') + '"'].join("\t");
+    }));
+    var t = lines.join("\n");
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { toast("Copié : collez dans Google Sheets."); }, function () { toast("Copie refusée par le navigateur."); });
+  });
+  function refreshIcs() {
+    var a = $("#b-ics"); if (window.MODE_APERCU) { a.hidden = true; return; }
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    var ev = items.filter(function (it) { return it.echeance && it.statut !== "Terminé"; }).map(function (it) {
+      var d = it.echeance.replace(/-/g, "");
+      return ["BEGIN:VEVENT", "UID:" + it.id + "@amks-autos", "DTSTAMP:" + stamp, "DTSTART;VALUE=DATE:" + d, "SUMMARY:Échéance : " + it.tache.replace(/[,;]/g, " "),
+        "DESCRIPTION:" + ((it.resp ? "Responsable : " + it.resp + "\\n" : "") + (it.detail || "")).replace(/\n/g, "\\n").replace(/[,;]/g, " "),
+        "BEGIN:VALARM", "TRIGGER:-P7D", "ACTION:DISPLAY", "DESCRIPTION:J-7", "END:VALARM", "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", "DESCRIPTION:J-1", "END:VALARM", "END:VEVENT"].join("\r\n");
+    });
+    var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//AMKS Autos//Echeances//FR"].concat(ev).concat(["END:VCALENDAR"]).join("\r\n");
+    if (a.href && a.href.indexOf("blob:") === 0) URL.revokeObjectURL(a.href);
+    a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = "echeances-amks-autos.ics";
+  }
+
+  $("#kpis").addEventListener("click", function (e) { var b = e.target.closest(".kpi"); if (!b) return; filtre = filtre === b.dataset.k ? "" : b.dataset.k; render(); });
+  ["#q", "#fr", "#fp"].forEach(function (s) { $(s).addEventListener("input", render); });
+  var _render = render; render = function () { _render(); refreshIcs(); };
+  if (window.SOURCE_DONNEES) $("#sub").textContent = window.SOURCE_DONNEES;
+  items = load(); render();
+})();
+</script>
+</body>
+</html>
