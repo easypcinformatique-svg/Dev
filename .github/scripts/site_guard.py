@@ -1509,6 +1509,51 @@ for path in pages:
         if c != avant:
             log(rel, f"bande de chiffres accordée ({COUNT} avis, {_recettes} recettes)")
 
+    # 6z8. Les sommaires des guides renvoient vers des ancres inexistantes : le
+    # lecteur clique et la page ne bouge pas. Trois causes, trois traitements —
+    # un identifiant nommé autrement, un titre sans identifiant, ou une section
+    # qui n'existe plus. Rien n'est inventé : si la section est absente, c'est
+    # l'entrée de sommaire qui part.
+    if 'href="#' in c and "<h2" in c:
+        def _slug(t):
+            t = re.sub(r"&#?\w+;", " ", t)
+            t = re.sub(r"<[^>]*>", " ", t)
+            return re.sub(r"[^a-z0-9]+", "-", sans_accent(t)).strip("-")
+
+        ids = set(re.findall(r'\sid="([^"]+)"', c))
+        repointes = poses = retires = 0
+        for href, label in re.findall(r'href="#([^"]+)"[^>]*>([^<]*)</a>', c):
+            if href in ids or not label.strip():
+                continue
+            s = _slug(label)
+            if s in ids:                                   # nommé autrement
+                c = c.replace(f'href="#{href}"', f'href="#{s}"')
+                repointes += 1
+                continue
+            pose = False
+            for niv, attrs, contenu in re.findall(r'<h([23])([^>]*)>(.*?)</h\1>', c, re.S):
+                if "id=" in attrs:
+                    continue
+                plat = _slug(contenu)
+                proche = plat == s or (len(min(plat, s, key=len)) >= 8
+                                       and (plat in s or s in plat))
+                if proche:
+                    c = c.replace(f"<h{niv}{attrs}>{contenu}</h{niv}>",
+                                  f'<h{niv} id="{href}"{attrs}>{contenu}</h{niv}>', 1)
+                    ids.add(href)
+                    poses += 1
+                    pose = True
+                    break
+            if pose:
+                continue
+            avant = c                                      # la section n'existe pas
+            c = re.sub(rf'\s*<li>\s*<a href="#{re.escape(href)}"[^>]*>[^<]*</a>\s*</li>', "", c)
+            if c != avant:
+                retires += 1
+        if repointes or poses or retires:
+            log(rel, f"sommaire : {repointes} lien(s) repointé(s), {poses} ancre(s) posée(s), "
+                     f"{retires} entrée(s) sans section retirée(s)")
+
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
     # phone modal by itself, so one label has to be true in both cases.
