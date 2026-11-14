@@ -540,23 +540,77 @@ for path in pages:
     # so it must not promise one channel.
     c = c.replace("🍕 Commander par WhatsApp", "🍕 Commander")
 
-    # La photo de bannière, fournie par la pizzeria. Un voile uniforme rendait
-    # bien le texte lisible mais éteignait la pizza sur toute la largeur. Il est
-    # remplacé par un voile localisé : sombre là où se trouve le texte, presque
-    # nul sur les bords, où la photo reste vive. Mesuré : 6,35:1 derrière le
-    # sous-titre contre 5,64 avec le voile uniforme, et un bord deux fois plus
-    # lumineux. Le pseudo-élément qui assombrissait les bords faisait l'inverse
-    # de ce qu'on cherche ; il part.
+    # La bannière reprend la charte du dépliant, choisie par la pizzeria : la
+    # photo reste entièrement vive, et le texte vit dans un panneau noir bordé
+    # d'or, comme les encadrés d'information au dos du dépliant. Le nom est
+    # composé comme sur le papier — P vert, N rouge, filet drapeau — et le
+    # numéro en Bebas Neue, la police du dépliant.
+    # Les classes d'origine sont conservées : le script qui change le libellé
+    # du bouton à 17h30 et les tests s'y accrochent.
     c = c.replace("hero1.webp", "hero-mozza.webp").replace("hero1.jpg", "hero-mozza.jpg")
-    for _plat in ("linear-gradient(to bottom,rgba(0,0,0,.50) 0%,rgba(0,0,0,.15) 40%,rgba(0,0,0,.60) 100%)",
-                  "linear-gradient(to bottom,rgba(0,0,0,.58) 0%,rgba(0,0,0,.44) 40%,rgba(0,0,0,.66) 100%)"):
-        c = c.replace(_plat,
-                      "radial-gradient(ellipse 58% 48% at 50% 48%,rgba(0,0,0,.72) 0%,"
-                      "rgba(0,0,0,.5) 55%,rgba(0,0,0,.12) 82%,rgba(0,0,0,.05) 100%)")
+    for _ancien in ("linear-gradient(to bottom,rgba(0,0,0,.50) 0%,rgba(0,0,0,.15) 40%,rgba(0,0,0,.60) 100%)",
+                    "linear-gradient(to bottom,rgba(0,0,0,.58) 0%,rgba(0,0,0,.44) 40%,rgba(0,0,0,.66) 100%)",
+                    "radial-gradient(ellipse 58% 48% at 50% 48%,rgba(0,0,0,.72) 0%,"
+                    "rgba(0,0,0,.5) 55%,rgba(0,0,0,.12) 82%,rgba(0,0,0,.05) 100%)"):
+        c = c.replace(_ancien, "linear-gradient(rgba(27,23,20,.22),rgba(27,23,20,.22))")
     c = c.replace(".hero::before{content:'';position:absolute;inset:0;"
                   "background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.35) 100%);}",
                   ".hero::before{content:'';position:absolute;inset:0;"
-                  "background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.12) 100%);}")
+                  "background:radial-gradient(ellipse at center,transparent 62%,rgba(0,0,0,.10) 100%);}")
+
+    if rel == "index.html" and "hero-panneau" not in c and '<section class="hero">' in c:
+        c = c.replace(
+            "family=Cinzel:wght@400;600;700;900&family=Josefin+Sans:wght@300;400;600;700",
+            "family=Cinzel:wght@400;600;700;900&family=Josefin+Sans:wght@300;400;600;700"
+            "&family=Playfair+Display:wght@700;900&family=Bebas+Neue&family=Manrope:wght@200;300;600", 1)
+        _i = c.find('<section class="hero">')
+        _j = c.find("</section>", _i)
+        _scroll = '<div class="hero-scroll"><div class="scroll-line"></div>Découvrir</div>'
+        c = c[:_i] + (
+            '<section class="hero"> <div class="hero-panneau">'
+            ' <div class="hero-badge">Pizzeria artisanale · Depuis 2008</div>'
+            ' <h1><span class="mv">P</span>izza <span class="mr">N</span>apoli<em>Carpentras</em></h1>'
+            ' <div class="hero-drapeau"><span></span><span></span><span></span></div>'
+            ' <p class="hero-sub">Pâte maison, ingrédients sélectionnés chaque jour.</p>'
+            ' <p class="hero-tel-label">Commandez au</p>'
+            ' <p class="hero-tel">07 61 08 36 08</p>'
+            ' <div class="hero-btns">'
+            ' <a href="#" onclick="openCommander();return false;" class="btn-primary btn-commander-online">🍕 Commander</a>'
+            ' <a href="#menu" class="btn-outline">Voir le menu</a>'
+            ' </div> </div> ' + _scroll + '\n'
+        ) + c[_j:]
+        c = c.replace("</head>",
+            "<style>\n"
+            ".hero-panneau{position:relative;z-index:3;background:rgba(27,23,20,.90);"
+            "border:1px solid #8C6E2E;border-radius:3px;padding:3rem 3.4rem 2.8rem;"
+            "max-width:720px;margin:0 1.2rem;box-shadow:0 30px 70px rgba(0,0,0,.5);"
+            "display:flex;flex-direction:column;align-items:center;text-align:center;}\n"
+            ".hero .hero-badge{background:none;border:none;padding:0;color:#D9AB4C;"
+            "text-shadow:none;font-family:'Manrope',sans-serif;font-size:.72rem;"
+            "letter-spacing:.26em;margin-bottom:1.4rem;}\n"
+            ".hero h1{font-family:'Playfair Display',serif;font-weight:900;color:#fff;"
+            "font-size:clamp(2.4rem,6vw,4.1rem);line-height:.98;margin-bottom:0;text-shadow:none;}\n"
+            ".hero h1 .mv{color:#1E7A3E;} .hero h1 .mr{color:#E2323A;}\n"
+            ".hero h1 em{display:block;font-family:'Playfair Display',serif;font-style:italic;"
+            "font-weight:700;color:#D9AB4C;font-size:.46em;margin-top:.18em;}\n"
+            ".hero-drapeau{display:flex;width:150px;height:6px;margin:1.1rem 0 0;"
+            "opacity:0;animation:fadeUp .8s ease forwards;animation-delay:1s;position:relative;z-index:2;}\n"
+            ".hero-drapeau span{flex:1} .hero-drapeau span:nth-child(1){background:#1E7A3E}"
+            ".hero-drapeau span:nth-child(2){background:#fff}"
+            ".hero-drapeau span:nth-child(3){background:#E2323A}\n"
+            ".hero .hero-sub{font-family:'Manrope',sans-serif;font-weight:200;color:#CDC6BB;"
+            "font-size:clamp(.95rem,1.8vw,1.05rem);letter-spacing:.04em;margin:1.7rem 0 0;}\n"
+            ".hero-tel-label{font-family:'Manrope',sans-serif;font-size:.68rem;letter-spacing:.3em;"
+            "text-transform:uppercase;color:#D9AB4C;font-weight:600;margin-top:1.6rem;"
+            "opacity:0;animation:fadeUp .9s ease forwards;animation-delay:1.05s;position:relative;z-index:2;}\n"
+            ".hero-tel{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.3rem,5.4vw,3.6rem);"
+            "color:#fff;letter-spacing:.07em;line-height:1.05;margin:0;"
+            "opacity:0;animation:fadeUp .9s ease forwards;animation-delay:1.1s;position:relative;z-index:2;}\n"
+            ".hero .hero-btns{margin-top:1.8rem;}\n"
+            ".hero .btn-outline{border-color:#D9AB4C;color:#D9AB4C;}\n"
+            "@media(max-width:640px){.hero-panneau{padding:2rem 1.4rem 1.8rem;}}\n"
+            "</style>\n</head>", 1)
+        log(rel, "bannière reprise sur la charte du dépliant (panneau bordé d'or)")
 
     # L'écran d'intro au drapeau bloquait la page 2 secondes à chaque visite :
     # 1,2 s d'attente puis 0,8 s de fondu. Ramené à 0,7 s au total. Les textes
@@ -1378,7 +1432,10 @@ for path in pages:
                       "function(b){var t=b.textContent.trim();"
                       "if(b.classList.contains('social-btn'))return;"
                       "if(t.indexOf('🍕')!==0&&t!=='Commander maintenant')return;"
-                      f"b.textContent='📞 Appeler pour commander — {tel}';"
+                      # Dans la bannière le numéro est déjà affiché en grand juste
+                      # au-dessus : le répéter dans le bouton le fait passer à la ligne.
+                      "b.textContent=b.closest('.hero-panneau')?'📞 Appeler pour commander':"
+                      f"'📞 Appeler pour commander — {tel}';"
                       f"b.setAttribute('href','tel:{tel.replace(' ', '')}');"
                       "b.setAttribute('onclick','');});}"
                       "window.addEventListener('load',libellerCommander);</script>\n</body>", 1)
