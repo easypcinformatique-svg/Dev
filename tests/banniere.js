@@ -20,7 +20,13 @@ const lum = (r, g, b) => 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(
 
   await page.goto(BASE + '/', { waitUntil: 'load' });
   const depart = Date.now();
-  await page.waitForSelector('#loader.hide', { timeout: 10000 });
+  // On attend la classe, pas la visibilité : une fois masqué, #loader porte
+  // visibility:hidden, donc waitForSelector ne le verrait jamais « visible ».
+  // Pendant les 350 ms de transition il l'est encore, d'où un test qui passait
+  // ou non selon la vitesse de la machine.
+  await page.waitForFunction(
+    () => document.getElementById('loader')?.classList.contains('hide'),
+    { timeout: 10000 });
   // L'intro ne doit pas retenir le visiteur : 1 s au plus avant que la page
   // soit utilisable, et les textes de la bannière doivent suivre tout de suite.
   const intro = Date.now() - depart;
