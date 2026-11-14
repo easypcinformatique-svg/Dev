@@ -26,6 +26,10 @@ HOST = "https://pizzanapolicarpentras.fr"
 # recipes and prices. Extracted from the October 2026 edition; see carte.json.
 CARTE = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     "..", "data", "carte.json"), encoding="utf-8"))
+# Company identity as the registry holds it (RCS Avignon, RNE, Insee, BODACC).
+# The legal pages are built from this rather than retyped.
+ENTREPRISE = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                         "..", "data", "entreprise.json"), encoding="utf-8"))
 FACEBOOK = "https://www.facebook.com/PizzaNapoliCarpentras/"
 FOUNDED = "2008"
 DUPLICATES = {  # page -> canonical target (content cannibalization)
@@ -1220,6 +1224,80 @@ for path in pages:
     c = re.sub(r'(Pernes-les-Fontaines, Mazan, Monteux, Aubignan), Sarrians(,? )', r'\1\2', c)
     c = re.sub(r', Sarrians(?=,? (et )?(Caromb|Saint-Didier|Loriol))', "", c)
     c = re.sub(r'(communes? (?:voisines?|environnantes?)[^.]{0,120}?), Sarrians\b', r'\1', c)
+
+    # T6 — the LCEN (article 6-III) and the code de commerce (R.123-237) want
+    # the RCS with its greffe, the capital, the VAT number and a named
+    # publication director. All four come from the registry, not from guesswork.
+    if "<h2>Éditeur du site</h2>" in c:
+        E = ENTREPRISE
+        bloc = ("<h2>Éditeur du site</h2>\n<p>"
+                f'<strong>{E["denomination"]}</strong><br>{E["forme"]}<br>'
+                f'Siège social : {E["adresse"]}<br>'
+                f'SIRET : {E["siret_siege"]} · SIREN : {E["siren"]}<br>'
+                f'RCS : {E["rcs"]} (immatriculée au greffe d’{E["greffe"]} le {E["immatriculation"]})<br>'
+                f'TVA intracommunautaire : {E["tva"]}<br>'
+                f'Directeur de la publication : {E["directeur_publication"]}<br>'
+                f'Gérants : {" et ".join(E["gerants"])}<br>'
+                f'Téléphone : {E["telephone"]}<br>Courriel : {EMAIL}</p>\n'
+                f'<p>Le fonds de commerce est exploité depuis {E["fonds_depuis"]} ; '
+                f'il a été repris par {E["denomination"]} le {E["reprise"]}.</p>\n')
+        i = c.find("<h2>Éditeur du site</h2>")
+        j = c.find("<h2>Hébergement</h2>", i)
+        if j != -1 and "TVA intracommunautaire" not in c[i:j]:
+            c = c[:i] + bloc + c[j:]
+            log(rel, "mentions légales complétées (RCS, capital, TVA, directeur de publication)")
+        H = E["hebergeur"]
+        c = re.sub(r'(Ce site est h[ée]berg[ée] par <strong>GitHub, Inc\.</strong><br>[^<]*<br>Site : github\.com)(?!<br>Contact)',
+                   rf'\1<br>Contact : {H["contact"]}', c)
+
+    # T7 — the CGV ignored the one condition that actually blocks an order, and
+    # said nothing about the withdrawal right. For meals prepared to order the
+    # right does not apply, but the contract has to say so rather than omit it.
+    if "<h2>8. Droit applicable</h2>" in c and "Minimum de commande" not in c:
+        paliers = {}
+        for nom, _cp, mini, _g in COMMUNES.values():
+            paliers.setdefault(mini, []).append(nom)
+        lignes = "".join(
+            f"<li><strong>{m} grandes pizzas (ou {m * 2} petites)</strong> : {_liste(v)}.</li>"
+            for m, v in sorted(paliers.items()))
+        articles = (
+            "<h2>8. Minimum de commande</h2>\n"
+            "<p>La livraison est gratuite, à partir d’un minimum qui varie selon la commune :</p>\n"
+            f"<ul>{lignes}</ul>\n"
+            "<p>Une petite pizza (26 cm) compte pour une demi-grande (33 cm). "
+            "Les commandes qui n’atteignent pas ce minimum restent possibles à emporter. "
+            "Les communes non listées ne sont pas desservies : appelez-nous au "
+            f"{ENTREPRISE['telephone']}.</p>\n"
+            "<h2>9. Droit de rétractation</h2>\n"
+            "<p>Conformément à l’article L.221-28, 3° et 4° du code de la consommation, "
+            "le droit de rétractation ne s’applique pas aux denrées périssables ni aux biens "
+            "confectionnés à la demande du consommateur. Nos pizzas étant préparées à la "
+            "commande, votre commande est ferme dès sa confirmation téléphonique par notre "
+            "équipe. Toute réclamation relève de l’article 6.</p>\n")
+        c = c.replace("<h2>8. Droit applicable</h2>",
+                      articles + "<h2>10. Droit applicable</h2>", 1)
+        c = c.replace("<h2>9. Médiateur</h2>", "<h2>11. Médiateur</h2>", 1)
+        log(rel, "CGV : minimum de commande et droit de rétractation ajoutés")
+
+    # C1 — the online form is shut from 17h30, which is when the service
+    # starts, so the main button spent the whole evening opening a refusal.
+    # The owner chose to keep that behaviour and tell the truth instead: after
+    # 17h30 the button says what it does, and dials straight away. Links that
+    # sit inside a sentence keep their wording.
+    if rel == "index.html" and "libellerCommander" not in c:
+        tel = ENTREPRISE["telephone"]
+        c = c.replace("</body>",
+                      "<script>function libellerCommander(){var d=new Date();"
+                      "if(d.getHours()*60+d.getMinutes()<17*60+30)return;"
+                      "document.querySelectorAll('a[onclick*=\"openCommander\"]').forEach("
+                      "function(b){var t=b.textContent.trim();"
+                      "if(b.classList.contains('social-btn'))return;"
+                      "if(t.indexOf('🍕')!==0&&t!=='Commander maintenant')return;"
+                      f"b.textContent='📞 Appeler pour commander — {tel}';"
+                      f"b.setAttribute('href','tel:{tel.replace(' ', '')}');"
+                      "b.setAttribute('onclick','');});}"
+                      "window.addEventListener('load',libellerCommander);</script>\n</body>", 1)
+        log(rel, "bouton de commande : libellé honnête après 17h30")
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the

@@ -1,0 +1,26 @@
+{
+ "_source": "Registre du commerce (RCS Avignon), RNE, Insee et BODACC — relevés le 14/11/2026",
+ "denomination": "Pizza Napoli Carpentras",
+ "forme": "SARL au capital de 1 000 €",
+ "capital": "1 000 €",
+ "siren": "952 676 310",
+ "siret_siege": "952 676 310 00016",
+ "rcs": "952 676 310 R.C.S. Avignon",
+ "greffe": "Avignon",
+ "immatriculation": "24 mai 2023",
+ "tva": "FR87 952 676 310",
+ "directeur_publication": "Brandon BRES, gérant",
+ "gerants": [
+  "Brandon BRES",
+  "Robert MANOSSIAN"
+ ],
+ "adresse": "209 Avenue Pierre Sémard, 84200 Carpentras, France",
+ "telephone": "07 61 08 36 08",
+ "hebergeur": {
+  "nom": "GitHub, Inc.",
+  "adresse": "88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA",
+  "contact": "support.github.com — +1 877 448 4820"
+ },
+ "fonds_depuis": "2008",
+ "reprise": "1er juin 2023"
+}
