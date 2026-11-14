@@ -38,7 +38,11 @@ def requete(url, methode="GET", suivre=False):
             corps = gzip.decompress(corps)
         return r.status, Entetes(r.headers), corps.decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
-        return e.code, Entetes(e.headers), ""
+        try:
+            corps = e.read().decode("utf-8", "replace")
+        except Exception:
+            corps = ""
+        return e.code, Entetes(e.headers), corps
     except Exception as e:
         return 0, Entetes({"erreur": str(e)}), ""
 
@@ -98,7 +102,13 @@ pages = {}
 
 
 def charger(u):
-    st, h, corps = requete(u)
+    """L'hébergeur limite les requêtes parallèles et répond 503 par rafales :
+    un essai unique transformerait un ralentissement en « page en erreur »."""
+    for essai in range(3):
+        st, h, corps = requete(u)
+        if st not in (0, 429) and st < 500:
+            return u, st, h, corps
+        time.sleep(1.5 * (essai + 1))
     return u, st, h, corps
 
 
@@ -168,11 +178,20 @@ for desc, ou in descs.items():
     if len(ou) > 1:
         note("important", "P", f"meta description identique sur {len(ou)} pages", ", ".join(ou[:4]))
 
+def requete_reessai(u, methode="GET"):
+    for essai in range(3):
+        st, h, c = requete(u, methode)
+        if st not in (0, 429) and st < 500:
+            return st, h, c
+        time.sleep(1.5 * (essai + 1))
+    return st, h, c
+
+
 # ---------- 4. liens internes ----------
 print(f"4. Vérification de {len(liens)} liens internes…")
 casses = []
 with cf.ThreadPoolExecutor(max_workers=8) as ex:
-    for u, st, h, _ in ex.map(lambda x: charger(x) if False else (x,) + requete(x, "HEAD"), sorted(liens)):
+    for u, st, h, _ in ex.map(lambda x: (x,) + requete_reessai(x, 'HEAD'), sorted(liens)):
         if st in (404, 410, 0) or st >= 500:
             casses.append((u[len(attendu):], st))
         elif st in (301, 308):
@@ -184,9 +203,22 @@ orphelines = [u[len(attendu):] or "/" for u in urls if u not in liens and u.rstr
 if orphelines:
     note("important", "L", f"{len(orphelines)} page(s) du sitemap sans lien entrant",
          ", ".join(orphelines[:6]))
-hors_sitemap = sorted(u for u in liens if u.endswith("/") and u not in urls and u.rstrip("/") != attendu)
+hors_sitemap = []
+for u in sorted(x for x in liens if x.endswith("/") and x not in urls and x.rstrip("/") != attendu):
+    st, _h, corps = requete_reessai(u)
+    if st != 200:
+        continue
+    rob = re.search(r'<meta name="robots" content="([^"]*)"', corps)
+    can = re.search(r'rel="canonical" href="([^"]+)"', corps)
+    # Exclusion légitime : la page demande à ne pas être indexée, ou désigne
+    # une autre page comme version de référence.
+    if rob and "noindex" in rob.group(1):
+        continue
+    if can and can.group(1).rstrip("/") != u.rstrip("/"):
+        continue
+    hors_sitemap.append(u)
 if hors_sitemap:
-    note("mineur", "I", f"{len(hors_sitemap)} page(s) liée(s) mais absente(s) du sitemap",
+    note("important", "I", f"{len(hors_sitemap)} page(s) indexable(s) liée(s) mais absente(s) du sitemap",
          ", ".join(x[len(attendu):] for x in hors_sitemap[:6]))
 
 # ---------- 5. 404 ----------
