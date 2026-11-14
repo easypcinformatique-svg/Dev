@@ -1,19 +1,16 @@
-/* AMKS Autos
-   Mise en page : bandes pleine largeur alternées (papier / teinte / encre),
-   contenu sur une grille de 1180 px, la plaque d'immatriculation comme objet signature. */
-/* AMKS Autos : identité tirée du logo. Fond noir profond, champagne métallisé pour
-   les actions, vert anglais pour les bandes, filet rouge du « A », tricolore arménien en signature.
+/* AMKS Autos : identité tirée du logo. Fond noir, or pour les actions et les titres,
+   bleu nuit de la voiture pour les bandes, tricolore arménien en signature.
    Thème sombre unique, assumé : le logo est conçu sur noir. */
 :root {
   --ink: #050506;           /* en-tête, hero, pied de page */
   --paper-on-ink: #EDEBE6;
-  --signal: #C9A45C;        /* champagne : actions, repères */
-  --signal-hi: #E6CF97;
+  --signal: #D6A546;        /* or : actions, repères */
+  --signal-hi: #F0CD7E;
   --signal-ink: #0A0908;
-  --gold-grad: linear-gradient(180deg, #F2E2B6 0%, #D4B06A 45%, #A8833F 100%);
-  --silver-grad: linear-gradient(180deg, #FFFFFF 0%, #D9D8D4 50%, #9E9C97 100%);
-  --red: #D0262E;           /* filet rouge du logo */
-  --green: #0E3A2C;         /* vert anglais de la voiture */
+  --gold-grad: linear-gradient(180deg, #FBE3A6 0%, #DDAE52 45%, #A97624 100%);
+  --silver-grad: linear-gradient(180deg, #FFF6DC 0%, #EBC77A 55%, #B9893A 100%);
+  --red: #D90012;           /* rouge du drapeau, dans le A */
+  --blue: #123A8C;          /* bleu nuit de la voiture */
   --bg: #0A0A0B;
   --tint: #111214;
   --card: #16171A;
@@ -59,7 +56,7 @@ p { margin: 0; }
   font: 600 .95rem/1 var(--f-body); text-decoration: none; cursor: pointer; transition: transform .15s, background .15s, border-color .15s; white-space: nowrap; }
 .btn:active { transform: translateY(1px); }
 .btn-lg { min-height: 52px; padding: 14px 24px; font-size: 1rem; }
-.btn-signal { background: var(--gold-grad); color: var(--signal-ink); border-color: #B8944F; box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 18px rgba(201,164,92,.18); }
+.btn-signal { background: var(--gold-grad); color: var(--signal-ink); border-color: #B07E2C; box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 18px rgba(214,165,70,.18); }
 .btn-signal:hover { filter: brightness(1.08); }
 .btn-outline { border-color: currentColor; background: transparent; color: var(--fg); }
 .btn-outline:hover { border-color: var(--signal); color: var(--signal); }
@@ -69,7 +66,7 @@ p { margin: 0; }
 
 /* Header */
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--ink); }
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: rgba(5,5,6,.92); backdrop-filter: blur(10px); color: var(--paper-on-ink); border-bottom: 1px solid rgba(201,164,92,.18); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: rgba(5,5,6,.92); backdrop-filter: blur(10px); color: var(--paper-on-ink); border-bottom: 1px solid rgba(214,165,70,.18); }
 .top-in { display: flex; align-items: center; gap: 20px; min-height: 68px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
 .brand-logo { height: 46px; width: auto; mix-blend-mode: screen; filter: brightness(.92) contrast(1.35); }
@@ -99,21 +96,21 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .hero-banner { position: relative; max-width: 1240px; margin: 0 auto; }
 .hero-banner img { width: 100%; height: auto; display: block; mix-blend-mode: screen; filter: contrast(1.12); }
 .hero-banner::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 75% 85% at 50% 50%, transparent 60%, var(--ink) 100%), linear-gradient(180deg, transparent 80%, var(--ink)); }
-.hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,164,92,.6), transparent); }
+.hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(214,165,70,.6), transparent); }
 .hero-in { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); gap: 56px; align-items: center; padding-block: 8px 72px; }
 .hero h1 { font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3.2rem); font-weight: 800; font-stretch: 118%; letter-spacing: .01em; text-transform: uppercase; background: var(--silver-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero h1 span { display: block; margin-top: 16px; font: 400 clamp(1.05rem, .95rem + .4vw, 1.25rem)/1.5 var(--f-body); text-transform: none; letter-spacing: 0; color: #CFCCC5; -webkit-text-fill-color: #CFCCC5; max-width: 52ch; }
 .lead { margin-top: 14px; font-size: 1rem; color: var(--muted); max-width: 58ch; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 .hero .btn-outline { color: var(--paper-on-ink); }
-.facts { list-style: none; padding: 0; margin: 40px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid rgba(201,164,92,.28); }
+.facts { list-style: none; padding: 0; margin: 40px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid rgba(214,165,70,.28); }
 .facts li { padding: 16px 16px 0 0; display: grid; gap: 2px; }
 .facts li + li { padding-left: 16px; border-left: 1px solid rgba(255,255,255,.12); }
 .facts b { font: 700 1.02rem/1.2 var(--f-display); font-stretch: 110%; color: var(--signal-hi); }
 .facts span { font-size: .82rem; color: var(--muted); }
 
 /* Plate */
-.plate-card { background: linear-gradient(180deg, #1B1C1F, #121315); color: var(--fg); border: 1px solid rgba(201,164,92,.35); border-radius: 16px; padding: 28px; box-shadow: 0 30px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05); display: grid; gap: 14px; }
+.plate-card { background: linear-gradient(180deg, #1B1C1F, #121315); color: var(--fg); border: 1px solid rgba(214,165,70,.35); border-radius: 16px; padding: 28px; box-shadow: 0 30px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05); display: grid; gap: 14px; }
 .plate-label { font-weight: 600; }
 .plate { display: flex; align-items: stretch; height: 78px; border: 3px solid #12202D; border-radius: 9px; background: #fff; overflow: hidden; cursor: text; }
 .plate-eu, .plate-dep { width: 46px; flex-shrink: 0; background: var(--plate-blue); color: #fff; display: grid; place-items: center; align-content: center; gap: 2px; padding: 6px 0; }
@@ -131,12 +128,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* Sections */
 .sec { padding-block: 88px; }
 .sec-tint { background: var(--tint); }
-.sec + .sec { border-top: 1px solid rgba(201,164,92,.10); }
+.sec + .sec { border-top: 1px solid rgba(214,165,70,.10); }
 .svc:hover { background: #1B1C20; }
-.sec-ink { background: radial-gradient(ellipse 90% 120% at 85% 0%, #17533F 0%, #0C2D23 45%, #06150F 100%); color: var(--paper-on-ink); }
+.sec-ink { background: radial-gradient(ellipse 90% 120% at 85% 0%, #1D4FB8 0%, #0D2560 42%, #050C22 100%); color: var(--paper-on-ink); }
 .sec-head { max-width: 760px; margin-bottom: 40px; display: grid; gap: 12px; }
 .sec-head > p:not(.eyebrow) { color: var(--muted); font-size: 1.05rem; }
-.sec-ink .sec-head > p:not(.eyebrow) { color: #B9C4BE; }
+.sec-ink .sec-head > p:not(.eyebrow) { color: #B8C3DA; }
 
 /* Services */
 .svc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
@@ -151,10 +148,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 /* Steps */
 .steps { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
-.steps li { counter-increment: s; display: grid; gap: 8px; align-content: start; padding-top: 18px; border-top: 1px solid rgba(201,164,92,.45); position: relative; }
+.steps li { counter-increment: s; display: grid; gap: 8px; align-content: start; padding-top: 18px; border-top: 1px solid rgba(214,165,70,.45); position: relative; }
 .steps li::before { content: counter(s, decimal-leading-zero); font: 700 .85rem/1 var(--f-mono); color: var(--signal); }
 .steps b { font: 700 1.15rem/1.2 var(--f-display); }
-.steps p { color: #B9C4BE; font-size: .93rem; }
+.steps p { color: #B8C3DA; font-size: .93rem; }
 
 /* Forfaits */
 .forfaits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
