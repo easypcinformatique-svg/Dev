@@ -1,6 +1,7 @@
 // Les offres du dépliant doivent être proposées pendant la commande, au bon
 // palier, et se retrouver dans le total comme dans le message envoyé.
 const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
 const fs = require('fs');
 const path = require('path');
 
@@ -8,7 +9,7 @@ const CARTE = JSON.parse(fs.readFileSync(
   path.join(__dirname, '..', '.github', 'data', 'carte.json'), 'utf8'));
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   let ok = 0, total = 0;
   const t = (nom, cond, detail = '') => {
     total++; if (cond) ok++;
@@ -25,7 +26,7 @@ const CARTE = JSON.parse(fs.readFileSync(
     const p = await ctx.newPage();
     p.on('dialog', d => d.dismiss());
     await ctx.route('**wa.me/**', r => r.abort());
-    await p.goto('http://127.0.0.1:8899/', { waitUntil: 'domcontentloaded' });
+    await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
     await p.evaluate(() => openCommander());
     await p.waitForTimeout(300);
     await p.evaluate(() => document.querySelector('#pre-order-notice.show') && dismissNotice());
@@ -114,7 +115,7 @@ const CARTE = JSON.parse(fs.readFileSync(
   {
     const ctx = await browser.newContext();
     const p = await ctx.newPage();
-    await p.goto('http://127.0.0.1:8899/', { waitUntil: 'domcontentloaded' });
+    await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
     const vues = await p.evaluate(() => DRINKS.map(d => `${d.name}|${d.price}`));
     const attendues = CARTE.boissons.map(b => `${b.nom}|${b.prix}`);
     t(`${attendues.length} boissons conformes au dépliant`,

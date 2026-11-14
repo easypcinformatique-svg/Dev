@@ -36,6 +36,34 @@ jobs:
 
       - name: Enforce invariants
         run: python3 .github/scripts/site_guard.py site
+
+      # Rien ne part en ligne sans que le site corrigé ait été ouvert dans un
+      # vrai navigateur. Si une seule vérification échoue, le job s'arrête ici
+      # et la production garde la version précédente.
+      - name: Install Chromium
+        run: |
+          npm install --no-audit --no-fund --silent playwright
+          npx playwright install --with-deps chromium
+      - name: Serve the corrected site
+        run: |
+          (cd site && python3 -m http.server 8899 >/dev/null 2>&1 &)
+          for i in $(seq 1 20); do
+            curl -sf -o /dev/null http://127.0.0.1:8899/ && break || sleep 1
+          done
+      - name: Test before deploying
+        run: |
+          echec=0
+          for t in bouton-commande offres-boisson parcours-commande carte \
+                   notification-commande consentement dom-rendu acces-commande; do
+            echo "::group::$t"
+            if node "tests/$t.js"; then echo "$t : OK"; else echo "::error::$t a échoué"; echec=1; fi
+            echo "::endgroup::"
+          done
+          if [ "$echec" = "1" ]; then
+            echo "::error::Déploiement annulé : le site corrigé ne passe pas les tests"
+            exit 1
+          fi
+
       - name: Commit and push (rebase + retry)
         run: |
           cd site

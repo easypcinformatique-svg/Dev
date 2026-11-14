@@ -2,9 +2,10 @@
 // atterrissait dans les spams. On passe une vraie commande dans l'interface et
 // on inspecte le corps de la requête, pas le code source.
 const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const ctx = await browser.newContext();
   await ctx.addInitScript(() => {                       // avant 17h30 : formulaire en ligne
     const R = Date, f = new R('2026-09-11T14:00:00');
@@ -19,7 +20,7 @@ const { chromium } = require('playwright');
   await ctx.route('**wa.me/**', r => r.abort());
   await ctx.route('**api.web3forms.com/**', r => { corps = r.request().postData(); r.abort(); });
 
-  await page.goto('http://127.0.0.1:8899/', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => openCommander());
   await page.waitForTimeout(300);
   await page.evaluate(() => document.querySelector('#pre-order-notice.show') && dismissNotice());

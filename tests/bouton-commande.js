@@ -1,9 +1,10 @@
 // Le bouton principal doit dire ce qu'il fait : le formulaire avant 17h30,
 // le téléphone après — puisque le tunnel est fermé pendant le service.
 const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   let ok = 0, total = 0;
   const t = (nom, cond, detail = '') => {
     total++; if (cond) ok++;
@@ -18,7 +19,7 @@ const { chromium } = require('playwright');
     }, heure);
     const p = await ctx.newPage();
     p.on('dialog', d => d.dismiss());
-    await p.goto('http://127.0.0.1:8899/', { waitUntil: 'load' });
+    await p.goto(BASE + '/', { waitUntil: 'load' });
     await p.waitForTimeout(500);
     const cta = p.locator('a.nav-cta').first();
     const r = {

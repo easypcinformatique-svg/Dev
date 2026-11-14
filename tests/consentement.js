@@ -1,8 +1,9 @@
 // Vérifie le comportement réel du consentement : cookies avant / après choix.
 const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const analytics = c => c.filter(k => /^_ga|^_gid|^_gat/.test(k.name));
   let ok = 0, total = 0;
   const t = (nom, cond, detail = '') => {
@@ -13,7 +14,7 @@ const { chromium } = require('playwright');
   // 1. Visiteur qui n'a pas encore choisi
   let ctx = await browser.newContext();
   let page = await ctx.newPage();
-  await page.goto('http://127.0.0.1:8899/', { waitUntil: 'networkidle' });
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
   const visible = await page.locator('#consent-banner').isVisible();
   let cookies = analytics(await ctx.cookies());
@@ -35,7 +36,7 @@ const { chromium } = require('playwright');
   // 3. Acceptation
   ctx = await browser.newContext();
   page = await ctx.newPage();
-  await page.goto('http://127.0.0.1:8899/', { waitUntil: 'networkidle' });
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
   await page.click('#consent-yes');
   await page.waitForTimeout(1500);
@@ -58,7 +59,7 @@ const { chromium } = require('playwright');
     Date = class extends R { constructor(...a) { return a.length ? new R(...a) : new R(f); } static now() { return f.getTime(); } };
   });
   page = await ctx.newPage();
-  await page.goto('http://127.0.0.1:8899/', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => openCommander());
   await page.waitForTimeout(400);
   t('formulaire de commande toujours ouvrable', await page.locator('#order-overlay.open').count() > 0);

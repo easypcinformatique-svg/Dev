@@ -1,5 +1,6 @@
 // Parcours client reel : clics dans l'interface, aucune manipulation d'etat interne.
 const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
 
 const CAS = [
   { n: '2 petites · Carpentras (min 2)',            v: '12 rue des Halles, 84200 Carpentras', t: '26', q: 2, att: 'BLOQUE' },
@@ -24,7 +25,7 @@ const CAS = [
 ];
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   let ok = 0;
 
   for (const c of CAS) {
@@ -42,7 +43,7 @@ const CAS = [
     await ctx.route('**wa.me/**', r => { envoye = true; r.abort(); });
     await ctx.route('**api.web3forms.com/**', r => r.abort());
 
-    await page.goto('http://127.0.0.1:8899/', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => openCommander());
     await page.waitForTimeout(300);
     await page.evaluate(() => document.querySelector('#pre-order-notice.show') && dismissNotice());

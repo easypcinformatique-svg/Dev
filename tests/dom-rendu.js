@@ -1,11 +1,12 @@
 const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
 const PAGES = ['/','/pizzeria-carpentras/','/livraison-pizza-mazan/','/blog/pizza-artisanale-carpentras/','/blog/guide-mazan.html'];
 (async () => {
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   let ko = 0;
   for (const p of PAGES) {
     const ctx = await b.newContext(); const page = await ctx.newPage();
-    await page.goto('http://127.0.0.1:8899' + p, { waitUntil: 'domcontentloaded' });
+    await page.goto('' + BASE + '' + p, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(600);
     const r = await page.evaluate(() => {
       const m = document.querySelector('main#main-content');
