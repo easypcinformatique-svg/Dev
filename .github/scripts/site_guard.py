@@ -881,6 +881,47 @@ for path in pages:
                "autres communes dès " + ", ".join(str(b) for b in _bornes[:-1])
                + f" ou {_bornes[-1]}", c)
 
+    # 6t4. Le minimum est écrit d'au moins six façons : tableau « N grandes
+    # (ou M petites) », tableau « N grandes pizzas », « dessert VILLE — N
+    # grandes », « Minimum N grandes », la meta description, l'og:description.
+    # Une règle par forme, c'est une forme oubliée à chaque fois — Pernes est
+    # resté à 3 pendant que tout le reste passait à 5. On apparie donc le
+    # nombre à la commune la plus proche qui le précède, quel que soit le
+    # balisage entre les deux.
+    MINI = {n: m for n, _cp, m, _g in COMMUNES.values()}
+    _villes = sorted(MINI, key=len, reverse=True)
+    _re_ville = re.compile("|".join(re.escape(v) for v in _villes))
+    _re_nombre = re.compile(r'(\d+)(\s*)(grandes?|petites?)\b')
+    _marque = re.compile(r'(Pizza )?Napoli\s*$|pizzanapoli', re.IGNORECASE)
+    _commune_page = COMMUNES.get(seg[len("livraison-pizza-"):], (None,))[0] \
+        if seg and seg.startswith("livraison-pizza-") else None
+
+    def _accorder(texte):
+        villes = [(m.end(), m.group(0)) for m in _re_ville.finditer(texte)]
+        sortie, dernier, change = [], 0, 0
+        for m in _re_nombre.finditer(texte):
+            avant = [v for v in villes if v[0] <= m.start()]
+            ville, ecart = (avant[-1][1], m.start() - avant[-1][0]) if avant else (None, 10 ** 9)
+            # Une commune cachée dans « Pizza Napoli Carpentras » ne compte pas.
+            if ville and _marque.search(texte[max(0, avant[-1][0] - len(ville) - 14):avant[-1][0] - len(ville)]):
+                ville, ecart = None, 10 ** 9
+            # Trop loin, ou séparé par une autre ligne : la page tranche.
+            if ecart > 90 or re.search(r'</tr>|</li>|</ul>|📍', texte[m.start() - ecart:m.start()]):
+                ville = _commune_page
+            if ville not in MINI:
+                continue
+            attendu = MINI[ville] * (2 if m.group(3).startswith("petite") else 1)
+            if int(m.group(1)) != attendu:
+                sortie.append(texte[dernier:m.start()] + f"{attendu}{m.group(2)}{m.group(3)}")
+                dernier = m.end()
+                change += 1
+        return ("".join(sortie) + texte[dernier:], change) if change else (texte, 0)
+
+    if _commune_page or (seg and seg in ("livraison-pizza-84200",)) or rel == "index.html":
+        c, _n = _accorder(c)
+        if _n:
+            log(rel, f"{_n} minimum(s) de commande réaccordé(s) sur la commune citée")
+
     # 6u. Sarrians. Four pages told four different stories; the arbiter is the
     # order form, and getMinPizzasForCity() does not list Sarrians, so an order
     # there is refused. The pages that promised delivery were the wrong ones.

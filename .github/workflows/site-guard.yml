@@ -53,6 +53,10 @@ jobs:
       - name: Test before deploying
         run: |
           echec=0
+          echo "::group::minimums"
+          if SITE_DIR=site node tests/minimums.js; then echo "minimums : OK"
+          else echo "::error::minimums a échoué"; echec=1; fi
+          echo "::endgroup::"
           for t in bouton-commande offres-boisson parcours-commande carte \
                    notification-commande consentement dom-rendu acces-commande banniere; do
             echo "::group::$t"
