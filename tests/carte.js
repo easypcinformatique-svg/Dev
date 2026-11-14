@@ -60,6 +60,36 @@ const cle = n => n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   t('bandeau conforme au dépliant',
     /0,50/.test(banniere) && /5 pizzas/i.test(banniere), banniere);
 
+  // La bande de chiffres de l'accueil : le nombre vit dans un attribut et le
+  // libellé dans un élément voisin, donc rien ne les tenait d'accord. Le
+  // compteur d'avis était resté à 526 quand le site en affichait 582 partout.
+  const chiffres = await page.evaluate(() =>
+    [...document.querySelectorAll('.counter-box')].map(b => ({
+      n: (b.querySelector('.counter-num') || {}).textContent?.trim(),
+      cible: (b.querySelector('.counter-num') || {}).getAttribute?.('data-target'),
+      lbl: (b.querySelector('.counter-lbl') || {}).textContent?.trim() || '',
+    })));
+  const source = await page.evaluate(() => {
+    const m = document.documentElement.innerHTML.match(/"reviewCount":"(\d+)"/);
+    return { avis: m ? m[1] : null, recettes: PIZZAS.length };
+  });
+  const trouve = l => chiffres.find(c => new RegExp(l, 'i').test(c.lbl));
+  const avis = trouve('avis');
+  t('compteur d’avis accordé au balisage',
+    avis && avis.n === source.avis && avis.cible === source.avis,
+    avis ? `affiché ${avis.n} / cible ${avis.cible} / source ${source.avis}` : 'compteur absent');
+  const recettes = trouve('recette|pizza');
+  t('compteur de recettes accordé à la carte',
+    recettes && +recettes.n === source.recettes,
+    recettes ? `${recettes.n} pour ${source.recettes} entrées` : 'compteur absent');
+  t('aucun compteur ne dit « pizzas » pour le menu entier',
+    !chiffres.some(c => /pizzas/i.test(c.lbl) && +c.n === source.recettes),
+    chiffres.map(c => `${c.n} ${c.lbl}`).join(' · '));
+  const ans = trouve("ans d");
+  t('années d’expérience justes',
+    ans && +ans.n === new Date().getFullYear() - 2008,
+    ans ? `${ans.n} ans` : 'compteur absent');
+
   console.log(`\n  ${ok}/${total} conformes`);
   await browser.close();
   process.exit(ok === total ? 0 : 1);

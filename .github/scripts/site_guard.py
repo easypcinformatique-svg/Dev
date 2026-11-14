@@ -1441,6 +1441,34 @@ for path in pages:
                       "window.addEventListener('load',libellerCommander);</script>\n</body>", 1)
         log(rel, "bouton de commande : libellé honnête après 17h30")
 
+    # 6z7. La bande de chiffres de l'accueil. Le nombre vit dans un attribut
+    # data-target et le libellé dans un élément voisin : les règles qui ne
+    # traitent que le texte ne le voyaient pas, et le compteur d'avis est resté
+    # à 526 pendant que les 582 du moment s'affichaient partout ailleurs. On
+    # accorde donc chaque chiffre à son libellé, comme pour les minimums.
+    if 'class="counter-num"' in c:
+        _recettes = len(re.findall(r"\{cat:'[^']*',\s*name:", c)) or len(MENU)
+
+        def _compteur(m):
+            libelle = m.group("lbl").lower()
+            if "avis" in libelle:
+                neuf, lbl = COUNT, m.group("lbl")
+            elif "recette" in libelle or "pizza" in libelle:
+                # 80 entrées au menu, dont quatre desserts : ce ne sont pas
+                # 80 pizzas. Le libellé suit le décompte réel.
+                neuf, lbl = str(_recettes), "Recettes au menu"
+            else:
+                return m.group(0)
+            return (f'{m.group("tete")}data-target="{neuf}">{neuf}</span>'
+                    f'{m.group("entre")}{lbl}</span>')
+
+        avant = c
+        c = re.sub(r'(?P<tete><span class="counter-num" )data-target="\d+">\d+</span>'
+                   r'(?P<entre>\s*<span class="counter-lbl">)(?P<lbl>[^<]*)</span>',
+                   _compteur, c)
+        if c != avant:
+            log(rel, f"bande de chiffres accordée ({COUNT} avis, {_recettes} recettes)")
+
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
     # phone modal by itself, so one label has to be true in both cases.
