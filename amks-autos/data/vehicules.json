@@ -1,0 +1,5 @@
+{
+  "_mode_emploi": "Ajoutez un objet par véhicule dans la liste 'vehicules'. Champs : marque, modele, annee, km, energie (Essence, Diesel, Hybride, Électrique), boite (Manuelle, Automatique), prix (euros TTC), photo (chemin d'image, facultatif), description. Liste vide : le site affiche la recherche sur mesure.",
+  "exemple": { "marque": "Peugeot", "modele": "208 1.2 PureTech", "annee": 2021, "km": 42000, "energie": "Essence", "boite": "Manuelle", "prix": 13990, "photo": "", "description": "Première main, carnet d'entretien, révision faite à l'atelier." },
+  "vehicules": []
+}
