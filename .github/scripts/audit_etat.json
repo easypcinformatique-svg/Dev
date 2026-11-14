@@ -1,0 +1,366 @@
+[
+ {
+  "code": "E1",
+  "gravite": "critique",
+  "titre": "≈12 000 mots publiés sans accents",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "E2",
+  "gravite": "important",
+  "titre": "Guides partiellement désaccentués",
+  "etat": "ouvert",
+  "detail": "blog/guide-carpentras.html 92; blog/guide-monteux.html 98; livraison-pizza-84200/index.html 87"
+ },
+ {
+  "code": "E3",
+  "gravite": "important",
+  "titre": "Meta description de l'accueil fautive",
+  "etat": "résolu",
+  "detail": "Pizza Napoli Carpentras — Pizzeria artisanale depuis 2008. Livraison gratuite 7j/7 dès 17h30. 80 recettes dès 7€90. ☎ 07"
+ },
+ {
+  "code": "E4",
+  "gravite": "important",
+  "titre": "Balises <title> sans accents",
+  "etat": "ouvert",
+  "detail": "blog/guide-pernes.html"
+ },
+ {
+  "code": "E5",
+  "gravite": "important",
+  "titre": "« Vous livrons aussi » en H2",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "E6",
+  "gravite": "important",
+  "titre": "Modale pré-commande mal écrite / promesse d'e-mail",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "E7",
+  "gravite": "important",
+  "titre": "Encart allergènes désaccentué",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "E8",
+  "gravite": "important",
+  "titre": "Alertes du tunnel sans accents",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "E9",
+  "gravite": "important",
+  "titre": "« Margharita » au lieu de Margherita",
+  "etat": "résolu",
+  "detail": "0 occurrence(s) sur 0 page(s)"
+ },
+ {
+  "code": "E10",
+  "gravite": "mineur",
+  "titre": "« rebourlet » n'existe pas",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "E11",
+  "gravite": "mineur",
+  "titre": "Typographie : espaces insécables et apostrophes",
+  "etat": "résolu",
+  "detail": "140 insécables, 1302 apostrophes droites"
+ },
+ {
+  "code": "E12",
+  "gravite": "mineur",
+  "titre": "« A lire aussi » sans accent",
+  "etat": "résolu",
+  "detail": "0 page(s)"
+ },
+ {
+  "code": "E13",
+  "gravite": "mineur",
+  "titre": "Note écrite « 4.5/5 » dans le texte visible",
+  "etat": "ouvert",
+  "detail": "index.html"
+ },
+ {
+  "code": "E14",
+  "gravite": "mineur",
+  "titre": "Fil d'Ariane affiche « rsaquo; »",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "S1",
+  "gravite": "critique",
+  "titre": "Pages villes quasi identiques",
+  "etat": "ouvert",
+  "detail": "similarité moyenne 93% sur 10 pages"
+ },
+ {
+  "code": "S2",
+  "gravite": "critique",
+  "titre": "Trois domaines concurrents",
+  "etat": "hors périmètre",
+  "detail": "dépend du propriétaire des domaines, pas de ce dépôt"
+ },
+ {
+  "code": "S3",
+  "gravite": "critique",
+  "titre": "Article sur le mauvais Serres",
+  "etat": "ouvert",
+  "detail": "blog/index.html"
+ },
+ {
+  "code": "S4",
+  "gravite": "important",
+  "titre": "Sarrians annoncé desservi",
+  "etat": "ouvert",
+  "detail": "livraison-pizza-sarrians/index.html, blog/que-faire-carpentras-ce-soir/index.html, blog/faq-livraison-pizza-carpentras/index.html"
+ },
+ {
+  "code": "S5",
+  "gravite": "important",
+  "titre": "areaServed oublie Serres",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "S6",
+  "gravite": "important",
+  "titre": "JSON-LD FAQ contredit le texte visible",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "S7",
+  "gravite": "important",
+  "titre": "Pages liées mais canonisées ailleurs",
+  "etat": "ouvert",
+  "detail": "pizza-carpentras/index.html, livraison-pizza-84200/index.html"
+ },
+ {
+  "code": "S8",
+  "gravite": "important",
+  "titre": "Serres traité comme une commune",
+  "etat": "ouvert",
+  "detail": "3 pages dédiées à un hameau de Carpentras ; fusion éditoriale, pas automatisable"
+ },
+ {
+  "code": "S9",
+  "gravite": "important",
+  "titre": "Six URL pour la même intention",
+  "etat": "ouvert",
+  "detail": "arbitrage éditorial : désigner une page pilier"
+ },
+ {
+  "code": "S10",
+  "gravite": "mineur",
+  "titre": "Balises <title> de plus de 60 caractères",
+  "etat": "ouvert",
+  "detail": "27 page(s), max 88"
+ },
+ {
+  "code": "S11",
+  "gravite": "mineur",
+  "titre": "Adresse « Pierre Semard » sans accent",
+  "etat": "résolu",
+  "detail": "0 page(s)"
+ },
+ {
+  "code": "S12",
+  "gravite": "mineur",
+  "titre": "Pied de page n'expose que 4 communes sur 9",
+  "etat": "ouvert",
+  "detail": "3/9 communes liées"
+ },
+ {
+  "code": "S13",
+  "gravite": "important",
+  "titre": "Signaux locaux absents (accès, parking, régimes)",
+  "etat": "résolu",
+  "detail": "4 page(s)"
+ },
+ {
+  "code": "C1",
+  "gravite": "critique",
+  "titre": "Le bouton « Commander par WhatsApp » ouvre une modale téléphone",
+  "etat": "ouvert",
+  "detail": "le formulaire reste coupé de 17h30 à minuit"
+ },
+ {
+  "code": "C2",
+  "gravite": "critique",
+  "titre": "Minimum de commande révélé au dernier clic",
+  "etat": "ouvert",
+  "detail": ""
+ },
+ {
+  "code": "C3",
+  "gravite": "critique",
+  "titre": "Récapitulatif par e-mail promis sans champ e-mail",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "C4",
+  "gravite": "important",
+  "titre": "Petites pizzas comptées comme des grandes",
+  "etat": "résolu",
+  "detail": "le contrôle actif pondère bien 0,5 / 1"
+ },
+ {
+  "code": "C5",
+  "gravite": "important",
+  "titre": "84210 attribué à Saint-Didier avant Pernes",
+  "etat": "résolu",
+  "detail": "noms testés avant les codes postaux"
+ },
+ {
+  "code": "C6",
+  "gravite": "important",
+  "titre": "Monteux en triple dans le tableau",
+  "etat": "ouvert",
+  "detail": "3 ligne(s) Monteux"
+ },
+ {
+  "code": "C7",
+  "gravite": "important",
+  "titre": "Parcours de commande absent des pages d'atterrissage",
+  "etat": "résolu",
+  "detail": "0 page(s) sans accès au tunnel"
+ },
+ {
+  "code": "C8",
+  "gravite": "important",
+  "titre": "Aucun créneau à emporter avant 19h30",
+  "etat": "résolu",
+  "detail": "premier créneau ?"
+ },
+ {
+  "code": "C9",
+  "gravite": "important",
+  "titre": "Délais de livraison contradictoires",
+  "etat": "ouvert",
+  "detail": "15-25 min, 20 à 30 min, 20 à 35 min, 20-25 min, 20-30 min, 20-35 min, 20–30 min, 25 à 40 min"
+ },
+ {
+  "code": "C10",
+  "gravite": "mineur",
+  "titre": "Offre promotionnelle sans conditions ni comptage fiable",
+  "etat": "résolu",
+  "detail": "deux paliers, comptage sur pizzaOrders"
+ },
+ {
+  "code": "T1",
+  "gravite": "critique",
+  "titre": "Témoignages citant des pizzas inexistantes",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "T2",
+  "gravite": "critique",
+  "titre": "Prix faux sur le blog et les pieds d'articles",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "T3",
+  "gravite": "critique",
+  "titre": "Livraison annoncée dès 17h30 au lieu de 19h",
+  "etat": "résolu",
+  "detail": "0 page(s)"
+ },
+ {
+  "code": "T4",
+  "gravite": "critique",
+  "titre": "Deux adresses e-mail différentes",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "T5",
+  "gravite": "important",
+  "titre": "Google Analytics sans recueil de consentement",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "T6",
+  "gravite": "important",
+  "titre": "Mentions légales incomplètes (LCEN)",
+  "etat": "ouvert",
+  "detail": "manque : RCS, capital social, TVA intracommunautaire, directeur de la publication"
+ },
+ {
+  "code": "T7",
+  "gravite": "important",
+  "titre": "CGV sans minimum de commande ni rétractation",
+  "etat": "ouvert",
+  "detail": "manque : minimum de commande, droit de rétractation"
+ },
+ {
+  "code": "T8",
+  "gravite": "important",
+  "titre": "Ancienneté contradictoire",
+  "etat": "ouvert",
+  "detail": "durées citées : 10, 15, 16, 18 ; « 2010 — Ouverture » sur 1 page(s)"
+ },
+ {
+  "code": "T9",
+  "gravite": "important",
+  "titre": "Note affichée 4,2 à un endroit",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "T10",
+  "gravite": "important",
+  "titre": "« Plus de 80 recettes » alors qu'il y en a 76",
+  "etat": "ouvert",
+  "detail": "80 entrées au menu"
+ },
+ {
+  "code": "T11",
+  "gravite": "important",
+  "titre": "Descriptions de pizzas fausses dans le blog",
+  "etat": "ouvert",
+  "detail": "blog/faq-livraison-pizza-carpentras/index.html, blog/guide-carpentras.html, blog/guide-livraison-pizza-carpentras/index.html, blog/que-faire-carpentras-ce-soir/index.html, blog/que-faire-mazan-ce-soir/index.html"
+ },
+ {
+  "code": "T12",
+  "gravite": "important",
+  "titre": "Formulaire collectant des données sans information",
+  "etat": "résolu",
+  "detail": ""
+ },
+ {
+  "code": "T13",
+  "gravite": "important",
+  "titre": "Crédits photo CC BY-SA incomplets",
+  "etat": "ouvert",
+  "detail": "9 page(s)"
+ },
+ {
+  "code": "T14",
+  "gravite": "mineur",
+  "titre": "Superlatifs non étayés",
+  "etat": "ouvert",
+  "detail": "pizzeria-carpentras/index.html"
+ },
+ {
+  "code": "T15",
+  "gravite": "mineur",
+  "titre": "« Pas de suppléments cachés » contredit par le minimum",
+  "etat": "résolu",
+  "detail": ""
+ }
+]

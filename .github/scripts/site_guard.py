@@ -164,7 +164,23 @@ ACCENTS_CONTEXTE = {
     r'\bmarche provencal\b': "marché provençal", r'\bmarche hebdomadaire\b': "marché hebdomadaire",
     r'\bmarches provencaux\b': "marchés provençaux", r'\bmarches de Noel\b': "marchés de Noël",
     r'\bNoel\b': "Noël",
+    r'\bA lire aussi\b': "À lire aussi", r'\bA emporter\b': "À emporter",
+    r'\bA partir de\b': "À partir de", r'\bA propos\b': "À propos",
 }
+
+# Words the site publishes without accents, resolved against a French
+# dictionary: a word is listed only when it is NOT valid French as written and
+# exactly one accented form exists. "ou", "a", "cote", "sur" are valid words,
+# so they are absent — restoring those needs a human, not a table. Built by
+# .github/scripts/construire_accents.py; the hand-checked list above wins.
+_table = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "accents.json")
+if os.path.exists(_table):
+    ACCENTS = {**json.load(open(_table, encoding="utf-8")), **ACCENTS}
+
+# One alternation instead of one pass per word: 600 regexes over every text
+# node of 50 pages is a minute of CI time for nothing.
+MOTIF_ACCENTS = re.compile(r'\b(' + "|".join(sorted(ACCENTS, key=len, reverse=True)) + r')\b',
+                           re.IGNORECASE)
 
 report = []
 
@@ -514,9 +530,18 @@ for path in pages:
     # Text nodes only: attributes carry file names and URLs, and accenting
     # img/chateau.webp into img/château.webp breaks the image.
     def accentuer(texte):
-        for sans, avec in ACCENTS.items():
-            texte = re.sub(rf'\b{sans}\b', avec, texte)
-            texte = re.sub(rf'\b{sans.capitalize()}\b', avec.capitalize(), texte)
+        def rendre(m):
+            source = m.group(0)
+            cible = ACCENTS.get(source.lower())
+            if not cible:
+                return source
+            if source.isupper():
+                return cible.upper()
+            if source[0].isupper():
+                return cible[0].upper() + cible[1:]
+            return cible
+
+        texte = MOTIF_ACCENTS.sub(rendre, texte)
         for motif, remplacement in ACCENTS_CONTEXTE.items():
             texte = re.sub(motif, remplacement, texte)
         return texte
@@ -540,6 +565,16 @@ for path in pages:
     c = "".join(morceaux)
     if doublons:
         log(rel, f"{doublons} balise(s) avec attribut dupliqué corrigée(s)")
+
+    # The description Google prints is an attribute, so the walk above never
+    # saw it: seven titles and every description stayed unaccented.
+    def accentuer_attribut(m):
+        return m.group(1) + accentuer(m.group(2)) + m.group(3)
+
+    c = re.sub(r'(<meta[^>]*(?:name|property)="(?:description|og:description|twitter:description)"[^>]*content=")'
+               r'([^"]*)(")', accentuer_attribut, c)
+    c = re.sub(r'(<meta[^>]*content=")([^"]*)("[^>]*(?:name|property)="(?:description|og:description|twitter:description)")',
+               accentuer_attribut, c)
 
     # 6i. Serres: the article described Serres (05700) in the Hautes-Alpes,
     # 150 km outside the delivery zone, while promising delivery there.
@@ -843,9 +878,12 @@ for path in pages:
 
     # 6x. the privacy policy said data never reaches a third party, while the
     # order is sent through WhatsApp — that is a transfer to Meta.
+    # The trailing lookahead is what stops the rule appending its own sentence
+    # a second time: the document-wide check passes as long as one page has it.
     if "Meta Platforms Ireland" not in c:
         c = re.sub(
-            r'(jamais vendues ni transmises[^.]*?)(,\s*sauf obligation l[ée]gale\.)',
+            r'(jamais vendues ni transmises[^.]*?)(,\s*sauf obligation l[ée]gale\.)'
+            r'(?!\s*Les informations de votre commande)',
             r'\1\2 Les informations de votre commande (nom, téléphone, adresse de livraison) '
             r'transitent par WhatsApp — Meta Platforms Ireland Ltd — pour être transmises à notre '
             r'équipe, et par notre prestataire d’envoi de formulaire.', c)
@@ -1075,6 +1113,113 @@ for path in pages:
     c = re.sub(r'(<h[23][^>]*>\s*(?:\d+\.\s*)?)Allergenes(\s*</h[23]>)', r'\1Allergènes\2', c)
     if c != avant:
         log(rel, "mention allergènes harmonisée (liste complète, accentuée)")
+
+    # 6z6. Batch from the September audit: statements that are simply wrong or
+    # inconsistent, and that a rule can settle without inventing anything.
+
+    # T3 — the blog announced delivery from 17h30, which is when orders open;
+    # delivery starts at 19h. 28 pages repeated the same wrong line.
+    c = re.sub(r"7j/7 de 17h30 [aà] 22h",
+               "7j/7 · commande dès 17h30 · livraison 19h00–22h00", c)
+    c = re.sub(r"livre 7 jours sur 7, du lundi au dimanche, de 17h30 [aà] 22h00\.",
+               "prend les commandes 7 jours sur 7 dès 17h30 et livre de 19h00 à 22h00.", c)
+    c = re.sub(r"La derni[èe]re commande est accept[ée]e [aà] 22h",
+               "Le dernier créneau de livraison est 21h30", c)
+
+    # E3 — "des 17h30" and "des 7€90" in the description Google displays. The
+    # price rule runs earlier and only sees text nodes, so the attribute is
+    # normalised here too rather than waiting a second run to settle.
+    c = re.sub(r'\bdes (?=\d{1,2}h\d{2}\b|\d+\s*€)', "dès ", c)
+    c = re.sub(r'(?<!petite )(?<!grande )dès\s*\d+\s*€(?:\s*\d{2})?', f'dès {euro(MIN_PRICE)}', c)
+
+    # E5 — a grammar mistake used as an H2 on five articles.
+    c = c.replace("Vous livrons aussi", "Nous livrons aussi")
+
+    # E10 — the rim of a pizza is a bourrelet, or a cornicione. Not a rebourlet.
+    c = re.sub(r'\brebourlet\b', "bourrelet", c, flags=re.IGNORECASE)
+
+    # S11 — the street name, inside the JSON-LD too, which the text pass skips.
+    c = c.replace("Pierre Semard", "Pierre Sémard")
+
+    # T10 — "Plus de 80 recettes" is false whichever way the card is counted.
+    c = c.replace("Plus de 80 recettes", "80 recettes")
+
+    # T9 — one stray 4,2 next to twenty 4,5.
+    c = re.sub(rf'\b4,2(?=\s*(?:&#9733;|★|/\s*5))', RATING.replace(".", ","), c)
+
+    # T14 — "the cheapest" is a claim that has to be provable; the facts under
+    # it are stronger anyway.
+    c = c.replace("Quelle est la pizzeria la moins chère de Carpentras avec livraison à domicile ?",
+                  "Combien coûte une pizza livrée à Carpentras ?")
+    c = c.replace("C'est l'une des offres les plus accessibles de Carpentras et du Vaucluse",
+                  "La livraison est gratuite dès le minimum de commande atteint")
+
+    # T15 — "no hidden extras" sat next to a per-ingredient supplement and a
+    # minimum order. Said straight, it is still an advantage.
+    c = c.replace("Pas de frais de livraison, pas de suppléments cachés.",
+                  "Livraison gratuite, sans frais de service ni majoration, "
+                  "dès le minimum de commande de votre commune. "
+                  "Ingrédient supplémentaire : 1,00 €.")
+
+    # S5 — Serres is served, with the lowest minimum, and was missing from the
+    # structured delivery area.
+    if '"areaServed":[' in c and '{"@type":"City","name":"Serres"}' not in c:
+        c = c.replace('"areaServed":[', '"areaServed":[{"@type":"City","name":"Serres"},', 1)
+        log(rel, "Serres ajoutée à areaServed")
+
+    # C6 — three Monteux rows for one commune, one an exact duplicate.
+    if c.count("📍 Monteux") > 2:
+        i = c.find("📍 Monteux</td>")
+        if i != -1:
+            debut = c.rfind("<tr", 0, i)
+            fin = c.find("</tr>", i)
+            if debut != -1 and fin != -1:
+                c = c[:debut] + c[fin + len("</tr>"):]
+                log(rel, "ligne Monteux en doublon retirée du tableau des zones")
+
+    # T8 — the page telling the pizzeria's story contradicted the founding year
+    # stated six times above it, and four different durations circulated.
+    c = re.sub(r'\b20(?:10|09|11)\s*(—|–|-)\s*Ouverture', rf'{FOUNDED} \1 Ouverture', c)
+    _ans = date.today().year - int(FOUNDED)
+    c = re.sub(r'\b(?:1[0-9])\s*ans (d[\'’]expérience|d[\'’]artisanat|de savoir-faire|au cœur)',
+               rf'{_ans} ans \1', c)
+    c = re.sub(r'[Pp]lus de 1[0-9] ans', f"plus de {_ans} ans", c)
+
+    # T11 — articles described pizzas that do not exist, or listed the wrong
+    # toppings. The card is the reference, so the parenthesis is rewritten from
+    # it. A pizza the card does not have is renamed to the one it meant.
+    c = c.replace("la Spéciale Pizza Napoli", "la Napoli").replace("la 4 Fromages", "la 4 Fro")
+
+    INGREDIENTS = {sans_accent(x) for d in CARTE["pizzas"].values()
+                   for x in re.split(r"[,()]", d["ingredients"]) for x in x.split() if len(x) > 3}
+
+    def _corriger_description(m):
+        nom, dedans = m.group("nom"), m.group("ing")
+        ref = CARTE_PAR_CLE.get(sans_accent(nom))
+        if not ref or re.search(r"\d", dedans) or "," not in dedans:
+            return m.group(0)
+        # Une tournure éditoriale n'est pas une liste d'ingrédients : on ne
+        # réécrit que si le texte en place en est bien une.
+        mots = {sans_accent(x) for x in re.split(r"[\s,()]+", dedans) if len(x) > 3}
+        if len(mots & INGREDIENTS) < 2:
+            return m.group(0)
+        vrai = ref[1]["ingredients"]
+        return m.group(0) if sans_accent(dedans) == sans_accent(vrai) else \
+            f'{m.group("tete")}{nom}{m.group("sep")}{vrai}{m.group("fin")}'
+
+    noms = "|".join(sorted((re.escape(n) for n in CARTE["pizzas"]), key=len, reverse=True))
+    c = re.sub(rf'(?P<tete>\b[Ll][ae] )(?P<nom>{noms})(?P<sep> \()(?P<ing>[^)]{{10,140}})(?P<fin>\))',
+               _corriger_description, c)
+    c = re.sub(rf'(?P<tete>\b[Ll][ae] )(?P<nom>{noms})(?P<sep> — )(?P<ing>[a-zà-ÿ][^<.]{{10,140}}?)(?P<fin>(?=\s*[<.]))',
+               _corriger_description, c)
+
+    # E13 — "4.5/5" with a decimal point in running French text.
+    c = re.sub(rf'\b{re.escape(RATING)}\s*/\s*5(?!")', RATING.replace(".", ",") + "/5", c)
+
+    # S4 — Sarrians is not served; three pages still listed it among the towns.
+    c = re.sub(r'(Pernes-les-Fontaines, Mazan, Monteux, Aubignan), Sarrians(,? )', r'\1\2', c)
+    c = re.sub(r', Sarrians(?=,? (et )?(Caromb|Saint-Didier|Loriol))', "", c)
+    c = re.sub(r'(communes? (?:voisines?|environnantes?)[^.]{0,120}?), Sarrians\b', r'\1', c)
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
