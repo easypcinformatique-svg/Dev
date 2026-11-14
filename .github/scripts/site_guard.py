@@ -1746,6 +1746,59 @@ if old != new_sitemap:
         f.write(new_sitemap)
     log("sitemap.xml", f"régénéré depuis le disque : {len(entries)} URLs")
 
+# ---------- 4b. sitemap d'images ----------
+# Il est déclaré dans robots.txt, donc Google vient le chercher. Il ne couvrait
+# que la page d'accueil — 7 images pour 38 pages indexées — et pointait encore
+# vers hero1.webp, l'ancienne photo de bannière. Il est régénéré depuis les
+# pages réelles, avec le texte alternatif comme légende : la recherche d'images
+# compte pour un restaurant.
+smap_img = os.path.join(SITE, "sitemap-images.xml")
+blocs = []
+for url, _lastmod, _f, _p in entries:
+    chemin = url[len(HOST):].lstrip("/") or "index.html"
+    sur_disque = os.path.join(SITE, chemin if chemin.endswith(".html") else chemin + "index.html")
+    if not os.path.exists(sur_disque):
+        continue
+    contenu = open(sur_disque, encoding="utf-8").read()
+    vues, images = set(), []
+    # La photo de bannière est un fond CSS, pas une balise <img> : c'est
+    # pourtant l'image phare du site, celle qu'on veut voir en recherche
+    # d'images. On la déclare explicitement.
+    fond = re.search(r"\.hero\{[^}]*url\('([^']+)'\)", contenu)
+    if fond:
+        plein = HOST + "/" + fond.group(1).lstrip("/")
+        vues.add(plein)
+        images.append(f"    <image:image><image:loc>{plein}</image:loc>"
+                      f"<image:title>Pizza Napoli Carpentras — pizzeria artisanale</image:title>"
+                      "</image:image>")
+    for balise in re.findall(r"<img[^>]*>", contenu):
+        src = re.search(r'src="([^"]+)"', balise)
+        alt = re.search(r'alt="([^"]*)"', balise)
+        if not src or src.group(1).startswith("data:"):
+            continue
+        plein = src.group(1) if src.group(1).startswith("http") else \
+            HOST + "/" + os.path.normpath(os.path.join(os.path.dirname(chemin),
+                                                       src.group(1))).replace(os.sep, "/").lstrip("/")
+        if plein in vues or not plein.startswith(HOST):
+            continue
+        vues.add(plein)
+        legende = unescape(alt.group(1)).strip() if alt else ""
+        images.append(f"    <image:image><image:loc>{plein}</image:loc>" +
+                      (f"<image:title>{legende.replace('&', '&amp;').replace('<', '&lt;')}</image:title>"
+                       if legende else "") + "</image:image>")
+    if images:
+        blocs.append(f"  <url>\n    <loc>{url}</loc>\n" + "\n".join(images) + "\n  </url>")
+neuf = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+        + "\n".join(blocs) + "\n</urlset>\n")
+ancien = open(smap_img, encoding="utf-8").read() if os.path.exists(smap_img) else ""
+if ancien != neuf:
+    with open(smap_img, "w", encoding="utf-8") as f:
+        f.write(neuf)
+    log("sitemap-images.xml",
+        f"régénéré : {sum(b.count('<image:image>') for b in blocs)} images sur {len(blocs)} pages")
+
 print(f"\n{len(report)} changement(s)" if report else "\nAucun changement — site conforme")
 
 # ---------- structural check: fail loudly rather than ship broken markup ----------
