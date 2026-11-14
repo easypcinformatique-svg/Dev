@@ -275,6 +275,24 @@ def sans_accent(nom):
 CARTE_PAR_CLE = {sans_accent(n): (n, d) for n, d in CARTE["pizzas"].items()}
 
 
+def remplacer_div(c, ident, neuf):
+    """Replace a whole <div id="…">…</div>, counting nesting rather than
+    guessing at a closing pattern: a regex that assumes how many </div> sit at
+    the end silently does nothing the day the markup gains a paragraph."""
+    depart = c.find(f'<div id="{ident}"')
+    if depart == -1:
+        return c, False
+    profondeur, i = 0, depart
+    for m in re.finditer(r'<div\b|</div>', c[depart:]):
+        profondeur += 1 if m.group(0) == "<div" else -1
+        if profondeur == 0:
+            i = depart + m.end()
+            break
+    else:
+        return c, False
+    return c[:depart] + neuf + c[i:], True
+
+
 FAVICONS = "\n".join(
     t for t in re.findall(r'<link[^>]*rel="(?:shortcut )?(?:icon|apple-touch-icon)"[^>]*>', home_html)
     if (lambda h: h and os.path.exists(os.path.join(SITE, h.group(1).lstrip("/"))))(
@@ -938,36 +956,125 @@ for path in pages:
         bloc = "var _min = -1;\n" + "\n".join(lignes) + "\n    if (_min === -1) {"
         avant = c
         c = re.sub(r"var _min = -1;.*?if \(_min === -1\) \{", bloc, c, flags=re.DOTALL)
-        c = re.sub(r"Nous livrons uniquement a : [^\\']*", f"Nous livrons uniquement a : {VILLES}.", c)
+        c = re.sub(r"Nous livrons uniquement a : [^\\']*", f"Nous livrons uniquement à : {VILLES}.", c)
         if c != avant:
             log(rel, "contrôle de zone de la commande régénéré depuis COMMUNES")
 
-    # 6z3. The banner promised a free 1.5 L bottle from 3 pizzas. The flyer
-    # sells a soda for 0,50 € from 3 and gives one from 5. The site was the
-    # generous one, and the customer reads both.
-    c = c.replace("3 pizzas achetées = 1 bouteille offerte",
-                  "3 pizzas = soda à 0,50 € · 5 pizzas = soda ou rosé offert")
-    if "free-bottle-popup" in c:
-        c = re.sub(r'\d+ pizzas achet[ée]es = 1 (?:bouteille 1\.5L offerte|soda ou 1 ros[ée] offert)\.',
-                   "5 pizzas achetées = 1 soda ou 1 rosé offert.", c)
-        c = c.replace("<p style=\"color:#999;font-size:.75rem;margin-top:.8rem;\">1 bouteille offerte par commande</p>",
-                      "<p style=\"color:#999;font-size:.75rem;margin-top:.8rem;\">Une offre par commande. "
-                      "Dès 3 pizzas : soda à 0,50 €.</p>")
-        # The counter read .qty-value, a class the form does not use, so the
-        # offer never appeared at all. pizzaOrders is what the order itself
-        # reads. A second block further down counts the same dead class to
-        # score "pizza points"; it is equally inert and the real minimum check
-        # lives in envoyerWhatsApp(), so it is left alone rather than woken up
-        # into a second, competing validation path.
+    # 6z3. The drinks list and the two offers come from the flyer. The old
+    # popup knew only one tier, offered 1.5 L bottles the price list does not
+    # contain, and counted a CSS class the form does not use — so it had never
+    # once appeared. It is replaced wholesale by a panel generated from
+    # carte.json: the highest tier the basket reaches is proposed, one offer per
+    # order, and the chosen drink joins the order like any other line.
+    if "const DRINKS" in c:
+        lignes = ",\n".join(f"{{name:'{b['nom']}',price:{b['prix']:.2f}}}" for b in CARTE["boissons"])
         avant = c
-        c = c.replace(
-            "var qtyEls = document.querySelectorAll('.qty-value');\n"
-            "      qtyEls.forEach(function(el) { totalPizzas += parseInt(el.textContent) || 0; });",
-            "Object.values(pizzaOrders || {}).forEach(function(o) { totalPizzas += o.qty || 0; });")
+        c = re.sub(r"const DRINKS = \[.*?\n\];", f"const DRINKS = [\n{lignes}\n];", c, flags=re.DOTALL)
         if c != avant:
-            log(rel, "offre boisson : compteur de pizzas réparé")
-        c = c.replace("if (totalPizzas >= 3 && !selectedFreeBottle) {",
-                      "if (totalPizzas >= 5 && !selectedFreeBottle) {")
+            log(rel, f"boissons alignées sur le dépliant ({len(CARTE['boissons'])} références)")
+
+    if "free-bottle-popup" in c or "offres-boisson" in c:
+        offres = json.dumps(CARTE["offres"], ensure_ascii=False)
+        evin = CARTE["mentions"]["alcool"]
+        panneau = (
+            '<div id="offres-boisson" style="display:none;position:fixed;inset:0;'
+            'background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;">'
+            '<div role="dialog" aria-labelledby="offre-titre" style="background:#FFFDF7;border-radius:12px;'
+            'padding:1.6rem;max-width:400px;margin:1rem;max-height:86vh;overflow:auto;">'
+            '<h3 id="offre-titre" style="color:#A8202A;font-size:1.15rem;margin:0 0 .4rem;">🎁 Votre offre</h3>'
+            '<p id="offre-detail" style="color:#555;font-size:.9rem;margin:0 0 1rem;"></p>'
+            '<div id="offre-choix" style="display:flex;flex-direction:column;gap:.5rem;"></div>'
+            f'<p id="offre-evin" style="color:#777;font-size:.7rem;margin:.9rem 0 0;display:none;">{evin}</p>'
+            '<p style="color:#999;font-size:.72rem;margin:.6rem 0 0;">Une offre par commande.</p>'
+            '<button type="button" onclick="refuserOffre()" style="margin-top:.9rem;width:100%;'
+            'padding:.6rem;border:1px solid #ccc;background:transparent;border-radius:8px;'
+            'cursor:pointer;font:inherit;color:#555;">Non merci</button>'
+            '</div></div>')
+        script = (
+            "<script>\n"
+            f"var OFFRES = {offres};\n"
+            "var offreChoisie = null, offreRefusee = false;\n"
+            "function nbPizzas(){var n=0;Object.values(typeof pizzaOrders!=='undefined'?pizzaOrders:{})"
+            ".forEach(function(o){n+=o.qty||0;});return n;}\n"
+            "function offreApplicable(){var n=nbPizzas();"
+            "for(var i=0;i<OFFRES.length;i++){if(n>=OFFRES[i].seuil)return OFFRES[i];}return null;}\n"
+            "function proposerOffre(){var o=offreApplicable();"
+            "if(!o||offreRefusee||(offreChoisie&&offreChoisie.seuil===o.seuil))return;\n"
+            "document.getElementById('offre-detail').textContent=o.titre;\n"
+            "document.getElementById('offre-evin').style.display=o.alcool?'block':'none';\n"
+            "var z=document.getElementById('offre-choix');z.innerHTML='';\n"
+            "o.choix.forEach(function(nom){var b=document.createElement('button');b.type='button';\n"
+            "b.style.cssText='padding:.7rem;border:2px solid #A8202A;background:#fff;border-radius:8px;"
+            "cursor:pointer;font:inherit;font-weight:600;';b.textContent=nom;\n"
+            "b.onclick=function(){choisirOffre(nom,o);};z.appendChild(b);});\n"
+            "document.getElementById('offres-boisson').style.display='flex';}\n"
+            "function choisirOffre(nom,o){offreChoisie={nom:nom,prix:o.prix,seuil:o.seuil,titre:o.titre};\n"
+            "document.getElementById('offres-boisson').style.display='none';\n"
+            "if(typeof updateTotal==='function')updateTotal();}\n"
+            "function refuserOffre(){offreRefusee=true;"
+            "document.getElementById('offres-boisson').style.display='none';}\n"
+            "function ligneOffre(){return offreChoisie?offreChoisie.nom+' ('+(offreChoisie.prix?"
+            "euroFmt(offreChoisie.prix):'offert')+')':'';}\n"
+            "var _nsOffre = typeof nextStep==='function'?nextStep:null;\n"
+            "if(_nsOffre){nextStep=function(s){if(s===2){proposerOffre();}_nsOffre(s);};}\n"
+            "</script>")
+        avant = c
+        # Remove the old popup, its handler and the nextStep override that drove it.
+        c, remplace = remplacer_div(c, "free-bottle-popup", panneau)
+        if not remplace:
+            c, remplace = remplacer_div(c, "offres-boisson", panneau)
+        if not remplace and "offres-boisson" not in c:
+            log(rel, "ALERTE panneau d'offres introuvable, rien remplacé")
+        c = re.sub(r"<script>\s*var selectedFreeBottle = '';.*?\n</script>", script, c, flags=re.DOTALL)
+        c = re.sub(r"<script>\nvar OFFRES = .*?\n</script>", script, c, flags=re.DOTALL)
+        if c != avant:
+            log(rel, "offres boissons du dépliant : deux paliers (3 et 5 pizzas)")
+
+    # The offer has to reach the total and the order message, or it is
+    # decoration. Both run before the block that declares offreChoisie, so the
+    # binding is tested rather than assumed.
+    if "offreChoisie" in c and "function updateTotal" in c:
+        if "offreRetenue" not in c:
+            c = c.replace(
+                "Object.values(drinkOrders).forEach(o=>{if(o.qty>0){total+=o.qty*o.price;count+=o.qty;}});",
+                "Object.values(drinkOrders).forEach(o=>{if(o.qty>0){total+=o.qty*o.price;count+=o.qty;}});\n"
+                "const offreRetenue = typeof offreChoisie!=='undefined' && offreChoisie;\n"
+                "if(offreRetenue){total+=offreRetenue.prix;count++;}", 1)
+        if "OFFRE :" not in c:
+            c = c.replace(
+                "msg+='💰 *Total estimé : '+euroFmt(total)+'*\\n';",
+                "if(typeof offreChoisie!=='undefined' && offreChoisie){total+=offreChoisie.prix;"
+                "msg+='🎁 *OFFRE :* '+ligneOffre()+'\\n\\n';}\n"
+                "msg+='💰 *Total estimé : '+euroFmt(total)+'*\\n';", 1)
+            log(rel, "offre reportée dans le total et le message de commande")
+
+    # 6z4. The alerts a refused customer reads were written without accents, and
+    # offered no way out. The flyer answers that case: "Hors zone ? Appelez-nous."
+    c = c.replace("Desole, nous ne livrons pas a cette adresse.",
+                  "Désolé, nous ne livrons pas à cette adresse.")
+    c = c.replace("Verifiez votre adresse ou choisissez A emporter.",
+                  "Vérifiez votre adresse ou choisissez À emporter.")
+    c = re.sub(r"(Désolé, nous ne livrons pas à cette adresse\.\\n[^']*?)(?<!08\.)'",
+               lambda m: m.group(1) + ("" if CARTE["mentions"]["hors_zone"] in m.group(1)
+                                       else "\\n" + CARTE["mentions"]["hors_zone"]) + "'", c)
+    c = c.replace("Minimum pour livrer a cette adresse :", "Minimum pour livrer à cette adresse :")
+    c = c.replace("Votre commande equivaut a ", "Votre commande équivaut à ")
+    c = c.replace("Ajoutez des pizzas pour commander en livraison.",
+                  "Ajoutez des pizzas pour commander en livraison.")
+
+    # 6z5. Two notices the flyer carries and the site did not spell correctly:
+    # the allergen list (règlement INCO) and what the cheese is made of. The
+    # homepage declared nine allergens and the CGV twelve; the longer list wins
+    # everywhere, because under-declaring one cannot be taken back.
+    avant = c
+    c = re.sub(r'Allerg[eè]nes\s*:\s*nos pizzas peuvent contenir[^<]*',
+               CARTE["mentions"]["allergenes"], c, flags=re.IGNORECASE)
+    c = re.sub(r'La liste des allerg[eè]nes est disponible sur demande au 07 61 08 36 08\.\s*'
+               r'Nos pizzas peuvent contenir\s*:[^<]*',
+               CARTE["mentions"]["allergenes"], c, flags=re.IGNORECASE)
+    c = re.sub(r'(<h[23][^>]*>\s*(?:\d+\.\s*)?)Allergenes(\s*</h[23]>)', r'\1Allergènes\2', c)
+    if c != avant:
+        log(rel, "mention allergènes harmonisée (liste complète, accentuée)")
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the

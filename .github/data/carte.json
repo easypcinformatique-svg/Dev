@@ -1,5 +1,5 @@
 {
- "source": "Depliant_Pizza_Napoli_A3_plie_A4_noir_6.pdf, prix en vigueur en octobre 2026",
+ "source": "Depliant_Pizza_Napoli_A4_plie_A5_noir_2.pdf, prix TTC en vigueur en octobre 2026",
  "renommages": {
   "Raviole Basilic": "Raviole"
  },
@@ -390,5 +390,95 @@
    "grande": 12.9,
    "ingredients": "Fromage, crème, viande hachée, merguez, oignons, Tabasco"
   }
+ },
+ "boissons": [
+  {
+   "nom": "Coca-Cola 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Coca Cherry 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Orangina 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Fanta 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Oasis 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Ice Tea 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Schweppes 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Eau minérale 33cl",
+   "prix": 1.6
+  },
+  {
+   "nom": "Bouteille Coca-Cola 1 L à 1,5 L",
+   "prix": 3.5
+  },
+  {
+   "nom": "Bouteille Fanta 1 L à 1,5 L",
+   "prix": 3.0
+  },
+  {
+   "nom": "Bouteille Ice Tea 1 L à 1,5 L",
+   "prix": 3.0
+  },
+  {
+   "nom": "Bouteille Orangina 1 L à 1,5 L",
+   "prix": 3.0
+  }
+ ],
+ "offres": [
+  {
+   "seuil": 5,
+   "titre": "5 pizzas achetées : rosé ou soda offert",
+   "prix": 0.0,
+   "choix": [
+    "Coca-Cola 33cl",
+    "Coca Cherry 33cl",
+    "Orangina 33cl",
+    "Fanta 33cl",
+    "Oasis 33cl",
+    "Ice Tea 33cl",
+    "Schweppes 33cl",
+    "Rosé"
+   ],
+   "alcool": true
+  },
+  {
+   "seuil": 3,
+   "titre": "3 pizzas achetées : votre soda à 0,50 €",
+   "prix": 0.5,
+   "choix": [
+    "Coca-Cola 33cl",
+    "Coca Cherry 33cl",
+    "Orangina 33cl",
+    "Fanta 33cl",
+    "Oasis 33cl",
+    "Ice Tea 33cl",
+    "Schweppes 33cl"
+   ],
+   "alcool": false
+  }
+ ],
+ "mentions": {
+  "alcool": "L’abus d’alcool est dangereux pour la santé, à consommer avec modération.",
+  "allergenes": "Allergènes : nos pizzas peuvent contenir gluten, lait, œufs, poisson, crustacés, mollusques, fruits à coque, céleri, moutarde, sésame, soja, lupin. Liste détaillée sur demande au 07 61 08 36 08.",
+  "fromage": "Fromage : 50 % emmental, 50 % mozzarella. Toutes nos pizzas sont personnalisables.",
+  "hors_zone": "Hors zone ? Appelez-nous au 07 61 08 36 08.",
+  "allergenes_note": "Liste la plus complète du site (celle des CGV) : le dépliant en cite neuf et renvoie au détail sur demande ; sous-déclarer ne se rattrape pas."
  }
 }
