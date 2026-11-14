@@ -1,4 +1,4 @@
-# Site AMKS Autos · Nikoghossian Père & Fils
+# Site AKMS Autos · Nikoghossian Père & Fils
 
 Site du garage AMKS Autos (carrosserie, peinture, mécanique), 115 boulevard de la Millière, Marseille 11e.
 Site statique : HTML, CSS et JavaScript sans dépendance ni étape de compilation. Il s'héberge tel quel (GitHub Pages, Netlify, OVH…).
@@ -24,7 +24,7 @@ Site statique : HTML, CSS et JavaScript sans dépendance ni étape de compilatio
 
 - **Coordonnées, horaires, fermetures, forfaits** : `js/config.js`. Les valeurs marquées « À CONFIRMER » sont à vérifier avant la mise en ligne.
 - **Véhicules à vendre** : ajouter des objets dans `data/vehicules.json` (modèle dans le champ `exemple`). Photos dans `img/`.
-- **Domaine** : remplacer `https://amks-autos.fr/` dans `index.html`, `robots.txt` et `sitemap.xml`.
+- **Domaine** : remplacer `https://akms-autos.fr/` dans `index.html`, `robots.txt` et `sitemap.xml`.
 
 ## Tester en local
 

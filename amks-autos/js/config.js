@@ -1,5 +1,5 @@
 /*
- * AMKS Autos : toutes les informations modifiables du site sont ici.
+ * AKMS Autos : toutes les informations modifiables du site sont ici.
  * Changez une valeur, enregistrez, et le site se met à jour partout (en-tête,
  * pied de page, formulaires, statut « ouvert / fermé », mentions légales).
  *
@@ -7,7 +7,7 @@
  * (Kbis, factures) mais doivent être vérifiées par le gérant avant la mise en ligne.
  */
 window.AMKS = {
-  nom: "AMKS Autos",
+  nom: "AKMS Autos",      // nom commercial (logo). La société reste AMKS AUTOS au Kbis.
   signature: "Nikoghossian Père & Fils",
   raisonSociale: "AMKS AUTOS",
   forme: "SARL à associé unique",

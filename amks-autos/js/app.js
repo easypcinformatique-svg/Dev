@@ -29,7 +29,7 @@
   $$(".mail-link").forEach(function (a) { a.href = "mailto:" + C.email; a.textContent = C.email; });
   var callTop = $("#call-top"); if (callTop) { callTop.href = "tel:+" + C.telephoneIntl; $(".call-num", callTop).textContent = C.telephone; }
   var itin = $("#itin"); if (itin) itin.href = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(adresse);
-  var waD = $("#wa-direct"); if (waD) waD.href = "https://wa.me/" + C.telephoneIntl + "?text=" + encodeURIComponent("Bonjour AMKS Autos, ");
+  var waD = $("#wa-direct"); if (waD) waD.href = "https://wa.me/" + C.telephoneIntl + "?text=" + encodeURIComponent("Bonjour " + C.nom + ", ");
 
   /* ---------- Horaires et statut en direct ---------- */
   function plages(d) { return C.fermetures.indexOf(iso(d)) >= 0 ? [] : (C.horaires[d.getDay()] || []); }
@@ -151,7 +151,7 @@
     var dt = iso(d).replace(/-/g, ""), uid = dt + "-" + title.replace(/\W/g, "") + "@amks-autos";
     var stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
     return ["BEGIN:VEVENT", "UID:" + uid, "DTSTAMP:" + stamp, "DTSTART;VALUE=DATE:" + dt, "SUMMARY:" + title, "DESCRIPTION:" + desc.replace(/\n/g, "\\n"),
-      "LOCATION:AMKS Autos\\, " + adresse.replace(/,/g, "\\,"), "BEGIN:VALARM", "TRIGGER:-P7D", "ACTION:DISPLAY", "DESCRIPTION:" + title, "END:VALARM", "END:VEVENT"].join("\r\n");
+      "LOCATION:" + C.nom + "\\, " + adresse.replace(/,/g, "\\,"), "BEGIN:VALARM", "TRIGGER:-P7D", "ACTION:DISPLAY", "DESCRIPTION:" + title, "END:VALARM", "END:VEVENT"].join("\r\n");
   }
   function icsFile(events) { return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//AMKS Autos//Echeances//FR", "CALSCALE:GREGORIAN"].concat(events).concat(["END:VCALENDAR"]).join("\r\n"); }
   function download(name, text, link) {
@@ -192,7 +192,7 @@
     var act = document.createElement("div"); act.className = "ech-actions";
     act.innerHTML = '<a class="btn btn-outline" id="ech-ics">Ajouter à mon agenda</a><a class="btn btn-signal" href="#demande">Réserver à l\'atelier</a>';
     out.appendChild(act);
-    download("echeances-vehicule.ics", icsFile(items.map(function (it) { return icsEvent(it.t + " : véhicule", it.d, it.n + "\nAMKS Autos : " + C.telephone); })), $("#ech-ics"));
+    download("echeances-vehicule.ics", icsFile(items.map(function (it) { return icsEvent(it.t + " : véhicule", it.d, it.n + "\n" + C.nom + " : " + C.telephone); })), $("#ech-ics"));
     $("#ech-ics").addEventListener("click", function () { toast("Fichier agenda téléchargé : ouvrez-le pour ajouter les rappels."); });
     try { localStorage.setItem("amks-ech", JSON.stringify({ mec: $("#ech-mec").value, ct: $("#ech-ct").value, rev: $("#ech-rev").value, km: km })); } catch (x) {}
   }
@@ -327,7 +327,7 @@
   var LIB = { devis: "Demande de devis", rdv: "Demande de rendez-vous", sinistre: "Déclaration de sinistre", vehicule: "Demande véhicule d'occasion" };
   function recap() {
     var t = typeVal(), d = choix.jour ? parse(choix.jour) : null, v = function (s) { return $(s).value.trim(); };
-    var lignes = [LIB[t] + " · AMKS Autos", ""];
+    var lignes = [LIB[t] + " · " + C.nom, ""];
     var tr = $$(".chip[aria-pressed=true]").map(function (b) { return b.textContent; });
     if (tr.length) lignes.push("Travaux : " + tr.join(", "));
     if (v("#wz-desc")) lignes.push("Détail : " + v("#wz-desc"));
@@ -347,7 +347,7 @@
       var f = function (x) { return iso(x).replace(/-/g, "") + "T" + pad(x.getHours()) + pad(x.getMinutes()) + "00"; };
       var end = new Date(start.getTime() + C.creneauMinutes * 6e4);
       var ev = ["BEGIN:VEVENT", "UID:" + f(start) + "-rdv@amks-autos", "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""),
-        "DTSTART:" + f(start), "DTEND:" + f(end), "SUMMARY:Dépôt du véhicule chez AMKS Autos (à confirmer par le garage)", "LOCATION:" + adresse.replace(/,/g, "\\,"),
+        "DTSTART:" + f(start), "DTEND:" + f(end), "SUMMARY:Dépôt du véhicule chez " + C.nom + " (à confirmer par le garage)", "LOCATION:" + adresse.replace(/,/g, "\\,"),
         "DESCRIPTION:" + txt.replace(/\n/g, "\\n").replace(/,/g, "\\,"), "END:VEVENT"].join("\r\n");
       download("rdv-amks-autos.ics", icsFile([ev]), ics); ics.hidden = false;
     } else ics.hidden = true;
