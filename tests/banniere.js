@@ -19,8 +19,19 @@ const lum = (r, g, b) => 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(
   };
 
   await page.goto(BASE + '/', { waitUntil: 'load' });
+  const depart = Date.now();
   await page.waitForSelector('#loader.hide', { timeout: 10000 });
-  await page.waitForTimeout(1200);
+  // L'intro ne doit pas retenir le visiteur : 1 s au plus avant que la page
+  // soit utilisable, et les textes de la bannière doivent suivre tout de suite.
+  const intro = Date.now() - depart;
+  t('intro retirée en moins d’une seconde', intro < 1000, `${intro} ms`);
+  await page.waitForFunction(
+    () => [...document.querySelectorAll('.hero-badge,.hero-sub,.hero-btns')]
+      .every(e => parseFloat(getComputedStyle(e).opacity) > 0.9),
+    { timeout: 4000 }).catch(() => {});
+  const apparus = Date.now() - depart;
+  t('bannière complète en moins de 2 s', apparus < 2000, `${apparus} ms`);
+  await page.waitForTimeout(400);
 
   const fond = await page.evaluate(() => getComputedStyle(document.querySelector('.hero')).backgroundImage);
   t('la bannière porte une photo', /url\(/.test(fond), fond.slice(0, 80));

@@ -548,6 +548,22 @@ for path in pages:
     c = c.replace("linear-gradient(to bottom,rgba(0,0,0,.50) 0%,rgba(0,0,0,.15) 40%,rgba(0,0,0,.60) 100%)",
                   "linear-gradient(to bottom,rgba(0,0,0,.58) 0%,rgba(0,0,0,.44) 40%,rgba(0,0,0,.66) 100%)")
 
+    # L'écran d'intro au drapeau bloquait la page 2 secondes à chaque visite :
+    # 1,2 s d'attente puis 0,8 s de fondu. Ramené à 0,7 s au total. Les textes
+    # de la bannière étaient minutés pour apparaître après lui — les décaler
+    # aussi, sinon la bannière reste vide une seconde et demie.
+    c = c.replace("getElementById('loader').classList.add('hide'),1200)",
+                  "getElementById('loader').classList.add('hide'),350)")
+    c = c.replace("#loader{position:fixed;inset:0;display:flex;align-items:center;"
+                  "justify-content:center;z-index:9999;transition:opacity .8s ease,visibility .8s;",
+                  "#loader{position:fixed;inset:0;display:flex;align-items:center;"
+                  "justify-content:center;z-index:9999;transition:opacity .35s ease,visibility .35s;")
+    for _avant, _apres in (("animation-delay:1.8s", "animation-delay:.75s"),
+                           ("animation-delay:2s", "animation-delay:.9s"),
+                           ("animation-delay:2.2s", "animation-delay:1.05s"),
+                           ("animation-delay:2.4s", "animation-delay:1.2s")):
+        c = c.replace(_avant, _apres)
+
     # 6h. accents dropped by a generator that transliterated to ASCII.
     # Text nodes only: attributes carry file names and URLs, and accenting
     # img/chateau.webp into img/château.webp breaks the image.
