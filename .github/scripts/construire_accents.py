@@ -44,6 +44,8 @@ for p in glob.glob(os.path.join(SITE, "**", "*.html"), recursive=True):
 
 table, ambigus, inconnus = {}, {}, []
 for mot, n in jetons.items():
+    if mot in NOMS_PROPRES:
+        continue
     if valide(mot):
         continue                                  # mot français valide tel qu'écrit
     accentuees = {f: k for f, k in index.get(mot, {}).items() if f != mot and valide(f)}

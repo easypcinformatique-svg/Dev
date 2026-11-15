@@ -1664,6 +1664,84 @@ for path in pages:
             "</script>\n</body>", 1)
         log(rel, "minimum de commande annoncé dès la saisie de l'adresse")
 
+    # S7 + S12. Le bloc « Nos pages locales » est le maillage interne le plus
+    # fort du site. Il pointait vers deux pages canonisées ailleurs — qui ne
+    # remonteront jamais, donc du maillage dépensé dans le vide — et n'exposait
+    # que quatre communes sur neuf. Les fantômes partent, les manquantes
+    # arrivent, le tout dérivé de COMMUNES.
+    if rel == "index.html" and "Nos pages locales" in c:
+        _style = ('style="background:#fff;border:1px solid #e0dbd0;border-radius:4px;padding:1rem;'
+                  'text-decoration:none;color:var(--brun);font-size:.82rem;font-weight:600;'
+                  'transition:box-shadow .2s;display:block;" '
+                  'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.1)\'" '
+                  'onmouseout="this.style.boxShadow=\'none\'"')
+        avant = c
+        for _fantome in ("/pizza-carpentras/", "/livraison-pizza-84200/"):
+            c = re.sub(rf'\s*<a href="{re.escape(_fantome)}"[^>]*>.*?</a>', "", c, flags=re.DOTALL)
+        manquantes = []
+        for _slug, (_nom, _cp, _mini, _g) in COMMUNES.items():
+            lien = f"/livraison-pizza-{_slug}/"
+            # On cherche une carte, pas un lien : ces communes sont déjà citées
+            # ailleurs dans la page, ce qui faisait croire qu'elles y étaient.
+            if f'<a href="{lien}" {_style}' in c or _slug == "carpentras":
+                continue
+            if not os.path.isdir(os.path.join(SITE, f"livraison-pizza-{_slug}")):
+                continue
+            manquantes.append(
+                f'<a href="{lien}" {_style}>🛵 {_nom}<br>'
+                f'<span style="font-weight:400;color:#888;font-size:.75rem;">'
+                f'Dès {_mini} grandes · {_cp}</span></a>')
+        if manquantes:
+            # On s'ancre sur la dernière carte du bloc, repérée à son style :
+            # chercher le dernier lien « livraison-pizza » de la page entière
+            # posait les cartes bien plus bas, hors du bloc.
+            dernier = c.rfind(f'<a href="/livraison-pizza-', 0, c.find("Nos pages locales") + 7000)
+            while dernier != -1 and _style not in c[dernier:dernier + 420]:
+                dernier = c.rfind('<a href="/livraison-pizza-', 0, dernier)
+            if dernier != -1:
+                fin = c.find("</a>", dernier) + 4
+                c = c[:fin] + " " + " ".join(manquantes) + c[fin:]
+            else:
+                manquantes = []
+        if c != avant:
+            log(rel, f"pages locales : 2 pages fantômes retirées, {len(manquantes)} commune(s) ajoutée(s)")
+
+    # T12. Le formulaire collecte nom, téléphone et adresse du domicile, puis
+    # transmet le tout par WhatsApp — un transfert vers un tiers — sans rien en
+    # dire ni renvoyer vers la politique de confidentialité. La phrase tient en
+    # deux lignes et se place là où les données sont saisies.
+    if rel == "index.html" and "rgpd-formulaire" not in c and 'onclick="nextStep(1)"' in c:
+        c = c.replace('<p style="font-size:.72rem;color:#aaa;margin-top:.7rem;">❌ Chèques non acceptés</p>',
+                      '<p style="font-size:.72rem;color:#aaa;margin-top:.7rem;">❌ Chèques non acceptés</p>'
+                      '<p id="rgpd-formulaire" style="font-size:.72rem;color:#8A8276;margin-top:.9rem;'
+                      'line-height:1.55;">Vos coordonnées servent uniquement à préparer et livrer votre '
+                      'commande. Celle-ci est transmise à notre équipe via WhatsApp (Meta Platforms '
+                      'Ireland Ltd). <a href="/politique-de-confidentialite/" style="color:#A8202A;">'
+                      'Politique de confidentialité</a>.</p>', 1)
+        log(rel, "information RGPD ajoutée là où les données sont saisies")
+
+    # C8. Les créneaux commençaient à 19h30 alors que l'à emporter ouvre à
+    # 18h50, et la même liste servait aux deux modes : impossible de demander
+    # sa pizza à 19h en la retirant soi-même. La liste suit maintenant le mode.
+    if rel == "index.html" and "creneauxSelonMode" not in c and 'id="client-heure"' in c:
+        c = c.replace("</body>",
+            "<script>\n"
+            "function creneauxSelonMode(){var s=document.getElementById('client-heure');\n"
+            "var e=document.getElementById('mode-emporter');if(!s)return;\n"
+            "var emporter=e&&e.checked;\n"
+            "var debut=emporter?18*60+50:19*60, fin=emporter?21*60+45:21*60+30;\n"
+            "var choisi=s.value, html='<option value=\"\">— Choisir un créneau —</option>';\n"
+            "for(var m=debut;m<=fin;m+=15){var h=Math.floor(m/60),mn=m%60;\n"
+            "var lib=h+'h'+(mn<10?'0':'')+mn;\n"
+            "html+='<option value=\"'+lib+'\"'+(lib===choisi?' selected':'')+'>'+lib+\n"
+            "(m+15>fin?' — dernier créneau':'')+'</option>';}\n"
+            "s.innerHTML=html;}\n"
+            "document.addEventListener('change',function(e){if(e.target&&e.target.name==='mode')"
+            "creneauxSelonMode();});\n"
+            "window.addEventListener('load',creneauxSelonMode);\n"
+            "</script>\n</body>", 1)
+        log(rel, "créneaux horaires adaptés au mode de retrait")
+
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
     # phone modal by itself, so one label has to be true in both cases.
