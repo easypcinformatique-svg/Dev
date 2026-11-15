@@ -1615,6 +1615,55 @@ for path in pages:
                    "30 a 45 minutes", "30 à 45 minutes"):
         c = c.replace(_forme, "20 à 50 minutes selon la commune")
 
+    # C2. Le minimum de commande n'était annoncé qu'au dernier clic : le client
+    # remplissait quatre écrans pour apprendre qu'il doit doubler sa commande.
+    # L'information existe pourtant dès la saisie de l'adresse. Elle s'affiche
+    # maintenant sous le champ, puis en permanence dans la barre de total avec
+    # ce qu'il manque. Le bouton n'est pas désactivé : à emporter il n'y a pas
+    # de minimum, et bloquer un bouton sans l'expliquer est pire que le refus.
+    if rel == "index.html" and "minimumCommune" not in c and "client-adresse" in c:
+        c = c.replace(
+            '<ul id="adr-suggestions"',
+            '<p id="min-commune" style="display:none;margin:.45rem 0 0;font-size:.82rem;'
+            'line-height:1.45;color:#3D3328;background:rgba(200,151,42,.12);'
+            'border-left:3px solid #C8972A;padding:.5rem .7rem;border-radius:2px;"></p>'
+            '<ul id="adr-suggestions"', 1)
+        c = c.replace("</body>",
+            "<script>\n"
+            "function pizzasEnPoints(){var p=0;Object.values(typeof pizzaOrders!=='undefined'?pizzaOrders:{})"
+            ".forEach(function(o){if(o.qty>0)p+=o.qty*(o.size==='26'?0.5:1);});return p;}\n"
+            "function minimumCommune(){var e=document.getElementById('client-adresse');\n"
+            "var m=document.getElementById('mode-livraison');\n"
+            "if(!e||!m||!m.checked||!e.value.trim())return null;\n"
+            "var n=getMinPizzasForCity(e.value);\n"
+            "return n===-1?{hors:true}:{min:n,ville:getCityName(e.value)};}\n"
+            "function afficherMinimum(){var z=document.getElementById('min-commune');if(!z)return;\n"
+            "var r=minimumCommune();\n"
+            "if(!r){z.style.display='none';return;}\n"
+            "z.style.display='block';\n"
+            "if(r.hors){z.innerHTML='Nous ne livrons pas à cette adresse. "
+            "La commande reste possible à emporter, ou appelez-nous au "
+            f"<a href=\"tel:{ENTREPRISE['telephone'].replace(' ', '')}\">{ENTREPRISE['telephone']}</a>.';return;}}\n"
+            "z.innerHTML='<strong>Livraison à '+(r.ville||'cette adresse')+' : à partir de '+r.min+\n"
+            "' grandes pizzas (ou '+(r.min*2)+' petites).</strong> Livraison gratuite dès ce minimum.';}\n"
+            "function manqueTexte(){var r=minimumCommune();\n"
+            "if(!r||r.hors||!r.min)return '';\n"
+            "var p=pizzasEnPoints(),reste=r.min-p;\n"
+            "if(reste<=0)return ' · minimum atteint';\n"
+            "var pet=Math.round(reste*2);\n"
+            "return ' · il manque '+(reste%1?pet+' petite'+(pet>1?'s':''):reste+' grande'+(reste>1?'s':''));}\n"
+            "var _vaOrig=typeof validateAdresse==='function'?validateAdresse:null;\n"
+            "if(_vaOrig){validateAdresse=function(i){_vaOrig(i);afficherMinimum();"
+            "if(typeof updateTotal==='function')updateTotal();};}\n"
+            "var _utOrig=typeof updateTotal==='function'?updateTotal:null;\n"
+            "if(_utOrig){updateTotal=function(){_utOrig();\n"
+            "var s=document.getElementById('sticky-count');\n"
+            "if(s&&!/il manque|minimum atteint/.test(s.textContent))s.textContent+=manqueTexte();};}\n"
+            "document.addEventListener('change',function(e){if(e.target&&e.target.name==='mode')"
+            "{afficherMinimum();if(typeof updateTotal==='function')updateTotal();}});\n"
+            "</script>\n</body>", 1)
+        log(rel, "minimum de commande annoncé dès la saisie de l'adresse")
+
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
     # phone modal by itself, so one label has to be true in both cases.
