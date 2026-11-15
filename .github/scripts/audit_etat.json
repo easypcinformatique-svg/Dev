@@ -18,14 +18,14 @@
   "gravite": "important",
   "titre": "Meta description de l'accueil fautive",
   "etat": "résolu",
-  "detail": "Pizza Napoli Carpentras — Pizzeria artisanale depuis 2008. Livraison gratuite 7j/7 dès 17h30. 80 recettes dès 7€90. ☎ 07"
+  "detail": "Pizza Napoli Carpentras — Pizzeria artisanale depuis 2008. Livraison gratuite 7j/7 dès 17h30. 80 recettes dès 7€. ☎ 07 6"
  },
  {
   "code": "E4",
   "gravite": "important",
   "titre": "Balises <title> sans accents",
-  "etat": "ouvert",
-  "detail": "blog/guide-pernes.html"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "E5",
@@ -87,8 +87,8 @@
   "code": "E13",
   "gravite": "mineur",
   "titre": "Note écrite « 4.5/5 » dans le texte visible",
-  "etat": "ouvert",
-  "detail": "index.html"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "E14",
@@ -123,7 +123,7 @@
   "gravite": "important",
   "titre": "Sarrians annoncé desservi",
   "etat": "ouvert",
-  "detail": "livraison-pizza-sarrians/index.html, blog/que-faire-carpentras-ce-soir/index.html, blog/faq-livraison-pizza-carpentras/index.html"
+  "detail": "livraison-pizza-sarrians/index.html, blog/que-faire-carpentras-ce-soir/index.html"
  },
  {
   "code": "S5",
@@ -165,7 +165,7 @@
   "gravite": "mineur",
   "titre": "Balises <title> de plus de 60 caractères",
   "etat": "ouvert",
-  "detail": "27 page(s), max 88"
+  "detail": "1 page(s), max 61"
  },
  {
   "code": "S11",
@@ -297,22 +297,22 @@
   "code": "T6",
   "gravite": "important",
   "titre": "Mentions légales incomplètes (LCEN)",
-  "etat": "ouvert",
-  "detail": "manque : RCS, capital social, TVA intracommunautaire, directeur de la publication"
+  "etat": "résolu",
+  "detail": "manque : "
  },
  {
   "code": "T7",
   "gravite": "important",
   "titre": "CGV sans minimum de commande ni rétractation",
-  "etat": "ouvert",
-  "detail": "manque : minimum de commande, droit de rétractation"
+  "etat": "résolu",
+  "detail": "manque : "
  },
  {
   "code": "T8",
   "gravite": "important",
   "titre": "Ancienneté contradictoire",
   "etat": "ouvert",
-  "detail": "durées citées : 10, 15, 16, 18 ; « 2010 — Ouverture » sur 1 page(s)"
+  "detail": "durées citées : 10, 15, 18 ; « 2010 — Ouverture » sur 0 page(s)"
  },
  {
   "code": "T9",
@@ -333,13 +333,13 @@
   "gravite": "important",
   "titre": "Descriptions de pizzas fausses dans le blog",
   "etat": "ouvert",
-  "detail": "blog/faq-livraison-pizza-carpentras/index.html, blog/guide-carpentras.html, blog/guide-livraison-pizza-carpentras/index.html, blog/que-faire-carpentras-ce-soir/index.html, blog/que-faire-mazan-ce-soir/index.html"
+  "detail": "blog/guide-carpentras.html, blog/guide-livraison-pizza-carpentras/index.html, blog/que-faire-carpentras-ce-soir/index.html, blog/que-faire-pernes-les-fontaines-ce-soir/index.html, pizza-carpentras/index.html"
  },
  {
   "code": "T12",
   "gravite": "important",
   "titre": "Formulaire collectant des données sans information",
-  "etat": "résolu",
+  "etat": "ouvert",
   "detail": ""
  },
  {

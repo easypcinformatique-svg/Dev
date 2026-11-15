@@ -56,6 +56,17 @@ COMMUNES = {
 # village order — and the zone table on the homepage states both, the team
 # settling the case on the call back.
 SECTEURS = {("monteux", "lac / périphérie"): 4}
+
+# Délai de livraison par commune, relevé sur la page dédiée à chacune — celle
+# qui fait autorité. Sept communes en annonçaient deux versions selon la page.
+DELAIS = {
+    "Carpentras": (20, 35), "Serres": (20, 35), "Aubignan": (20, 35),
+    "Caromb": (25, 40), "Loriol-du-Comtat": (25, 40), "Monteux": (25, 40),
+    "Pernes-les-Fontaines": (30, 45),
+    "Mazan": (35, 50), "Saint-Didier": (35, 50),
+}
+ALIAS_DELAI = {v: v for v in DELAIS}
+ALIAS_DELAI.update({"Pernes": "Pernes-les-Fontaines", "Loriol": "Loriol-du-Comtat"})
 STRUCTURAL = ("div", "nav", "main", "header", "footer", "section", "ul", "table")
 
 
@@ -1553,6 +1564,56 @@ for path in pages:
         if repointes or poses or retires:
             log(rel, f"sommaire : {repointes} lien(s) repointé(s), {poses} ancre(s) posée(s), "
                      f"{retires} entrée(s) sans section retirée(s)")
+
+    # 6z9. Lot issu de l'audit : ce qui reste corrigeable sans inventer un fait.
+
+    # T10 — « plus de 80 recettes » onze fois, en minuscules : la règle
+    # précédente ne traitait que la capitale initiale.
+    c = re.sub(r'\b[Pp]lus de (80 recettes)', r'\1', c)
+
+    # S3 — la vignette du blog décrivait encore Serres (05700), dans les
+    # Hautes-Alpes, alors que l'article a été réécrit sur Serres (84200).
+    c = c.replace("Citadelle médiévale, lac de Serre-Ponçon, panorama sur la vallée du Buëch... "
+                  "La cité médiévale des Hautes-Alpes aux portes des Alpes.", DESC_SERRES)
+
+    # S4 — Sarrians figurait encore dans des énumérations de zones livrées.
+    c = re.sub(r',\s*Sarrians(?=\s*(?:et alentours|et environs|\.|,|<))', "", c)
+    if rel.startswith("livraison-pizza-sarrians"):
+        c = re.sub(r'(<meta name="(?:description|twitter:description|og:description)"[^>]*content=")'
+                   r'Livraison Pizza Sarrians[^"]*"',
+                   r"\1Sarrians n’est pas dans notre zone de livraison. "
+                   r"La commande reste possible à emporter au 209 avenue Pierre Sémard, Carpentras.\"", c)
+
+    # T8 — « 15 ans » alors que le fonds est exploité depuis 2008. Le « 10 ans »
+    # d'un avis client reste tel quel : ce sont ses mots, pas les nôtres.
+    c = re.sub(r'\b15 ans\b', f"{date.today().year - int(FOUNDED)} ans", c)
+
+    # T14 — un superlatif chiffrable engage ; les faits en dessous sont plus
+    # convaincants et vérifiables.
+    c = c.replace("La Meilleure Pizza du Vaucluse depuis 2008",
+                  "Pizzeria artisanale à Carpentras depuis 2008")
+
+    # C9 — sept communes annonçaient deux délais différents selon la page,
+    # jusqu'à vingt minutes d'écart. La page dédiée à la livraison fait foi.
+    def _delai(m):
+        avant = re.sub(r"<[^>]*>", " ", c[max(0, m.start() - 140):m.start()])
+        ville = None
+        for x in re.finditer("|".join(sorted((re.escape(v) for v in ALIAS_DELAI),
+                                             key=len, reverse=True)), avant):
+            ville = ALIAS_DELAI[x.group(0)]
+        if not ville:
+            return m.group(0)
+        bas, haut = DELAIS[ville]
+        return f"{bas} à {haut} min" if "à" in m.group(0) else f"{bas}-{haut} min"
+
+    c = re.sub(r"\d{2}\s*(?:à|-|–)\s*\d{2}\s*min(?!u)", _delai, c)
+    # « 30 à 45 minutes maximum » sur la page des engagements : le mot engage,
+    # et il contredit les délais annoncés ailleurs. Chaîne exacte : une règle
+    # large sur « NN à NN minutes » écrasait les délais justes et se
+    # réappliquait à sa propre sortie, en allongeant le texte à chaque passage.
+    for _forme in ("30 a 45 minutes maximum", "30 à 45 minutes maximum",
+                   "30 a 45 minutes", "30 à 45 minutes"):
+        c = c.replace(_forme, "20 à 50 minutes selon la commune")
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
