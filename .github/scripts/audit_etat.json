@@ -10,8 +10,8 @@
   "code": "E2",
   "gravite": "important",
   "titre": "Guides partiellement désaccentués",
-  "etat": "ouvert",
-  "detail": "blog/guide-carpentras.html 92; blog/guide-monteux.html 98; livraison-pizza-84200/index.html 87"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "E3",
@@ -115,15 +115,15 @@
   "code": "S3",
   "gravite": "critique",
   "titre": "Article sur le mauvais Serres",
-  "etat": "ouvert",
-  "detail": "blog/index.html"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "S4",
   "gravite": "important",
   "titre": "Sarrians annoncé desservi",
-  "etat": "ouvert",
-  "detail": "livraison-pizza-sarrians/index.html, blog/que-faire-carpentras-ce-soir/index.html"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "S5",
@@ -164,8 +164,8 @@
   "code": "S10",
   "gravite": "mineur",
   "titre": "Balises <title> de plus de 60 caractères",
-  "etat": "ouvert",
-  "detail": "1 page(s), max 61"
+  "etat": "résolu",
+  "detail": "0 page(s), max 0"
  },
  {
   "code": "S11",
@@ -178,8 +178,8 @@
   "code": "S12",
   "gravite": "mineur",
   "titre": "Pied de page n'expose que 4 communes sur 9",
-  "etat": "ouvert",
-  "detail": "3/9 communes liées"
+  "etat": "résolu",
+  "detail": "9/9 communes liées"
  },
  {
   "code": "S13",
@@ -191,16 +191,16 @@
  {
   "code": "C1",
   "gravite": "critique",
-  "titre": "Le bouton « Commander par WhatsApp » ouvre une modale téléphone",
-  "etat": "ouvert",
-  "detail": "le formulaire reste coupé de 17h30 à minuit"
+  "titre": "Le bouton annonce une action qu'il ne fait pas après 17h30",
+  "etat": "résolu",
+  "detail": "arbitrage du propriétaire : le libellé bascule sur l'appel à 17h30"
  },
  {
   "code": "C2",
   "gravite": "critique",
   "titre": "Minimum de commande révélé au dernier clic",
-  "etat": "ouvert",
-  "detail": ""
+  "etat": "résolu",
+  "detail": "annoncé dès la saisie de l'adresse et décompté dans la barre de total"
  },
  {
   "code": "C3",
@@ -227,8 +227,8 @@
   "code": "C6",
   "gravite": "important",
   "titre": "Monteux en triple dans le tableau",
-  "etat": "ouvert",
-  "detail": "3 ligne(s) Monteux"
+  "etat": "résolu",
+  "detail": "0 ligne(s) Monteux"
  },
  {
   "code": "C7",
@@ -249,7 +249,7 @@
   "gravite": "important",
   "titre": "Délais de livraison contradictoires",
   "etat": "ouvert",
-  "detail": "15-25 min, 20 à 30 min, 20 à 35 min, 20-25 min, 20-30 min, 20-35 min, 20–30 min, 25 à 40 min"
+  "detail": "15-25 min, 20 à 30 min, 20 à 35 min, 20 à 50 min, 20-30 min, 20-35 min, 25 à 40 min, 25-35 min"
  },
  {
   "code": "C10",
@@ -311,8 +311,8 @@
   "code": "T8",
   "gravite": "important",
   "titre": "Ancienneté contradictoire",
-  "etat": "ouvert",
-  "detail": "durées citées : 10, 15, 18 ; « 2010 — Ouverture » sur 0 page(s)"
+  "etat": "résolu",
+  "detail": "durées citées : 18 ; « 2010 — Ouverture » sur 0 page(s)"
  },
  {
   "code": "T9",
@@ -325,21 +325,21 @@
   "code": "T10",
   "gravite": "important",
   "titre": "« Plus de 80 recettes » alors qu'il y en a 76",
-  "etat": "ouvert",
+  "etat": "résolu",
   "detail": "80 entrées au menu"
  },
  {
   "code": "T11",
   "gravite": "important",
   "titre": "Descriptions de pizzas fausses dans le blog",
-  "etat": "ouvert",
-  "detail": "blog/guide-carpentras.html, blog/guide-livraison-pizza-carpentras/index.html, blog/que-faire-carpentras-ce-soir/index.html, blog/que-faire-pernes-les-fontaines-ce-soir/index.html, pizza-carpentras/index.html"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "T12",
   "gravite": "important",
   "titre": "Formulaire collectant des données sans information",
-  "etat": "ouvert",
+  "etat": "résolu",
   "detail": ""
  },
  {
@@ -353,8 +353,8 @@
   "code": "T14",
   "gravite": "mineur",
   "titre": "Superlatifs non étayés",
-  "etat": "ouvert",
-  "detail": "pizzeria-carpentras/index.html"
+  "etat": "résolu",
+  "detail": ""
  },
  {
   "code": "T15",

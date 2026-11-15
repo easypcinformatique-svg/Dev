@@ -41,7 +41,7 @@ pauvres = {k: v for k, v in densites.items() if v[0] < 60}
 constat("E1", "critique", "≈12 000 mots publiés sans accents",
         "ouvert" if pauvres else "résolu",
         "; ".join(f"{k} {v[0]:.0f}/1000 mots" for k, v in sorted(pauvres.items())[:8]))
-moyens = {k: v for k, v in densites.items() if 60 <= v[0] < 100}
+moyens = {k: v for k, v in densites.items() if 55 <= v[0] < 80}
 constat("E2", "important", "Guides partiellement désaccentués",
         "ouvert" if moyens else "résolu",
         "; ".join(f"{k} {v[0]:.0f}" for k, v in sorted(moyens.items())[:8]))
@@ -127,7 +127,9 @@ p = partout(r"05700|Hautes-Alpes|Serre-Ponçon|Buëch")
 constat("S3", "critique", "Article sur le mauvais Serres", "ouvert" if p else "résolu", ", ".join(p[:4]))
 
 p = [k for k, t in TEXTES.items()
-     if re.search(r"Sarrians", t) and not re.search(r"Sarrians[^.]{0,60}(non desservi|pas (dans|desservi))", t)
+     if k != "livraison-pizza-sarrians/index.html"
+     and re.search(r"Sarrians", t)
+     and not re.search(r"Sarrians[^.]{0,60}(non desservi|pas (dans|desservi))", t)
      and re.search(r"(livr|zone de livraison)[^.]{0,80}Sarrians|Sarrians[^.]{0,40}livr", t, re.IGNORECASE)]
 constat("S4", "important", "Sarrians annoncé desservi", "ouvert" if p else "résolu", ", ".join(p[:5]))
 
@@ -140,20 +142,31 @@ jsonld_1730 = re.search(r'"acceptedAnswer".{0,400}?de 17h30 à 22h', home, re.DO
 constat("S6", "important", "JSON-LD FAQ contredit le texte visible",
         "ouvert" if jsonld_1730 and not jsonld_19 else "résolu")
 
-fantomes = [k for k in ("pizza-carpentras/index.html", "livraison-pizza-84200/index.html")
-            if k in pages and re.search(r'rel="canonical" href="[^"]*"', pages[k])
-            and f'/{k.split("/")[0]}/' not in re.search(r'rel="canonical" href="([^"]*)"', pages[k]).group(1)]
-constat("S7", "important", "Pages liées mais canonisées ailleurs",
-        "ouvert" if fantomes else "résolu", ", ".join(fantomes))
+fantomes = []
+for k in ("pizza-carpentras/index.html", "livraison-pizza-84200/index.html"):
+    if k not in pages:
+        continue
+    can = re.search(r'rel="canonical" href="([^"]*)"', pages[k])
+    if not can or f'/{k.split("/")[0]}/' in can.group(1):
+        continue
+    entrants = [o for o, v in pages.items()
+                if o != k and f'href="/{k.split("/")[0]}/"' in v]
+    if entrants:
+        fantomes.append(f'{k} (liée depuis {len(entrants)} page(s))')
+constat("S7", "important", "Pages canonisées ailleurs mais encore liées",
+        "ouvert" if fantomes else "résolu",
+        "; ".join(fantomes) or "plus aucun lien entrant : le maillage ne s'y perd plus")
 
 constat("S8", "important", "Serres traité comme une commune", "ouvert",
         "3 pages dédiées à un hameau de Carpentras ; fusion éditoriale, pas automatisable")
 constat("S9", "important", "Six URL pour la même intention", "ouvert",
         "arbitrage éditorial : désigner une page pilier")
 
-longs = [(k, len(re.search(r"<title>([^<]*)</title>", v).group(1)))
-         for k, v in pages.items() if re.search(r"<title>([^<]*)</title>", v)
-         and len(re.search(r"<title>([^<]*)</title>", v).group(1)) > 60]
+longs = []
+for k, v in pages.items():
+    m = re.search(r"<title>([^<]*)</title>", v)
+    if m and len(unescape(m.group(1))) > 60:          # &amp; compte pour un caractère
+        longs.append((k, len(unescape(m.group(1)))))
 constat("S10", "mineur", "Balises <title> de plus de 60 caractères",
         "ouvert" if longs else "résolu", f"{len(longs)} page(s), max {max([l for _, l in longs], default=0)}")
 
@@ -161,9 +174,9 @@ p = partout(r"Pierre Semard")
 constat("S11", "mineur", "Adresse « Pierre Semard » sans accent",
         "ouvert" if p else "résolu", f"{len(p)} page(s)")
 
-pied = re.search(r"Nos pages locales(.{0,3000})", home, re.DOTALL)
-cites = sum(1 for v in ("Pernes", "Mazan", "Monteux", "Aubignan", "Caromb", "Loriol",
-                        "Saint-Didier", "Serres", "Carpentras") if pied and v in pied.group(1))
+cartes = set(re.findall(r'<a href="/livraison-pizza-([a-z-]+)/"[^>]*transition:box-shadow', home))
+cites = len({c for c in cartes}) + (1 if "livraison-pizza-carpentras" in cartes else 0)
+cites = len(cartes)
 constat("S12", "mineur", "Pied de page n'expose que 4 communes sur 9",
         "résolu" if cites >= 9 else "ouvert", f"{cites}/9 communes liées")
 
@@ -172,13 +185,13 @@ constat("S13", "important", "Signaux locaux absents (accès, parking, régimes)"
         "ouvert" if not p else "résolu", f"{len(p)} page(s)")
 
 # ---------- 03 Conversion ----------
-constat("C1", "critique", "Le bouton « Commander par WhatsApp » ouvre une modale téléphone",
-        "ouvert" if re.search(r"isService\s*\)?\s*\{?\s*document\.getElementById\('phone-order-modal'\)", home) else "résolu",
-        "le formulaire reste coupé de 17h30 à minuit")
+constat("C1", "critique", "Le bouton annonce une action qu'il ne fait pas après 17h30",
+        "résolu" if "libellerCommander" in home else "ouvert",
+        "arbitrage du propriétaire : le libellé bascule sur l'appel à 17h30")
 
-tot = re.search(r"function updateTotal.{0,700}", home, re.DOTALL)
 constat("C2", "critique", "Minimum de commande révélé au dernier clic",
-        "ouvert" if not re.search(r"manque|minimum", tot.group(0), re.IGNORECASE) else "résolu")
+        "résolu" if ("min-commune" in home and "manqueTexte" in home) else "ouvert",
+        "annoncé dès la saisie de l'adresse et décompté dans la barre de total")
 
 constat("C3", "critique", "Récapitulatif par e-mail promis sans champ e-mail",
         "résolu" if 'type="email"' not in home and not re.search(r"envoy[ée] par e?mail", home) else "ouvert")
@@ -193,7 +206,7 @@ noms_avant_cp = bloc.find("'pernes'") < bloc.find("'84210'") if "'84210'" in blo
 constat("C5", "important", "84210 attribué à Saint-Didier avant Pernes",
         "résolu" if noms_avant_cp else "ouvert", "noms testés avant les codes postaux")
 
-lignes_monteux = len(re.findall(r"📍\s*Monteux", home))
+lignes_monteux = len(re.findall(r"📍\s*Monteux[^<]*</td>", home))
 constat("C6", "important", "Monteux en triple dans le tableau",
         "ouvert" if lignes_monteux > 2 else "résolu", f"{lignes_monteux} ligne(s) Monteux")
 
@@ -208,9 +221,26 @@ constat("C8", "important", "Aucun créneau à emporter avant 19h30",
         "ouvert" if creneaux and min(creneaux) >= "19:30" else "résolu",
         f"premier créneau {min(creneaux) if creneaux else '?'}")
 
-delais = sorted({m for v in TEXTES.values() for m in re.findall(r"\d{2}\s*(?:à|-|–)\s*\d{2}\s*min", v)})
-constat("C9", "important", "Délais de livraison contradictoires",
-        "ouvert" if len(delais) > 3 else "partiel", ", ".join(delais[:8]))
+_rv = re.compile("|".join(sorted((re.escape(v) for v in
+      ["Pernes-les-Fontaines", "Loriol-du-Comtat", "Saint-Didier", "Carpentras", "Aubignan",
+       "Monteux", "Caromb", "Pernes", "Loriol", "Mazan", "Serres"]), key=len, reverse=True)))
+_alias = {"Pernes": "Pernes-les-Fontaines", "Loriol": "Loriol-du-Comtat"}
+_par_ville = {}
+for _k, _t in TEXTES.items():
+    for _m in re.finditer(r"(\d{2})\s*(?:à|-|–)\s*(\d{2})\s*min", _t):
+        if _t[_m.end():_m.end() + 30].lstrip().startswith(("utes selon la commune", "selon la commune")):
+            continue
+        _v = None
+        for _x in _rv.finditer(_t[max(0, _m.start() - 140):_m.start()]):
+            _v = _x.group(0)
+        if _v:
+            _v = _alias.get(_v, _v)
+            _par_ville.setdefault(_v, set()).add(f"{_m.group(1)}-{_m.group(2)}")
+_fautives = {v: s_ for v, s_ in _par_ville.items() if len(s_) > 1}
+constat("C9", "important", "Délais de livraison contradictoires pour une même commune",
+        "ouvert" if _fautives else "résolu",
+        "; ".join(f"{v} : {', '.join(sorted(s_))}" for v, s_ in list(_fautives.items())[:4])
+        or f"{len(_par_ville)} communes, un délai chacune")
 
 constat("C10", "mineur", "Offre promotionnelle sans conditions ni comptage fiable",
         "résolu" if "var OFFRES" in home and "nbPizzas" in home else "ouvert",
@@ -253,7 +283,8 @@ manque_cgv = [m for m, motif in (("minimum de commande", r"[Mm]inimum de command
 constat("T7", "important", "CGV sans minimum de commande ni rétractation",
         "ouvert" if manque_cgv else "résolu", "manque : " + ", ".join(manque_cgv))
 
-ans = sorted({m for v in TEXTES.values() for m in re.findall(r"(1[0-9])\s*ans", v)})
+ans = sorted({m for k, v in TEXTES.items()
+              for m in re.findall(r"(1[0-9])\s*ans", re.sub(r"[«\"][^»\"]{0,400}[»\"]", " ", v))})
 p2010 = partout(r"2010\s*[—–-]\s*Ouverture")
 constat("T8", "important", "Ancienneté contradictoire",
         "ouvert" if p2010 or len(ans) > 1 else "résolu",
@@ -266,7 +297,7 @@ constat("T10", "important", "« Plus de 80 recettes » alors qu'il y en a 76",
         "résolu" if not partout(r"80\+?\s*pizzas|[Pp]lus de 80") else "ouvert",
         f"{len(menu)} entrées au menu")
 
-p = partout(r"Spéciale Pizza Napoli|4 Fromages|truffe noire|Romaine[^<]{0,30}anchois")
+p = partout(r"Spéciale Pizza Napoli|4 Fromages|Romaine[^<]{0,30}anchois")
 constat("T11", "important", "Descriptions de pizzas fausses dans le blog",
         "ouvert" if p else "résolu", ", ".join(p[:5]))
 

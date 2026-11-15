@@ -1383,6 +1383,10 @@ for path in pages:
     # toppings. The card is the reference, so the parenthesis is rewritten from
     # it. A pizza the card does not have is renamed to the one it meant.
     c = c.replace("la Spéciale Pizza Napoli", "la Napoli").replace("la 4 Fromages", "la 4 Fro")
+    # « 4 Fromages » n'est pas à la carte : elle s'y appelle « 4 Fro ». Le
+    # renommage doit précéder la correction des ingrédients, qui cherche les
+    # pizzas par leur nom.
+    c = re.sub(r"\b4 Fromages\b", "4 Fro", c)
 
     INGREDIENTS = {sans_accent(x) for d in CARTE["pizzas"].values()
                    for x in re.split(r"[,()]", d["ingredients"]) for x in x.split() if len(x) > 3}
@@ -1402,9 +1406,12 @@ for path in pages:
             f'{m.group("tete")}{nom}{m.group("sep")}{vrai}{m.group("fin")}'
 
     noms = "|".join(sorted((re.escape(n) for n in CARTE["pizzas"]), key=len, reverse=True))
-    c = re.sub(rf'(?P<tete>\b[Ll][ae] )(?P<nom>{noms})(?P<sep> \()(?P<ing>[^)]{{10,140}})(?P<fin>\))',
+    # Le nom est parfois enveloppé dans <strong> : la balise fermante se glisse
+    # entre lui et le tiret, et un motif qui exige le tiret collé ne voit rien.
+    c = re.sub(rf'(?P<tete>\b[Ll][ae] )(?P<nom>{noms})(?P<sep>(?:</\w+>)?\s*\()(?P<ing>[^)]{{10,140}})(?P<fin>\))',
                _corriger_description, c)
-    c = re.sub(rf'(?P<tete>\b[Ll][ae] )(?P<nom>{noms})(?P<sep> — )(?P<ing>[a-zà-ÿ][^<.]{{10,140}}?)(?P<fin>(?=\s*[<.]))',
+    c = re.sub(rf'(?P<tete>\b[Ll][ae] )(?P<nom>{noms})(?P<sep>(?:</\w+>)?\s*[—–]\s*)'
+               rf'(?P<ing>[a-zà-ÿ][^<.]{{10,140}}?)(?P<fin>(?=\s*[<.]))',
                _corriger_description, c)
 
     # E13 — "4.5/5" with a decimal point in running French text.
@@ -1596,17 +1603,33 @@ for path in pages:
     # C9 — sept communes annonçaient deux délais différents selon la page,
     # jusqu'à vingt minutes d'écart. La page dédiée à la livraison fait foi.
     def _delai(m):
+        # La phrase générale des engagements ne vise aucune commune : on la
+        # laisse telle quelle plutôt que de lui coller un délai local.
+        if c[m.end():m.end() + 20].lstrip().startswith("selon la commune"):
+            return m.group(0)
         avant = re.sub(r"<[^>]*>", " ", c[max(0, m.start() - 140):m.start()])
         ville = None
         for x in re.finditer("|".join(sorted((re.escape(v) for v in ALIAS_DELAI),
                                              key=len, reverse=True)), avant):
             ville = ALIAS_DELAI[x.group(0)]
+        # « arrive en 20-30 minutes » sur le guide de Pernes parle de Pernes,
+        # même si le nom est trop loin dans la phrase : la page tranche.
+        ville = ville or _commune_delai_page
         if not ville:
             return m.group(0)
         bas, haut = DELAIS[ville]
-        return f"{bas} à {haut} min" if "à" in m.group(0) else f"{bas}-{haut} min"
+        unite = "minutes" if "minute" in m.group(0) else "min"
+        return f"{bas} à {haut} {unite}" if "à" in m.group(0) else f"{bas}-{haut} {unite}"
 
-    c = re.sub(r"\d{2}\s*(?:à|-|–)\s*\d{2}\s*min(?!u)", _delai, c)
+    _commune_delai_page = None
+    for _slug, (_nom, _cp, _mini, _guide) in COMMUNES.items():
+        if rel in (f"livraison-pizza-{_slug}/index.html", f"blog/guide-{_guide}.html",
+                   f"blog/que-faire-{_slug}-ce-soir/index.html"):
+            _commune_delai_page = _nom
+            break
+    # « min » et « minutes » : exclure la seconde forme laissait une quinzaine
+    # de mentions avec les anciennes valeurs.
+    c = re.sub(r"\d{2}\s*(?:à|-|–)\s*\d{2}\s*min(?:ute)?s?\b", _delai, c)
     # « 30 à 45 minutes maximum » sur la page des engagements : le mot engage,
     # et il contredit les délais annoncés ailleurs. Chaîne exacte : une règle
     # large sur « NN à NN minutes » écrasait les délais justes et se
@@ -1741,6 +1764,12 @@ for path in pages:
             "window.addEventListener('load',creneauxSelonMode);\n"
             "</script>\n</body>", 1)
         log(rel, "créneaux horaires adaptés au mode de retrait")
+
+    # Ces deux pages désignent une autre page comme version de référence : les
+    # liens qui y mènent dépensent du maillage dans le vide. Partout sur le
+    # site, ils pointent désormais vers la page canonique elle-même.
+    c = c.replace('href="/pizza-carpentras/"', 'href="/pizzeria-carpentras/"')
+    c = c.replace('href="/livraison-pizza-84200/"', 'href="/livraison-pizza-carpentras/"')
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
