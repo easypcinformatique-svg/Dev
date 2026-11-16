@@ -1771,6 +1771,63 @@ for path in pages:
     c = c.replace('href="/pizza-carpentras/"', 'href="/pizzeria-carpentras/"')
     c = c.replace('href="/livraison-pizza-84200/"', 'href="/livraison-pizza-carpentras/"')
 
+    # Mobile. La page d'accueil réclamait 548 px de large sur un écran de 375 :
+    # le téléphone la rendait dézoomée à 68 %, ce qui ramenait tout le texte
+    # sous la taille lisible. Trois blocs l'imposaient — la barre d'infos, une
+    # grille à deux colonnes qui ne repassait jamais sur une, et des sections à
+    # 64 px de marge horizontale. Les autres pages tenaient déjà dans 375.
+    # Les autres pages tenaient déjà dans la largeur, mais leurs libellés sont
+    # tout aussi petits : la feuille vaut pour tout le site.
+    if "mobile-reflow" not in c and "</head>" in c:
+        c = c.replace("</head>",
+            "<style id=\"mobile-reflow\">\n"
+            "@media(max-width:640px){\n"
+            " .infos-bar{grid-template-columns:1fr !important;padding:1.4rem 1rem !important;}\n"
+            " .infos-bar .info-item{min-width:0 !important;flex-wrap:wrap;"
+            "padding:1rem 1.1rem !important;}\n"
+            " .about{grid-template-columns:1fr !important;padding-left:1rem !important;"
+            "padding-right:1rem !important;}\n"
+            " main section{padding-left:1rem !important;padding-right:1rem !important;}\n"
+            " main section > *{min-width:0;}\n"
+            # Le bandeau d'offre porte désormais les deux paliers du dépliant :
+            # il est devenu trop long pour tenir sur une ligne et poussait la
+            # page au-delà de l'écran.
+            " .promo-banner{white-space:normal !important;padding:.55rem .6rem !important;"
+            "font-size:.64rem !important;line-height:1.55;}\n"
+            " .promo-banner span{display:inline !important;white-space:normal !important;}\n"
+            # Grilles à deux colonnes qui ne se replient pas : la chronologie de
+            # l'histoire, les engagements, le badge de note. Appliquer
+            # grid-template-columns à un élément qui n'est pas une grille est
+            # sans effet, la règle est donc sans risque pour le reste.
+            " main .reveal, .about-features, .about-text{grid-template-columns:1fr !important;}\n"
+            " .about-img-wrap{max-width:100% !important;overflow:hidden;}\n"
+            " .testi-grid{max-width:100%;}\n"
+            # iOS zoome automatiquement sur un champ dont le texte fait moins de
+            # 16 px : le formulaire sautait à chaque fois qu'on touchait un champ.
+            " #order-overlay input, #order-overlay select, #order-overlay textarea"
+            "{font-size:16px !important;}\n"
+            # Zones tactiles : 24 px est le minimum recommandé pour viser au doigt.
+            " nav a, footer a, .nav-links a{min-height:24px;display:inline-flex;"
+            "align-items:center;}\n"
+            # Des libellés descendaient à 9,6 px : lisible sur un écran
+            # d'ordinateur, pas au creux de la main. Les classes concernées sont
+            # relevées une à une — un plancher appliqué à tout rapetissait les
+            # titres, puisque 1em s'y mesure au parent.
+            " .price-size,.section-tag,.menu-badge,.testi-author,.step-num,.label,"
+            ".hero-tel-label,.counter-lbl,.info-label,.hero-badge,.promo-banner,"
+            "#order-overlay label,small,figcaption{font-size:12px !important;}\n"
+            # L'en-tête fixe mesure près de 200 px sur un téléphone — logo,
+            # horodatage et bandeau d'offre empilés — et recouvrait le nom de la
+            # pizzeria. La bannière démarre donc sous lui et s'étire au besoin.
+            " .hero{height:auto !important;min-height:100vh;padding-top:210px !important;"
+            "padding-bottom:3rem !important;}\n"
+            # « 🍕 Commander » se coupait entre l'emoji et le mot, les deux
+            # lignes se chevauchant.
+            " .hero-btns .btn-primary,.hero-btns .btn-outline{white-space:nowrap;"
+            "letter-spacing:.09em !important;padding:.9rem 1.2rem !important;}\n"
+            "}\n</style>\n</head>", 1)
+        log(rel, "feuille mobile : largeur, lisibilité et zones tactiles")
+
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
     # phone modal by itself, so one label has to be true in both cases.
