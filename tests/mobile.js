@@ -11,7 +11,11 @@ const PAGES = [
   ['/pizzeria-carpentras/', 'pizzeria'],
   ['/cgv/', 'CGV'],
 ];
+// 360 px d'abord : c'est la largeur des Galaxy A et de la plupart des Android
+// d'entrée de gamme, plus étroite que l'iPhone SE. Elle manquait, et c'est
+// elle qui a montré le bouton d'appel coupé des deux côtés.
 const ECRANS = [
+  { nom: 'Android 360', largeur: 360, hauteur: 800 },
   { nom: 'iPhone SE', largeur: 375, hauteur: 667 },
   { nom: 'iPhone 14', largeur: 390, hauteur: 844 },
   { nom: 'Android large', largeur: 412, hauteur: 915 },
@@ -51,6 +55,42 @@ const ECRANS = [
                       debord: Math.round(Math.max(b.right - window.innerWidth, -b.left)) });
         }
       }
+      // Contenu rogné. Le test ne regardait que la largeur du document : un
+      // élément qui sort de l'écran mais que son parent masque ne l'élargit
+      // pas, donc le bouton d'appel a pu rester coupé des deux côtés sans
+      // qu'une seule vérification bronche. On regarde ici ce que le visiteur
+      // perd vraiment — du texte et des commandes, pas une image décorative
+      // volontairement agrandie (celles-là portent une transformation).
+      // Un carrousel range ses diapositives côte à côte et n'en montre qu'une :
+      // ses voisines sont hors écran exprès. Signature : un parent qui masque
+      // son débordement et dont le contenu fait au moins le double de sa
+      // largeur. Le hero, lui, masque aussi son débordement mais ne dépasse
+      // que de quelques dizaines de pixels — le bouton rogné reste donc vu.
+      const dansCarrousel = e => {
+        for (let x = e.parentElement; x && x !== document.body; x = x.parentElement) {
+          const s = getComputedStyle(x);
+          if (/hidden|auto|scroll/.test(s.overflowX + s.overflow) &&
+              x.scrollWidth >= x.clientWidth * 2 && x.clientWidth > 0) return true;
+        }
+        return false;
+      };
+      const rogne = [];
+      for (const e of document.querySelectorAll(
+          'a, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, li, label, td, th')) {
+        const b = e.getBoundingClientRect();
+        if (b.width === 0 || b.height === 0) continue;
+        const s = getComputedStyle(e);
+        if (s.position === 'fixed' || s.visibility === 'hidden' || s.display === 'none') continue;
+        if (s.transform !== 'none') continue;
+        if (e.classList.contains('skip-link')) continue;   // hors champ exprès
+        if (dansCarrousel(e)) continue;
+        if (!e.textContent.trim() && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.tagName)) continue;
+        const sortie = Math.round(Math.max(b.right - window.innerWidth, -b.left));
+        if (sortie > 1) {
+          rogne.push(`${e.tagName.toLowerCase()}.${(e.className || '').toString().slice(0, 24)}` +
+                     ` +${sortie}px « ${e.textContent.trim().slice(0, 26)} »`);
+        }
+      }
       // Zones tactiles trop petites. La norme WCAG 2.5.8 exempte les liens au
       // fil d'une phrase et les cibles masquées : les compter donnerait un
       // chiffre spectaculaire et faux.
@@ -88,8 +128,19 @@ const ECRANS = [
         evitement = { cacheAuRepos: r.right <= 0 || r.bottom <= 0 || r.left >= window.innerWidth,
                       visibleAuClavier: f.right > 0 && f.left < window.innerWidth && f.height > 0 };
       }
+      // L'en-tête recouvre la bannière : le nom de la pizzeria doit rester
+      // dessous. La marge était un nombre fixe calé sur l'en-tête d'un jour ;
+      // une ligne de plus dans le bandeau d'offre l'aurait masqué.
+      const entete = document.querySelector('nav');
+      const titre = document.querySelector('.hero-panneau');
+      let recouvrement = null;
+      if (entete && titre) {
+        recouvrement = Math.round(entete.getBoundingClientRect().bottom -
+                                  titre.getBoundingClientRect().top);
+      }
       return {
-        evitement,
+        evitement, recouvrement,
+        rogne: [...new Set(rogne)].slice(0, 6), nbRogne: rogne.length,
         largeurDoc: de.scrollWidth, largeurEcran: window.innerWidth,
         debordements: trop.slice(0, 6), nbDebord: trop.length,
         petites: [...new Set(petites)].slice(0, 6), nbPetites: petites.length,
@@ -108,6 +159,14 @@ const ECRANS = [
       const deborde = r.largeurDoc > r.largeurEcran + 1;
       t(`${nom.padEnd(13)} aucun défilement horizontal`, !deborde,
         deborde ? `document ${r.largeurDoc} px pour un écran de ${r.largeurEcran}` : '');
+      // Bloquant, sur les quatre largeurs : du texte ou un bouton rogné est
+      // invisible pour le visiteur, que la page défile ou non.
+      t(`${nom.padEnd(13)} aucun texte ni bouton rogné`, r.nbRogne === 0,
+        r.nbRogne ? `${r.nbRogne} — ${r.rogne.join(' · ')}` : '');
+      if (r.recouvrement !== null) {
+        t(`${nom.padEnd(13)} l’en-tête ne recouvre pas la bannière`, r.recouvrement <= 0,
+          `l’en-tête descend ${r.recouvrement} px trop bas`);
+      }
       if (deborde || r.nbDebord) {
         details.push(`${ecran.nom} ${chemin} : ${r.nbDebord} élément(s) hors écran — ` +
           r.debordements.map(d => `${d.tag}.${d.cls} +${d.debord}px`).join(', '));

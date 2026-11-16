@@ -324,6 +324,29 @@ def remplacer_div(c, ident, neuf):
     return c[:depart] + neuf + c[i:], True
 
 
+def poser_script(c, marqueur, bloc):
+    """Pose le bloc avant </body>, ou REMPLACE celui qui porte déjà le marqueur.
+
+    Les scripts étaient jusqu'ici injectés « seulement s'ils manquent ». Une
+    correction écrite ici n'arrivait donc jamais sur un site déjà traité : le
+    bouton d'appel a gardé des semaines un libellé corrigé depuis, qui
+    répétait le numéro déjà affiché juste au-dessus et débordait de l'écran.
+    Un bloc identique n'est pas réécrit, pour que le guard reste idempotent."""
+    i = c.find(marqueur)
+    if i == -1:
+        if "</body>" not in c:
+            return c, False
+        return c.replace("</body>", bloc + "\n</body>", 1), True
+    debut = c.rfind("<script", 0, i)
+    fin = c.find("</script>", i)
+    if debut == -1 or fin == -1:
+        return c, False
+    fin += len("</script>")
+    if c[debut:fin] == bloc:
+        return c, False
+    return c[:debut] + bloc + c[fin:], True
+
+
 FAVICONS = "\n".join(
     t for t in re.findall(r'<link[^>]*rel="(?:shortcut )?(?:icon|apple-touch-icon)"[^>]*>', home_html)
     if (lambda h: h and os.path.exists(os.path.join(SITE, h.group(1).lstrip("/"))))(
@@ -1058,13 +1081,14 @@ for path in pages:
     # 6v. the order form could only be opened from the homepage, while the 37
     # other pages are the ones that catch search traffic. They now link to
     # /#commander, and the homepage opens the form when it sees that hash.
-    if rel == "index.html" and "commanderDepuisHash" not in c:
-        c = c.replace("</body>",
-                      "<script>function commanderDepuisHash(){if(location.hash==='#commander'"
-                      "&&typeof openCommander==='function'){openCommander();}}"
-                      "window.addEventListener('hashchange',commanderDepuisHash);"
-                      "window.addEventListener('load',commanderDepuisHash);</script>\n</body>", 1)
-        log(rel, "ouverture du formulaire par #commander")
+    if rel == "index.html":
+        bloc = ("<script>function commanderDepuisHash(){if(location.hash==='#commander'"
+                "&&typeof openCommander==='function'){openCommander();}}"
+                "window.addEventListener('hashchange',commanderDepuisHash);"
+                "window.addEventListener('load',commanderDepuisHash);</script>")
+        c, pose = poser_script(c, "function commanderDepuisHash", bloc)
+        if pose:
+            log(rel, "ouverture du formulaire par #commander")
 
     # 6w. the form promises a recap by email while asking for no email address.
     c = re.sub(r'Un r[ée]capitulatif de votre commande vous sera envoy[ée] par email[^<.]*\.',
@@ -1481,23 +1505,41 @@ for path in pages:
     # The owner chose to keep that behaviour and tell the truth instead: after
     # 17h30 the button says what it does, and dials straight away. Links that
     # sit inside a sentence keep their wording.
-    if rel == "index.html" and "libellerCommander" not in c:
+    if rel == "index.html":
         tel = ENTREPRISE["telephone"]
-        c = c.replace("</body>",
-                      "<script>function libellerCommander(){var d=new Date();"
-                      "if(d.getHours()*60+d.getMinutes()<17*60+30)return;"
-                      "document.querySelectorAll('a[onclick*=\"openCommander\"]').forEach("
-                      "function(b){var t=b.textContent.trim();"
-                      "if(b.classList.contains('social-btn'))return;"
-                      "if(t.indexOf('🍕')!==0&&t!=='Commander maintenant')return;"
-                      # Dans la bannière le numéro est déjà affiché en grand juste
-                      # au-dessus : le répéter dans le bouton le fait passer à la ligne.
-                      "b.textContent=b.closest('.hero-panneau')?'📞 Appeler pour commander':"
-                      f"'📞 Appeler pour commander — {tel}';"
-                      f"b.setAttribute('href','tel:{tel.replace(' ', '')}');"
-                      "b.setAttribute('onclick','');});}"
-                      "window.addEventListener('load',libellerCommander);</script>\n</body>", 1)
-        log(rel, "bouton de commande : libellé honnête après 17h30")
+        bloc = ("<script>function libellerCommander(){var d=new Date();"
+                "if(d.getHours()*60+d.getMinutes()<17*60+30)return;"
+                "document.querySelectorAll('a[onclick*=\"openCommander\"]').forEach("
+                "function(b){var t=b.textContent.trim();"
+                "if(b.classList.contains('social-btn'))return;"
+                "if(t.indexOf('🍕')!==0&&t!=='Commander maintenant')return;"
+                # Dans la bannière le numéro est déjà affiché en grand juste
+                # au-dessus : le répéter dans le bouton le fait déborder de
+                # l'écran sur un téléphone, et le dit deux fois.
+                "b.textContent=b.closest('.hero-panneau')?'📞 Appeler pour commander':"
+                f"'📞 Appeler pour commander — {tel}';"
+                f"b.setAttribute('href','tel:{tel.replace(' ', '')}');"
+                "b.setAttribute('onclick','');});}"
+                "window.addEventListener('load',libellerCommander);</script>")
+        c, pose = poser_script(c, "function libellerCommander", bloc)
+        if pose:
+            log(rel, "bouton de commande : libellé honnête après 17h30")
+
+        # La bannière démarrait sous un en-tête supposé haut de 210 px. C'est
+        # juste aujourd'hui — 197 px, 13 px de marge — mais le bandeau d'offre
+        # vient du dépliant : une offre d'une ligne de plus recouvrirait le nom
+        # de la pizzeria. La hauteur réelle est donc mesurée à l'affichage.
+        cale = ("<script>function caleHero(){"
+                "var n=document.querySelector('nav'),h=document.querySelector('.hero');"
+                "if(!n||!h)return;"
+                "var d=n.getBoundingClientRect().bottom-h.getBoundingClientRect().top;"
+                "if(d>80&&d<420)document.documentElement.style.setProperty("
+                "'--haut-entete',Math.round(d)+'px');}"
+                "window.addEventListener('load',caleHero);"
+                "window.addEventListener('resize',caleHero);</script>")
+        c, pose = poser_script(c, "function caleHero", cale)
+        if pose:
+            log(rel, "bannière calée sur la hauteur réelle de l'en-tête")
 
     # 6z7. La bande de chiffres de l'accueil. Le nombre vit dans un attribut
     # data-target et le libellé dans un élément voisin : les règles qui ne
@@ -1746,8 +1788,8 @@ for path in pages:
     # C8. Les créneaux commençaient à 19h30 alors que l'à emporter ouvre à
     # 18h50, et la même liste servait aux deux modes : impossible de demander
     # sa pizza à 19h en la retirant soi-même. La liste suit maintenant le mode.
-    if rel == "index.html" and "creneauxSelonMode" not in c and 'id="client-heure"' in c:
-        c = c.replace("</body>",
+    if rel == "index.html" and 'id="client-heure"' in c:
+        bloc = (
             "<script>\n"
             "function creneauxSelonMode(){var s=document.getElementById('client-heure');\n"
             "var e=document.getElementById('mode-emporter');if(!s)return;\n"
@@ -1762,8 +1804,10 @@ for path in pages:
             "document.addEventListener('change',function(e){if(e.target&&e.target.name==='mode')"
             "creneauxSelonMode();});\n"
             "window.addEventListener('load',creneauxSelonMode);\n"
-            "</script>\n</body>", 1)
-        log(rel, "créneaux horaires adaptés au mode de retrait")
+            "</script>")
+        c, pose = poser_script(c, "function creneauxSelonMode", bloc)
+        if pose:
+            log(rel, "créneaux horaires adaptés au mode de retrait")
 
     # Ces deux pages désignent une autre page comme version de référence : les
     # liens qui y mènent dépensent du maillage dans le vide. Partout sur le
@@ -1895,12 +1939,22 @@ for path in pages:
             # L'en-tête fixe mesure près de 200 px sur un téléphone — logo,
             # horodatage et bandeau d'offre empilés — et recouvrait le nom de la
             # pizzeria. La bannière démarre donc sous lui et s'étire au besoin.
-            " .hero{height:auto !important;min-height:100vh;padding-top:210px !important;"
+            " .hero{height:auto !important;min-height:100vh;"
+            "padding-top:calc(var(--haut-entete,197px) + 1.4rem) !important;"
             "padding-bottom:3rem !important;}\n"
-            # « 🍕 Commander » se coupait entre l'emoji et le mot, les deux
-            # lignes se chevauchant.
-            " .hero-btns .btn-primary,.hero-btns .btn-outline{white-space:nowrap;"
-            "letter-spacing:.09em !important;padding:.9rem 1.2rem !important;}\n"
+            # Le panneau dépassait de 84 px : largeur maximale et marges
+            # intérieures reprises pour un écran de téléphone.
+            " .hero-panneau{max-width:100% !important;margin:0 .7rem !important;"
+            "padding:2.2rem 1.1rem 2rem !important;box-sizing:border-box;}\n"
+            # Après 17h30 le bouton devient « 📞 Appeler pour commander » : avec
+            # white-space:nowrap il mesurait 496 px et sortait de l'écran des
+            # deux côtés, rogné par le hero. Il revient à la ligne, et
+            # line-height l'empêche de se chevaucher — c'est ce chevauchement,
+            # et non la largeur, que le nowrap corrigeait au départ.
+            " .hero-btns{flex-wrap:wrap;max-width:100%;}\n"
+            " .hero-btns .btn-primary,.hero-btns .btn-outline{white-space:normal !important;"
+            "line-height:1.35;max-width:100%;box-sizing:border-box;text-align:center;"
+            "letter-spacing:.06em !important;padding:.85rem 1rem !important;}\n"
             "}\n</style>")
     # La feuille est remplacée, pas seulement posée : sinon une correction
     # écrite ici ne serait jamais arrivée sur un site déjà traité.
