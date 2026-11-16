@@ -59,7 +59,7 @@ const ECRANS = [
         const b = e.getBoundingClientRect();
         if (b.width === 0 || b.height === 0) continue;
         if (getComputedStyle(e).display === 'none') continue;
-        if (e.classList.contains('skip-link')) continue;          // visible au clavier seulement
+        if (e.classList.contains('skip-link')) continue;          // mesuré à part, ci-dessous
         const p = e.parentElement;
         const dansPhrase = p && /^(P|LI|TD|SPAN|STRONG|EM|SMALL)$/.test(p.tagName)
           && p.textContent.trim().length > e.textContent.trim().length + 12;
@@ -75,7 +75,21 @@ const ECRANS = [
         const px = parseFloat(getComputedStyle(e).fontSize);
         if (px && px < 12) minus.push(`${px.toFixed(1)}px « ${e.textContent.trim().slice(0, 28)} »`);
       }
+      // Le lien d'évitement n'avait aucune règle CSS : il s'affichait en texte
+      // nu tout en haut de chaque page. Il doit être hors champ au repos et
+      // revenir au premier plan quand le clavier l'atteint.
+      const saut = document.querySelector('.skip-link');
+      let evitement = null;
+      if (saut) {
+        const r = saut.getBoundingClientRect();
+        saut.focus();
+        const f = saut.getBoundingClientRect();
+        saut.blur();
+        evitement = { cacheAuRepos: r.right <= 0 || r.bottom <= 0 || r.left >= window.innerWidth,
+                      visibleAuClavier: f.right > 0 && f.left < window.innerWidth && f.height > 0 };
+      }
       return {
+        evitement,
         largeurDoc: de.scrollWidth, largeurEcran: window.innerWidth,
         debordements: trop.slice(0, 6), nbDebord: trop.length,
         petites: [...new Set(petites)].slice(0, 6), nbPetites: petites.length,
@@ -102,15 +116,19 @@ const ECRANS = [
       if (r.nbMinus) details.push(`${ecran.nom} ${chemin} : ${r.nbMinus} texte(s) < 12px — ${r.minus.join(' · ')}`);
       if (ecran === ECRANS[0]) {
         t(`${nom.padEnd(13)} balise viewport présente`, r.viewport);
-        // Ces deux-là ne bloquent pas la publication : ce sont des libellés et
-        // des liens secondaires, relevés pour qu'ils ne se dégradent pas. Le
-        // plafond est l'état constaté le 16/11/2026, pas un idéal.
-        const plafondTactile = { 'accueil': 4, 'page commune': 7, 'guide': 18, 'pizzeria': 4, 'CGV': 2 }[nom] ?? 0;
-        const plafondTexte = { 'accueil': 21, 'page commune': 8, 'guide': 0, 'pizzeria': 7, 'CGV': 0 }[nom] ?? 0;
+        // Ces deux plafonds étaient l'état constaté, pas un idéal : 21 libellés
+        // sous 12 px sur l'accueil, 18 cibles trop petites sur le guide. Tout a
+        // été repris le 16/11/2026, le plafond est donc zéro — un seul libellé
+        // qui repasserait sous la barre arrêterait la publication.
+        const plafondTactile = 0;
+        const plafondTexte = 0;
         t(`${nom.padEnd(13)} zones tactiles : pas de régression`, r.nbPetites <= plafondTactile,
           `${r.nbPetites} sous 24 px, plafond ${plafondTactile}`);
         t(`${nom.padEnd(13)} petits textes : pas de régression`, r.nbMinus <= plafondTexte,
           `${r.nbMinus} sous 12 px, plafond ${plafondTexte}`);
+        t(`${nom.padEnd(13)} lien d’évitement caché, puis visible au clavier`,
+          !r.evitement || (r.evitement.cacheAuRepos && r.evitement.visibleAuClavier),
+          r.evitement ? `repos=${r.evitement.cacheAuRepos} clavier=${r.evitement.visibleAuClavier}` : '');
       }
     }
   }

@@ -1778,9 +1778,56 @@ for path in pages:
     # 64 px de marge horizontale. Les autres pages tenaient déjà dans 375.
     # Les autres pages tenaient déjà dans la largeur, mais leurs libellés sont
     # tout aussi petits : la feuille vaut pour tout le site.
-    if "mobile-reflow" not in c and "</head>" in c:
-        c = c.replace("</head>",
+    feuille_mobile = (
             "<style id=\"mobile-reflow\">\n"
+            # Le bloc de liens par commune, en bas de page, est un <nav>. La
+            # feuille du site habille « nav » sans classe : le pied de page
+            # héritait donc du fond blanc de l'en-tête, avec des liens blancs à
+            # 45 % par-dessus. Ce bloc était invisible sur tous les écrans,
+            # avec en prime un filet rouge et 4 rem de marge. Rien à voir avec
+            # le mobile : la règle vaut pour toutes les largeurs.
+            # Le lien d'évitement « Aller au contenu » n'a jamais eu de règle
+            # CSS : il s'affichait en clair tout en haut de chaque page, en
+            # texte nu. Sur l'accueil l'en-tête fixe le recouvrait, ailleurs
+            # non. Il reprend sa place : hors champ, et visible au clavier.
+            ".skip-link{position:absolute !important;left:-9999px;top:0;z-index:9999;"
+            "padding:.6rem 1.1rem;background:#A8202A;color:#FFFDF7;text-decoration:none;"
+            "font-size:.85rem;border-radius:0 0 3px 0;}\n"
+            ".skip-link:focus{left:0 !important;}\n"
+            # Sur les pages commune et pizzeria, le logo est un conteneur flex :
+            # l'espace entre « Pizza Napoli » et « Carpentras » y disparaît —
+            # un blanc entre deux éléments flex est supprimé. On le rétablit
+            # par gap, sans effet sur l'accueil où le logo n'est pas en flex.
+            ".nav-logo,.nl{gap:.3em;}\n"
+            "footer nav{background:transparent !important;backdrop-filter:none !important;"
+            "border-bottom:0 !important;box-shadow:none !important;padding-left:0;"
+            "padding-right:0;padding-bottom:0;width:auto;}\n"
+            # Une fois le fond blanc retiré, ces liens restaient à 3,1:1 sur le
+            # vert du pied de page — sous le minimum lisible de 4,5:1. Portés à
+            # 6,1:1 et 5,0:1, ils gardent leur rôle de liens secondaires.
+            "footer nav a{color:rgba(255,255,255,.78) !important;}\n"
+            "footer nav a:hover,footer nav a:focus{color:#fff !important;}\n"
+            "footer nav span{color:rgba(255,255,255,.68) !important;}\n"
+            # Même cause ailleurs dans le pied de page : des blocs écrits pour
+            # une page claire, posés sur le vert foncé. « Facebook ·
+            # TripAdvisor · PagesJaunes » s'affichait en gris anthracite sur
+            # vert, à 1,9:1. Le reste tournait autour de 3,1:1. Tout est
+            # remonté au-dessus de 4,5:1, le minimum lisible.
+            "footer .social-links a,footer .social-btn"
+            "{color:rgba(255,255,255,.85) !important;}\n"
+            "footer .footer-copy,footer .footer-copy *{color:rgba(255,255,255,.78) !important;}\n"
+            "footer > a[style*=\"#C89732\"]{color:#E0B860 !important;}\n"
+            "footer div[style*=\"color:#666\"]{color:rgba(255,255,255,.72) !important;}\n"
+            "footer div[style*=\"color:#666\"] a{color:#E0E0E0 !important;}\n"
+            # La même barre légale existe hors du pied de page, sur fond crème
+            # (pages commune et pizzeria) : là, ses liens gris clair tombaient
+            # à 2,8:1. Il faut les assombrir, pas les éclaircir.
+            "body > div[style*=\"color:#666\"] a{color:#5A5A5A !important;}\n"
+            # Pages commune et pizzeria : le pied de page noir portait sa ligne
+            # de villes à 3,2:1 et son copyright à 1,8:1.
+            "footer p{color:rgba(255,255,255,.72) !important;}\n"
+            # Et le numéro de téléphone des neuf guides, à 4,3:1.
+            "footer p a{color:rgba(255,255,255,.85) !important;}\n"
             "@media(max-width:640px){\n"
             " .infos-bar{grid-template-columns:1fr !important;padding:1.4rem 1rem !important;}\n"
             " .infos-bar .info-item{min-width:0 !important;flex-wrap:wrap;"
@@ -1816,6 +1863,35 @@ for path in pages:
             " .price-size,.section-tag,.menu-badge,.testi-author,.step-num,.label,"
             ".hero-tel-label,.counter-lbl,.info-label,.hero-badge,.promo-banner,"
             "#order-overlay label,small,figcaption{font-size:12px !important;}\n"
+            # La plupart des petits libellés ne portent pas de classe : leur
+            # taille est écrite dans l'attribut style. On vise donc la valeur
+            # elle-même, de .4 à .74 — au-delà (.75rem = 12px) le texte est
+            # déjà assez grand et une règle fixe le rapetisserait.
+            " [style*=\"font-size:.4\"],[style*=\"font-size:.5\"],[style*=\"font-size:.6\"],"
+            "[style*=\"font-size:.70\"],[style*=\"font-size:.71\"],[style*=\"font-size:.72\"],"
+            "[style*=\"font-size:.73\"],[style*=\"font-size:.74\"],[style*=\"font-size:.7r\"],"
+            "[style*=\"font-size:.7e\"],\n"
+            # Les libellés restants, repérés un à un sur l'accueil, les pages
+            # commune et la page pizzeria.
+            " .menu-tab,.footer-copy,.addr-maps-btn,.t-sub,.st-info,.st-count,.cp-label,"
+            ".status-pill,.status-pill span,.nc,.hb,.l,.cvi h3,.hero-tag,.info-title,"
+            ".pizza-desc,.nav-cta,.nav-links a,th{font-size:12px !important;}\n"
+            # Fil d'Ariane, barre légale, liens de carte : des liens sans classe
+            # posés directement dans un bloc, hauts de 12 à 17 px. Une marge
+            # intérieure verticale agrandit la cible sans changer le flux —
+            # passer en inline-flex empêcherait un lien long de revenir à la
+            # ligne et remettrait la page en débordement.
+            " div > a:not([class]),strong > a:not([class])"
+            "{padding-top:6px !important;padding-bottom:6px !important;}\n"
+            # Les puces du carrousel d'avis mesuraient 9 px. Le bouton passe à
+            # 24 px, transparent, et la puce visible est redessinée en
+            # pseudo-élément : la cible grandit, le point reste un point.
+            " .testi-dot{width:24px !important;height:24px !important;padding:0 !important;"
+            "background:transparent !important;border-radius:0 !important;position:relative;}\n"
+            " .testi-dot::before{content:\"\";position:absolute;top:50%;left:50%;"
+            "transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;"
+            "background:rgba(0,0,0,.18);}\n"
+            " .testi-dot.active::before{width:22px;border-radius:5px;background:var(--oro);}\n"
             # L'en-tête fixe mesure près de 200 px sur un téléphone — logo,
             # horodatage et bandeau d'offre empilés — et recouvrait le nom de la
             # pizzeria. La bannière démarre donc sous lui et s'étire au besoin.
@@ -1825,8 +1901,19 @@ for path in pages:
             # lignes se chevauchant.
             " .hero-btns .btn-primary,.hero-btns .btn-outline{white-space:nowrap;"
             "letter-spacing:.09em !important;padding:.9rem 1.2rem !important;}\n"
-            "}\n</style>\n</head>", 1)
-        log(rel, "feuille mobile : largeur, lisibilité et zones tactiles")
+            "}\n</style>")
+    # La feuille est remplacée, pas seulement posée : sinon une correction
+    # écrite ici ne serait jamais arrivée sur un site déjà traité.
+    if "</head>" in c:
+        deb = c.find('<style id="mobile-reflow">')
+        if deb == -1:
+            c = c.replace("</head>", feuille_mobile + "\n</head>", 1)
+            log(rel, "feuille mobile : largeur, lisibilité et zones tactiles")
+        else:
+            fin = c.find("</style>", deb)
+            if fin != -1 and c[deb:fin + 8] != feuille_mobile:
+                c = c[:deb] + feuille_mobile + c[fin + 8:]
+                log(rel, "feuille mobile mise à jour")
 
     # 6v2. Every page other than the homepage gets a link into the order form.
     # Before 17h30 it opens the online form; after, the homepage shows the
