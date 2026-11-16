@@ -1516,8 +1516,19 @@ for path in pages:
                 # Dans la bannière le numéro est déjà affiché en grand juste
                 # au-dessus : le répéter dans le bouton le fait déborder de
                 # l'écran sur un téléphone, et le dit deux fois.
-                "b.textContent=b.closest('.hero-panneau')?'📞 Appeler pour commander':"
+                # Rendre le numéro insécable a été essayé : dans ces boutons en
+                # capitales très espacées il mesure 333 px à lui seul, soit
+                # plus que l'écran. Il doit donc pouvoir se couper.
+                "b.textContent=b.closest('.hero-panneau,.contact-list')?"
+                "'📞 Appeler pour commander':"
                 f"'📞 Appeler pour commander — {tel}';"
+                # La feuille du site affiche les liens tel: en 2,8 rem, pour le
+                # numéro présenté en grand dans « Nous trouver ». En posant
+                # href=tel: sur ce bouton, le script lui faisait hériter de
+                # cette règle : le libellé s'étalait en 45 px sur cinq lignes,
+                # juste sous le numéro déjà affiché. On fige la taille réelle
+                # du bouton avant de changer l'adresse.
+                "b.style.fontSize=getComputedStyle(b).fontSize;"
                 f"b.setAttribute('href','tel:{tel.replace(' ', '')}');"
                 "b.setAttribute('onclick','');});}"
                 "window.addEventListener('load',libellerCommander);</script>")
@@ -1880,6 +1891,32 @@ for path in pages:
             "padding-right:1rem !important;}\n"
             " main section{padding-left:1rem !important;padding-right:1rem !important;}\n"
             " main section > *{min-width:0;}\n"
+            # « Nous trouver » gardait ses 4 rem de marge et sa grille ne se
+            # repliait pas : le bloc réclamait 374 px. Sur un écran de 360, le
+            # navigateur élargit alors la mise en page et rétrécit toute la
+            # page — le bandeau d'offre se retrouvait rogné à droite et chaque
+            # texte perdait 4 %. Une case de grille ne descend pas sous la
+            # taille de son contenu tant qu'on ne lui dit pas (min-width:0).
+            " .contact{grid-template-columns:1fr !important;}\n"
+            " .contact > *,.contact-info > *{min-width:0 !important;}\n"
+            " .contact-info{padding-left:1rem !important;padding-right:1rem !important;}\n"
+            " iframe{max-width:100% !important;}\n"
+            # Sur 320 px, c'était le pied de page : ses 2 rem de marge et la
+            # rangée « Facebook · TripAdvisor · PagesJaunes » qui refusait de
+            # passer à la ligne réclamaient 353 px à elles seules.
+            " footer{padding-left:1rem !important;padding-right:1rem !important;}\n"
+            " .social-links{flex-wrap:wrap !important;}\n"
+            # La règle de fond : une case de grille et un élément de flex
+            # refusent par défaut de descendre sous la largeur de leur contenu.
+            # C'est ce qui, partout sur cette page, pousse la mise en page plus
+            # large que l'écran. Sans !important, une largeur minimale voulue
+            # par la feuille du site reste prioritaire.
+            " main *,footer *{min-width:0;}\n"
+            # Ces liens d'appel portaient white-space:nowrap : la phrase entière
+            # devenait un seul mot pour le navigateur, plus large que l'écran,
+            # et élargissait la mise en page de toute la page.
+            " .contact-list a,.ct a,.ct p,a[href^=\"tel:\"],.commander-inline a"
+            "{white-space:normal !important;}\n"
             # Le bandeau d'offre porte désormais les deux paliers du dépliant :
             # il est devenu trop long pour tenir sur une ligne et poussait la
             # page au-delà de l'écran.

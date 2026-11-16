@@ -15,6 +15,7 @@ const PAGES = [
 // d'entrée de gamme, plus étroite que l'iPhone SE. Elle manquait, et c'est
 // elle qui a montré le bouton d'appel coupé des deux côtés.
 const ECRANS = [
+  { nom: 'petit 320', largeur: 320, hauteur: 568 },
   { nom: 'Android 360', largeur: 360, hauteur: 800 },
   { nom: 'iPhone SE', largeur: 375, hauteur: 667 },
   { nom: 'iPhone 14', largeur: 390, hauteur: 844 },
@@ -156,9 +157,16 @@ const ECRANS = [
     console.log(`\n── ${ecran.nom} (${ecran.largeur} px) ──`);
     for (const [chemin, nom] of PAGES) {
       const r = await mesurer(chemin, ecran);
-      const deborde = r.largeurDoc > r.largeurEcran + 1;
-      t(`${nom.padEnd(13)} aucun défilement horizontal`, !deborde,
-        deborde ? `document ${r.largeurDoc} px pour un écran de ${r.largeurEcran}` : '');
+      // Comparer à window.innerWidth était un angle mort : quand le contenu
+      // réclame plus que l'écran, le navigateur mobile ÉLARGIT la fenêtre de
+      // mise en page et rétrécit la page pour la faire entrer. innerWidth vaut
+      // alors la largeur élargie, le test trouvait l'égalité et ne voyait rien
+      // — pendant que le téléphone affichait tout en plus petit, bandeau
+      // d'offre rogné compris. On compare donc à la largeur réelle de l'écran.
+      const deborde = r.largeurDoc > ecran.largeur + 1 || r.largeurEcran > ecran.largeur + 1;
+      t(`${nom.padEnd(13)} tient dans la largeur de l’écran`, !deborde,
+        deborde ? `mise en page sur ${r.largeurEcran} px, document ${r.largeurDoc} px, ` +
+                  `écran ${ecran.largeur} px` : '');
       // Bloquant, sur les quatre largeurs : du texte ou un bouton rogné est
       // invisible pour le visiteur, que la page défile ou non.
       t(`${nom.padEnd(13)} aucun texte ni bouton rogné`, r.nbRogne === 0,
