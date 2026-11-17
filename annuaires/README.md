@@ -125,6 +125,21 @@ site de l'organisme publie son équipe de direction. Aucun nom ni aucune adresse
 ne vient d'un réseau social, et aucune adresse n'est construite à partir d'un
 nom.
 
+Compléments de la colonne « Dirigeants » : `fonctions_sites.py` relève sur le
+site de chaque organisme les noms qu'il publie (président, directeur général,
+directeur, directeur financier, à défaut directeur de la publication), marqués
+« (site) » dans la page ; les départements et la Région viennent de l'annuaire
+de l'administration (président et directeur général des services). Un nom relevé
+sur un site n'est pas repris pour une commune ni quand plusieurs organismes
+partagent ce site. Le champ `president` de l'annuaire des Epl est rempli depuis
+`dirigeants.json`.
+
+## Clients
+
+Une case « Client » en tête de ligne barre l'organisme. Elle est enregistrée
+avec les commentaires, dans le navigateur, et suit la même sauvegarde. Le filtre
+« Masquer les clients » ne laisse que les prospects.
+
 ## Commentaires
 
 La page de prospection a une colonne « Commentaire », enregistrée dans le
