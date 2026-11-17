@@ -14,6 +14,10 @@ const PAGES = [
 // 360 px d'abord : c'est la largeur des Galaxy A et de la plupart des Android
 // d'entrée de gamme, plus étroite que l'iPhone SE. Elle manquait, et c'est
 // elle qui a montré le bouton d'appel coupé des deux côtés.
+// Le site n'a pas la même page avant et après 17h30 : le bouton de commande
+// change de libellé, donc de largeur et de hauteur.
+const HEURES = ['2026-11-17T21:40:00', '2026-11-17T11:03:00'];
+
 const ECRANS = [
   { nom: 'petit 320', largeur: 320, hauteur: 568 },
   { nom: 'Android 360', largeur: 360, hauteur: 800 },
@@ -30,12 +34,22 @@ const ECRANS = [
     console.log(`  ${cond ? 'OK   ' : 'ECHEC'} ${nom}${cond || !detail ? '' : '   (' + detail + ')'}`);
   };
 
-  const mesurer = async (chemin, ecran) => {
+  // L'accueil n'a pas la même page avant et après 17h30 : le bouton change de
+  // libellé, donc de largeur et de hauteur. Mesurer à l'heure où le test
+  // tourne ne voyait qu'un des deux états — c'est ainsi qu'un bouton de cinq
+  // lignes a vécu en ligne sans qu'aucune suite ne bronche.
+  const mesurer = async (chemin, ecran, heure) => {
     const ctx = await browser.newContext({
       viewport: { width: ecran.largeur, height: ecran.hauteur },
       isMobile: true, hasTouch: true, deviceScaleFactor: 2,
       userAgent: devices['iPhone 13'].userAgent,
     });
+    if (heure) {
+      await ctx.addInitScript(h => {
+        const R = Date, f = new R(h);
+        Date = class extends R { constructor(...a) { return a.length ? new R(...a) : new R(f); } static now() { return f.getTime(); } };
+      }, heure);
+    }
     const p = await ctx.newPage();
     p.on('dialog', d => d.dismiss());
     await p.goto(BASE + chemin, { waitUntil: 'load' });
@@ -139,8 +153,50 @@ const ECRANS = [
         recouvrement = Math.round(entete.getBoundingClientRect().bottom -
                                   titre.getBoundingClientRect().top);
       }
+      // Les boutons flottants recouvrent le contenu : c'est leur nature, mais
+      // la fin du site, elle, ne peut pas défiler plus loin. Ce qui est caché
+      // là l'est pour de bon.
+      let masqueFin = null;
+      const flot = document.querySelector('.float-group');
+      if (flot) {
+        // Le bandeau de consentement bloque le défilement tant qu'il est
+        // ouvert : sans l'écarter, « la fin de page » restait le haut de page.
+        document.querySelectorAll('#consent-banner, .cookie-banner').forEach(e => e.remove());
+        // Le <body> porte overflow-y:auto : c'est LUI qui défile, pas la
+        // fenêtre. window.scrollTo ne bougeait rien et « la fin de page »
+        // restait le haut de page.
+        // Le site défile en douceur (scroll-behavior:smooth) : un scrollTo
+        // lance une animation et ne bouge rien tout de suite. On la coupe.
+        document.documentElement.style.scrollBehavior = 'auto';
+        document.body.style.scrollBehavior = 'auto';
+        const boite = document.scrollingElement || document.documentElement;
+        const bas = Math.max(document.body.scrollHeight, boite.scrollHeight);
+        boite.scrollTop = bas;
+        document.body.scrollTop = bas;
+        window.scrollTo({ top: bas, behavior: 'instant' });
+        const f = flot.getBoundingClientRect();
+        const caches = [];
+        for (const e of document.querySelectorAll('a, p, li, h1, h2, h3, h4, span, div, td, th')) {
+          if (e.children.length || !e.textContent.trim()) continue;
+          const s = getComputedStyle(e);
+          if (s.position === 'fixed' || s.visibility === 'hidden' || s.display === 'none') continue;
+          const b = e.getBoundingClientRect();
+          if (!b.width || !b.height) continue;
+          const largeur = Math.min(b.right, f.right) - Math.max(b.left, f.left);
+          const hauteur = Math.min(b.bottom, f.bottom) - Math.max(b.top, f.top);
+          if (largeur > 2 && hauteur > 2) {
+            caches.push(`${e.tagName.toLowerCase()}.${(e.className || '').toString().slice(0, 20)}` +
+                        ` « ${e.textContent.trim().slice(0, 24)} »`);
+          }
+        }
+        masqueFin = { n: caches.length, ex: [...new Set(caches)].slice(0, 4),
+                      h: Math.round(f.height), l: Math.round(f.width),
+                      // Si rien n'a défilé, la mesure ne veut rien dire.
+                      defile: Math.round(Math.max(boite.scrollTop, document.body.scrollTop,
+                                                  window.scrollY)) };
+      }
       return {
-        evitement, recouvrement,
+        evitement, recouvrement, masqueFin,
         rogne: [...new Set(rogne)].slice(0, 6), nbRogne: rogne.length,
         largeurDoc: de.scrollWidth, largeurEcran: window.innerWidth,
         debordements: trop.slice(0, 6), nbDebord: trop.length,
@@ -155,8 +211,13 @@ const ECRANS = [
 
   for (const ecran of ECRANS) {
     console.log(`\n── ${ecran.nom} (${ecran.largeur} px) ──`);
-    for (const [chemin, nom] of PAGES) {
-      const r = await mesurer(chemin, ecran);
+    for (const [chemin, nomPage] of PAGES) {
+     // L'accueil est mesuré dans ses deux états sur l'écran le plus étroit.
+     const heures = (chemin === '/' && ecran === ECRANS[0]) ? HEURES : [HEURES[0]];
+     for (const heure of heures) {
+      const nom = heures.length > 1
+        ? nomPage + (heure.includes('T21') ? ' soir' : ' jour') : nomPage;
+      const r = await mesurer(chemin, ecran, heure);
       // Comparer à window.innerWidth était un angle mort : quand le contenu
       // réclame plus que l'écran, le navigateur mobile ÉLARGIT la fenêtre de
       // mise en page et rétrécit la page pour la faire entrer. innerWidth vaut
@@ -174,6 +235,16 @@ const ECRANS = [
       if (r.recouvrement !== null) {
         t(`${nom.padEnd(13)} l’en-tête ne recouvre pas la bannière`, r.recouvrement <= 0,
           `l’en-tête descend ${r.recouvrement} px trop bas`);
+      }
+      if (r.masqueFin) {
+        t(`${nom.padEnd(13)} la page défile jusqu’en bas`, r.masqueFin.defile > 100,
+          `défilement ${r.masqueFin.defile} px`);
+        t(`${nom.padEnd(13)} rien de caché sous les boutons flottants en fin de page`,
+          r.masqueFin.n === 0, `${r.masqueFin.n} — ${r.masqueFin.ex.join(' · ')}`);
+        // Une colonne haute recouvre le milieu de l'écran ; une rangée basse
+        // ne mord que sur la dernière ligne. Le plafond garde ce choix.
+        t(`${nom.padEnd(13)} boutons flottants discrets (≤ 60 px de haut)`,
+          r.masqueFin.h <= 60, `${r.masqueFin.l}×${r.masqueFin.h} px`);
       }
       if (deborde || r.nbDebord) {
         details.push(`${ecran.nom} ${chemin} : ${r.nbDebord} élément(s) hors écran — ` +
@@ -197,6 +268,7 @@ const ECRANS = [
           !r.evitement || (r.evitement.cacheAuRepos && r.evitement.visibleAuClavier),
           r.evitement ? `repos=${r.evitement.cacheAuRepos} clavier=${r.evitement.visibleAuClavier}` : '');
       }
+     }
     }
   }
 

@@ -1906,6 +1906,20 @@ for path in pages:
             # passer à la ligne réclamaient 353 px à elles seules.
             " footer{padding-left:1rem !important;padding-right:1rem !important;}\n"
             " .social-links{flex-wrap:wrap !important;}\n"
+            # Les deux boutons flottants formaient une colonne de 58 × 129 px
+            # posée au milieu du bord droit : sur un écran de 360 px elle
+            # recouvrait la fin des lignes, « Commander maintenant » perdait
+            # son dernier mot. Ils passent côte à côte, plus petits, dans le
+            # coin : la bande masquée tombe de 129 px de haut à 46, tout en
+            # bas de l'écran, là où l'œil ne lit pas. Et le pied de page
+            # réserve la place qu'il faut pour que la fin du site ne soit
+            # jamais cachée.
+            " .float-group{flex-direction:row !important;bottom:.6rem !important;"
+            "right:.6rem !important;gap:.6rem !important;}\n"
+            " .float-btn{width:46px !important;height:46px !important;}\n"
+            " .float-btn svg{width:21px !important;height:21px !important;}\n"
+            " footer{padding-bottom:4.5rem !important;}\n"
+            " body > div[style*=\"color:#666\"]{padding-bottom:4.5rem !important;}\n"
             # La règle de fond : une case de grille et un élément de flex
             # refusent par défaut de descendre sous la largeur de leur contenu.
             # C'est ce qui, partout sur cette page, pousse la mise en page plus
