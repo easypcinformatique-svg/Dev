@@ -295,7 +295,8 @@ document.getElementById('familles').innerHTML=SOURCES.map(([titre,liens])=>`
 
 /* ══ AVIS BOAMP EN DIRECT ══ */
 const BOAMP='https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp/records';
-const DEPTS_PACA='code_departement in ("04","05","06","13","83","84")';
+/* Le BOAMP écrit certains départements sans zéro initial. */
+const DEPTS_PACA='code_departement in ("04","05","06","4","5","6","13","83","84")';
 const THEMES=[
   ['Banque et financement','(objet like "emprunt" or objet like "emprunts" or objet like "bancaire" or objet like "bancaires" or objet like "trésorerie" or objet like "financement" or objet like "financements")'],
   ['Aménagement et concessions','(objet like "concession" or objet like "aménagement")'],

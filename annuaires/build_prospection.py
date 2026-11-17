@@ -31,6 +31,7 @@ EPL = RACINE / "annuaire-sem-spl-syndicats.html"
 GABARIT = pathlib.Path(__file__).resolve().parent / "template_prospection.html"
 SORTIE = RACINE / "annuaire-prospection-paca.html"
 COMPLEMENTS = pathlib.Path(__file__).resolve().parent / "contacts_complementaires.json"
+DIRIGEANTS = pathlib.Path(__file__).resolve().parent / "dirigeants.json"
 
 DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes",
          "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"}
@@ -48,7 +49,7 @@ TYPES_SYNDICAT = {"SIVU", "SIVOM", "SMF", "SMO", "PETR", "POLEM"}
 SEUIL_POPULATION = 5000
 SEUIL_MEMBRES = 5
 
-CLES = ["type", "nom", "dept", "taille", "adresse", "tel", "email", "contact"]
+CLES = ["type", "nom", "dept", "taille", "dirigeants", "adresse", "tel", "email", "contact"]
 
 
 def propre(v):
@@ -71,6 +72,7 @@ def depuis_communes():
     for c in lire_data(MAIRES):
         yield {"type": "Commune", "nom": c["ville"], "dept": c["dept"],
                "taille": f'{c["pop"]:,}'.replace(",", " ") + " hab.",
+               "dirigeants": f'Maire : {c["maire"]}' if c.get("maire") else "",
                "adresse": c["adresse"], "tel": c["tel"],
                "email": c["email"], "contact": c.get("contact", "")}
 
@@ -198,9 +200,19 @@ def completer(entrees):
     if not COMPLEMENTS.exists():
         return 0
     complements = json.loads(COMPLEMENTS.read_text(encoding="utf-8"))
+    dirigeants = json.loads(DIRIGEANTS.read_text(encoding="utf-8")) if DIRIGEANTS.exists() else {}
     touchees = 0
     for e in entrees:
-        c = complements.get(cle_complement(e))
+        cle = cle_complement(e)   # avant toute modification du lien de contact
+        e.setdefault("dirigeants", "")
+        # Les syndicats repris d'une ancienne page portent leur président dans l'adresse.
+        m = re.match(r"^(.*?) — président (.+)$", e["adresse"])
+        if m:
+            e["adresse"] = m.group(1)
+            e["dirigeants"] = e["dirigeants"] or f"Président : {m.group(2)}"
+        if dirigeants.get(cle):
+            e["dirigeants"] = dirigeants[cle] if not e["dirigeants"].startswith("Maire") else e["dirigeants"]
+        c = complements.get(cle)
         if not c:
             continue
         avant = (e["email"], e["tel"], e["contact"])
@@ -224,6 +236,7 @@ def depuis_page_existante(garder):
         return
     for ligne in bloc.group(1).splitlines():
         e = {k: v for k, v in re.findall(r'(\w+):"([^"]*)"', ligne)}
+        e.setdefault("dirigeants", "")
         if all(k in e for k in CLES) and garder(e["type"]):
             yield e
 
@@ -258,6 +271,8 @@ def main():
     if reprises:
         entrees += list(depuis_page_existante(lambda t: any(r(t) for r in reprises)))
 
+    for e in entrees:
+        e.setdefault("dirigeants", "")
     # Un organisme peut figurer dans deux sources : on garde la mieux renseignée.
     unique = {}
     for e in entrees:
