@@ -1602,7 +1602,7 @@
   "source": "site de l'organisme + avis de marché BOAMP du 21/11/2025"
  },
  "nom:SOCIETE FRANCAISE DES HABITATIONS ECONOMIQUES SOCIETE ANONYME D HABITATIONS A LOYER MODERE|13": {
-  "email": "",
+  "email": "oriane.miler@sfhe.fr",
   "tel": "",
   "web": "https://sfhe.fr",
   "source": "site de l'organisme"
@@ -1874,8 +1874,8 @@
  "siren:302332374": {
   "email": "",
   "tel": "04 42 87 92 19",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://associationsaintemarie.fr",
+  "source": "FINESS + site de l'organisme (nom et code postal concordants)"
  },
  "siren:302382395": {
   "email": "accueil@acpm.eu",
@@ -2250,10 +2250,10 @@
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:334990249": {
-  "email": "",
+  "email": "contact@saralogisol.fr",
   "tel": "",
   "web": "https://saralogisol.fr",
-  "source": "site déclaré au Journal officiel des associations"
+  "source": "site déclaré au Journal officiel des associations + site de l'organisme"
  },
  "siren:335001434": {
   "email": "",
@@ -2320,6 +2320,12 @@
   "tel": "04 91 98 10 27",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:344741517": {
+  "email": "contact@adpei.org",
+  "tel": "",
+  "web": "https://adpei.org",
+  "source": "site de l'organisme (SIREN vérifié)"
  },
  "siren:347427338": {
   "email": "jmlemons@rs13.fr",
@@ -2418,16 +2424,16 @@
   "source": "FINESS"
  },
  "siren:377740709": {
-  "email": "",
+  "email": "contact@vivacite.org",
   "tel": "04 91 18 01 80",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://vivacite.org",
+  "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:378212666": {
-  "email": "",
+  "email": "contact@maikkom.fr",
   "tel": "",
   "web": "https://qronos.maikkom.fr",
-  "source": "site déclaré au Journal officiel des associations"
+  "source": "site déclaré au Journal officiel des associations + site de l'organisme"
  },
  "siren:378911622": {
   "email": "accueil.arles@imf.asso.fr",
@@ -2447,11 +2453,17 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:380022103": {
+  "email": "contact@apei-carpentras.com",
+  "tel": "",
+  "web": "https://apei-carpentras.com",
+  "source": "site de l'organisme (SIREN vérifié)"
+ },
  "siren:381028646": {
-  "email": "",
+  "email": "contact@arremme.fr",
   "tel": "04 91 87 67 91",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://arremme.fr",
+  "source": "FINESS + site de l'organisme (nom et code postal concordants)"
  },
  "siren:381159177": {
   "email": "",
@@ -2735,6 +2747,12 @@
   "web": "https://www.isatis.org",
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
+ "siren:411293665": {
+  "email": "contact@semailles.asso.fr",
+  "tel": "",
+  "web": "https://semaillesavignon.fr",
+  "source": "site de l'organisme (SIREN vérifié)"
+ },
  "siren:411831696": {
   "email": "billetterie@festival-aix.com",
   "tel": "",
@@ -2940,10 +2958,10 @@
   "source": "site de l'organisme"
  },
  "siren:441092699": {
-  "email": "",
+  "email": "secretariat@acte13.fr",
   "tel": "04 42 52 54 54",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://acte13.com",
+  "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:441747557": {
   "email": "",
@@ -3125,6 +3143,12 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:512387325": {
+  "email": "contact@adelaideservices.fr",
+  "tel": "",
+  "web": "https://adelaideservices.fr",
+  "source": "site de l'organisme (SIREN vérifié)"
+ },
  "siren:517889531": {
   "email": "contact@cocktailetculture.fr",
   "tel": "",
@@ -3226,6 +3250,12 @@
   "tel": "04 95 06 10 95",
   "web": "https://equatio.org/nos-formations",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:775558422": {
+  "email": "ars.association@ars13.org",
+  "tel": "",
+  "web": "https://ars13.org",
+  "source": "site de l'organisme (nom et code postal concordants)"
  },
  "siren:775558679": {
   "email": "contact@hpf.asso.fr",
@@ -3714,10 +3744,10 @@
   "source": "FINESS"
  },
  "siren:782815559": {
-  "email": "",
+  "email": "accueil@aafp-provence.fr",
   "tel": "04 91 47 02 66",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://aafp-provence.fr",
+  "source": "FINESS + site de l'organisme (nom et code postal concordants)"
  },
  "siren:782815674": {
   "email": "directiongenerale@leolagrange.org",
@@ -4073,6 +4103,12 @@
   "web": "https://yeswecamp.org",
   "source": "site déclaré au Journal officiel des associations"
  },
+ "siren:789561123": {
+  "email": "contact@courtoiseressourcerie.com",
+  "tel": "",
+  "web": "https://courtoiseressourcerie.com",
+  "source": "site de l'organisme (nom et code postal concordants)"
+ },
  "siren:793035890": {
   "email": "ce.0132011r@ac-aix-marseille.fr",
   "tel": "04 91 46 03 55",
@@ -4120,6 +4156,12 @@
   "tel": "",
   "web": "https://www.carasante.com",
   "source": "site de l'organisme (SIREN vérifié)"
+ },
+ "siren:821443959": {
+  "email": "accueil@amicial.fr",
+  "tel": "09 70 82 13 49",
+  "web": "https://amicial.fr",
+  "source": "site de l'organisme (SIREN vérifié) + annuaire officiel pour-les-personnes-agees.gouv.fr"
  },
  "siren:824547145": {
   "email": "info@pnsd.fr",

@@ -123,9 +123,14 @@ def demasquer(page):
     return t
 
 
+# Adresses relevées sur un site mais qui ne sont pas celles de l'organisme
+# (association hébergée par une mairie, antenne d'une autre région).
+EXCLUES = {"cdvrcm@gmail.com", "contact@presenceverte-53-61-72.fr"}
+
+
 def nettoyer(m):
     m = m.strip(".,;:)»\"'<>").lower()
-    if "@" not in m or REJET.search(m):
+    if "@" not in m or REJET.search(m) or m in EXCLUES:
         return ""
     local, dom = m.rsplit("@", 1)
     if not dom.endswith(tuple("." + e for e in EXTENSIONS)):
@@ -207,7 +212,9 @@ def domaines_plausibles(nom, sigle, dept):
     if 1 < len(brut) <= 4:
         bases += ["".join(brut), "-".join(brut)]
     bases = [b for b in dict.fromkeys(bases) if 4 <= len(b) <= 40]
-    return [f"https://www.{b}{t}" for b in bases[:8] for t in (".fr", ".org", ".com", ".asso.fr")]
+    # Avec et sans « www » : certains sites ne répondent que sur le domaine nu (amicial.fr).
+    return [f"https://{w}{b}{t}" for b in bases[:8] for t in (".fr", ".org", ".com", ".asso.fr")
+            for w in ("www.", "")]
 
 
 def se_confirme(textes, c):
