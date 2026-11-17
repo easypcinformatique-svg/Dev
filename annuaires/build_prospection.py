@@ -206,7 +206,9 @@ def completer(entrees):
         avant = (e["email"], e["tel"], e["contact"])
         e["email"] = e["email"] or c.get("email", "")
         e["tel"] = e["tel"] or c.get("tel", "")
-        if not e["contact"] and c.get("web"):
+        # Sans adresse, le site de l'organisme vaut mieux que rien ou qu'une fiche SIRENE.
+        if c.get("web") and not e["email"] and (
+                not e["contact"] or "annuaire-entreprises" in e["contact"]):
             e["contact"] = c["web"]
         touchees += avant != (e["email"], e["tel"], e["contact"])
     return touchees
