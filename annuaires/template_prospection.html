@@ -110,6 +110,12 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 .g-splain{background:#F0F9FF;color:#0C4A6E}
 .g-autre{background:#F5F5F4;color:#44403C}
 .g-asso{background:#FFF1F2;color:#9F1239}
+.th-note{cursor:default}
+.td-note{min-width:210px}
+textarea.note{width:100%;min-height:44px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font:inherit;font-size:12.5px;color:var(--text);background:var(--surface);resize:vertical}
+textarea.note:focus{outline:none;border-color:var(--bleu-l)}
+textarea.note.rempli{background:#FFFBEB;border-color:#F59E0B}
+@media print{textarea.note{border:none;resize:none}}
 
 /* ══ BADGES RÉGION ══ */
 .rbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
@@ -206,6 +212,11 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="avec">Seulement avec une adresse</option>
       <option value="sans">Seulement sans adresse</option>
     </select>
+    <select id="note-filter" name="note-filter" onchange="render()" aria-label="Filtrer sur la présence d'un commentaire">
+      <option value="">Avec ou sans commentaire</option>
+      <option value="avec">Seulement commentés</option>
+      <option value="sans">Seulement non commentés</option>
+    </select>
     <select id="dept-filter" name="dept-filter" onchange="render()" aria-label="Filtrer par département">
       <option value="">Toute la région PACA</option>
     </select>
@@ -229,6 +240,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
     </button>
+    <button class="btn btn-outline" onclick="exporterNotes()" title="Télécharge vos commentaires dans un fichier, pour les sauvegarder ou les reporter sur un autre appareil">Sauvegarder mes commentaires</button>
+    <button class="btn btn-outline" onclick="document.getElementById('import-notes').click()" title="Recharge un fichier de commentaires sauvegardé">Importer</button>
+    <input type="file" id="import-notes" accept="application/json,.json" hidden onchange="importerNotes(this)">
     <button class="btn btn-ghost" onclick="resetFilters()">Réinitialiser</button>
     <span id="count-label"></span>
   </div>
@@ -246,6 +260,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
           <th>Adresse</th>
           <th>Téléphone</th>
           <th onclick="setSort('email')">Courriel ou contact <span class="arr" id="arr-email"></span></th>
+          <th class="th-note">Commentaire</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -291,6 +306,47 @@ function classeType(t){
 
 /* Les contacts collectés n'ont pas tous leur schéma. */
 function lien(u){ return /^https?:\/\//i.test(u) ? u : 'https://'+u; }
+
+/* ══ COMMENTAIRES ══
+   Enregistrés dans le navigateur (localStorage) : ils ne quittent pas l'appareil
+   et ne sont visibles de personne d'autre, mais ne suivent pas non plus d'un
+   appareil à l'autre. « Sauvegarder mes commentaires » en fait un fichier, que
+   « Importer » recharge ailleurs. */
+const CLE_NOTES='prospection-paca-commentaires-v1';
+let NOTES={};
+try{ NOTES=JSON.parse(localStorage.getItem(CLE_NOTES)||'{}')||{}; }catch(e){ NOTES={}; }
+function idNote(d){ return d.type.split(' · ')[0]+'|'+d.dept+'|'+d.nom; }
+function noteDe(d){ const n=NOTES[idNote(d)]; return n?n.t:''; }
+function ecrireNotes(){
+  try{ localStorage.setItem(CLE_NOTES,JSON.stringify(NOTES)); return true; }
+  catch(e){ showToast("Ce navigateur refuse l'enregistrement : le commentaire sera perdu à la fermeture de la page.",'#B91C1C',6000); return false; }
+}
+function enregistrerNote(zone){
+  const t=zone.value.trim(), id=zone.dataset.id;
+  if(t) NOTES[id]={t:t,d:new Date().toISOString().slice(0,10)}; else delete NOTES[id];
+  zone.classList.toggle('rempli',!!t);
+  if(ecrireNotes()) showToast(t?'Commentaire enregistré':'Commentaire supprimé','#065F46',1800);
+}
+function exporterNotes(){
+  const n=Object.keys(NOTES).length;
+  if(!n){ showToast('Aucun commentaire à sauvegarder.','#B45309',3000); return; }
+  const blob=new Blob([JSON.stringify(NOTES,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='commentaires-prospection-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  showToast(n+' commentaire'+(n>1?'s':'')+' sauvegardé'+(n>1?'s':''),'#065F46',3000);
+}
+function importerNotes(champ){
+  const f=champ.files[0]; if(!f) return;
+  f.text().then(txt=>{
+    const lus=JSON.parse(txt); let n=0;
+    Object.keys(lus).forEach(id=>{
+      const v=lus[id];
+      if(v&&typeof v.t==='string'&&v.t.trim()&&(!NOTES[id]||(v.d||'')>=(NOTES[id].d||''))){ NOTES[id]={t:v.t.slice(0,2000),d:String(v.d||'').slice(0,10)}; n++; }
+    });
+    ecrireNotes(); render(); showToast(n+' commentaire'+(n>1?'s':'')+' importé'+(n>1?'s':''),'#065F46',3000);
+  }).catch(()=>showToast("Ce fichier n'est pas une sauvegarde de commentaires.",'#B91C1C',5000));
+  champ.value='';
+}
 
 let sortField='nom', sortDir='asc';
 
@@ -347,6 +403,9 @@ function getFiltered(){
   const rows=DATA.filter(d=>{
     if(dep&&d.dept!==dep)return false;
     if(typ&&d.type!==typ&&!d.type.startsWith(typ+' · '))return false;
+    const nf=document.getElementById('note-filter').value;
+    if(nf==='avec'&&!noteDe(d))return false;
+    if(nf==='sans'&&noteDe(d))return false;
     if(mail==='avec'&&!d.email)return false;
     if(mail==='sans'&&d.email)return false;
     if(!q)return true;
@@ -367,7 +426,7 @@ function render(){
   const rows=getFiltered();
   const tbody=document.getElementById('tbody');
   if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="9"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
   } else {
     tbody.innerHTML=rows.map((d,i)=>`
     <tr>
@@ -383,6 +442,8 @@ function render(){
         : d.contact
           ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">${d.type.startsWith('Association')?'Fiche officielle':'Formulaire de contact'} ↗</a>`
           : '<span class="web-na">Non disponible</span>'}</td>
+      <td class="td-note"><textarea class="note${noteDe(d)?' rempli':''}" rows="2" maxlength="2000" aria-label="Commentaire sur ${esc(d.nom)}"
+        placeholder="Ajouter un commentaire…" data-id="${esc(idNote(d))}" onchange="enregistrerNote(this)">${esc(noteDe(d))}</textarea></td>
     </tr>`).join('');
   }
   document.getElementById('s-total').textContent=fmt(DATA.length);
@@ -395,7 +456,7 @@ function render(){
 }
 
 function resetFilters(){
-  ['search','dept-filter','type-filter','mail-filter'].forEach(id=>document.getElementById(id).value='');
+  ['search','dept-filter','type-filter','mail-filter','note-filter'].forEach(id=>document.getElementById(id).value='');
   sortField='nom';sortDir='asc';
   document.querySelectorAll('.arr').forEach(el=>el.textContent='');
   document.getElementById('arr-nom').textContent='↑';
@@ -491,10 +552,10 @@ function triggerDownload(blob, filename){
 }
 
 const COLUMNS=['Rang','Organisme','Type','Département','Code dép.','Taille','Adresse',
-               'Téléphone','Courriel','Contact officiel'];
+               'Téléphone','Courriel','Contact officiel','Commentaire'];
 function toRow(d,i){
   return [i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.dept,d.taille,d.adresse,
-          d.tel||'',d.email||'',d.contact||''];
+          d.tel||'',d.email||'',d.contact||'',noteDe(d)];
 }
 
 /* ══ EXPORT CSV ══ */
@@ -519,7 +580,7 @@ function exportSheets(){
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:5},{wch:46},{wch:22},{wch:24},{wch:9},{wch:16},{wch:44},
-                 {wch:17},{wch:32},{wch:40}];
+                 {wch:17},{wch:32},{wch:40},{wch:50}];
     ws['!freeze']={xSplit:0,ySplit:1};
     XLSX.utils.book_append_sheet(wb,ws,'Prospection');
 

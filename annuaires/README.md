@@ -72,6 +72,42 @@ python3 annuaires/build_prospection.py --associations /tmp/associations.json
 Les familles dont la source n'est pas passée en argument sont reprises de la
 page existante : régénérer les seules associations ne retire rien d'autre.
 
+## Compléments de contacts
+
+`enrichit_contacts.py` rebalaye les sources officielles et écrit
+`contacts_complementaires.json`, que `build_prospection.py` applique à chaque
+régénération sans jamais écraser une valeur déjà présente. Au 17/11/2026 la page
+passe de 165 à 362 adresses e-mail et à 640 téléphones, sur 981 organismes.
+
+| Source | Apporte | Rapprochement |
+|--------|---------|---------------|
+| BANATIC officiel (`banatic.interieur.gouv.fr`, export national) | courriel, téléphone, site des syndicats | nom et département |
+| Annuaire de l'éducation | courriel, téléphone, site des associations gestionnaires d'établissements | SIREN |
+| FINESS | téléphone des associations sanitaires et médico-sociales | SIREN |
+| Site de l'organisme | courriel | site donné par une source, ou confirmé par le SIREN |
+
+La phrase plus haut selon laquelle BANATIC ne publie ni e-mail ni téléphone vaut
+pour la copie OpenDataSoft d'origine : l'export officiel porte ces colonnes, mais
+toutes ne sont pas remplies (63 syndicats sur 190 ont un courriel).
+
+`--cherche-sites` essaie des noms de domaine plausibles pour les organismes sans
+site connu et ne retient un site que s'il affiche le SIREN de l'organisme.
+Le Répertoire national des associations, qui porte un champ site web, n'est pas
+téléchargeable par script (protection anti-robot du ministère).
+
+```bash
+python3 annuaires/enrichit_contacts.py CACHE --cherche-sites
+python3 annuaires/build_prospection.py --associations CACHE/associations.json
+```
+
+## Commentaires
+
+La page de prospection a une colonne « Commentaire », enregistrée dans le
+navigateur (`localStorage`). Les commentaires ne sont donc ni publiés ni
+partagés, et ne suivent pas d'un appareil à l'autre : « Sauvegarder mes
+commentaires » en fait un fichier JSON que « Importer » recharge ailleurs. Ils
+figurent dans les exports CSV et Excel.
+
 Le bouton de copie déduplique : deux organismes partageant une adresse ne la
 produisent qu'une fois, ce qui explique l'écart entre les 165 adresses
 renseignées et les 163 copiées.

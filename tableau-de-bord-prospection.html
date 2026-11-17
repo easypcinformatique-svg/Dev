@@ -6,85 +6,193 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Tableau de bord prospection PACA</title>
 <style>
-:root{--bleu:#1E3A8A;--bleu-l:#3B82F6;--fond:#F3F4F6;--surface:#fff;--texte:#111827;--gris:#6B7280;--bord:#E5E7EB;--ok:#065F46;--alerte:#92400E}
+:root{
+  --encre:#0B1F3A;--encre-2:#16335C;--accent:#C8872B;--accent-clair:#FBF1DF;
+  --fond:#F4F2ED;--surface:#FFFFFF;--texte:#1B2430;--gris:#5F6B7A;--bord:#E3DED3;
+  --vert:#1F6F54;--vert-clair:#E4F2EC;--rouge:#A6402B;--bleu:#2457A6;--bleu-clair:#E7EEF9;
+  --rayon:14px;--ombre:0 1px 2px rgba(11,31,58,.06),0 6px 18px rgba(11,31,58,.06);
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fond);color:var(--texte);line-height:1.5;font-size:15px}
-header{background:var(--bleu);color:#fff;padding:20px 16px}
-header h1{margin:0;font-size:20px;text-wrap:balance}
-header p{margin:4px 0 0;font-size:13px;opacity:.85}
-main{max-width:1000px;margin:0 auto;padding:16px}
-h2{font-size:16px;margin:28px 0 10px;color:var(--bleu);text-wrap:balance}
-.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.carte{background:var(--surface);border:1px solid var(--bord);border-radius:10px;padding:14px;display:block;color:inherit;text-decoration:none}
-a.carte:hover,a.carte:focus-visible{border-color:var(--bleu-l);outline:none}
-.carte .n{font-size:26px;font-weight:700;color:var(--bleu);font-variant-numeric:tabular-nums}
-.carte .t{font-weight:600}
-.carte .d{font-size:13px;color:var(--gris)}
-.bloc{background:var(--surface);border:1px solid var(--bord);border-radius:10px;padding:14px;margin-bottom:12px}
-.bloc h3{margin:0 0 4px;font-size:15px}
-.etiq{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;background:#EEF2FF;color:#3730A3;margin-right:6px}
-.etiq.suivi{background:#FEF3C7;color:var(--alerte)}
-.etiq.contexte{background:#ECFDF5;color:var(--ok)}
-ul.faits{margin:8px 0 0;padding-left:18px}
-ul.faits li{margin-bottom:6px}
-.date{font-variant-numeric:tabular-nums;font-weight:600}
-.src{font-size:12px;color:var(--gris)}
-.src a{color:var(--bleu)}
-.note{font-size:13px;color:var(--gris);border-left:3px solid var(--bord);padding-left:10px;margin-top:8px}
-.onglets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.onglets button{font:inherit;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--bord);background:var(--surface);cursor:pointer}
-.onglets button[aria-pressed="true"]{background:var(--bleu);color:#fff;border-color:var(--bleu)}
-.avis{border-top:1px solid var(--bord);padding:10px 0}
-.avis:first-child{border-top:0}
-.avis a{color:var(--bleu);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
-.avis .meta{font-size:12px;color:var(--gris)}
-footer{max-width:1000px;margin:0 auto;padding:16px;font-size:12px;color:var(--gris)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--fond);color:var(--texte);line-height:1.55;font-size:15px}
+a{color:var(--bleu)}
+.cadre{max-width:1080px;margin:0 auto;padding:0 18px}
+
+/* En-tête */
+.tete{background:linear-gradient(135deg,var(--encre) 0%,var(--encre-2) 70%,#234a80 100%);color:#fff;padding:30px 0 74px;position:relative;overflow:hidden}
+.tete::after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;border:44px solid rgba(200,135,43,.16)}
+.sur{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:#E9C48A;font-weight:600}
+.tete h1{margin:6px 0 6px;font-size:clamp(24px,5vw,34px);line-height:1.15;font-weight:700;text-wrap:balance;letter-spacing:-.01em}
+.tete p{margin:0;max-width:56ch;color:#D5DEEC;font-size:14.5px}
+.maj{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:12.5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:5px 11px;border-radius:999px;color:#fff}
+.maj i{width:7px;height:7px;border-radius:50%;background:#6EE7B7;display:inline-block}
+
+/* Chiffres clés */
+.cles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:-48px;position:relative;z-index:1}
+.cle{background:var(--surface);border-radius:var(--rayon);box-shadow:var(--ombre);padding:14px 16px;border:1px solid var(--bord)}
+.cle b{display:block;font-size:clamp(22px,4.6vw,30px);line-height:1.1;color:var(--encre);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.cle span{font-size:12.5px;color:var(--gris)}
+.cle.fort b{color:var(--accent)}
+
+nav.sommaire{display:flex;gap:8px;overflow-x:auto;padding:16px 0 4px;scrollbar-width:none}
+nav.sommaire a{flex:none;font-size:13px;text-decoration:none;color:var(--encre);background:var(--surface);border:1px solid var(--bord);padding:7px 13px;border-radius:999px;font-weight:600}
+nav.sommaire a:hover,nav.sommaire a:focus-visible{border-color:var(--accent);outline:none}
+
+section{margin-top:30px;scroll-margin-top:12px}
+h2{font-size:19px;margin:0 0 4px;color:var(--encre);letter-spacing:-.01em;text-wrap:balance}
+.chapo{margin:0 0 14px;color:var(--gris);font-size:13.5px;max-width:70ch}
+
+/* Annuaires */
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.annuaire{background:var(--surface);border:1px solid var(--bord);border-radius:var(--rayon);padding:18px;text-decoration:none;color:inherit;box-shadow:var(--ombre);display:flex;flex-direction:column;gap:6px;transition:transform .15s,border-color .15s}
+.annuaire:hover,.annuaire:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none}
+.annuaire .pic{width:40px;height:40px;border-radius:11px;background:var(--accent-clair);display:grid;place-items:center;color:var(--accent)}
+.annuaire .t{font-weight:700;font-size:16px;color:var(--encre)}
+.annuaire .d{font-size:13px;color:var(--gris);flex:1}
+.annuaire .aller{font-size:13px;font-weight:600;color:var(--bleu)}
+.annuaire.principal{background:linear-gradient(160deg,#fff 55%,var(--accent-clair));border-color:#E7CFA5}
+
+/* Couverture */
+.panneau{background:var(--surface);border:1px solid var(--bord);border-radius:var(--rayon);padding:18px;box-shadow:var(--ombre)}
+.barre-ligne{display:grid;grid-template-columns:minmax(120px,190px) 1fr auto;gap:12px;align-items:center;padding:7px 0;font-size:13.5px}
+.barre-ligne+.barre-ligne{border-top:1px dashed var(--bord)}
+.barre{height:10px;border-radius:999px;background:#ECE8DF;overflow:hidden;display:flex}
+.barre i{display:block;height:100%}
+.barre .m{background:var(--vert)}
+.barre .t{background:#8FBFA9}
+.barre-ligne .n{font-variant-numeric:tabular-nums;color:var(--gris);font-size:12.5px;white-space:nowrap}
+.legende{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gris);margin-top:10px}
+.legende i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* Avis */
+.onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.onglets button{font:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid var(--bord);background:var(--fond);color:var(--encre);cursor:pointer}
+.onglets button[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
+.avis{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--bord)}
+.avis .j{width:52px;text-align:center;background:var(--bleu-clair);border-radius:10px;padding:6px 0;color:var(--bleu);font-weight:700;font-size:16px;line-height:1.1;font-variant-numeric:tabular-nums;align-self:start}
+.avis .j small{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.avis a{color:var(--encre);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.avis a:hover{text-decoration:underline}
+.avis .meta{font-size:12.5px;color:var(--gris);margin-top:2px}
+.puce{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--fond);border:1px solid var(--bord);color:var(--gris);margin-right:4px}
+.puce.limite{background:#FDECE7;border-color:#F3C6BA;color:var(--rouge)}
+.remarque{font-size:12.5px;color:var(--gris);background:var(--fond);border-radius:10px;padding:10px 12px;margin-top:12px}
+
+/* Veille */
+.dossier{background:var(--surface);border:1px solid var(--bord);border-radius:var(--rayon);padding:18px;box-shadow:var(--ombre);margin-bottom:14px;border-left:5px solid var(--bleu)}
+.dossier.suivi{border-left-color:var(--accent)}
+.etiq{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu)}
+.dossier.suivi .etiq{color:var(--accent)}
+.dossier h3{margin:2px 0 10px;font-size:16.5px;color:var(--encre);text-wrap:balance}
+.fil{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--bord)}
+.fil li{position:relative;padding:0 0 12px 4px}
+.fil li::before{content:"";position:absolute;left:-24px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--bleu)}
+.dossier.suivi .fil li::before{border-color:var(--accent)}
+.fil .date{display:block;font-size:12px;font-weight:700;color:var(--gris);font-variant-numeric:tabular-nums}
+.fil .src{font-size:12px;color:var(--gris)}
+.lecture{background:var(--accent-clair);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:4px}
+.lecture b{color:#8A5A14}
+
+/* Sources */
+.familles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.famille{background:var(--surface);border:1px solid var(--bord);border-radius:var(--rayon);padding:16px}
+.famille h3{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+.famille ul{list-style:none;margin:0;padding:0}
+.famille li{padding:5px 0;border-top:1px solid var(--bord);font-size:13.5px}
+.famille li:first-child{border-top:0}
+.famille a{font-weight:600;text-decoration:none}
+.famille a:hover{text-decoration:underline}
+.famille small{display:block;color:var(--gris);font-size:12px}
+
+footer{margin:34px 0 0;padding:20px 0 30px;border-top:1px solid var(--bord);font-size:12px;color:var(--gris)}
+@media (max-width:640px){
+  .cles{grid-template-columns:repeat(2,1fr)}
+  .barre-ligne{grid-template-columns:1fr auto}
+  .barre-ligne .barre{grid-column:1/-1;order:3}
+}
+@media (prefers-reduced-motion:reduce){.annuaire{transition:none}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Tableau de bord prospection PACA</h1>
-  <p>Annuaires, avis publics en direct et veille. Veille mise à jour le <span id="maj"></span>.</p>
+<header class="tete">
+  <div class="cadre">
+    <div class="sur">Provence-Alpes-Côte d'Azur</div>
+    <h1>Tableau de bord prospection</h1>
+    <p>Collectivités, entreprises publiques locales, bailleurs sociaux et grandes associations : les annuaires, les avis publics du jour et la veille.</p>
+    <span class="maj"><i></i>Veille mise à jour le <span id="maj"></span></span>
+  </div>
 </header>
-<main>
 
-<h2>Annuaires</h2>
-<div class="grille">
-  <a class="carte" href="annuaire-prospection-paca.html">
-    <div class="n">981</div><div class="t">Fichier de prospection</div>
-    <div class="d">Communes, EPCI, syndicats, Epl, bailleurs sociaux, associations de 50 salariés et plus, départements et Région.</div>
-  </a>
-  <a class="carte" href="annuaire-maires-france.html">
-    <div class="n">97</div><div class="t">Annuaire des maires</div>
-    <div class="d">Communes de PACA de plus de 10 000 habitants et Monaco. Mise à jour chaque lundi.</div>
-  </a>
-  <a class="carte" href="annuaire-sem-spl-syndicats.html">
-    <div class="n">110</div><div class="t">SEM, SPL et syndicats</div>
-    <div class="d">Entreprises publiques locales de PACA. Mise à jour chaque mercredi.</div>
-  </a>
+<div class="cadre">
+  <div class="cles" aria-label="Chiffres clés">
+    <div class="cle"><b id="k-total">…</b><span>organismes suivis</span></div>
+    <div class="cle fort"><b id="k-mails">…</b><span>avec une adresse e-mail</span></div>
+    <div class="cle"><b id="k-tels">…</b><span>avec un téléphone</span></div>
+    <div class="cle"><b id="k-vides">…</b><span>sans aucun contact direct</span></div>
+  </div>
+
+  <nav class="sommaire" aria-label="Sommaire">
+    <a href="#annuaires">Annuaires</a><a href="#couverture">Couverture</a><a href="#avis-publics">Avis publics</a><a href="#veille-titre">Veille</a><a href="#sources">Sources</a>
+  </nav>
+
+  <section id="annuaires">
+    <h2>Annuaires</h2>
+    <p class="chapo">Le fichier de prospection réunit tout. Les deux autres annuaires en sont les sources, mises à jour chaque semaine.</p>
+    <div class="grille">
+      <a class="annuaire principal" href="annuaire-prospection-paca.html">
+        <span class="pic"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h12"/></svg></span>
+        <span class="t">Fichier de prospection</span>
+        <span class="d">Communes, EPCI, syndicats, Epl, bailleurs sociaux, associations de 50 salariés et plus. Filtres, export, copie des adresses et commentaires.</span>
+        <span class="aller">Ouvrir le fichier →</span>
+      </a>
+      <a class="annuaire" href="annuaire-maires-france.html">
+        <span class="pic"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12M10 21v-6h4v6"/></svg></span>
+        <span class="t">Annuaire des maires</span>
+        <span class="d">Communes de PACA de plus de 10 000 habitants et Monaco. Actualisé chaque lundi.</span>
+        <span class="aller">Ouvrir →</span>
+      </a>
+      <a class="annuaire" href="annuaire-sem-spl-syndicats.html">
+        <span class="pic"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+        <span class="t">SEM, SPL et syndicats</span>
+        <span class="d">Entreprises publiques locales de PACA. Actualisé chaque mercredi.</span>
+        <span class="aller">Ouvrir →</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="couverture">
+    <h2>Couverture des contacts par famille</h2>
+    <p class="chapo">Part des organismes joignables directement. Calculé à l'ouverture depuis le fichier de prospection en ligne.</p>
+    <div class="panneau">
+      <div id="barres">Calcul en cours…</div>
+      <div class="legende"><span><i style="background:var(--vert)"></i>Adresse e-mail</span><span><i style="background:#8FBFA9"></i>Téléphone seul</span><span><i style="background:#ECE8DF"></i>Aucun contact direct</span></div>
+    </div>
+  </section>
+
+  <section id="avis-publics">
+    <h2>Avis publics en direct</h2>
+    <p class="chapo">Bulletin officiel des annonces des marchés publics, PACA, 90 derniers jours. Interrogé à chaque ouverture de la page.</p>
+    <div class="panneau">
+      <div class="onglets" id="onglets"></div>
+      <div id="avis" aria-live="polite">Chargement des avis…</div>
+      <p class="remarque">Les contrats d'emprunt ne passent pas par les marchés publics : ils n'apparaissent presque jamais ici. Ces avis signalent les projets d'investissement en amont, pas les consultations bancaires elles-mêmes.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="veille-titre">Veille</h2>
+    <p class="chapo">Faits datés et sourcés. Les encadrés « Lecture » sont une interprétation, pas un fait.</p>
+    <div id="veille"></div>
+  </section>
+
+  <section id="sources">
+    <h2>Sources de la veille</h2>
+    <p class="chapo">Sites balayés chaque semaine par la veille automatique, à consulter aussi directement.</p>
+    <div class="familles" id="familles"></div>
+  </section>
+
+  <footer>Sources publiques uniquement. Chaque fait de la veille renvoie à sa source. Les coordonnées évoluent : à vérifier avant tout envoi. Non contractuel.</footer>
 </div>
-
-<h2>Avis publics en direct (BOAMP, PACA, 90 derniers jours)</h2>
-<div class="bloc">
-  <div class="onglets" id="onglets"></div>
-  <div id="avis" aria-live="polite">Chargement des avis…</div>
-  <p class="note">Interrogation directe du Bulletin officiel des annonces des marchés publics à chaque ouverture de la page.
-  Les contrats d'emprunt ne passent pas par les marchés publics : ils n'apparaissent donc presque jamais ici.
-  Ces avis signalent les projets d'investissement en amont, pas les consultations bancaires elles-mêmes.</p>
-</div>
-
-<h2>Veille</h2>
-<div id="veille"></div>
-
-<h2>Sources à consulter</h2>
-<div class="grille">
-  <a class="carte" href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener"><div class="t">BOAMP</div><div class="d">Recherche d'avis de marchés et de concessions.</div></a>
-  <a class="carte" href="https://www.banquedesterritoires.fr/edition-localtis" target="_blank" rel="noopener"><div class="t">Localtis</div><div class="d">Actualité quotidienne des collectivités, Banque des Territoires.</div></a>
-  <a class="carte" href="https://www.maire-info.com/" target="_blank" rel="noopener"><div class="t">Maire info</div><div class="d">Quotidien des élus locaux, rubrique finances locales.</div></a>
-  <a class="carte" href="https://www.collectivites-locales.gouv.fr/finances-locales" target="_blank" rel="noopener"><div class="t">Finances locales</div><div class="d">Comptes et données officielles des collectivités.</div></a>
-</div>
-</main>
-<footer>Sources publiques uniquement. Chaque fait de la veille renvoie à sa source ; les lignes marquées « Lecture » sont une interprétation, pas un fait sourcé. Non contractuel.</footer>
 
 <script>
 /* ══════════════════════════════════════════
@@ -100,18 +208,90 @@ const VEILLE = [
   {famille:"contexte",titre:"Institutionnels de PACA : signaux repérés dans les avis publics",lecture:"Premier relevé. La tâche hebdomadaire complète cette rubrique avec les SEM, SPL, bailleurs sociaux et grandes associations de la région.",faits:[["05/11/2026","L'URSSAF Provence-Alpes-Côte d'Azur lance un marché de services bancaires, réponses attendues le 07/12/2026.","BOAMP, avis 26-107208","https://www.boamp.fr/pages/avis/?q=idweb:26-107208"],["Nov. 2025","La Région Provence-Alpes-Côte d'Azur consulte pour l'arrangement et la mise à jour de son programme d'émissions obligataires EMTN.","BOAMP, avis 25-127139","https://www.boamp.fr/pages/avis/?q=idweb:25-127139"]]}
 ];
 
+/* Sites suivis par la veille. La tâche hebdomadaire reprend cette liste. */
+const SOURCES = [
+  ["Finances locales",[
+    ["Localtis","Banque des Territoires, quotidien des collectivités","https://www.banquedesterritoires.fr/edition-localtis"],
+    ["Maire info","Quotidien des élus locaux","https://www.maire-info.com/"],
+    ["La Gazette des communes","Finances, budgets, dette locale","https://www.lagazettedescommunes.com/"],
+    ["Agence France Locale","Études et baromètres de l'emprunt local","https://www.agence-france-locale.fr/"],
+    ["OFGL","Données ouvertes des finances locales","https://data.ofgl.fr/"],
+    ["Collectivités locales","Portail officiel de l'État","https://www.collectivites-locales.gouv.fr/finances-locales"]]],
+  ["Presse économique régionale",[
+    ["TPBM","Travaux publics et bâtiment du Midi","https://www.tpbm-presse.com/"],
+    ["Gomet'","Actualité économique Aix-Marseille","https://gomet.net/"],
+    ["La Tribune Région Sud","Économie régionale","https://region-sud.latribune.fr/"],
+    ["Businews","Économie Provence-Alpes-Côte d'Azur","https://www.businews.fr/"],
+    ["Les Nouvelles Publications","Économie et droit, Bouches-du-Rhône","https://www.nouvellespublications.com/"],
+    ["Petites Affiches des Alpes-Maritimes","Vie publique et économie du 06","https://www.petitesaffiches.fr/"],
+    ["Made in Marseille","Projets urbains et aménagement","https://madeinmarseille.net/"]]],
+  ["Presse quotidienne",[
+    ["La Provence","Bouches-du-Rhône, Vaucluse, Alpes","https://www.laprovence.com/"],
+    ["Nice-Matin","Alpes-Maritimes","https://www.nicematin.com/"],
+    ["Var-Matin","Var","https://www.varmatin.com/"],
+    ["Le Dauphiné Libéré","Hautes-Alpes, Alpes-de-Haute-Provence, Vaucluse","https://www.ledauphine.com/"],
+    ["Le Moniteur","Construction et commande publique","https://www.lemoniteur.fr/"]]],
+  ["Avis et décisions",[
+    ["BOAMP","Marchés publics et concessions","https://www.boamp.fr/pages/recherche/"],
+    ["TED","Avis européens au-dessus des seuils","https://ted.europa.eu/"],
+    ["Chambre régionale des comptes","Rapports sur les collectivités et leurs satellites","https://www.ccomptes.fr/fr/crc-provence-alpes-cote-dazur"],
+    ["BANATIC","Base nationale de l'intercommunalité","https://www.banatic.interieur.gouv.fr/"]]],
+  ["Grandes collectivités",[
+    ["Région Sud","Délibérations et budget","https://www.maregionsud.fr/"],
+    ["Métropole Aix-Marseille-Provence","Conseils et projets","https://ampmetropole.fr/"],
+    ["Métropole Nice Côte d'Azur","Conseils et projets, dont Isola 2000","https://www.nicecotedazur.org/"],
+    ["Métropole Toulon Provence Méditerranée","Conseils et projets","https://metropoletpm.fr/"]]],
+  ["Institutionnels",[
+    ["Fédération des Epl","SEM, SPL et SemOp","https://www.lesepl.fr/"],
+    ["AR Hlm PACA et Corse","Bailleurs sociaux de la région","https://www.arhlmpacacorse.com/"],
+    ["Union sociale pour l'habitat","Logement social, national","https://www.union-habitat.org/"],
+    ["ARS PACA","Appels à projets sanitaires et médico-sociaux","https://www.paca.ars.sante.fr/"],
+    ["URIOPSS PACA et Corse","Associations sanitaires et sociales","https://www.uriopss-pacac.fr/"],
+    ["CRESS PACA","Économie sociale et solidaire","https://www.cresspaca.org/"]]]
+];
+
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function lienSur(u){return /^https?:\/\//i.test(u)?u:'#';}
+function fmt(n){return Number(n).toLocaleString('fr-FR');}
 
 document.getElementById('maj').textContent=VEILLE_MAJ;
 document.getElementById('veille').innerHTML=VEILLE.map(v=>`
-  <div class="bloc">
-    <span class="etiq ${v.famille==='suivi'?'suivi':'contexte'}">${v.famille==='suivi'?'Dossier suivi':'Contexte'}</span>
+  <article class="dossier ${v.famille==='suivi'?'suivi':''}">
+    <span class="etiq">${v.famille==='suivi'?'Dossier suivi':'Contexte'}</span>
     <h3>${esc(v.titre)}</h3>
-    <ul class="faits">${v.faits.map(f=>`<li><span class="date">${esc(f[0])}</span> · ${esc(f[1])}
-      <span class="src">(<a href="${esc(lienSur(f[3]))}" target="_blank" rel="noopener">${esc(f[2])}</a>)</span></li>`).join('')}</ul>
-    ${v.lecture?`<p class="note"><strong>Lecture :</strong> ${esc(v.lecture)}</p>`:''}
-  </div>`).join('');
+    <ul class="fil">${v.faits.map(f=>`<li><span class="date">${esc(f[0])}</span>${esc(f[1])}
+      <span class="src">· <a href="${esc(lienSur(f[3]))}" target="_blank" rel="noopener">${esc(f[2])}</a></span></li>`).join('')}</ul>
+    ${v.lecture?`<div class="lecture"><b>Lecture.</b> ${esc(v.lecture)}</div>`:''}
+  </article>`).join('');
+
+document.getElementById('familles').innerHTML=SOURCES.map(([titre,liens])=>`
+  <div class="famille"><h3>${esc(titre)}</h3><ul>${liens.map(l=>`<li><a href="${esc(lienSur(l[2]))}" target="_blank" rel="noopener">${esc(l[0])}</a><small>${esc(l[1])}</small></li>`).join('')}</ul></div>`).join('');
+
+/* ══ COUVERTURE : relit le fichier de prospection publié à côté ══ */
+(async function(){
+  const zone=document.getElementById('barres');
+  try{
+    const html=await (await fetch('annuaire-prospection-paca.html',{cache:'no-cache'})).text();
+    const bloc=html.match(/const DATA = \[\n([\s\S]*?)\n\];/);
+    if(!bloc) throw new Error('bloc absent');
+    const lignes=bloc[1].split('\n').map(l=>{const e={};l.replace(/(\w+):"([^"]*)"/g,(_,k,v)=>{e[k]=v;});return e;}).filter(e=>e.type);
+    const mails=lignes.filter(e=>e.email).length, tels=lignes.filter(e=>e.tel).length;
+    document.getElementById('k-total').textContent=fmt(lignes.length);
+    document.getElementById('k-mails').textContent=fmt(mails);
+    document.getElementById('k-tels').textContent=fmt(tels);
+    document.getElementById('k-vides').textContent=fmt(lignes.filter(e=>!e.email&&!e.tel).length);
+    const fam={};
+    lignes.forEach(e=>{const f=e.type.split(' · ')[0];(fam[f]=fam[f]||{n:0,m:0,t:0}).n++; if(e.email)fam[f].m++; else if(e.tel)fam[f].t++;});
+    const noms={'Commune':'Communes','EPCI':'EPCI','Syndicat':'Syndicats','Epl':'Entreprises publiques locales','Association':'Associations','Bailleur social':'Bailleurs sociaux','Département':'Départements','Région':'Région'};
+    zone.innerHTML=Object.keys(fam).sort((a,b)=>fam[b].n-fam[a].n).map(f=>{
+      const x=fam[f]; return `<div class="barre-ligne"><span><strong>${esc(noms[f]||f)}</strong></span>
+        <span class="barre" role="img" aria-label="${x.m} avec e-mail, ${x.t} avec téléphone seul, sur ${x.n}"><i class="m" style="width:${100*x.m/x.n}%"></i><i class="t" style="width:${100*x.t/x.n}%"></i></span>
+        <span class="n">${fmt(x.m)} e-mails · ${fmt(x.n)}</span></div>`;}).join('');
+  }catch(e){
+    zone.textContent='Le fichier de prospection n\'a pas pu être relu depuis cette page.';
+    ['k-total','k-mails','k-tels','k-vides'].forEach(id=>document.getElementById(id).textContent='n. d.');
+  }
+})();
 
 /* ══ AVIS BOAMP EN DIRECT ══ */
 const BOAMP='https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp/records';
@@ -121,6 +301,7 @@ const THEMES=[
   ['Aménagement et concessions','(objet like "concession" or objet like "aménagement")'],
   ['Construction et réhabilitation','(objet like "construction" or objet like "réhabilitation")']
 ];
+const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 const depuis=new Date(Date.now()-90*864e5).toISOString().slice(0,10);
 const cache={};
 function dateFr(d){return d?String(d).slice(0,10).split('-').reverse().join('/'):'';}
@@ -132,21 +313,26 @@ async function charger(i){
     const where=`${DEPTS_PACA} and ${THEMES[i][1]} and dateparution>="${depuis}"`;
     const url=BOAMP+'?'+new URLSearchParams({where,order_by:'dateparution desc',limit:'25',
       select:'idweb,objet,nomacheteur,dateparution,datelimitereponse,code_departement,nature_libelle,url_avis'});
-    try{
-      const r=await fetch(url); if(!r.ok) throw new Error(r.status);
-      cache[i]=await r.json();
-    }catch(e){
+    let rep=null;
+    for(let essai=0;essai<3&&!rep;essai++){
+      try{ const r=await fetch(url); if(r.ok) rep=await r.json(); }catch(e){}
+      if(!rep) await new Promise(ok=>setTimeout(ok,1200));
+    }
+    if(!rep){
       zone.innerHTML='Le BOAMP ne répond pas pour le moment. <a href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener">Ouvrir la recherche du BOAMP</a>.';
       return;
     }
+    cache[i]=rep;
   }
   const d=cache[i], lignes=d.results||[];
-  zone.innerHTML=lignes.length?`<p class="src">${d.total_count} avis, les ${lignes.length} plus récents :</p>`+lignes.map(a=>`
-    <div class="avis">
-      <a href="${esc(lienSur(a.url_avis||''))}" target="_blank" rel="noopener">${esc(a.objet)}</a>
-      <div class="meta">${esc(a.nomacheteur)} · ${esc([].concat(a.code_departement||[]).join(', '))} · ${esc(a.nature_libelle||'')}
-      · paru le ${dateFr(a.dateparution)}${a.datelimitereponse?' · réponse avant le '+dateFr(a.datelimitereponse):''}</div>
-    </div>`).join(''):'Aucun avis sur la période.';
+  zone.innerHTML=lignes.length?`<div class="meta" style="font-size:12.5px;color:var(--gris)">${fmt(d.total_count)} avis sur la période, les ${lignes.length} plus récents :</div>`+lignes.map(a=>{
+    const p=String(a.dateparution||'').slice(0,10).split('-');
+    return `<div class="avis">
+      <div class="j">${esc(p[2]||'')}<small>${esc(MOIS[(+p[1]||1)-1])}</small></div>
+      <div><a href="${esc(lienSur(a.url_avis||''))}" target="_blank" rel="noopener">${esc(a.objet)}</a>
+      <div class="meta">${esc(a.nomacheteur)}</div>
+      <div class="meta"><span class="puce">${esc([].concat(a.code_departement||[]).join(', '))}</span><span class="puce">${esc(a.nature_libelle||'')}</span>${a.datelimitereponse?`<span class="puce limite">Réponse avant le ${dateFr(a.datelimitereponse)}</span>`:''}</div></div>
+    </div>`;}).join(''):'Aucun avis sur la période.';
 }
 document.getElementById('onglets').innerHTML=THEMES.map((t,i)=>`<button type="button" onclick="charger(${i})">${esc(t[0])}</button>`).join('');
 charger(0);

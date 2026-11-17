@@ -30,6 +30,7 @@ MAIRES = RACINE / "annuaire-maires-france.html"
 EPL = RACINE / "annuaire-sem-spl-syndicats.html"
 GABARIT = pathlib.Path(__file__).resolve().parent / "template_prospection.html"
 SORTIE = RACINE / "annuaire-prospection-paca.html"
+COMPLEMENTS = pathlib.Path(__file__).resolve().parent / "contacts_complementaires.json"
 
 DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes",
          "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"}
@@ -179,6 +180,38 @@ def depuis_associations(chemin):
                "contact": a["fiche"]}
 
 
+def cle_complement(e):
+    """Clé d'une entrée dans contacts_complementaires.json (voir enrichit_contacts.py)."""
+    import unicodedata
+    if e["type"].startswith("Association"):
+        siren = re.search(r"/entreprise/(\d{9})", e["contact"])
+        if siren:
+            return f"siren:{siren.group(1)}"
+    nom = re.sub(r"\s*\([^)]*\)\s*$", "", e["nom"]) if e["type"].startswith("Association") else e["nom"]
+    s = unicodedata.normalize("NFD", nom)
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn").upper()
+    return f'nom:{re.sub(r"[^A-Z0-9]+", " ", s).strip()}|{e["dept"]}'
+
+
+def completer(entrees):
+    """Ajoute e-mail, téléphone et site là où ils manquent ; n'écrase rien."""
+    if not COMPLEMENTS.exists():
+        return 0
+    complements = json.loads(COMPLEMENTS.read_text(encoding="utf-8"))
+    touchees = 0
+    for e in entrees:
+        c = complements.get(cle_complement(e))
+        if not c:
+            continue
+        avant = (e["email"], e["tel"], e["contact"])
+        e["email"] = e["email"] or c.get("email", "")
+        e["tel"] = e["tel"] or c.get("tel", "")
+        if not e["contact"] and c.get("web"):
+            e["contact"] = c["web"]
+        touchees += avant != (e["email"], e["tel"], e["contact"])
+    return touchees
+
+
 def depuis_page_existante(garder):
     """Entrées de la page déjà générée dont le type satisfait `garder`."""
     if not SORTIE.exists():
@@ -235,6 +268,7 @@ def main():
         if not garde or (bool(e["email"]), bool(e["tel"])) > (bool(garde["email"]), bool(garde["tel"])):
             unique[cle] = e
     entrees = sorted(unique.values(), key=lambda e: (e["type"], e["dept"], e["nom"]))
+    completees = completer(entrees)
 
     lignes = []
     for e in entrees:
@@ -264,6 +298,7 @@ def main():
 
     avec = sum(1 for e in entrees if e["email"])
     print(f"✅ {SORTIE.name} — {len(entrees)} organismes, {avec} avec une adresse")
+    print(f"   {completees} entrées complétées depuis {COMPLEMENTS.name}")
     if ecartes:
         print(f"   {len(ecartes)} syndicats écartés (moins de {SEUIL_POPULATION} hab. "
               f"desservis et moins de {SEUIL_MEMBRES} membres)")
