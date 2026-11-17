@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Tableau de bord prospection PACA</title>
+<style>
+:root{--bleu:#1E3A8A;--bleu-l:#3B82F6;--fond:#F3F4F6;--surface:#fff;--texte:#111827;--gris:#6B7280;--bord:#E5E7EB;--ok:#065F46;--alerte:#92400E}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fond);color:var(--texte);line-height:1.5;font-size:15px}
+header{background:var(--bleu);color:#fff;padding:20px 16px}
+header h1{margin:0;font-size:20px;text-wrap:balance}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+main{max-width:1000px;margin:0 auto;padding:16px}
+h2{font-size:16px;margin:28px 0 10px;color:var(--bleu);text-wrap:balance}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.carte{background:var(--surface);border:1px solid var(--bord);border-radius:10px;padding:14px;display:block;color:inherit;text-decoration:none}
+a.carte:hover,a.carte:focus-visible{border-color:var(--bleu-l);outline:none}
+.carte .n{font-size:26px;font-weight:700;color:var(--bleu);font-variant-numeric:tabular-nums}
+.carte .t{font-weight:600}
+.carte .d{font-size:13px;color:var(--gris)}
+.bloc{background:var(--surface);border:1px solid var(--bord);border-radius:10px;padding:14px;margin-bottom:12px}
+.bloc h3{margin:0 0 4px;font-size:15px}
+.etiq{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;background:#EEF2FF;color:#3730A3;margin-right:6px}
+.etiq.suivi{background:#FEF3C7;color:var(--alerte)}
+.etiq.contexte{background:#ECFDF5;color:var(--ok)}
+ul.faits{margin:8px 0 0;padding-left:18px}
+ul.faits li{margin-bottom:6px}
+.date{font-variant-numeric:tabular-nums;font-weight:600}
+.src{font-size:12px;color:var(--gris)}
+.src a{color:var(--bleu)}
+.note{font-size:13px;color:var(--gris);border-left:3px solid var(--bord);padding-left:10px;margin-top:8px}
+.onglets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.onglets button{font:inherit;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--bord);background:var(--surface);cursor:pointer}
+.onglets button[aria-pressed="true"]{background:var(--bleu);color:#fff;border-color:var(--bleu)}
+.avis{border-top:1px solid var(--bord);padding:10px 0}
+.avis:first-child{border-top:0}
+.avis a{color:var(--bleu);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.avis .meta{font-size:12px;color:var(--gris)}
+footer{max-width:1000px;margin:0 auto;padding:16px;font-size:12px;color:var(--gris)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Tableau de bord prospection PACA</h1>
+  <p>Annuaires, avis publics en direct et veille. Veille mise à jour le <span id="maj"></span>.</p>
+</header>
+<main>
+
+<h2>Annuaires</h2>
+<div class="grille">
+  <a class="carte" href="annuaire-prospection-paca.html">
+    <div class="n">981</div><div class="t">Fichier de prospection</div>
+    <div class="d">Communes, EPCI, syndicats, Epl, bailleurs sociaux, associations de 50 salariés et plus, départements et Région.</div>
+  </a>
+  <a class="carte" href="annuaire-maires-france.html">
+    <div class="n">97</div><div class="t">Annuaire des maires</div>
+    <div class="d">Communes de PACA de plus de 10 000 habitants et Monaco. Mise à jour chaque lundi.</div>
+  </a>
+  <a class="carte" href="annuaire-sem-spl-syndicats.html">
+    <div class="n">110</div><div class="t">SEM, SPL et syndicats</div>
+    <div class="d">Entreprises publiques locales de PACA. Mise à jour chaque mercredi.</div>
+  </a>
+</div>
+
+<h2>Avis publics en direct (BOAMP, PACA, 90 derniers jours)</h2>
+<div class="bloc">
+  <div class="onglets" id="onglets"></div>
+  <div id="avis" aria-live="polite">Chargement des avis…</div>
+  <p class="note">Interrogation directe du Bulletin officiel des annonces des marchés publics à chaque ouverture de la page.
+  Les contrats d'emprunt ne passent pas par les marchés publics : ils n'apparaissent donc presque jamais ici.
+  Ces avis signalent les projets d'investissement en amont, pas les consultations bancaires elles-mêmes.</p>
+</div>
+
+<h2>Veille</h2>
+<div id="veille"></div>
+
+<h2>Sources à consulter</h2>
+<div class="grille">
+  <a class="carte" href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener"><div class="t">BOAMP</div><div class="d">Recherche d'avis de marchés et de concessions.</div></a>
+  <a class="carte" href="https://www.banquedesterritoires.fr/edition-localtis" target="_blank" rel="noopener"><div class="t">Localtis</div><div class="d">Actualité quotidienne des collectivités, Banque des Territoires.</div></a>
+  <a class="carte" href="https://www.maire-info.com/" target="_blank" rel="noopener"><div class="t">Maire info</div><div class="d">Quotidien des élus locaux, rubrique finances locales.</div></a>
+  <a class="carte" href="https://www.collectivites-locales.gouv.fr/finances-locales" target="_blank" rel="noopener"><div class="t">Finances locales</div><div class="d">Comptes et données officielles des collectivités.</div></a>
+</div>
+</main>
+<footer>Sources publiques uniquement. Chaque fait de la veille renvoie à sa source ; les lignes marquées « Lecture » sont une interprétation, pas un fait sourcé. Non contractuel.</footer>
+
+<script>
+/* ══════════════════════════════════════════
+   VEILLE — bloc réécrit par la tâche hebdomadaire.
+   Une entrée par ligne. Pas de guillemet double ni d'antislash dans les valeurs.
+   famille : "suivi" (dossier nommé) ou "contexte" (tendance générale).
+   faits : [date affichée, texte, libellé de la source, URL].
+   ══════════════════════════════════════════ */
+const VEILLE_MAJ = "17/11/2026";
+const VEILLE = [
+  {famille:"suivi",titre:"Isola 2000 : implantation d'un Club Med (UTN du parking P2)",lecture:"Le resort est un investissement privé. Les besoins de financement public à vérifier portent sur les équipements liés à l'opération (parking à étages, gare du télécabine du Pelevos) : le porteur de chacun, commune, Métropole Nice Côte d'Azur ou opérateur de la station, n'est pas établi par ces sources.",faits:[["Nov. 2026","Le conseil métropolitain adopte le principe d'une concertation publique préalable. Les partisans avancent 450 emplois créés, les opposants parlent d'un projet anachronique.","France 3, repris par Titrespresse","https://www.titrespresse.com/28316772603/med-isola-projet"],["Mai 2026","La maire d'Isola enchaîne les réunions avec les équipes investissement et construction du Club Med. Un démarrage de chantier en 2027 est évoqué.","Écoutez l'info","https://ecoutezlinfo.fr/le-club-med-va-simplanter-a-isola-2000/"],["Déc. 2025","Le Club Med confirme son intérêt. Une ouverture en 2030 est évoquée.","France 3 Provence-Alpes-Côte d'Azur","https://france3-regions.franceinfo.fr/provence-alpes-cote-d-azur/alpes-maritimes/nice/excellente-nouvelle-pour-l-economie-locale-l-implantation-d-un-club-med-a-isola-2000-en-bonne-voie-3267389.html"],["05/12/2025","La Métropole Nice Côte d'Azur vote à l'unanimité la délibération sur l'Unité Touristique Nouvelle : hébergements touristiques, parking à étages et gare du futur télécabine du Pelevos.","Petites Affiches des Alpes-Maritimes","https://www.petitesaffiches.fr/politique,104/isola-2000-feu-vert-metropolitain,39191.html?lang=fr"]]},
+  {famille:"contexte",titre:"Collectivités locales : un recours à l'emprunt qui reste élevé",lecture:"Le besoin d'emprunt se maintient en 2026 mais l'épargne du bloc communal est attendue en repli en 2027 : la demande de crédit existe, la sélectivité sur la capacité de désendettement compte davantage.",faits:[["06/10/2026","Note de conjoncture de La Banque Postale : besoin de financement de 0,25 % du PIB en 2026 après 0,35 %, et encours de dette en hausse de 7,5 milliards d'euros.","La Banque Postale","https://www.labanquepostale.fr/entreprises-associations-secteur-public/qui-sommes-nous/publications/secteur-public-local/note-conjoncture-collectivites-locales-octobre2026.html"],["07/10/2026","Investissement local en repli de 2,6 % mais encore à 78,5 milliards d'euros en 2026.","Maire info","https://maire-info.com/article.php?id=31153"],["08/10/2026","Pour 2027, La Banque Postale prévoit un repli de l'épargne des communes et des groupements à fiscalité propre.","Weka","https://www.weka.fr/actualite/?p=227951"],["24/06/2026","Selon l'Agence France Locale, l'autofinancement couvre 27 % des investissements en 2025 contre 34 % en 2019, et l'emprunt près d'un tiers.","Maire info","https://www.maire-info.com//les-collectivites-continuent-d'investir-grâce-à-une-dependance-accrue-à-l'endettement-previent-l'afl-article2-30921"]]},
+  {famille:"contexte",titre:"Institutionnels de PACA : signaux repérés dans les avis publics",lecture:"Premier relevé. La tâche hebdomadaire complète cette rubrique avec les SEM, SPL, bailleurs sociaux et grandes associations de la région.",faits:[["05/11/2026","L'URSSAF Provence-Alpes-Côte d'Azur lance un marché de services bancaires, réponses attendues le 07/12/2026.","BOAMP, avis 26-107208","https://www.boamp.fr/pages/avis/?q=idweb:26-107208"],["Nov. 2025","La Région Provence-Alpes-Côte d'Azur consulte pour l'arrangement et la mise à jour de son programme d'émissions obligataires EMTN.","BOAMP, avis 25-127139","https://www.boamp.fr/pages/avis/?q=idweb:25-127139"]]}
+];
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function lienSur(u){return /^https?:\/\//i.test(u)?u:'#';}
+
+document.getElementById('maj').textContent=VEILLE_MAJ;
+document.getElementById('veille').innerHTML=VEILLE.map(v=>`
+  <div class="bloc">
+    <span class="etiq ${v.famille==='suivi'?'suivi':'contexte'}">${v.famille==='suivi'?'Dossier suivi':'Contexte'}</span>
+    <h3>${esc(v.titre)}</h3>
+    <ul class="faits">${v.faits.map(f=>`<li><span class="date">${esc(f[0])}</span> · ${esc(f[1])}
+      <span class="src">(<a href="${esc(lienSur(f[3]))}" target="_blank" rel="noopener">${esc(f[2])}</a>)</span></li>`).join('')}</ul>
+    ${v.lecture?`<p class="note"><strong>Lecture :</strong> ${esc(v.lecture)}</p>`:''}
+  </div>`).join('');
+
+/* ══ AVIS BOAMP EN DIRECT ══ */
+const BOAMP='https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp/records';
+const DEPTS_PACA='code_departement in ("04","05","06","13","83","84")';
+const THEMES=[
+  ['Banque et financement','(objet like "emprunt" or objet like "emprunts" or objet like "bancaire" or objet like "bancaires" or objet like "trésorerie" or objet like "financement" or objet like "financements")'],
+  ['Aménagement et concessions','(objet like "concession" or objet like "aménagement")'],
+  ['Construction et réhabilitation','(objet like "construction" or objet like "réhabilitation")']
+];
+const depuis=new Date(Date.now()-90*864e5).toISOString().slice(0,10);
+const cache={};
+function dateFr(d){return d?String(d).slice(0,10).split('-').reverse().join('/'):'';}
+async function charger(i){
+  document.querySelectorAll('#onglets button').forEach((b,j)=>b.setAttribute('aria-pressed',j===i));
+  const zone=document.getElementById('avis');
+  if(!cache[i]){
+    zone.textContent='Chargement des avis…';
+    const where=`${DEPTS_PACA} and ${THEMES[i][1]} and dateparution>="${depuis}"`;
+    const url=BOAMP+'?'+new URLSearchParams({where,order_by:'dateparution desc',limit:'25',
+      select:'idweb,objet,nomacheteur,dateparution,datelimitereponse,code_departement,nature_libelle,url_avis'});
+    try{
+      const r=await fetch(url); if(!r.ok) throw new Error(r.status);
+      cache[i]=await r.json();
+    }catch(e){
+      zone.innerHTML='Le BOAMP ne répond pas pour le moment. <a href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener">Ouvrir la recherche du BOAMP</a>.';
+      return;
+    }
+  }
+  const d=cache[i], lignes=d.results||[];
+  zone.innerHTML=lignes.length?`<p class="src">${d.total_count} avis, les ${lignes.length} plus récents :</p>`+lignes.map(a=>`
+    <div class="avis">
+      <a href="${esc(lienSur(a.url_avis||''))}" target="_blank" rel="noopener">${esc(a.objet)}</a>
+      <div class="meta">${esc(a.nomacheteur)} · ${esc([].concat(a.code_departement||[]).join(', '))} · ${esc(a.nature_libelle||'')}
+      · paru le ${dateFr(a.dateparution)}${a.datelimitereponse?' · réponse avant le '+dateFr(a.datelimitereponse):''}</div>
+    </div>`).join(''):'Aucun avis sur la période.';
+}
+document.getElementById('onglets').innerHTML=THEMES.map((t,i)=>`<button type="button" onclick="charger(${i})">${esc(t[0])}</button>`).join('');
+charger(0);
+</script>
+</body>
+</html>
