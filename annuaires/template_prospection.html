@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prospection PACA – Communes, EPCI, syndicats, Epl et collectivités</title>
+<title>Prospection PACA – Communes, EPCI, syndicats, Epl, associations et collectivités</title>
 <meta name="description" content="Annuaire des entreprises publiques locales de Provence-Alpes-Côte d'Azur : sociétés d'économie mixte, sociétés publiques locales et sociétés publiques locales d'aménagement, par département. Recherche, filtres et export CSV, Excel et PDF.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -109,6 +109,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 .g-spla{background:#FDF4FF;color:#7E22CE}
 .g-splain{background:#F0F9FF;color:#0C4A6E}
 .g-autre{background:#F5F5F4;color:#44403C}
+.g-asso{background:#FFF1F2;color:#9F1239}
 
 /* ══ BADGES RÉGION ══ */
 .rbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
@@ -161,7 +162,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <div class="emblem">📇</div>
     <div class="header-text">
       <div class="header-title">Fichier de prospection &mdash; Provence-Alpes-C&ocirc;te d'Azur</div>
-      <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; D&eacute;partements &middot; R&eacute;gion</div>
+      <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; Associations &middot; D&eacute;partements &middot; R&eacute;gion</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -185,7 +186,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="disclaimer">
     <span>⚠️</span>
     <span>Sources officielles : annuaire de l'administration (DILA) pour les communes, EPCI, d&eacute;partements et R&eacute;gion ;
-    export de l'annuaire des Epl ; BANATIC pour les syndicats. Les adresses manquantes sont celles que l'organisme ne publie pas &mdash;
+    export de l'annuaire des Epl ; BANATIC pour les syndicats ; SIRENE (API Recherche d'entreprises) pour les associations
+    de 50 salari&eacute;s et plus dont le si&egrave;ge est en PACA, qui n'y publient ni adresse e-mail ni t&eacute;l&eacute;phone. Les adresses manquantes sont celles que l'organisme ne publie pas &mdash;
     les plus gros renvoient g&eacute;n&eacute;ralement vers un formulaire, dont le lien figure &agrave; la place.
     <strong>Ces coordonn&eacute;es &eacute;voluent : v&eacute;rifiez-les avant tout envoi.</strong></span>
   </div>
@@ -255,7 +257,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 
 <footer>
   <div class="footer">
-    <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
+    <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; SIRENE &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
     <span>__COUNT__ organismes &bull; __VERSION__ &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
@@ -283,6 +285,7 @@ function classeType(t){
   if(t.startsWith('Syndicat'))    return 'g-semop';
   if(t.startsWith('Epl'))         return 'g-spla';
   if(t.startsWith('Département')) return 'g-splain';
+  if(t.startsWith('Association')) return 'g-asso';
   return 'g-autre';
 }
 
@@ -301,7 +304,20 @@ Object.keys(DEPTS).sort((a,b)=>(a==='MC')-(b==='MC')||a.localeCompare(b,'fr')).f
   o.value=c; o.textContent=(c==='MC')?DEPTS[c]:`${c} — ${DEPTS[c]}`;
   document.getElementById('dept-filter').appendChild(o);
 });
-fillSelect('type-filter', TYPES);
+/* Une famille à plusieurs sous-types (Association, Epl, Syndicat) reçoit une
+   entrée « tous » : le filtre accepte alors le préfixe de la famille. */
+(function(){
+  const familles={};
+  TYPES.forEach(t=>{const f=t.split(' · ')[0]; if(f!==t) familles[f]=(familles[f]||0)+1;});
+  const vues=new Set(), options=[];
+  TYPES.forEach(t=>{
+    const f=t.split(' · ')[0];
+    if(f!==t&&familles[f]>1&&!vues.has(f)){vues.add(f);options.push([f,f+' · tous']);}
+    options.push([t,t]);
+  });
+  const sel=document.getElementById('type-filter');
+  options.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o);});
+})();
 
 /* ══ HELPERS ══ */
 function fmt(n){return Number(n||0).toLocaleString('fr-FR')}
@@ -330,7 +346,7 @@ function getFiltered(){
   const mail=document.getElementById('mail-filter').value;
   const rows=DATA.filter(d=>{
     if(dep&&d.dept!==dep)return false;
-    if(typ&&d.type!==typ)return false;
+    if(typ&&d.type!==typ&&!d.type.startsWith(typ+' · '))return false;
     if(mail==='avec'&&!d.email)return false;
     if(mail==='sans'&&d.email)return false;
     if(!q)return true;
@@ -365,7 +381,7 @@ function render(){
       <td>${d.email
         ? `<a class="web-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`
         : d.contact
-          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">Formulaire de contact ↗</a>`
+          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">${d.type.startsWith('Association')?'Fiche officielle':'Formulaire de contact'} ↗</a>`
           : '<span class="web-na">Non disponible</span>'}</td>
     </tr>`).join('');
   }
@@ -509,9 +525,9 @@ function exportSheets(){
 
     const meta=XLSX.utils.aoa_to_sheet([
       ['Fichier de prospection — Provence-Alpes-Côte d\'Azur'],
-      ['Communes, EPCI, syndicats, Epl, départements et Région'],
+      ['Communes, EPCI, syndicats, Epl, associations, départements et Région'],
       [''],
-      ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, INSEE'],
+      ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, SIRENE, INSEE'],
       ['Date d\'export', '__EXPORT_DATE__'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
       ['Version', '__VERSION__'],
@@ -550,7 +566,7 @@ function exportPDF(){
     doc.setFontSize(13);
     doc.text('Fichier de prospection — Provence-Alpes-Côte d\'Azur',12,8);
     doc.setFontSize(8);
-    doc.text('Communes · EPCI · Syndicats · Epl · '+rows.length+' organismes — '+new Date().toLocaleDateString('fr-FR'),12,14);
+    doc.text('Communes · EPCI · Syndicats · Epl · Associations · '+rows.length+' organismes — '+new Date().toLocaleDateString('fr-FR'),12,14);
 
     doc.autoTable({
       startY:23,

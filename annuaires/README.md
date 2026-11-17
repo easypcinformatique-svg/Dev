@@ -32,6 +32,8 @@ régénération suivante.
 | Syndicats (SIVU, SIVOM, SMF, SMO, PETR) | 190 | 0 |
 | Départements | 6 | 1 |
 | Région Sud | 1 | 0 |
+| Bailleurs sociaux | 17 | 0 |
+| Associations de 50 salariés et plus | 508 | 0 |
 
 Les syndicats viennent de BANATIC, qui ne publie **ni adresse e-mail ni
 téléphone** : ils arrivent avec leur nom, leur type, leur président, leur
@@ -42,6 +44,33 @@ limite de la source, pas une collecte incomplète.
 moins de 5 membres — des SIVU d'école ou d'eau entre deux communes, dont les
 emprunts se comptent en dizaines de milliers d'euros. Les seuils sont les
 constantes `SEUIL_POPULATION` et `SEUIL_MEMBRES` de `build_prospection.py`.
+
+Les associations viennent de SIRENE, par l'API Recherche d'entreprises
+(`collecte_associations_paca.py`). Trois choix de périmètre :
+
+- **le siège doit être en PACA**. Le filtre régional de l'API retient toute
+  association ayant un établissement dans la région : 269 sièges hors région
+  (réseaux nationaux, le plus souvent parisiens) sont écartés, leur décideur
+  n'étant pas sur place ;
+- **50 salariés et plus**, d'après la tranche d'effectif de l'unité légale. Elle
+  date de l'année affichée entre parenthèses (N-2 en général) : un ordre de
+  grandeur, pas un effectif à jour. Le seuil est le second argument du script ;
+- **le secteur est déduit du code NAF** et figure dans le type
+  (« Association · Médico-social et social »). Le filtre par type propose une
+  entrée « tous » par famille.
+
+Ni SIRENE ni le Répertoire national des associations ne publient d'adresse
+e-mail ou de téléphone : comme les syndicats, les associations arrivent sans
+contact direct. Le lien « Fiche officielle » ouvre leur page de l'Annuaire des
+entreprises (dirigeants déclarés, établissements, comptes publiés).
+
+```bash
+python3 annuaires/collecte_associations_paca.py /tmp/associations.json 50
+python3 annuaires/build_prospection.py --associations /tmp/associations.json
+```
+
+Les familles dont la source n'est pas passée en argument sont reprises de la
+page existante : régénérer les seules associations ne retire rien d'autre.
 
 Le bouton de copie déduplique : deux organismes partageant une adresse ne la
 produisent qu'une fois, ce qui explique l'écart entre les 165 adresses

@@ -6,12 +6,18 @@ Réunit dans un seul fichier, avec un filtre « type d'organisme » :
   - les entreprises publiques locales   (annuaire-sem-spl-syndicats.html)
   - les EPCI, départements et Région    (collecte_organismes_paca.py)
   - les syndicats et bailleurs sociaux  (BANATIC, quand le fichier est là)
+  - les associations employeuses        (collecte_associations_paca.py)
+
+Les sources passées en argument sont régénérées ; celles qui ne le sont pas sont
+**reprises de la page existante**, pour qu'une régénération partielle — les
+seules associations, par exemple — n'emporte pas les syndicats ou les EPCI.
 
 Les deux annuaires restent la source de vérité pour ce qu'ils contiennent : la
 page de prospection les relit plutôt que de dupliquer leurs données, pour qu'une
 mise à jour hebdomadaire s'y propage à la régénération suivante.
 
-Usage : python3 annuaires/build_prospection.py [--organismes X.json] [--banatic Y.csv]
+Usage : python3 annuaires/build_prospection.py [--organismes X.json] [--banatic Y.json]
+                                                [--bailleurs Z.json] [--associations A.json]
 """
 import argparse
 import json
@@ -152,11 +158,47 @@ def depuis_bailleurs(chemin):
                "adresse": adresse, "tel": "", "email": "", "contact": ""}
 
 
+def depuis_associations(chemin):
+    """Associations employeuses de PACA, depuis l'API Recherche d'entreprises.
+
+    SIRENE ne publie ni adresse e-mail ni téléphone, et le Répertoire national
+    des associations non plus : ces entrées arrivent avec leur secteur, leur
+    tranche d'effectif et l'adresse du siège, sans contact direct. Le champ
+    `contact` porte la fiche officielle de l'Annuaire des entreprises, où l'on
+    retrouve dirigeants déclarés, établissements et comptes publiés.
+    """
+    if not chemin or not chemin.exists():
+        return
+    for a in json.loads(chemin.read_text(encoding="utf-8")):
+        if a["dept"] not in DEPTS:
+            continue
+        nom = a["nom"] + (f' ({a["sigle"]})' if a.get("sigle") else "")
+        taille = a["effectif"] + (f' ({a["annee_effectif"]})' if a.get("annee_effectif") else "")
+        yield {"type": f'Association · {a["secteur"]}', "nom": nom, "dept": a["dept"],
+               "taille": taille, "adresse": a["adresse"], "tel": "", "email": "",
+               "contact": a["fiche"]}
+
+
+def depuis_page_existante(garder):
+    """Entrées de la page déjà générée dont le type satisfait `garder`."""
+    if not SORTIE.exists():
+        return
+    html = SORTIE.read_text(encoding="utf-8")
+    bloc = re.search(r"const DATA = \[\n([\s\S]*?)\n\];", html)
+    if not bloc:
+        return
+    for ligne in bloc.group(1).splitlines():
+        e = {k: v for k, v in re.findall(r'(\w+):"([^"]*)"', ligne)}
+        if all(k in e for k in CLES) and garder(e["type"]):
+            yield e
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--organismes", default=None)
     ap.add_argument("--banatic", default=None)
     ap.add_argument("--bailleurs", default=None)
+    ap.add_argument("--associations", default=None)
     args = ap.parse_args()
 
     entrees = list(depuis_communes()) + list(depuis_epl())
@@ -165,11 +207,30 @@ def main():
     entrees += list(depuis_banatic(pathlib.Path(args.banatic) if args.banatic else None,
                                    ecartes))
     entrees += list(depuis_bailleurs(pathlib.Path(args.bailleurs) if args.bailleurs else None))
+    entrees += list(depuis_associations(
+        pathlib.Path(args.associations) if args.associations else None))
+
+    # Les familles dont la source n'est pas fournie sont reprises telles quelles.
+    reprises = []
+    if not args.organismes:
+        reprises.append(lambda t: t in ("EPCI", "Département", "Région"))
+    if not args.banatic:
+        reprises.append(lambda t: t.startswith("Syndicat"))
+    if not args.bailleurs:
+        reprises.append(lambda t: t == "Bailleur social")
+    if not args.associations:
+        reprises.append(lambda t: t.startswith("Association"))
+    if reprises:
+        entrees += list(depuis_page_existante(lambda t: any(r(t) for r in reprises)))
 
     # Un organisme peut figurer dans deux sources : on garde la mieux renseignée.
     unique = {}
     for e in entrees:
         cle = (propre(e["nom"]).upper(), e["dept"])
+        if e["type"].startswith("Association"):
+            # Deux associations distinctes portent parfois le même nom dans un
+            # département (OGEC, ADMR) : leur fiche SIREN les départage.
+            cle += (e["contact"],)
         garde = unique.get(cle)
         if not garde or (bool(e["email"]), bool(e["tel"])) > (bool(garde["email"]), bool(garde["tel"])):
             unique[cle] = e
