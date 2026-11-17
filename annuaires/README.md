@@ -100,6 +100,31 @@ python3 annuaires/enrichit_contacts.py CACHE --cherche-sites
 python3 annuaires/build_prospection.py --associations CACHE/associations.json
 ```
 
+## Balayage approfondi et dirigeants
+
+`fouille_profonde.py` reprend chaque organisme sans adresse : il cherche son
+site (sources, Wikidata, noms de domaine confirmés par le SIREN ou par le nom et
+le code postal), puis lit les pages de contact et de mentions légales en
+restituant les adresses masquées. Deux sources officielles complètent :
+
+- les **avis du BOAMP** des deux dernières années, où l'acheteur publie son
+  adresse de contact, rapprochée par SIRET. Le BOAMP écrit certains départements
+  sans zéro initial (« 6 » pour « 06 ») : les deux graphies sont interrogées ;
+- le **Journal officiel des associations**, dont les annonces portent le site
+  déclaré par l'association (champ `siteweb`), rapproché par numéro RNA ou SIREN.
+
+Les grands bailleurs sociaux et la plupart des grandes collectivités ne publient
+aucune adresse : leur site ne propose qu'un formulaire.
+
+La colonne « Dirigeants » vient de `dirigeants.json`, assemblé par
+`assemble_dirigeants.py` : président et directeur général d'après le Registre
+national des entreprises (`collecte_dirigeants.py`), présidents des syndicats et
+des EPCI d'après BANATIC, maires d'après l'annuaire des maires. Les directeurs
+financiers ne sont pas des mandataires sociaux : ils ne figurent que lorsque le
+site de l'organisme publie son équipe de direction. Aucun nom ni aucune adresse
+ne vient d'un réseau social, et aucune adresse n'est construite à partir d'un
+nom.
+
 ## Commentaires
 
 La page de prospection a une colonne « Commentaire », enregistrée dans le

@@ -11,6 +11,24 @@
   "web": "https://mesdemarches.mairie-aixenprovence.fr",
   "source": "site de l'organisme"
  },
+ "nom:AIX MARSEILLE PROVENCE|13": {
+  "email": "marches.publics@splain-amp.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 19/08/2026"
+ },
+ "nom:BATIGERE HABITAT|06": {
+  "email": "",
+  "tel": "",
+  "web": "https://batigere.fr",
+  "source": ""
+ },
+ "nom:BATIGERE RHONE ALPES SOCIETE ANONYME D HABITATIONS A LOYER MODERE|06": {
+  "email": "",
+  "tel": "",
+  "web": "https://batigere.fr",
+  "source": ""
+ },
  "nom:CA D ARLES CRAU CAMARGUE MONTAGNETTE|13": {
   "email": "lepresident@agglo-accm.fr",
   "tel": "04 86 52 60 00",
@@ -234,10 +252,10 @@
   "source": "BANATIC"
  },
  "nom:CITADIS SOCIETE D EQUIPEMENT DEVELOPPEMENT ET VALORISATION|84": {
-  "email": "",
+  "email": "claugier@citadis.fr",
   "tel": "",
   "web": "https://citadis-splt84.fr",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 02/12/2025"
  },
  "nom:CONSEIL DEPARTEMENTAL ALPES MARITIMES|06": {
   "email": "",
@@ -294,10 +312,16 @@
   "source": "BANATIC"
  },
  "nom:ETABLISSEMENT PUBLIC D AMENAGEMENT ET DE GESTION DES EAUX HUVEAUNE COTIERS AYGALADES EPAGE HUCA|13": {
-  "email": "",
+  "email": "e.fleury@epagehuca.fr",
   "tel": "04 91 88 44 00",
   "web": "https://epagehuca.fr",
-  "source": "BANATIC + site de l'organisme (nom et code postal concordants)"
+  "source": "BANATIC + site de l'organisme (nom et code postal concordants) + avis de marché BOAMP du 02/06/2026"
+ },
+ "nom:GAMBETTA SUD EST SOCIETE ANONYME COOPERATIVE D INTERET COLLECTIF D HABITATIONS A LOYER MODERE SOCIETE A CAPITAL VARIAB|06": {
+  "email": "",
+  "tel": "",
+  "web": "https://groupegambetta.fr",
+  "source": ""
  },
  "nom:GIGNAC LA NERTHE|13": {
   "email": "com@mairie-gignaclanerthe.fr",
@@ -329,6 +353,12 @@
   "web": "https://faconeo.com",
   "source": "site de l'organisme"
  },
+ "nom:IMMOBILIERE RHONE ALPES SA D HLM|83": {
+  "email": "",
+  "tel": "",
+  "web": "https://groupe3f.fr",
+  "source": "site de l'organisme"
+ },
  "nom:ISTRES|13": {
   "email": "",
   "tel": "",
@@ -336,10 +366,10 @@
   "source": "site de l'organisme"
  },
  "nom:LA CIOTAT SHIPYARDS|13": {
-  "email": "",
+  "email": "amenagement@laciotat-shipyards.com",
   "tel": "",
   "web": "https://laciotat-shipyards.com",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 17/11/2026"
  },
  "nom:MARITIMA MEDIAS|13": {
   "email": "",
@@ -389,6 +419,12 @@
   "web": "https://nice.fr",
   "source": "site de l'organisme"
  },
+ "nom:OFFICE PUBLIC DE L HABITAT DU VAR|83": {
+  "email": "relationclient@varhabitat.com",
+  "tel": "",
+  "web": "https://varhabitat.com",
+  "source": "site de l'organisme"
+ },
  "nom:PAYS D ORANGE EN PROVENCE|84": {
   "email": "accueil@ccpro.fr",
   "tel": "04 90 03 01 50",
@@ -413,6 +449,12 @@
   "web": "https://ports-menton.fr",
   "source": "site de l'organisme"
  },
+ "nom:POSTE HABITAT PROVENCE|06": {
+  "email": "",
+  "tel": "",
+  "web": "https://postehabitat.com",
+  "source": ""
+ },
  "nom:PROVENCE METROPOLE LOGEMENT|13": {
   "email": "",
   "tel": "",
@@ -426,10 +468,10 @@
   "source": "site de l'organisme"
  },
  "nom:SA DE CONSTRUCTION ET DE GESTION IMMOBILIERE DE LA VILLE D AIX EN PROVENCE|13": {
-  "email": "",
+  "email": "stephane.livolsi@sacogiva.fr",
   "tel": "",
   "web": "https://sacogiva-immobilier.fr",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 02/11/2026"
  },
  "nom:SCOT PROVENCE MEDITERRANEE|83": {
   "email": "",
@@ -490,6 +532,12 @@
   "tel": "04 90 92 08 10",
   "web": "",
   "source": "BANATIC"
+ },
+ "nom:SI CANAL DES ALPINES SEPTENTRIONALES|13": {
+  "email": "contact@sicas.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 23/10/2026"
  },
  "nom:SI COLLEGE SAINT EXUPERY DE BEDARRIDES|84": {
   "email": "",
@@ -606,16 +654,16 @@
   "source": "BANATIC"
  },
  "nom:SI DE RESTAURATION COLLECTIVE SIRC|83": {
-  "email": "",
+  "email": "contact-mairie@ville-lagarde.fr",
   "tel": "04 94 21 67 90",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + site de l'organisme"
  },
  "nom:SI DE SECOURS ET DE LUTTE CONTRE L INCENDIE DE L AGGLOMERATION TOULONNAISE SILIAT|83": {
-  "email": "",
+  "email": "christine.torres@siliat.org",
   "tel": "04 94 93 83 64",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 25/03/2026"
  },
  "nom:SI DES CHEMINS ET COURS D EAU DU CANTON DE LA ROQUEBRUSSANNE|83": {
   "email": "",
@@ -634,6 +682,12 @@
   "tel": "04 94 05 15 70",
   "web": "",
   "source": "BANATIC"
+ },
+ "nom:SI DES EAUX ET ASSAINISSEMENT RICHERENCHES VALREAS VISAN|84": {
+  "email": "eau@rivavi.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 06/01/2026"
  },
  "nom:SI DES INSTALLATIONS SPORTIVES DE GREASQUE|13": {
   "email": "",
@@ -684,10 +738,10 @@
   "source": "BANATIC"
  },
  "nom:SI ETUDE ET REALISATION MASSIF FORESTIER MONTAGNETTE|13": {
-  "email": "",
+  "email": "contact.mairie@barbentane.fr",
   "tel": "04 90 43 95 47",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + site de l'organisme"
  },
  "nom:SI GUIL DURANCE D ECLAIRAGE PUBLIC SIGDEP|05": {
   "email": "contact@sigdep.fr",
@@ -834,16 +888,16 @@
   "source": "BANATIC"
  },
  "nom:SIVOM DU HAUT DE L ARC|13": {
-  "email": "",
+  "email": "marchepublicsiha@orange.fr",
   "tel": "04 42 29 40 29",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 06/11/2026"
  },
  "nom:SIVOM DU LITTORAL DES MAURES|83": {
-  "email": "",
+  "email": "courrier@cavalaire.fr",
   "tel": "04 94 00 46 20",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + site de l'organisme"
  },
  "nom:SIVOM LES VILLAGES PERCHES|06": {
   "email": "cabinet.du.maire@mairie-lagaude.fr",
@@ -1037,6 +1091,12 @@
   "web": "",
   "source": "BANATIC"
  },
+ "nom:SM BASSIN VERSANT DU GAPEAU|83": {
+  "email": "contact@smbvg.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 22/09/2026"
+ },
  "nom:SM CHARGE D ELABORER APPROUVER SUIVRE ET REVISER LE SCOT DE L OUEST DES ALPES MARITIMES|06": {
   "email": "",
   "tel": "04 97 01 11 06",
@@ -1056,10 +1116,10 @@
   "source": "BANATIC"
  },
  "nom:SM D AMENAGEMENT ET D EXPLOITATION DU CENTRE DE VOL A VOILE DE FAYENCE TOURETTES|83": {
-  "email": "",
+  "email": "contact.urbanisme@mairie-tourrettes-83.fr",
   "tel": "04 94 76 01 11",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + site de l'organisme"
  },
  "nom:SM D AMENAGEMENT ET DE DEVELOPPEMENT DE SERRE PONCON SMADESEP|05": {
   "email": "contact@smadesep.com",
@@ -1098,10 +1158,10 @@
   "source": "BANATIC"
  },
  "nom:SM DE GESTION DU PARC NATUREL REGIONAL DES ALPILLES|13": {
-  "email": "",
+  "email": "j.baudel@parc-alpilles.fr",
   "tel": "04 90 90 44 00",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 25/09/2026"
  },
  "nom:SM DE GESTION DU PARC NATUREL REGIONAL DU MONT VENTOUX|84": {
   "email": "contact@parcduventoux.fr",
@@ -1114,6 +1174,12 @@
   "tel": "04 93 05 07 90",
   "web": "",
   "source": "BANATIC"
+ },
+ "nom:SM DE L ARGENS|83": {
+  "email": "contact@syndicatargens.fr",
+  "tel": "",
+  "web": "",
+  "source": "site de l'organisme"
  },
  "nom:SM DE L OUVEZE PROVENCALE SMOP|84": {
   "email": "sm.ouveze.provencale@wanadoo.fr",
@@ -1140,10 +1206,10 @@
   "source": "BANATIC"
  },
  "nom:SM DE LA REPPE DU GRAND VALLAT ET DE SES AFFLUENTS|83": {
-  "email": "",
+  "email": "bernard.thevenet@sudsaintebaume.fr",
   "tel": "04 94 32 97 00",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 16/09/2025"
  },
  "nom:SM DE LA STATION DE ROUBION LES BUISSES|06": {
   "email": "",
@@ -1182,10 +1248,10 @@
   "source": "BANATIC"
  },
  "nom:SM DES EAUX DU VERDON|83": {
-  "email": "",
+  "email": "contact@syndicatdeseauxduverdon.fr",
   "tel": "04 94 70 16 23",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 23/01/2026"
  },
  "nom:SM DES EAUX DURANCE VENTOUX|84": {
   "email": "siedv@wanadoo.fr",
@@ -1248,10 +1314,10 @@
   "source": "BANATIC"
  },
  "nom:SM DU DEVELOPPEMENT DURABLE DE L EST VAR POUR LE TRAITEMENT ET LA VALORISATION DES DECHETS MENAGERS|83": {
-  "email": "",
+  "email": "contact@smiddev.fr",
   "tel": "04 98 11 98 80",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 30/09/2026"
  },
  "nom:SM DU GRAND SITE DE L ESTEREL|83": {
   "email": "contact@smgse.fr",
@@ -1379,17 +1445,35 @@
   "web": "https://www.sitteu.fr",
   "source": "BANATIC + site de l'organisme (SIREN vérifié)"
  },
+ "nom:SOCIETE ANONYME D ECONOMIE MIXTE DE CONSTRUCTION DE DRAGUIGNAN|83": {
+  "email": "laurent.panetta@saiem-draguignan.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 04/03/2026"
+ },
  "nom:SOCIETE ANONYME D ECONOMIE MIXTE MARSEILLE HABITAT|13": {
-  "email": "",
+  "email": "contact@marseillehabitat.fr",
   "tel": "",
   "web": "https://marseillehabitat.fr",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 12/11/2026"
+ },
+ "nom:SOCIETE ANONYME GARDEENNE D ECONOMIE MIXTE|83": {
+  "email": "marches@sagem-lagarde.com",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 26/07/2026"
  },
  "nom:SOCIETE CANNOISE DE CONSTRUCTION ET D AMENAGEMENT|06": {
   "email": "",
   "tel": "",
   "web": "https://socaconam.com",
   "source": "site de l'organisme"
+ },
+ "nom:SOCIETE D AMENAGEMENT ET DE GESTION PUBLIQUE|83": {
+  "email": "marches@sagem-lagarde.com",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 23/10/2026"
  },
  "nom:SOCIETE D ECONOMIE MIXTE D EXPANSION DE LA VALETTE DU VAR|83": {
   "email": "com@splm-semexval.com",
@@ -1398,10 +1482,10 @@
   "source": "site de l'organisme"
  },
  "nom:SOCIETE D ECONOMIE MIXTE DE GESTION DU PORT DE BANDOL|83": {
-  "email": "",
+  "email": "contact@portbandol.fr",
   "tel": "",
   "web": "https://portbandol.fr",
-  "source": "site de l'organisme (SIREN vérifié)"
+  "source": "site de l'organisme (SIREN vérifié) + avis de marché BOAMP du 18/02/2026"
  },
  "nom:SOCIETE D ECONOMIE MIXTE DE LOISIRS D ORCIERES MERLETTE|05": {
   "email": "info@orcieres.com",
@@ -1415,11 +1499,23 @@
   "web": "https://isola2000.com",
   "source": "site de l'organisme"
  },
+ "nom:SOCIETE D ECONOMIE MIXTE DE SORGUES|84": {
+  "email": "g.bergogne@semdesorgues.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 10/02/2026"
+ },
  "nom:SOCIETE D ECONOMIE MIXTE DES SAINTES MARIES DE LA MER|13": {
-  "email": "",
+  "email": "siege@saintesmaries.com",
   "tel": "",
   "web": "https://lessaintesmaries.fr",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 11/10/2026"
+ },
+ "nom:SOCIETE D ECONOMIE MIXTE IMMOBILIERE ET D AMENAGEMENT DE LA VILLE DE BOLLENE ET SA REGION|84": {
+  "email": "contact@semibplus.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 06/08/2026"
  },
  "nom:SOCIETE D ECONOMIE MIXTE POUR LES EVENEMENTS CANNOIS|06": {
   "email": "contact@palaisdesfestivals.com",
@@ -1434,10 +1530,22 @@
   "source": "site de l'organisme"
  },
  "nom:SOCIETE DU CANAL DE PROVENCE ET D AMENAGEMENT DE LA REGION PROVENCALE|13": {
-  "email": "",
+  "email": "thibaud.chevallier@canal-de-provence.com",
   "tel": "",
   "web": "https://canaldeprovence.com",
+  "source": "site de l'organisme + avis de marché BOAMP du 21/11/2025"
+ },
+ "nom:SOCIETE FRANCAISE DES HABITATIONS ECONOMIQUES SOCIETE ANONYME D HABITATIONS A LOYER MODERE|13": {
+  "email": "",
+  "tel": "",
+  "web": "https://sfhe.fr",
   "source": "site de l'organisme"
+ },
+ "nom:SOCIETE PUBLIQUE DES ECOLES MARSEILLAISES|13": {
+  "email": "achats@splain-ecolesmarseillaises.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 25/07/2025"
  },
  "nom:SOCIETE PUBLIQUE LOCALE PORT DE FREJUS|83": {
   "email": "info@portfrejus.fr",
@@ -1451,8 +1559,20 @@
   "web": "https://port-heraclea.fr",
   "source": "site de l'organisme"
  },
+ "nom:SOCIETE PUBLIQUE LOCALE SENS URBAIN|13": {
+  "email": "p.duplan@sens-urbain.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 21/10/2026"
+ },
  "nom:SOLEIL EAU VENT ENERGIE|05": {
   "email": "contact@seveenergierenouvelable.fr",
+  "tel": "",
+  "web": "",
+  "source": "site de l'organisme"
+ },
+ "nom:SPL AIX MANOSQUE VAL DE DURANCE|13": {
+  "email": "communication@semepa.fr",
   "tel": "",
   "web": "",
   "source": "site de l'organisme"
@@ -1469,11 +1589,23 @@
   "web": "https://lacove.fr",
   "source": "site de l'organisme"
  },
+ "nom:SPL MEDITERRANEE|83": {
+  "email": "m.gendry@splm-semexval.com",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 24/02/2026"
+ },
+ "nom:SPL MIN MARCHE MARSEILLE MEDITERRANEE|13": {
+  "email": "marches@min-mmm.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 31/10/2026"
+ },
  "nom:SPL ONE PROVENCE PROMOTION|13": {
-  "email": "",
+  "email": "marches.publics@groupe-amp.fr",
   "tel": "",
   "web": "https://faconeo.com",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 28/03/2026"
  },
  "nom:SPL PAYS DE GRASSE DEVELOPPEMENT|06": {
   "email": "",
@@ -1494,9 +1626,21 @@
   "source": "site de l'organisme (SIREN vérifié)"
  },
  "nom:SPL TERRITOIRE VAUCLUSE|84": {
-  "email": "",
+  "email": "citadis@citadis.fr",
   "tel": "",
   "web": "https://citadis-splt84.fr",
+  "source": "site de l'organisme + avis de marché BOAMP du 08/01/2026"
+ },
+ "nom:SPL TRI RHODANIEN|84": {
+  "email": "contact@sieceutom.fr",
+  "tel": "",
+  "web": "",
+  "source": "site de l'organisme"
+ },
+ "nom:SPLA PAYS D AIX TERRITOIRES|13": {
+  "email": "communication@semepa.fr",
+  "tel": "",
+  "web": "",
   "source": "site de l'organisme"
  },
  "nom:SYNDICAT D ADDUCTION DES EAUX DE LA SOURCE D ENTRAIGUES|83": {
@@ -1506,10 +1650,10 @@
   "source": "BANATIC"
  },
  "nom:SYNDICAT D ALIMENTATION EN EAU DE LA SAINTE BAUME|83": {
-  "email": "",
+  "email": "e.scogna@mairie-nanslespins.fr",
   "tel": "04 94 37 21 41",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 28/03/2025"
  },
  "nom:SYNDICAT D ECLAIRAGE PUBLIC EMBRUNAIS SAVINOIS SYEP EMBRUNAIS SAVINOIS|05": {
   "email": "syep@outlook.fr",
@@ -1524,10 +1668,10 @@
   "source": "BANATIC"
  },
  "nom:SYNDICAT DE L EAU DU VAR EST SEVE|83": {
-  "email": "",
+  "email": "ngreffe.ta-toulon@juradm.fr",
   "tel": "04 94 17 66 95",
   "web": "",
-  "source": "BANATIC"
+  "source": "BANATIC + avis de marché BOAMP du 06/02/2026"
  },
  "nom:SYNDICAT DE L ESTERON ET DU VAR INFERIEUR SIEVI|06": {
   "email": "sievi@sievi.fr",
@@ -1578,16 +1722,16 @@
   "source": "site de l'organisme"
  },
  "nom:UNICIL SOCIETE ANONYME D HABITATION A LOYER MODERE|13": {
-  "email": "",
+  "email": "a.elharchi@unicil.fr",
   "tel": "",
   "web": "https://unicil.fr",
-  "source": "site de l'organisme (SIREN vérifié)"
+  "source": "site de l'organisme (SIREN vérifié) + avis de marché BOAMP du 01/11/2026"
  },
  "nom:VAR AMENAGEMENT DEVELOPPEMENT|83": {
-  "email": "",
+  "email": "s.gaffuel@vad83.eu",
   "tel": "",
   "web": "https://var-amenagement-developpement.fr",
-  "source": "site de l'organisme"
+  "source": "site de l'organisme + avis de marché BOAMP du 03/09/2026"
  },
  "siren:057817314": {
   "email": "secretariat@chevreulblancarde.com",
@@ -1601,17 +1745,35 @@
   "web": "",
   "source": "Annuaire de l'éducation"
  },
+ "siren:300165040": {
+  "email": "cco@ccocl13.fr",
+  "tel": "",
+  "web": "https://ccocl13.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:300586179": {
-  "email": "",
+  "email": "siege@groupe-umane.fr",
   "tel": "04 94 66 78 76",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://adapei-varmed.fr",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations + site de l'organisme"
  },
  "siren:300758109": {
   "email": "",
   "tel": "04 94 92 27 08",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://entraideduvar.com",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
+ },
+ "siren:300918570": {
+  "email": "accueil@aec-escourtines.com",
+  "tel": "",
+  "web": "https://aec-escourtines.com",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:301100988": {
+  "email": "contact@cledesages.fr",
+  "tel": "",
+  "web": "https://associationlacledesages.com",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:301125704": {
   "email": "",
@@ -1620,10 +1782,10 @@
   "source": "FINESS"
  },
  "siren:301692448": {
-  "email": "",
+  "email": "contact@assoaves.fr",
   "tel": "04 42 89 74 77",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://assoaves.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:302136148": {
   "email": "",
@@ -1638,10 +1800,10 @@
   "source": "FINESS"
  },
  "siren:302382395": {
-  "email": "",
+  "email": "accueil@acpm.eu",
   "tel": "04 91 07 75 40",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://acpm.eu",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:302477369": {
   "email": "",
@@ -1656,10 +1818,10 @@
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:303054233": {
-  "email": "",
+  "email": "contact@labourguette.org",
   "tel": "04 90 07 41 77",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://bourguette-autisme.org",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations"
  },
  "siren:303435374": {
   "email": "contact@lycee-leschenes.fr",
@@ -1733,6 +1895,12 @@
   "web": "",
   "source": "Annuaire de l'éducation"
  },
+ "siren:311210058": {
+  "email": "sec.dir.siege@ajl.asso.fr",
+  "tel": "",
+  "web": "https://ajl-asso.fr",
+  "source": "site déclaré au Journal officiel des associations + avis de marché BOAMP du 08/01/2025"
+ },
  "siren:312398183": {
   "email": "",
   "tel": "04 92 50 10 23",
@@ -1751,11 +1919,23 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:313140949": {
+  "email": "contact@avens83.fr",
+  "tel": "",
+  "web": "",
+  "source": "site de l'organisme"
+ },
  "siren:313402232": {
   "email": "cecile.imbert@avath.fr",
   "tel": "04 94 24 26 56",
   "web": "",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:313609125": {
+  "email": "",
+  "tel": "",
+  "web": "https://agafpa.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:314271677": {
   "email": "contact@apajh04.fr",
@@ -1770,16 +1950,16 @@
   "source": "FINESS"
  },
  "siren:316139096": {
-  "email": "",
+  "email": "association@atp-mediterranee.org",
   "tel": "04 95 04 51 70",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://atp-mediterranee.org",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:316832344": {
-  "email": "",
+  "email": "accueil.siege@chrysalidegdf.com",
   "tel": "04 42 11 42 42",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://chrysalidegdf.com",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations"
  },
  "siren:317401230": {
   "email": "contact@espoir-provence.fr",
@@ -1828,6 +2008,12 @@
   "tel": "06 85 80 96 28",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:320788425": {
+  "email": "direction@ballet-de-marseille.com",
+  "tel": "",
+  "web": "https://ballet-de-marseille.com",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:320788433": {
   "email": "ce.0133263b@ac-aix-marseille.fr",
@@ -1913,6 +2099,12 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:330393737": {
+  "email": "contact@aacs-martigues.org",
+  "tel": "",
+  "web": "https://aacs-martigues.org",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:331365239": {
   "email": "",
   "tel": "",
@@ -1924,6 +2116,12 @@
   "tel": "04 90 14 81 81",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:332087790": {
+  "email": "contact@relfets.asso.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 07/02/2025"
  },
  "siren:332150812": {
   "email": "marine.guissart@eeap-lauriersroses.fr",
@@ -1961,11 +2159,23 @@
   "web": "",
   "source": "Annuaire de l'éducation"
  },
+ "siren:334626728": {
+  "email": "contact@has.asso.fr",
+  "tel": "",
+  "web": "https://has.asso.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:334898640": {
   "email": "contact@avodd.fr",
   "tel": "04 94 12 83 83",
   "web": "https://avodd.fr",
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
+ },
+ "siren:334990249": {
+  "email": "",
+  "tel": "",
+  "web": "https://saralogisol.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:335001434": {
   "email": "",
@@ -2021,11 +2231,23 @@
   "web": "https://casim.fr",
   "source": "FINESS + site de l'organisme (nom et code postal concordants)"
  },
+ "siren:344420252": {
+  "email": "association@partageettravail.fr",
+  "tel": "",
+  "web": "https://partageettravail.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:344696562": {
   "email": "",
   "tel": "04 91 98 10 27",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:347427338": {
+  "email": "jmlemons@rs13.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 13/06/2025"
  },
  "siren:347992992": {
   "email": "",
@@ -2045,11 +2267,35 @@
   "web": "https://etsi.org",
   "source": "site de l'organisme"
  },
+ "siren:349373340": {
+  "email": "irts@irts-pacacorse.com",
+  "tel": "",
+  "web": "https://irts-pacacorse.com",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:349531699": {
+  "email": "jmlemons@rs13.fr",
+  "tel": "",
+  "web": "https://regieservice13.fr",
+  "source": "site déclaré au Journal officiel des associations + avis de marché BOAMP du 13/06/2025"
+ },
  "siren:349675785": {
   "email": "directeur@adir83.fr",
   "tel": "04 94 93 69 00",
   "web": "",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:350323101": {
+  "email": "crsfs-paca@lpo.fr",
+  "tel": "",
+  "web": "https://paca.lpo.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:350448726": {
+  "email": "contact@association-isis.fr",
+  "tel": "",
+  "web": "https://association-isis.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:350916391": {
   "email": "cedis@cedis.fr",
@@ -2068,6 +2314,12 @@
   "tel": "04 91 75 83 00",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:352340657": {
+  "email": "",
+  "tel": "",
+  "web": "https://aubagnefc.org",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:352490411": {
   "email": "",
@@ -2093,17 +2345,23 @@
   "web": "",
   "source": "FINESS"
  },
- "siren:378911622": {
+ "siren:378212666": {
   "email": "",
+  "tel": "",
+  "web": "https://qronos.maikkom.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:378911622": {
+  "email": "accueil.arles@imf.asso.fr",
   "tel": "04 91 36 51 30",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://imf.asso.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:379333479": {
-  "email": "",
+  "email": "contact@apiprovence.org",
   "tel": "04 22 13 81 76",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://apiprovence.org",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:379478480": {
   "email": "",
@@ -2153,6 +2411,18 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:387464795": {
+  "email": "t.lescure@mljt.fr",
+  "tel": "",
+  "web": "https://mission-locale-toulon.fr",
+  "source": "site déclaré au Journal officiel des associations + avis de marché BOAMP du 14/02/2025"
+ },
+ "siren:387493513": {
+  "email": "dg@aecd.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 07/02/2025"
+ },
  "siren:388151128": {
   "email": "",
   "tel": "04 90 65 20 51",
@@ -2189,6 +2459,12 @@
   "web": "http://www.lacordaire.com/",
   "source": "Annuaire de l'éducation"
  },
+ "siren:390736395": {
+  "email": "administratif.propulse@asso-gdid.fr",
+  "tel": "",
+  "web": "https://asso-gdid.fr",
+  "source": "site déclaré au Journal officiel des associations + avis de marché BOAMP du 07/01/2025"
+ },
  "siren:391199635": {
   "email": "contact@clarisse-environnement.fr",
   "tel": "",
@@ -2196,10 +2472,10 @@
   "source": "site de l'organisme (SIREN vérifié)"
  },
  "siren:391717394": {
-  "email": "",
+  "email": "prelude.secretariat@orange.fr",
   "tel": "04 94 98 04 40",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://association-aep.org",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:391847084": {
   "email": "",
@@ -2208,16 +2484,22 @@
   "source": "FINESS"
  },
  "siren:392499679": {
-  "email": "",
+  "email": "accueil@associationlevillage.fr",
   "tel": "04 90 72 80 52",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://associationlevillage.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:393897723": {
   "email": "",
   "tel": "04 42 29 39 39",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:393914395": {
+  "email": "contact@formasup-med.com",
+  "tel": "",
+  "web": "https://formasup-med.com",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:394082804": {
   "email": "",
@@ -2237,6 +2519,18 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:395031321": {
+  "email": "administration@environnementetsolidarite.org",
+  "tel": "",
+  "web": "https://environnementetsolidarite.org",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:397450008": {
+  "email": "contact@abi06.org",
+  "tel": "",
+  "web": "https://abi06.org",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:397595828": {
   "email": "contact@kroccan.com",
   "tel": "",
@@ -2244,16 +2538,22 @@
   "source": "site de l'organisme (SIREN vérifié)"
  },
  "siren:397754508": {
-  "email": "",
+  "email": "accueil@lamaisondegardanne.fr",
   "tel": "04 42 65 73 60",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://lamaisondegardanne.org",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:398561829": {
   "email": "",
   "tel": "04 92 98 90 40",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:398586313": {
+  "email": "",
+  "tel": "",
+  "web": "https://ams-environnement.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:398765107": {
   "email": "emploisfamiliauxservices.fr@orange.fr",
@@ -2303,11 +2603,23 @@
   "web": "https://escardio.org",
   "source": "site de l'organisme"
  },
- "siren:407836444": {
+ "siren:403797525": {
   "email": "",
+  "tel": "",
+  "web": "https://es13.com",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:405383761": {
+  "email": "contact@bou-sol.eu",
+  "tel": "",
+  "web": "https://bou-sol.eu",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:407836444": {
+  "email": "contact@efcv83.com",
   "tel": "04 94 60 90 27",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://efcv83.com",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:408181295": {
   "email": "",
@@ -2345,6 +2657,18 @@
   "web": "https://www.isatis.org",
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
+ "siren:411831696": {
+  "email": "billetterie@festival-aix.com",
+  "tel": "",
+  "web": "https://festival-aix.com",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:412033979": {
+  "email": "",
+  "tel": "",
+  "web": "https://missionlocalecommunautaire.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:412481053": {
   "email": "contact@sendra.fr",
   "tel": "",
@@ -2352,10 +2676,10 @@
   "source": "site de l'organisme (nom et code postal concordants)"
  },
  "siren:413297771": {
-  "email": "",
+  "email": "l.bourreaud@isc84.org",
   "tel": "04 90 27 61 61",
   "web": "",
-  "source": "FINESS"
+  "source": "FINESS + avis de marché BOAMP du 06/11/2025"
  },
  "siren:413448390": {
   "email": "",
@@ -2363,17 +2687,35 @@
   "web": "https://www.home-services.com",
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
+ "siren:413745654": {
+  "email": "",
+  "tel": "",
+  "web": "https://nh83.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:413810268": {
   "email": "",
   "tel": "04 98 00 40 40",
   "web": "",
   "source": "FINESS"
  },
+ "siren:414003236": {
+  "email": "accueil@urapeda-sud.org",
+  "tel": "",
+  "web": "https://urapeda-sud.org",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:414500959": {
+  "email": "accueil@agis06.fr",
+  "tel": "",
+  "web": "https://agis06.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:414502617": {
-  "email": "",
+  "email": "contact@osiris-arles.fr",
   "tel": "04 90 49 85 25",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://osiris-arles.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:414543652": {
   "email": "",
@@ -2387,6 +2729,12 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:415225416": {
+  "email": "marchespublics@rtm.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 27/11/2025"
+ },
  "siren:418220851": {
   "email": "",
   "tel": "04 98 05 23 30",
@@ -2399,6 +2747,12 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:418915724": {
+  "email": "",
+  "tel": "",
+  "web": "https://e2c-marseille.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:419531520": {
   "email": "contact@mediance13.com",
   "tel": "",
@@ -2410,6 +2764,12 @@
   "tel": "",
   "web": "https://acad.fr",
   "source": "site de l'organisme (nom et code postal concordants)"
+ },
+ "siren:420070286": {
+  "email": "info@plie-mpmcentre.com",
+  "tel": "",
+  "web": "https://plie-mpcentre.org",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:422707521": {
   "email": "lycee@ndfrance.org",
@@ -2429,11 +2789,29 @@
   "web": "https://arapi-autisme.fr",
   "source": "site de l'organisme"
  },
+ "siren:424777779": {
+  "email": "defie.resptechnique@gmail.com",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 01/03/2026"
+ },
+ "siren:433834512": {
+  "email": "aftc13@aftc13.com",
+  "tel": "",
+  "web": "https://aftc13.com",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:433891900": {
   "email": "",
   "tel": "04 94 17 84 90",
   "web": "https://www.sante-assistance-services.fr",
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
+ },
+ "siren:434391215": {
+  "email": "",
+  "tel": "",
+  "web": "https://marais-vigueirat.reserves-naturelles.org",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:437559289": {
   "email": "",
@@ -2465,11 +2843,17 @@
   "web": "https://www.resurgences.asso.fr",
   "source": "site de l'organisme (SIREN vérifié)"
  },
+ "siren:439848854": {
+  "email": "ams.direction@yahoo.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 19/05/2026"
+ },
  "siren:440658102": {
   "email": "",
   "tel": "04 96 11 04 11",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://arcade.ms",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:441024718": {
   "email": "contact@actavista.fr",
@@ -2489,17 +2873,35 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:443391297": {
+  "email": "",
+  "tel": "",
+  "web": "https://eccoly.net",
+  "source": "site déclaré au Journal officiel des associations"
+ },
+ "siren:445174675": {
+  "email": "communication@hopital-saint-joseph.fr",
+  "tel": "",
+  "web": "https://hopital-saint-joseph.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:447990615": {
   "email": "",
   "tel": "04 94 27 26 89",
   "web": "",
   "source": "FINESS"
  },
+ "siren:449935881": {
+  "email": "association@mami83.fr",
+  "tel": "",
+  "web": "https://mami83.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:450626205": {
-  "email": "",
+  "email": "contact@asso-paje.fr",
   "tel": "06 73 58 60 31",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://asso-paje.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:452047186": {
   "email": "",
@@ -2510,8 +2912,8 @@
  "siren:452418072": {
   "email": "",
   "tel": "04 91 50 74 18",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://abcdsaintjoseph.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:452776818": {
   "email": "",
@@ -2567,11 +2969,23 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:484752126": {
+  "email": "greffe.ta-marseille@juriadm.fr",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 17/12/2025"
+ },
  "siren:487631012": {
   "email": "ecole.0831661e@ac-nice.fr",
   "tel": "04 98 07 23 10",
   "web": "",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:488779091": {
+  "email": "",
+  "tel": "",
+  "web": "https://ressourcerie-ledirigeable.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:490051679": {
   "email": "unis-services@orange.fr",
@@ -2591,6 +3005,12 @@
   "web": "",
   "source": "FINESS"
  },
+ "siren:493996672": {
+  "email": "secretariat@consortial.fr",
+  "tel": "",
+  "web": "https://consortial.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:494681935": {
   "email": "contact@bleu-ciel.fr",
   "tel": "",
@@ -2604,10 +3024,16 @@
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:501410427": {
-  "email": "",
+  "email": "contact@anef-provence.com",
   "tel": "04 91 36 53 50",
+  "web": "https://anef-provence.com",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
+ },
+ "siren:507868412": {
+  "email": "contact@objectifplus.org",
+  "tel": "",
   "web": "",
-  "source": "FINESS"
+  "source": "avis de marché BOAMP du 10/09/2025"
  },
  "siren:509340790": {
   "email": "contact@synergiefamily.com",
@@ -2627,6 +3053,12 @@
   "web": "https://cocktailetculture.fr",
   "source": "site de l'organisme"
  },
+ "siren:520438326": {
+  "email": "secretariat@consortial.fr",
+  "tel": "",
+  "web": "https://consortial.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:524200045": {
   "email": "",
   "tel": "04 90 18 84 00",
@@ -2639,17 +3071,35 @@
   "web": "https://chateauvallon-liberte.fr",
   "source": "site de l'organisme (SIREN vérifié)"
  },
+ "siren:533429775": {
+  "email": "",
+  "tel": "",
+  "web": "https://adess-arcs.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:534824875": {
   "email": "",
   "tel": "04 70 64 40 08",
   "web": "",
   "source": "FINESS"
  },
+ "siren:537934903": {
+  "email": "contact@cs-toulon.fr",
+  "tel": "",
+  "web": "https://cs-toulon.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:579500562": {
   "email": "ce.0830095c@ac-nice.fr",
   "tel": "04 94 11 16 60",
   "web": "http://www.maristes83.com",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:775550627": {
+  "email": "cannes.jeunesse@cannes-jeunesse.fr",
+  "tel": "",
+  "web": "https://cannes-jeunesse.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:775552011": {
   "email": "administratif@ametra06.org",
@@ -2668,6 +3118,12 @@
   "tel": "04 92 29 44 00",
   "web": "",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:775552235": {
+  "email": "siege@montjoye.org",
+  "tel": "",
+  "web": "https://montjoye.org",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:775552268": {
   "email": "ecole.0061398m@ac-nice.fr",
@@ -2694,16 +3150,16 @@
   "source": "Annuaire de l'éducation"
  },
  "siren:775558679": {
-  "email": "",
+  "email": "contact@hpf.asso.fr",
   "tel": "04 91 50 85 18",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://hpf.asso.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:775558786": {
   "email": "",
   "tel": "04 91 62 40 41",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://adrim.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:775558927": {
   "email": "administration-college@saintbruno13.com",
@@ -2748,10 +3204,10 @@
   "source": "Annuaire de l'éducation"
  },
  "siren:775559719": {
-  "email": "",
+  "email": "sauvegarde13@sauvegarde13.org",
   "tel": "04 91 82 09 99",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://sauvegarde13.org",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations"
  },
  "siren:775559727": {
   "email": "siege@araimc.org",
@@ -2765,6 +3221,12 @@
   "web": "https://www.afah.fr",
   "source": "site de l'organisme (SIREN vérifié)"
  },
+ "siren:775559743": {
+  "email": "",
+  "tel": "",
+  "web": "https://aajt.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:775559925": {
   "email": "",
   "tel": "04 91 71 80 00",
@@ -2772,10 +3234,10 @@
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:775560089": {
-  "email": "",
+  "email": "siege@association-fouque.org",
   "tel": "04 91 16 78 98",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://association-fouque.org",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations"
  },
  "siren:775560105": {
   "email": "ime.valbrise@amsp.fr",
@@ -2796,10 +3258,16 @@
   "source": "Annuaire de l'éducation"
  },
  "siren:775713670": {
-  "email": "",
+  "email": "coordination.vacances@laligue83.org",
   "tel": "04 94 24 72 72",
   "web": "",
-  "source": "FINESS"
+  "source": "FINESS + avis de marché BOAMP du 30/04/2025"
+ },
+ "siren:775713688": {
+  "email": "",
+  "tel": "",
+  "web": "https://adseaav.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:775714090": {
   "email": "",
@@ -2825,11 +3293,23 @@
   "web": "",
   "source": "Annuaire de l'éducation"
  },
+ "siren:781626817": {
+  "email": "siege@association-alc.org",
+  "tel": "",
+  "web": "https://association-alc.org",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:782394944": {
   "email": "ce.0040034r@ac-aix-marseille.fr",
   "tel": "04 92 30 58 60",
   "web": "http://www.sacrecoeurdigne.com",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:782424857": {
+  "email": "direction@fondationseltzer.fr",
+  "tel": "",
+  "web": "",
+  "source": "site de l'organisme"
  },
  "siren:782436299": {
   "email": "ce.0050422g@ac-aix-marseille.fr",
@@ -2910,16 +3390,22 @@
   "source": "FINESS"
  },
  "siren:782609432": {
-  "email": "",
+  "email": "qualite@saintdo.com",
   "tel": "04 92 07 57 57",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://saintdo.com",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:782609549": {
   "email": "ce.0060745c@ac-nice.fr",
   "tel": "04 93 97 29 50",
   "web": "http://institution-nazareth.fr/?page_id=6",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:782613681": {
+  "email": "",
+  "tel": "",
+  "web": "https://nice.catholique.fr",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:782614556": {
   "email": "ce.0060677d@ac-nice.fr",
@@ -2990,14 +3476,14 @@
  "siren:782686166": {
   "email": "",
   "tel": "04 42 20 09 81",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://les-parons.org",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations"
  },
  "siren:782686190": {
-  "email": "",
+  "email": "accueil@asso-saintmichel.org",
   "tel": "04 42 20 21 02",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://asso-saintmichel.org",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:782687990": {
   "email": "ce.0132017x@ac-aix-marseille.fr",
@@ -3042,10 +3528,10 @@
   "source": "Annuaire de l'éducation"
  },
  "siren:782727291": {
-  "email": "",
+  "email": "contact.siege@lesabeilles.fr",
   "tel": "04 90 18 82 30",
-  "web": "",
-  "source": "Annuaire de l'éducation"
+  "web": "https://lesabeilles.fr",
+  "source": "Annuaire de l'éducation + site déclaré au Journal officiel des associations"
  },
  "siren:782732101": {
   "email": "gestion.administrative-sm@stlouis-stemarie.fr",
@@ -3108,10 +3594,10 @@
   "source": "Annuaire de l'éducation"
  },
  "siren:782787857": {
-  "email": "",
+  "email": "contact@federation-rds.fr",
   "tel": "04 42 28 80 95",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://federation-rds.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:782810311": {
   "email": "",
@@ -3124,6 +3610,12 @@
   "tel": "04 91 48 05 92",
   "web": "",
   "source": "Annuaire de l'éducation"
+ },
+ "siren:782812713": {
+  "email": "accueil@cfbt-asso.com",
+  "tel": "",
+  "web": "https://cfbt-asso.com",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:782814925": {
   "email": "",
@@ -3142,6 +3634,12 @@
   "tel": "04 91 47 02 66",
   "web": "",
   "source": "FINESS"
+ },
+ "siren:782815674": {
+  "email": "directiongenerale@leolagrange.org",
+  "tel": "",
+  "web": "https://leolagrange-mediterranee.org",
+  "source": "site déclaré au Journal officiel des associations + avis de marché BOAMP du 12/01/2025"
  },
  "siren:782824353": {
   "email": "",
@@ -3173,6 +3671,12 @@
   "web": "http://www.chevreul.com",
   "source": "Annuaire de l'éducation"
  },
+ "siren:782859466": {
+  "email": "",
+  "tel": "",
+  "web": "https://cfadubatiment.fr",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:782859987": {
   "email": "",
   "tel": "04 91 78 40 19",
@@ -3198,16 +3702,22 @@
   "source": "FINESS + site de l'organisme (SIREN vérifié)"
  },
  "siren:782883854": {
-  "email": "",
+  "email": "contact@acopad.tm.fr",
   "tel": "04 94 92 06 73",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://acopad-centredeformation.com",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
+ },
+ "siren:782886139": {
+  "email": "contact@maisondelafamille.net",
+  "tel": "",
+  "web": "https://maisondelafamille.net",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:782886147": {
-  "email": "",
+  "email": "contact.aismorbihan@soliha.fr",
   "tel": "04 91 11 63 10",
   "web": "",
-  "source": "FINESS"
+  "source": "FINESS + site de l'organisme"
  },
  "siren:782886386": {
   "email": "",
@@ -3220,6 +3730,12 @@
   "tel": "",
   "web": "https://agam.org",
   "source": "site de l'organisme (nom et code postal concordants)"
+ },
+ "siren:782911960": {
+  "email": "schaeffer@itii-paca.com",
+  "tel": "",
+  "web": "",
+  "source": "avis de marché BOAMP du 25/09/2025"
  },
  "siren:782911994": {
   "email": "ce.0133474f@ac-aix-marseille.fr",
@@ -3294,10 +3810,10 @@
   "source": "Annuaire de l'éducation"
  },
  "siren:782974158": {
-  "email": "",
+  "email": "v.levrere@lacana.asso.fr",
   "tel": "04 91 65 85 20",
   "web": "",
-  "source": "FINESS"
+  "source": "FINESS + avis de marché BOAMP du 10/07/2026"
  },
  "siren:782974349": {
   "email": "ce.0131818f@ac-aix-marseille.fr",
@@ -3396,10 +3912,10 @@
   "source": "site de l'organisme (nom et code postal concordants)"
  },
  "siren:783200884": {
-  "email": "",
+  "email": "contact@aist84.fr",
   "tel": "06 25 53 03 47",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://aist84.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:783200926": {
   "email": "",
@@ -3467,6 +3983,12 @@
   "web": "http://www.stjoavignon.com",
   "source": "Annuaire de l'éducation"
  },
+ "siren:789420668": {
+  "email": "",
+  "tel": "",
+  "web": "https://yeswecamp.org",
+  "source": "site déclaré au Journal officiel des associations"
+ },
  "siren:793035890": {
   "email": "ce.0132011r@ac-aix-marseille.fr",
   "tel": "04 91 46 03 55",
@@ -3502,6 +4024,12 @@
   "tel": "",
   "web": "https://sosmediterranee.fr",
   "source": "site de l'organisme"
+ },
+ "siren:814625679": {
+  "email": "remi88journeaux@gmail.com",
+  "tel": "",
+  "web": "https://asso-archipel.com",
+  "source": "site déclaré au Journal officiel des associations"
  },
  "siren:814635082": {
   "email": "contact@carasante.com",
@@ -3546,10 +4074,10 @@
   "source": "FINESS"
  },
  "siren:923444616": {
-  "email": "",
+  "email": "contact@lavarappe.fr",
   "tel": "04 91 10 04 38",
-  "web": "",
-  "source": "FINESS"
+  "web": "https://lavarappe.fr",
+  "source": "FINESS + site déclaré au Journal officiel des associations"
  },
  "siren:924727845": {
   "email": "",

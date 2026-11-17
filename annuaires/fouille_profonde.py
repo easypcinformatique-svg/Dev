@@ -50,7 +50,7 @@ EXTENSIONS = ("fr", "com", "org", "net", "eu", "info", "pro", "coop", "mc", "ema
 REJET = re.compile(
     r"(wix|squarespace|wordpress|sentry|example|exemple|domain|domaine\.|votre|your|godaddy|ovh\.|"
     r"gandi|1and1|ionos|o2switch|webmaster|no-?reply|noreply|ne-pas-repondre|^dpo|dpd@|rgpd|cnil|"
-    r"privacy|abuse|postmaster|presse@|press@|recrut|emploi@|candidat|rh@|jobs?@|newsletter|"
+    r"privacy|abuse|informatiqueetlibert|donnees-?personnelles|postmaster|presse@|press@|recrut|emploi@|candidat|rh@|jobs?@|newsletter|"
     r"nom@|prenom|email@|adresse@|xxx|test@|user@|john|doe@|"
     r"\.(png|jpe?g|gif|webp|svg|css|js|pdf)$|@(2x|3x)\.|@sentry|@google|@facebook|@twitter)", re.I)
 PREFERES = ("contact", "accueil", "siege", "secretariat", "direction", "mairie", "courrier",
