@@ -167,6 +167,7 @@ textarea.note.rempli{background:#FFFBEB;border-color:#F59E0B}
   <div class="header-inner">
     <div class="emblem">📇</div>
     <div class="header-text">
+      <a class="retour-tdb" href="tableau-de-bord-prospection.html" style="display:inline-block;margin-bottom:5px;color:#fff;border:1px solid rgba(255,255,255,.5);padding:3px 11px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none">&larr; Tableau de bord</a>
       <div class="header-title">Fichier de prospection &mdash; Provence-Alpes-C&ocirc;te d'Azur</div>
       <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; Associations &middot; D&eacute;partements &middot; R&eacute;gion</div>
     </div>
@@ -306,6 +307,11 @@ function classeType(t){
 
 /* Les contacts collectés n'ont pas tous leur schéma. */
 function lien(u){ return /^https?:\/\//i.test(u) ? u : 'https://'+u; }
+function libelleContact(u){
+  if(/annuaire-entreprises/.test(u)) return 'Fiche officielle';
+  if(/service-public|contact|formulaire|demarche/i.test(u)) return 'Formulaire de contact';
+  return 'Site internet';
+}
 
 /* ══ COMMENTAIRES ══
    Enregistrés dans le navigateur (localStorage) : ils ne quittent pas l'appareil
@@ -440,7 +446,7 @@ function render(){
       <td>${d.email
         ? `<a class="web-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`
         : d.contact
-          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">${d.type.startsWith('Association')?'Fiche officielle':'Formulaire de contact'} ↗</a>`
+          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">${libelleContact(d.contact)} ↗</a>`
           : '<span class="web-na">Non disponible</span>'}</td>
       <td class="td-note"><textarea class="note${noteDe(d)?' rempli':''}" rows="2" maxlength="2000" aria-label="Commentaire sur ${esc(d.nom)}"
         placeholder="Ajouter un commentaire…" data-id="${esc(idNote(d))}" onchange="enregistrerNote(this)">${esc(noteDe(d))}</textarea></td>
