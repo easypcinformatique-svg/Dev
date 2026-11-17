@@ -111,6 +111,11 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 .g-autre{background:#F5F5F4;color:#44403C}
 .g-asso{background:#FFF1F2;color:#9F1239}
 .th-note{cursor:default}
+.th-client{cursor:default;width:54px}
+.td-client{text-align:center}
+.td-client input{width:18px;height:18px;cursor:pointer;accent-color:var(--bleu,#1E3A8A)}
+tr.est-client td{background:#F3F4F6}
+tr.est-client td:not(.td-client):not(.td-note),tr.est-client td:not(.td-client):not(.td-note) a{text-decoration:line-through;color:#9CA3AF}
 .td-dir{min-width:170px;font-size:12.5px;line-height:1.5}
 .td-dir .role{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted,#6B7280);margin-right:2px}
 .td-note{min-width:210px}
@@ -220,6 +225,11 @@ textarea.note.rempli{background:#FFFBEB;border-color:#F59E0B}
       <option value="avec">Seulement commentés</option>
       <option value="sans">Seulement non commentés</option>
     </select>
+    <select id="client-filter" name="client-filter" onchange="render()" aria-label="Filtrer sur les clients">
+      <option value="">Clients et prospects</option>
+      <option value="sans">Masquer les clients</option>
+      <option value="avec">Seulement les clients</option>
+    </select>
     <select id="dept-filter" name="dept-filter" onchange="render()" aria-label="Filtrer par département">
       <option value="">Toute la région PACA</option>
     </select>
@@ -243,7 +253,7 @@ textarea.note.rempli{background:#FFFBEB;border-color:#F59E0B}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
     </button>
-    <button class="btn btn-outline" onclick="exporterNotes()" title="Télécharge vos commentaires dans un fichier, pour les sauvegarder ou les reporter sur un autre appareil">Sauvegarder mes commentaires</button>
+    <button class="btn btn-outline" onclick="exporterNotes()" title="Télécharge vos commentaires dans un fichier, pour les sauvegarder ou les reporter sur un autre appareil">Sauvegarder commentaires et clients</button>
     <button class="btn btn-outline" onclick="document.getElementById('import-notes').click()" title="Recharge un fichier de commentaires sauvegardé">Importer</button>
     <input type="file" id="import-notes" accept="application/json,.json" hidden onchange="importerNotes(this)">
     <button class="btn btn-ghost" onclick="resetFilters()">Réinitialiser</button>
@@ -255,6 +265,7 @@ textarea.note.rempli{background:#FFFBEB;border-color:#F59E0B}
     <table>
       <thead>
         <tr>
+          <th class="th-client" title="Cochez pour marquer l'organisme comme client : sa ligne est barrée">Client</th>
           <th style="width:44px">#</th>
           <th onclick="setSort('nom')">Organisme <span class="arr" id="arr-nom">↑</span></th>
           <th onclick="setSort('type')">Type <span class="arr" id="arr-type"></span></th>
@@ -325,20 +336,30 @@ const CLE_NOTES='prospection-paca-commentaires-v1';
 let NOTES={};
 try{ NOTES=JSON.parse(localStorage.getItem(CLE_NOTES)||'{}')||{}; }catch(e){ NOTES={}; }
 function idNote(d){ return d.type.split(' · ')[0]+'|'+d.dept+'|'+d.nom; }
-function noteDe(d){ const n=NOTES[idNote(d)]; return n?n.t:''; }
+function noteDe(d){ const n=NOTES[idNote(d)]; return n&&n.t?n.t:''; }
+function estClient(d){ const n=NOTES[idNote(d)]; return !!(n&&n.c); }
+function basculerClient(case_){
+  const id=case_.dataset.id, n=NOTES[id]||{t:'',d:''};
+  if(case_.checked) n.c=1; else delete n.c;
+  n.d=new Date().toISOString().slice(0,10);
+  if(n.t||n.c) NOTES[id]=n; else delete NOTES[id];
+  if(ecrireNotes()) showToast(case_.checked?'Marqué comme client':'Marque client retirée','#065F46',1800);
+  if(document.getElementById('client-filter').value) render(); else case_.closest('tr').classList.toggle('est-client',case_.checked);
+}
 function ecrireNotes(){
   try{ localStorage.setItem(CLE_NOTES,JSON.stringify(NOTES)); return true; }
   catch(e){ showToast("Ce navigateur refuse l'enregistrement : le commentaire sera perdu à la fermeture de la page.",'#B91C1C',6000); return false; }
 }
 function enregistrerNote(zone){
   const t=zone.value.trim(), id=zone.dataset.id;
-  if(t) NOTES[id]={t:t,d:new Date().toISOString().slice(0,10)}; else delete NOTES[id];
+  const ancien=NOTES[id]||{};
+  if(t||ancien.c){ NOTES[id]={t:t,d:new Date().toISOString().slice(0,10)}; if(ancien.c) NOTES[id].c=1; } else delete NOTES[id];
   zone.classList.toggle('rempli',!!t);
   if(ecrireNotes()) showToast(t?'Commentaire enregistré':'Commentaire supprimé','#065F46',1800);
 }
 function exporterNotes(){
   const n=Object.keys(NOTES).length;
-  if(!n){ showToast('Aucun commentaire à sauvegarder.','#B45309',3000); return; }
+  if(!n){ showToast('Aucun commentaire ni client à sauvegarder.','#B45309',3000); return; }
   const blob=new Blob([JSON.stringify(NOTES,null,1)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='commentaires-prospection-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
@@ -350,7 +371,7 @@ function importerNotes(champ){
     const lus=JSON.parse(txt); let n=0;
     Object.keys(lus).forEach(id=>{
       const v=lus[id];
-      if(v&&typeof v.t==='string'&&v.t.trim()&&(!NOTES[id]||(v.d||'')>=(NOTES[id].d||''))){ NOTES[id]={t:v.t.slice(0,2000),d:String(v.d||'').slice(0,10)}; n++; }
+      if(v&&typeof v.t==='string'&&(v.t.trim()||v.c)&&(!NOTES[id]||(v.d||'')>=(NOTES[id].d||''))){ NOTES[id]={t:v.t.slice(0,2000),d:String(v.d||'').slice(0,10)}; if(v.c) NOTES[id].c=1; n++; }
     });
     ecrireNotes(); render(); showToast(n+' commentaire'+(n>1?'s':'')+' importé'+(n>1?'s':''),'#065F46',3000);
   }).catch(()=>showToast("Ce fichier n'est pas une sauvegarde de commentaires.",'#B91C1C',5000));
@@ -415,6 +436,9 @@ function getFiltered(){
     const nf=document.getElementById('note-filter').value;
     if(nf==='avec'&&!noteDe(d))return false;
     if(nf==='sans'&&noteDe(d))return false;
+    const cf=document.getElementById('client-filter').value;
+    if(cf==='avec'&&!estClient(d))return false;
+    if(cf==='sans'&&estClient(d))return false;
     if(mail==='avec'&&!d.email)return false;
     if(mail==='sans'&&d.email)return false;
     if(!q)return true;
@@ -435,10 +459,11 @@ function render(){
   const rows=getFiltered();
   const tbody=document.getElementById('tbody');
   if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="11"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
   } else {
     tbody.innerHTML=rows.map((d,i)=>`
-    <tr>
+    <tr class="${estClient(d)?'est-client':''}">
+      <td class="td-client"><input type="checkbox" aria-label="${esc(d.nom)} est client" data-id="${esc(idNote(d))}" ${estClient(d)?'checked':''} onchange="basculerClient(this)"></td>
       <td class="td-rank">${i+1}</td>
       <td><div class="struct">${esc(d.nom)}</div></td>
       <td><span class="gbadge ${classeType(d.type)}">${esc(d.type)}</span></td>
@@ -466,7 +491,7 @@ function render(){
 }
 
 function resetFilters(){
-  ['search','dept-filter','type-filter','mail-filter','note-filter'].forEach(id=>document.getElementById(id).value='');
+  ['search','dept-filter','type-filter','mail-filter','note-filter','client-filter'].forEach(id=>document.getElementById(id).value='');
   sortField='nom';sortDir='asc';
   document.querySelectorAll('.arr').forEach(el=>el.textContent='');
   document.getElementById('arr-nom').textContent='↑';
@@ -562,10 +587,10 @@ function triggerDownload(blob, filename){
 }
 
 const COLUMNS=['Rang','Organisme','Type','Département','Code dép.','Taille','Dirigeants','Adresse',
-               'Téléphone','Courriel','Contact officiel','Commentaire'];
+               'Téléphone','Courriel','Contact officiel','Commentaire','Client'];
 function toRow(d,i){
   return [i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.dept,d.taille,d.dirigeants||'',d.adresse,
-          d.tel||'',d.email||'',d.contact||'',noteDe(d)];
+          d.tel||'',d.email||'',d.contact||'',noteDe(d),estClient(d)?'oui':''];
 }
 
 /* ══ EXPORT CSV ══ */
@@ -590,7 +615,7 @@ function exportSheets(){
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:5},{wch:46},{wch:22},{wch:24},{wch:9},{wch:16},{wch:44},
-                 {wch:17},{wch:32},{wch:40},{wch:50},{wch:40}];
+                 {wch:17},{wch:32},{wch:40},{wch:50},{wch:40},{wch:8}];
     ws['!freeze']={xSplit:0,ySplit:1};
     XLSX.utils.book_append_sheet(wb,ws,'Prospection');
 
