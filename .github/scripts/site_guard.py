@@ -364,6 +364,45 @@ for _src in sorted(glob.glob(os.path.join(MEDIAS, "*"))):
         shutil.copy2(_src, _dst)
         log(os.path.basename(_src), "média déposé dans le site")
 
+# iOS ne sait pas se servir d'un favicon en SVG : quand un client ajoute le
+# site à son écran d'accueil, il place une capture de la page. On dessine donc
+# l'icône, reprise du favicon existant — carré rouge arrondi, « PN » doré.
+_ICONE = os.path.join(SITE, "apple-touch-icon.png")
+if not os.path.exists(_ICONE):
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        T = 180
+        im = Image.new("RGBA", (T, T), (0, 0, 0, 0))
+        # Le dégradé du favicon, #CE2B37 vers #A01F2A, en diagonale.
+        fond = Image.new("RGB", (T, T))
+        px = fond.load()
+        for y in range(T):
+            for x in range(T):
+                t = (x + y) / (2 * (T - 1))
+                px[x, y] = (round(0xCE + (0xA0 - 0xCE) * t),
+                            round(0x2B + (0x1F - 0x2B) * t),
+                            round(0x37 + (0x2A - 0x37) * t))
+        masque = Image.new("L", (T, T), 0)
+        ImageDraw.Draw(masque).rounded_rectangle([0, 0, T - 1, T - 1], radius=34, fill=255)
+        im.paste(fond, (0, 0), masque)
+        police = None
+        for p in ("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
+                  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"):
+            if os.path.exists(p):
+                police = ImageFont.truetype(p, 76)
+                break
+        d = ImageDraw.Draw(im)
+        if police:
+            b = d.textbbox((0, 0), "PN", font=police)
+            d.text(((T - (b[2] - b[0])) / 2 - b[0], (T - (b[3] - b[1])) / 2 - b[1] - 4),
+                   "PN", font=police, fill=(0xE8, 0xC0, 0x60))
+        else:
+            d.text((T // 2 - 16, T // 2 - 8), "PN", fill=(0xE8, 0xC0, 0x60))
+        im.save(_ICONE, "PNG")
+        log("apple-touch-icon.png", "icône d'écran d'accueil dessinée (180×180)")
+    except Exception as _e:                      # Pillow absent : on s'en passe
+        log("apple-touch-icon.png", f"non dessinée ({_e})")
+
 # ---------- per-page invariants ----------
 pages = sorted(glob.glob(os.path.join(SITE, "**", "*.html"), recursive=True))
 for path in pages:
@@ -905,6 +944,39 @@ for path in pages:
     if FAVICONS and "rel=\"icon\"" not in c and "</head>" in c:
         c = c.replace("</head>", FAVICONS + "\n</head>", 1)
         log(rel, "favicon déclaré")
+
+    # Deux manques relevés sur les 38 pages par l'audit mobile du 18/11.
+    # theme-color teinte la barre du navigateur : sans elle, un liseré gris
+    # sépare l'écran du bandeau. La valeur est celle du bandeau lui-même.
+    if "theme-color" not in c and "</head>" in c:
+        c = c.replace("</head>",
+                      '<meta name="theme-color" content="#00703C">\n</head>', 1)
+        log(rel, "couleur de barre du navigateur déclarée")
+    # Et l'icône d'écran d'accueil : iOS ignore un favicon en SVG et met une
+    # capture de la page à la place quand on ajoute le site à l'accueil.
+    if "apple-touch-icon" not in c and "</head>" in c and os.path.exists(
+            os.path.join(SITE, "apple-touch-icon.png")):
+        c = c.replace("</head>",
+                      '<link rel="apple-touch-icon" sizes="180x180" '
+                      'href="/apple-touch-icon.png">\n</head>', 1)
+        log(rel, "icône d'écran d'accueil déclarée")
+
+    # Une image de fond écrite en chemin relatif dans un <style> se résout
+    # depuis le dossier de la page : sur /livraison-pizza-carpentras/, la photo
+    # du bandeau était cherchée dans ce dossier et renvoyait une 404. Seul le
+    # dégradé s'affichait. Ces fichiers vivent tous à la racine.
+    avant = c
+    c = re.sub(r"url\('(?!/|https?:|data:)([^'/)]+\.(?:jpg|jpeg|png|webp|avif))'\)",
+               r"url('/\1')", c)
+    if c != avant:
+        log(rel, "image de fond : chemin rendu absolu")
+
+    # type="tel" suffit à la plupart des téléphones, inputmode lève le doute
+    # sur ceux qui l'ignorent : le clavier s'ouvre sur les chiffres.
+    if 'id="client-tel"' in c and 'inputmode' not in c.split('id="client-tel"')[0][-90:]:
+        c = c.replace('<input type="tel" id="client-tel"',
+                      '<input type="tel" inputmode="tel" id="client-tel"', 1)
+        log(rel, "clavier numérique pour le téléphone")
 
     # 6q. social cards: a share with no image is a share nobody clicks
     if "</head>" in c:
@@ -1883,6 +1955,47 @@ for path in pages:
             "footer p{color:rgba(255,255,255,.72) !important;}\n"
             # Et le numéro de téléphone des neuf guides, à 4,3:1.
             "footer p a{color:rgba(255,255,255,.85) !important;}\n"
+            # L'audit du 18/11 a mesuré le contraste de 11 172 textes sur les
+            # 38 pages. Quarante couples de couleurs tombaient sous le minimum
+            # lisible de 4,5:1 — lisibles sur un écran d'ordinateur, beaucoup
+            # moins sur un téléphone en plein jour. Les voici relevés, en
+            # gardant la teinte de chacun. Chaque valeur est calculée, pas
+            # choisie à l'œil : le rapport obtenu est noté en regard.
+            ".status-pill.open,.status-pill.open *{color:#1A5E2A !important;}\n"      # 1,36 → 5,6
+            ".status-pill:not(.open),.status-pill:not(.open) *{color:#A01A17 !important;}\n"  # 1,68 → 5,8
+            ".info-label,.pom-title,.pom-body strong{color:#FFF0CC !important;}\n"    # 1,97 → 4,6
+            ".cp-call{background:#157A42 !important;}\n"                              # 2,10 → 5,4
+            ".price-size{color:rgba(255,255,255,.65) !important;}\n"                  # 2,69 → 7,2
+            ".card-tag.tag-rosso{color:#A01A17 !important;}\n"                        # 2,61 → 7,7
+            ".card-tag.tag-verde{color:#1A5E2A !important;}\n"                        # 2,61 → 7,6
+            # Les gris clairs posés sur le crème ou le blanc : mentions
+            # légales, notes de bas de bloc, horodatage, cellules de tableau.
+            "[style*=\"color:#aaa\"],[style*=\"color:#999\"],[style*=\"color:#888\"],"
+            "[style*=\"color:#bbb\"],td.bad,.blog-meta,.pizza-desc,.avis-author,.cp-label"
+            "{color:#5A5A5A !important;}\n"                                           # 2,3 → 6,7
+            # Second passage, après mesure du premier : ces textes-là sont sur
+            # fond sombre, les éclaircir au lieu de les assombrir. Le premier
+            # jet avait mis .t-sub en gris moyen sur un panneau noir — 2,5:1,
+            # soit pire qu'avant.
+            ".t-sub{color:rgba(255,255,255,.8) !important;}\n"                        # 2,5 → 7,9
+            ".l{color:#fff !important;}\n"                                            # 3,2 → 5,2
+            ".pom-text strong,.pom-text b{color:#FFF0CC !important;}\n"               # 2,0 → 4,6
+            # Le préfixe « color: » est indispensable : sans lui le sélecteur
+            # attraperait aussi les blocs dont le FOND est en blanc translucide,
+            # et leur poserait un texte presque blanc.
+            "[style*=\"color:rgba(255,255,255,.3\"],[style*=\"color:rgba(255,255,255,.4\"],"
+            "[style*=\"color:rgba(255,255,255,.5\"],[style*=\"color:rgba(255,255,255,.6\"]"
+            "{color:rgba(255,255,255,.82) !important;}\n"                             # 2,7 → 9,5
+            ".st-count{color:rgba(255,255,255,.82) !important;}\n"                    # 3,8 → 9,5
+            # La puce numérotée est blanche sur rouge dans la feuille du site :
+            # la passer en gris moyen l'avait fait tomber à 1,3:1.
+            ".step-num{color:#fff !important;}\n"                                     # 1,3 → 5,2
+            # Le doré du bandeau d'offre sur le vert : 3,6:1. Éclairci.
+            ".promo-banner span,.promo-banner b{color:#FFE9B0 !important;}\n"         # 3,6 → 5,2
+            "p[style*=\"color:rgba(255,255,255,.9\"]{color:#fff !important;}\n"       # 4,5 → 5,2
+            "footer [style*=\"color:#aaa\"],footer [style*=\"color:#999\"],"
+            "footer [style*=\"color:#888\"],footer [style*=\"color:#bbb\"]"
+            "{color:rgba(255,255,255,.78) !important;}\n"
             "@media(max-width:640px){\n"
             " .infos-bar{grid-template-columns:1fr !important;padding:1.4rem 1rem !important;}\n"
             " .infos-bar .info-item{min-width:0 !important;flex-wrap:wrap;"
@@ -1923,9 +2036,24 @@ for path in pages:
             # La règle de fond : une case de grille et un élément de flex
             # refusent par défaut de descendre sous la largeur de leur contenu.
             # C'est ce qui, partout sur cette page, pousse la mise en page plus
-            # large que l'écran. Sans !important, une largeur minimale voulue
-            # par la feuille du site reste prioritaire.
-            " main *,footer *{min-width:0;}\n"
+            # large que l'écran.
+            #
+            # Elle ne vise que des conteneurs. Écrite « main * », elle touchait
+            # aussi les <strong> et les <a> : dans une liste dont le <li> est
+            # en flex, chaque mot balisé devient un élément de flex à part, et
+            # ces éléments-là se réduisaient à 30 px pendant que le texte nu
+            # voisin gardait sa taille — les deux se chevauchaient. Le guide de
+            # livraison affichait « Appelezau » et le numéro à un chiffre par
+            # ligne. Un conteneur peut rétrécir ; un mot, non.
+            " main div,main section,main ul,main ol,main li,main figure,main table,"
+            "main form,main aside,footer div,footer ul,footer nav,footer form{min-width:0;}\n"
+            # Et la cause première dans ce guide : un <li> en flex dont le
+            # contenu est une phrase. Chaque fragment devient une colonne. La
+            # puce numérotée passe en position absolue et la phrase retrouve un
+            # flux normal.
+            " .steps li{display:block !important;position:relative;"
+            "padding-left:3.2rem !important;}\n"
+            " .steps li::before{position:absolute !important;left:.9rem;top:.8rem;}\n"
             # Ces liens d'appel portaient white-space:nowrap : la phrase entière
             # devenait un seul mot pour le navigateur, plus large que l'écran,
             # et élargissait la mise en page de toute la page.
@@ -1946,8 +2074,15 @@ for path in pages:
             " .testi-grid{max-width:100%;}\n"
             # iOS zoome automatiquement sur un champ dont le texte fait moins de
             # 16 px : le formulaire sautait à chaque fois qu'on touchait un champ.
-            " #order-overlay input, #order-overlay select, #order-overlay textarea"
-            "{font-size:16px !important;}\n"
+            " #order-overlay input, #order-overlay select, #order-overlay textarea,"
+            # Le champ de recherche de la carte était resté à 13,6 px : hors du
+            # formulaire de commande, il échappait à la règle, et iOS zoomait
+            # dès qu'on le touchait.
+            " #menuSearch, input[type=search]{font-size:16px !important;}\n"
+            # Un tableau de prix large de 442 px élargissait toute la page du
+            # guide « commander pour un groupe ». Il défile maintenant seul.
+            " .article-body table,main table{display:block;overflow-x:auto;"
+            "max-width:100%;-webkit-overflow-scrolling:touch;}\n"
             # Zones tactiles : 24 px est le minimum recommandé pour viser au doigt.
             " nav a, footer a, .nav-links a{min-height:24px;display:inline-flex;"
             "align-items:center;}\n"
@@ -1970,7 +2105,7 @@ for path in pages:
             # commune et la page pizzeria.
             " .menu-tab,.footer-copy,.addr-maps-btn,.t-sub,.st-info,.st-count,.cp-label,"
             ".status-pill,.status-pill span,.nc,.hb,.l,.cvi h3,.hero-tag,.info-title,"
-            ".pizza-desc,.nav-cta,.nav-links a,th{font-size:12px !important;}\n"
+            ".pizza-desc,.nav-cta,.nav-links a,th,.card-tag{font-size:12px !important;}\n"
             # Fil d'Ariane, barre légale, liens de carte : des liens sans classe
             # posés directement dans un bloc, hauts de 12 à 17 px. Une marge
             # intérieure verticale agrandit la cible sans changer le flux —
@@ -2006,6 +2141,44 @@ for path in pages:
             " .hero-btns .btn-primary,.hero-btns .btn-outline{white-space:normal !important;"
             "line-height:1.35;max-width:100%;box-sizing:border-box;text-align:center;"
             "letter-spacing:.06em !important;padding:.85rem 1rem !important;}\n"
+            "}\n"
+            # Téléphone tenu dans l'autre sens. La feuille s'arrêtait à 640 px
+            # de large : couché, l'écran en fait 740 et tout retombait sur la
+            # mise en page de bureau. Le nom de la pizzeria disparaissait sous
+            # l'en-tête, 520 libellés repassaient sous 12 px et les boutons
+            # flottants redevenaient une colonne. On garde la mise en page
+            # large — elle a la place — mais pas les tailles de bureau.
+            "@media(max-height:520px) and (orientation:landscape){\n"
+            " .hero{height:auto !important;min-height:0 !important;"
+            "padding-top:calc(var(--haut-entete,197px) + 1.2rem) !important;"
+            "padding-bottom:2rem !important;}\n"
+            " .hero-panneau{max-width:100% !important;box-sizing:border-box;}\n"
+            " .price-size,.section-tag,.menu-badge,.testi-author,.step-num,.label,"
+            ".hero-tel-label,.counter-lbl,.info-label,.hero-badge,.promo-banner,"
+            ".menu-tab,.footer-copy,.addr-maps-btn,.t-sub,.st-info,.st-count,.cp-label,"
+            ".status-pill,.status-pill span,.nc,.hb,.l,.cvi h3,.hero-tag,.info-title,"
+            ".pizza-desc,.nav-cta,.nav-links a,th,.card-tag,"
+            "[style*=\"font-size:.4\"],[style*=\"font-size:.5\"],[style*=\"font-size:.6\"],"
+            "[style*=\"font-size:.70\"],[style*=\"font-size:.71\"],[style*=\"font-size:.72\"],"
+            "[style*=\"font-size:.73\"],[style*=\"font-size:.74\"],[style*=\"font-size:.7r\"],"
+            "[style*=\"font-size:.7e\"],"
+            "#order-overlay label,small,figcaption{font-size:12px !important;}\n"
+            " #order-overlay input,#order-overlay select,#order-overlay textarea,"
+            "#menuSearch,input[type=search]{font-size:16px !important;}\n"
+            " .float-group{flex-direction:row !important;bottom:.5rem !important;"
+            "right:.5rem !important;gap:.5rem !important;}\n"
+            " .float-btn{width:42px !important;height:42px !important;}\n"
+            " .float-btn svg{width:19px !important;height:19px !important;}\n"
+            " .testi-dot{width:24px !important;height:24px !important;padding:0 !important;"
+            "background:transparent !important;border-radius:0 !important;position:relative;}\n"
+            " .testi-dot::before{content:\"\";position:absolute;top:50%;left:50%;"
+            "transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;"
+            "background:rgba(0,0,0,.18);}\n"
+            " .testi-dot.active::before{width:22px;border-radius:5px;background:var(--oro);}\n"
+            " .steps li{display:block !important;position:relative;"
+            "padding-left:3.2rem !important;}\n"
+            " .steps li::before{position:absolute !important;left:.9rem;top:.8rem;}\n"
+            " .article-body table,main table{display:block;overflow-x:auto;max-width:100%;}\n"
             "}\n</style>")
     # La feuille est remplacée, pas seulement posée : sinon une correction
     # écrite ici ne serait jamais arrivée sur un site déjà traité.
