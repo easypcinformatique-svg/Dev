@@ -32,6 +32,8 @@ régénération suivante.
 | Syndicats (SIVU, SIVOM, SMF, SMO, PETR) | 190 | 0 |
 | Départements | 6 | 1 |
 | Région Sud | 1 | 0 |
+| Bailleurs sociaux | 17 | 0 |
+| Associations de 50 salariés et plus | 508 | 0 |
 
 Les syndicats viennent de BANATIC, qui ne publie **ni adresse e-mail ni
 téléphone** : ils arrivent avec leur nom, leur type, leur président, leur
@@ -42,6 +44,109 @@ limite de la source, pas une collecte incomplète.
 moins de 5 membres — des SIVU d'école ou d'eau entre deux communes, dont les
 emprunts se comptent en dizaines de milliers d'euros. Les seuils sont les
 constantes `SEUIL_POPULATION` et `SEUIL_MEMBRES` de `build_prospection.py`.
+
+Les associations viennent de SIRENE, par l'API Recherche d'entreprises
+(`collecte_associations_paca.py`). Trois choix de périmètre :
+
+- **le siège doit être en PACA**. Le filtre régional de l'API retient toute
+  association ayant un établissement dans la région : 269 sièges hors région
+  (réseaux nationaux, le plus souvent parisiens) sont écartés, leur décideur
+  n'étant pas sur place ;
+- **50 salariés et plus**, d'après la tranche d'effectif de l'unité légale. Elle
+  date de l'année affichée entre parenthèses (N-2 en général) : un ordre de
+  grandeur, pas un effectif à jour. Le seuil est le second argument du script ;
+- **le secteur est déduit du code NAF** et figure dans le type
+  (« Association · Médico-social et social »). Le filtre par type propose une
+  entrée « tous » par famille.
+
+Ni SIRENE ni le Répertoire national des associations ne publient d'adresse
+e-mail ou de téléphone : comme les syndicats, les associations arrivent sans
+contact direct. Le lien « Fiche officielle » ouvre leur page de l'Annuaire des
+entreprises (dirigeants déclarés, établissements, comptes publiés).
+
+```bash
+python3 annuaires/collecte_associations_paca.py /tmp/associations.json 50
+python3 annuaires/build_prospection.py --associations /tmp/associations.json
+```
+
+Les familles dont la source n'est pas passée en argument sont reprises de la
+page existante : régénérer les seules associations ne retire rien d'autre.
+
+## Compléments de contacts
+
+`enrichit_contacts.py` rebalaye les sources officielles et écrit
+`contacts_complementaires.json`, que `build_prospection.py` applique à chaque
+régénération sans jamais écraser une valeur déjà présente. Au 17/11/2026 la page
+passe de 165 à 362 adresses e-mail et à 640 téléphones, sur 981 organismes.
+
+| Source | Apporte | Rapprochement |
+|--------|---------|---------------|
+| BANATIC officiel (`banatic.interieur.gouv.fr`, export national) | courriel, téléphone, site des syndicats | nom et département |
+| Annuaire de l'éducation | courriel, téléphone, site des associations gestionnaires d'établissements | SIREN |
+| FINESS | téléphone des associations sanitaires et médico-sociales | SIREN |
+| Site de l'organisme | courriel | site donné par une source, ou confirmé par le SIREN |
+
+La phrase plus haut selon laquelle BANATIC ne publie ni e-mail ni téléphone vaut
+pour la copie OpenDataSoft d'origine : l'export officiel porte ces colonnes, mais
+toutes ne sont pas remplies (63 syndicats sur 190 ont un courriel).
+
+`--cherche-sites` essaie des noms de domaine plausibles pour les organismes sans
+site connu et ne retient un site que s'il affiche le SIREN de l'organisme.
+Le Répertoire national des associations, qui porte un champ site web, n'est pas
+téléchargeable par script (protection anti-robot du ministère).
+
+```bash
+python3 annuaires/enrichit_contacts.py CACHE --cherche-sites
+python3 annuaires/build_prospection.py --associations CACHE/associations.json
+```
+
+## Balayage approfondi et dirigeants
+
+`fouille_profonde.py` reprend chaque organisme sans adresse : il cherche son
+site (sources, Wikidata, noms de domaine confirmés par le SIREN ou par le nom et
+le code postal), puis lit les pages de contact et de mentions légales en
+restituant les adresses masquées. Deux sources officielles complètent :
+
+- les **avis du BOAMP** des deux dernières années, où l'acheteur publie son
+  adresse de contact, rapprochée par SIRET. Le BOAMP écrit certains départements
+  sans zéro initial (« 6 » pour « 06 ») : les deux graphies sont interrogées ;
+- le **Journal officiel des associations**, dont les annonces portent le site
+  déclaré par l'association (champ `siteweb`), rapproché par numéro RNA ou SIREN.
+
+Les grands bailleurs sociaux et la plupart des grandes collectivités ne publient
+aucune adresse : leur site ne propose qu'un formulaire.
+
+La colonne « Dirigeants » vient de `dirigeants.json`, assemblé par
+`assemble_dirigeants.py` : président et directeur général d'après le Registre
+national des entreprises (`collecte_dirigeants.py`), présidents des syndicats et
+des EPCI d'après BANATIC, maires d'après l'annuaire des maires. Les directeurs
+financiers ne sont pas des mandataires sociaux : ils ne figurent que lorsque le
+site de l'organisme publie son équipe de direction. Aucun nom ni aucune adresse
+ne vient d'un réseau social, et aucune adresse n'est construite à partir d'un
+nom.
+
+Compléments de la colonne « Dirigeants » : `fonctions_sites.py` relève sur le
+site de chaque organisme les noms qu'il publie (président, directeur général,
+directeur, directeur financier, à défaut directeur de la publication), marqués
+« (site) » dans la page ; les départements et la Région viennent de l'annuaire
+de l'administration (président et directeur général des services). Un nom relevé
+sur un site n'est pas repris pour une commune ni quand plusieurs organismes
+partagent ce site. Le champ `president` de l'annuaire des Epl est rempli depuis
+`dirigeants.json`.
+
+## Clients
+
+Une case « Client » en tête de ligne barre l'organisme. Elle est enregistrée
+avec les commentaires, dans le navigateur, et suit la même sauvegarde. Le filtre
+« Masquer les clients » ne laisse que les prospects.
+
+## Commentaires
+
+La page de prospection a une colonne « Commentaire », enregistrée dans le
+navigateur (`localStorage`). Les commentaires ne sont donc ni publiés ni
+partagés, et ne suivent pas d'un appareil à l'autre : « Sauvegarder mes
+commentaires » en fait un fichier JSON que « Importer » recharge ailleurs. Ils
+figurent dans les exports CSV et Excel.
 
 Le bouton de copie déduplique : deux organismes partageant une adresse ne la
 produisent qu'une fois, ce qui explique l'écart entre les 165 adresses

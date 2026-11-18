@@ -6,12 +6,18 @@ Réunit dans un seul fichier, avec un filtre « type d'organisme » :
   - les entreprises publiques locales   (annuaire-sem-spl-syndicats.html)
   - les EPCI, départements et Région    (collecte_organismes_paca.py)
   - les syndicats et bailleurs sociaux  (BANATIC, quand le fichier est là)
+  - les associations employeuses        (collecte_associations_paca.py)
+
+Les sources passées en argument sont régénérées ; celles qui ne le sont pas sont
+**reprises de la page existante**, pour qu'une régénération partielle — les
+seules associations, par exemple — n'emporte pas les syndicats ou les EPCI.
 
 Les deux annuaires restent la source de vérité pour ce qu'ils contiennent : la
 page de prospection les relit plutôt que de dupliquer leurs données, pour qu'une
 mise à jour hebdomadaire s'y propage à la régénération suivante.
 
-Usage : python3 annuaires/build_prospection.py [--organismes X.json] [--banatic Y.csv]
+Usage : python3 annuaires/build_prospection.py [--organismes X.json] [--banatic Y.json]
+                                                [--bailleurs Z.json] [--associations A.json]
 """
 import argparse
 import json
@@ -24,6 +30,8 @@ MAIRES = RACINE / "annuaire-maires-france.html"
 EPL = RACINE / "annuaire-sem-spl-syndicats.html"
 GABARIT = pathlib.Path(__file__).resolve().parent / "template_prospection.html"
 SORTIE = RACINE / "annuaire-prospection-paca.html"
+COMPLEMENTS = pathlib.Path(__file__).resolve().parent / "contacts_complementaires.json"
+DIRIGEANTS = pathlib.Path(__file__).resolve().parent / "dirigeants.json"
 
 DEPTS = {"04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes", "06": "Alpes-Maritimes",
          "13": "Bouches-du-Rhône", "83": "Var", "84": "Vaucluse", "MC": "Monaco"}
@@ -41,7 +49,7 @@ TYPES_SYNDICAT = {"SIVU", "SIVOM", "SMF", "SMO", "PETR", "POLEM"}
 SEUIL_POPULATION = 5000
 SEUIL_MEMBRES = 5
 
-CLES = ["type", "nom", "dept", "taille", "adresse", "tel", "email", "contact"]
+CLES = ["type", "nom", "dept", "taille", "dirigeants", "adresse", "tel", "email", "contact"]
 
 
 def propre(v):
@@ -64,6 +72,7 @@ def depuis_communes():
     for c in lire_data(MAIRES):
         yield {"type": "Commune", "nom": c["ville"], "dept": c["dept"],
                "taille": f'{c["pop"]:,}'.replace(",", " ") + " hab.",
+               "dirigeants": f'Maire : {c["maire"]}' if c.get("maire") else "",
                "adresse": c["adresse"], "tel": c["tel"],
                "email": c["email"], "contact": c.get("contact", "")}
 
@@ -152,11 +161,92 @@ def depuis_bailleurs(chemin):
                "adresse": adresse, "tel": "", "email": "", "contact": ""}
 
 
+def depuis_associations(chemin):
+    """Associations employeuses de PACA, depuis l'API Recherche d'entreprises.
+
+    SIRENE ne publie ni adresse e-mail ni téléphone, et le Répertoire national
+    des associations non plus : ces entrées arrivent avec leur secteur, leur
+    tranche d'effectif et l'adresse du siège, sans contact direct. Le champ
+    `contact` porte la fiche officielle de l'Annuaire des entreprises, où l'on
+    retrouve dirigeants déclarés, établissements et comptes publiés.
+    """
+    if not chemin or not chemin.exists():
+        return
+    for a in json.loads(chemin.read_text(encoding="utf-8")):
+        if a["dept"] not in DEPTS:
+            continue
+        nom = a["nom"] + (f' ({a["sigle"]})' if a.get("sigle") else "")
+        taille = a["effectif"] + (f' ({a["annee_effectif"]})' if a.get("annee_effectif") else "")
+        yield {"type": f'Association · {a["secteur"]}', "nom": nom, "dept": a["dept"],
+               "taille": taille, "adresse": a["adresse"], "tel": "", "email": "",
+               "contact": a["fiche"]}
+
+
+def cle_complement(e):
+    """Clé d'une entrée dans contacts_complementaires.json (voir enrichit_contacts.py)."""
+    import unicodedata
+    if e["type"].startswith("Association"):
+        siren = re.search(r"/entreprise/(\d{9})", e["contact"])
+        if siren:
+            return f"siren:{siren.group(1)}"
+    nom = re.sub(r"\s*\([^)]*\)\s*$", "", e["nom"]) if e["type"].startswith("Association") else e["nom"]
+    s = unicodedata.normalize("NFD", nom)
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn").upper()
+    return f'nom:{re.sub(r"[^A-Z0-9]+", " ", s).strip()}|{e["dept"]}'
+
+
+def completer(entrees):
+    """Ajoute e-mail, téléphone et site là où ils manquent ; n'écrase rien."""
+    if not COMPLEMENTS.exists():
+        return 0
+    complements = json.loads(COMPLEMENTS.read_text(encoding="utf-8"))
+    dirigeants = json.loads(DIRIGEANTS.read_text(encoding="utf-8")) if DIRIGEANTS.exists() else {}
+    touchees = 0
+    for e in entrees:
+        cle = cle_complement(e)   # avant toute modification du lien de contact
+        e.setdefault("dirigeants", "")
+        # Les syndicats repris d'une ancienne page portent leur président dans l'adresse.
+        m = re.match(r"^(.*?) — président (.+)$", e["adresse"])
+        if m:
+            e["adresse"] = m.group(1)
+            e["dirigeants"] = e["dirigeants"] or f"Président : {m.group(2)}"
+        if dirigeants.get(cle):
+            e["dirigeants"] = dirigeants[cle] if not e["dirigeants"].startswith("Maire") else e["dirigeants"]
+        c = complements.get(cle)
+        if not c:
+            continue
+        avant = (e["email"], e["tel"], e["contact"])
+        e["email"] = e["email"] or c.get("email", "")
+        e["tel"] = e["tel"] or c.get("tel", "")
+        # Sans adresse, le site de l'organisme vaut mieux que rien ou qu'une fiche SIRENE.
+        if c.get("web") and not e["email"] and (
+                not e["contact"] or "annuaire-entreprises" in e["contact"]):
+            e["contact"] = c["web"]
+        touchees += avant != (e["email"], e["tel"], e["contact"])
+    return touchees
+
+
+def depuis_page_existante(garder):
+    """Entrées de la page déjà générée dont le type satisfait `garder`."""
+    if not SORTIE.exists():
+        return
+    html = SORTIE.read_text(encoding="utf-8")
+    bloc = re.search(r"const DATA = \[\n([\s\S]*?)\n\];", html)
+    if not bloc:
+        return
+    for ligne in bloc.group(1).splitlines():
+        e = {k: v for k, v in re.findall(r'(\w+):"([^"]*)"', ligne)}
+        e.setdefault("dirigeants", "")
+        if all(k in e for k in CLES) and garder(e["type"]):
+            yield e
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--organismes", default=None)
     ap.add_argument("--banatic", default=None)
     ap.add_argument("--bailleurs", default=None)
+    ap.add_argument("--associations", default=None)
     args = ap.parse_args()
 
     entrees = list(depuis_communes()) + list(depuis_epl())
@@ -165,15 +255,37 @@ def main():
     entrees += list(depuis_banatic(pathlib.Path(args.banatic) if args.banatic else None,
                                    ecartes))
     entrees += list(depuis_bailleurs(pathlib.Path(args.bailleurs) if args.bailleurs else None))
+    entrees += list(depuis_associations(
+        pathlib.Path(args.associations) if args.associations else None))
 
+    # Les familles dont la source n'est pas fournie sont reprises telles quelles.
+    reprises = []
+    if not args.organismes:
+        reprises.append(lambda t: t in ("EPCI", "Département", "Région"))
+    if not args.banatic:
+        reprises.append(lambda t: t.startswith("Syndicat"))
+    if not args.bailleurs:
+        reprises.append(lambda t: t == "Bailleur social")
+    if not args.associations:
+        reprises.append(lambda t: t.startswith("Association"))
+    if reprises:
+        entrees += list(depuis_page_existante(lambda t: any(r(t) for r in reprises)))
+
+    for e in entrees:
+        e.setdefault("dirigeants", "")
     # Un organisme peut figurer dans deux sources : on garde la mieux renseignée.
     unique = {}
     for e in entrees:
         cle = (propre(e["nom"]).upper(), e["dept"])
+        if e["type"].startswith("Association"):
+            # Deux associations distinctes portent parfois le même nom dans un
+            # département (OGEC, ADMR) : leur fiche SIREN les départage.
+            cle += (e["contact"],)
         garde = unique.get(cle)
         if not garde or (bool(e["email"]), bool(e["tel"])) > (bool(garde["email"]), bool(garde["tel"])):
             unique[cle] = e
     entrees = sorted(unique.values(), key=lambda e: (e["type"], e["dept"], e["nom"]))
+    completees = completer(entrees)
 
     lignes = []
     for e in entrees:
@@ -203,6 +315,7 @@ def main():
 
     avec = sum(1 for e in entrees if e["email"])
     print(f"✅ {SORTIE.name} — {len(entrees)} organismes, {avec} avec une adresse")
+    print(f"   {completees} entrées complétées depuis {COMPLEMENTS.name}")
     if ecartes:
         print(f"   {len(ecartes)} syndicats écartés (moins de {SEUIL_POPULATION} hab. "
               f"desservis et moins de {SEUIL_MEMBRES} membres)")

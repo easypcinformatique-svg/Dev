@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prospection PACA – Communes, EPCI, syndicats, Epl et collectivités</title>
+<title>Prospection PACA – Communes, EPCI, syndicats, Epl, associations et collectivités</title>
 <meta name="description" content="Annuaire des entreprises publiques locales de Provence-Alpes-Côte d'Azur : sociétés d'économie mixte, sociétés publiques locales et sociétés publiques locales d'aménagement, par département. Recherche, filtres et export CSV, Excel et PDF.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -109,6 +109,20 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 .g-spla{background:#FDF4FF;color:#7E22CE}
 .g-splain{background:#F0F9FF;color:#0C4A6E}
 .g-autre{background:#F5F5F4;color:#44403C}
+.g-asso{background:#FFF1F2;color:#9F1239}
+.th-note{cursor:default}
+.th-client{cursor:default;width:54px}
+.td-client{text-align:center}
+.td-client input{width:18px;height:18px;cursor:pointer;accent-color:var(--bleu,#1E3A8A)}
+tr.est-client td{background:#F3F4F6}
+tr.est-client td:not(.td-client):not(.td-note),tr.est-client td:not(.td-client):not(.td-note) a{text-decoration:line-through;color:#9CA3AF}
+.td-dir{min-width:170px;font-size:12.5px;line-height:1.5}
+.td-dir .role{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted,#6B7280);margin-right:2px}
+.td-note{min-width:210px}
+textarea.note{width:100%;min-height:44px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font:inherit;font-size:12.5px;color:var(--text);background:var(--surface);resize:vertical}
+textarea.note:focus{outline:none;border-color:var(--bleu-l)}
+textarea.note.rempli{background:#FFFBEB;border-color:#F59E0B}
+@media print{textarea.note{border:none;resize:none}}
 
 /* ══ BADGES RÉGION ══ */
 .rbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
@@ -160,8 +174,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="header-inner">
     <div class="emblem">📇</div>
     <div class="header-text">
+      <a class="retour-tdb" href="tableau-de-bord-prospection.html" style="display:inline-block;margin-bottom:5px;color:#fff;border:1px solid rgba(255,255,255,.5);padding:3px 11px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none">&larr; Tableau de bord</a>
       <div class="header-title">Fichier de prospection &mdash; Provence-Alpes-C&ocirc;te d'Azur</div>
-      <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; D&eacute;partements &middot; R&eacute;gion</div>
+      <div class="header-sub">Communes &middot; EPCI &middot; Syndicats &middot; Epl &middot; Associations &middot; D&eacute;partements &middot; R&eacute;gion</div>
     </div>
     <div class="tricolor">
       <span style="background:#002395"></span>
@@ -185,7 +200,8 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
   <div class="disclaimer">
     <span>⚠️</span>
     <span>Sources officielles : annuaire de l'administration (DILA) pour les communes, EPCI, d&eacute;partements et R&eacute;gion ;
-    export de l'annuaire des Epl ; BANATIC pour les syndicats. Les adresses manquantes sont celles que l'organisme ne publie pas &mdash;
+    export de l'annuaire des Epl ; BANATIC pour les syndicats ; SIRENE (API Recherche d'entreprises) pour les associations
+    de 50 salari&eacute;s et plus dont le si&egrave;ge est en PACA, qui n'y publient ni adresse e-mail ni t&eacute;l&eacute;phone. Les adresses manquantes sont celles que l'organisme ne publie pas &mdash;
     les plus gros renvoient g&eacute;n&eacute;ralement vers un formulaire, dont le lien figure &agrave; la place.
     <strong>Ces coordonn&eacute;es &eacute;voluent : v&eacute;rifiez-les avant tout envoi.</strong></span>
   </div>
@@ -203,6 +219,16 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <option value="">Avec ou sans adresse</option>
       <option value="avec">Seulement avec une adresse</option>
       <option value="sans">Seulement sans adresse</option>
+    </select>
+    <select id="note-filter" name="note-filter" onchange="render()" aria-label="Filtrer sur la présence d'un commentaire">
+      <option value="">Avec ou sans commentaire</option>
+      <option value="avec">Seulement commentés</option>
+      <option value="sans">Seulement non commentés</option>
+    </select>
+    <select id="client-filter" name="client-filter" onchange="render()" aria-label="Filtrer sur les clients">
+      <option value="">Clients et prospects</option>
+      <option value="sans">Masquer les clients</option>
+      <option value="avec">Seulement les clients</option>
     </select>
     <select id="dept-filter" name="dept-filter" onchange="render()" aria-label="Filtrer par département">
       <option value="">Toute la région PACA</option>
@@ -227,6 +253,9 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Imprimer
     </button>
+    <button class="btn btn-outline" onclick="exporterNotes()" title="Télécharge vos commentaires dans un fichier, pour les sauvegarder ou les reporter sur un autre appareil">Sauvegarder commentaires et clients</button>
+    <button class="btn btn-outline" onclick="document.getElementById('import-notes').click()" title="Recharge un fichier de commentaires sauvegardé">Importer</button>
+    <input type="file" id="import-notes" accept="application/json,.json" hidden onchange="importerNotes(this)">
     <button class="btn btn-ghost" onclick="resetFilters()">Réinitialiser</button>
     <span id="count-label"></span>
   </div>
@@ -236,14 +265,17 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
     <table>
       <thead>
         <tr>
+          <th class="th-client" title="Cochez pour marquer l'organisme comme client : sa ligne est barrée">Client</th>
           <th style="width:44px">#</th>
           <th onclick="setSort('nom')">Organisme <span class="arr" id="arr-nom">↑</span></th>
           <th onclick="setSort('type')">Type <span class="arr" id="arr-type"></span></th>
           <th onclick="setSort('dept')">Département <span class="arr" id="arr-dept"></span></th>
           <th>Taille</th>
+          <th>Dirigeants</th>
           <th>Adresse</th>
           <th>Téléphone</th>
           <th onclick="setSort('email')">Courriel ou contact <span class="arr" id="arr-email"></span></th>
+          <th class="th-note">Commentaire</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -255,7 +287,7 @@ td{padding:11px 13px;vertical-align:top;font-size:13px}
 
 <footer>
   <div class="footer">
-    <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
+    <span>Sources : annuaire de l'administration (DILA) &bull; annuaire des Epl &bull; BANATIC &bull; SIRENE &bull; INSEE &bull; <span class="footer-warn">Non contractuel</span></span>
     <span>__COUNT__ organismes &bull; __VERSION__ &bull; &copy; <span id="yr"></span></span>
   </div>
 </footer>
@@ -283,11 +315,68 @@ function classeType(t){
   if(t.startsWith('Syndicat'))    return 'g-semop';
   if(t.startsWith('Epl'))         return 'g-spla';
   if(t.startsWith('Département')) return 'g-splain';
+  if(t.startsWith('Association')) return 'g-asso';
   return 'g-autre';
 }
 
 /* Les contacts collectés n'ont pas tous leur schéma. */
 function lien(u){ return /^https?:\/\//i.test(u) ? u : 'https://'+u; }
+function libelleContact(u){
+  if(/annuaire-entreprises/.test(u)) return 'Fiche officielle';
+  if(/service-public|contact|formulaire|demarche/i.test(u)) return 'Formulaire de contact';
+  return 'Site internet';
+}
+
+/* ══ COMMENTAIRES ══
+   Enregistrés dans le navigateur (localStorage) : ils ne quittent pas l'appareil
+   et ne sont visibles de personne d'autre, mais ne suivent pas non plus d'un
+   appareil à l'autre. « Sauvegarder mes commentaires » en fait un fichier, que
+   « Importer » recharge ailleurs. */
+const CLE_NOTES='prospection-paca-commentaires-v1';
+let NOTES={};
+try{ NOTES=JSON.parse(localStorage.getItem(CLE_NOTES)||'{}')||{}; }catch(e){ NOTES={}; }
+function idNote(d){ return d.type.split(' · ')[0]+'|'+d.dept+'|'+d.nom; }
+function noteDe(d){ const n=NOTES[idNote(d)]; return n&&n.t?n.t:''; }
+function estClient(d){ const n=NOTES[idNote(d)]; return !!(n&&n.c); }
+function basculerClient(case_){
+  const id=case_.dataset.id, n=NOTES[id]||{t:'',d:''};
+  if(case_.checked) n.c=1; else delete n.c;
+  n.d=new Date().toISOString().slice(0,10);
+  if(n.t||n.c) NOTES[id]=n; else delete NOTES[id];
+  if(ecrireNotes()) showToast(case_.checked?'Marqué comme client':'Marque client retirée','#065F46',1800);
+  if(document.getElementById('client-filter').value) render(); else case_.closest('tr').classList.toggle('est-client',case_.checked);
+}
+function ecrireNotes(){
+  try{ localStorage.setItem(CLE_NOTES,JSON.stringify(NOTES)); return true; }
+  catch(e){ showToast("Ce navigateur refuse l'enregistrement : le commentaire sera perdu à la fermeture de la page.",'#B91C1C',6000); return false; }
+}
+function enregistrerNote(zone){
+  const t=zone.value.trim(), id=zone.dataset.id;
+  const ancien=NOTES[id]||{};
+  if(t||ancien.c){ NOTES[id]={t:t,d:new Date().toISOString().slice(0,10)}; if(ancien.c) NOTES[id].c=1; } else delete NOTES[id];
+  zone.classList.toggle('rempli',!!t);
+  if(ecrireNotes()) showToast(t?'Commentaire enregistré':'Commentaire supprimé','#065F46',1800);
+}
+function exporterNotes(){
+  const n=Object.keys(NOTES).length;
+  if(!n){ showToast('Aucun commentaire ni client à sauvegarder.','#B45309',3000); return; }
+  const blob=new Blob([JSON.stringify(NOTES,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='commentaires-prospection-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  showToast(n+' commentaire'+(n>1?'s':'')+' sauvegardé'+(n>1?'s':''),'#065F46',3000);
+}
+function importerNotes(champ){
+  const f=champ.files[0]; if(!f) return;
+  f.text().then(txt=>{
+    const lus=JSON.parse(txt); let n=0;
+    Object.keys(lus).forEach(id=>{
+      const v=lus[id];
+      if(v&&typeof v.t==='string'&&(v.t.trim()||v.c)&&(!NOTES[id]||(v.d||'')>=(NOTES[id].d||''))){ NOTES[id]={t:v.t.slice(0,2000),d:String(v.d||'').slice(0,10)}; if(v.c) NOTES[id].c=1; n++; }
+    });
+    ecrireNotes(); render(); showToast(n+' commentaire'+(n>1?'s':'')+' importé'+(n>1?'s':''),'#065F46',3000);
+  }).catch(()=>showToast("Ce fichier n'est pas une sauvegarde de commentaires.",'#B91C1C',5000));
+  champ.value='';
+}
 
 let sortField='nom', sortDir='asc';
 
@@ -301,7 +390,20 @@ Object.keys(DEPTS).sort((a,b)=>(a==='MC')-(b==='MC')||a.localeCompare(b,'fr')).f
   o.value=c; o.textContent=(c==='MC')?DEPTS[c]:`${c} — ${DEPTS[c]}`;
   document.getElementById('dept-filter').appendChild(o);
 });
-fillSelect('type-filter', TYPES);
+/* Une famille à plusieurs sous-types (Association, Epl, Syndicat) reçoit une
+   entrée « tous » : le filtre accepte alors le préfixe de la famille. */
+(function(){
+  const familles={};
+  TYPES.forEach(t=>{const f=t.split(' · ')[0]; if(f!==t) familles[f]=(familles[f]||0)+1;});
+  const vues=new Set(), options=[];
+  TYPES.forEach(t=>{
+    const f=t.split(' · ')[0];
+    if(f!==t&&familles[f]>1&&!vues.has(f)){vues.add(f);options.push([f,f+' · tous']);}
+    options.push([t,t]);
+  });
+  const sel=document.getElementById('type-filter');
+  options.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o);});
+})();
 
 /* ══ HELPERS ══ */
 function fmt(n){return Number(n||0).toLocaleString('fr-FR')}
@@ -330,11 +432,17 @@ function getFiltered(){
   const mail=document.getElementById('mail-filter').value;
   const rows=DATA.filter(d=>{
     if(dep&&d.dept!==dep)return false;
-    if(typ&&d.type!==typ)return false;
+    if(typ&&d.type!==typ&&!d.type.startsWith(typ+' · '))return false;
+    const nf=document.getElementById('note-filter').value;
+    if(nf==='avec'&&!noteDe(d))return false;
+    if(nf==='sans'&&noteDe(d))return false;
+    const cf=document.getElementById('client-filter').value;
+    if(cf==='avec'&&!estClient(d))return false;
+    if(cf==='sans'&&estClient(d))return false;
     if(mail==='avec'&&!d.email)return false;
     if(mail==='sans'&&d.email)return false;
     if(!q)return true;
-    return [d.nom,d.type,d.dept,DEPTS[d.dept],d.adresse,d.email,d.tel,d.taille]
+    return [d.nom,d.type,d.dept,DEPTS[d.dept],d.adresse,d.email,d.tel,d.taille,d.dirigeants]
       .some(v=>String(v||'').toLowerCase().includes(q));
   });
   rows.sort((a,b)=>{
@@ -351,22 +459,26 @@ function render(){
   const rows=getFiltered();
   const tbody=document.getElementById('tbody');
   if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="11"><div class="empty"><div class="empty-ico">🔎</div><p>Aucun organisme ne correspond à cette recherche.</p></div></td></tr>';
   } else {
     tbody.innerHTML=rows.map((d,i)=>`
-    <tr>
+    <tr class="${estClient(d)?'est-client':''}">
+      <td class="td-client"><input type="checkbox" aria-label="${esc(d.nom)} est client" data-id="${esc(idNote(d))}" ${estClient(d)?'checked':''} onchange="basculerClient(this)"></td>
       <td class="td-rank">${i+1}</td>
       <td><div class="struct">${esc(d.nom)}</div></td>
       <td><span class="gbadge ${classeType(d.type)}">${esc(d.type)}</span></td>
       <td><span class="rbadge r${DEPT_COULEUR[d.dept]||0}">${esc(DEPTS[d.dept]||d.dept)}</span><br><span class="dept-tag">${esc(d.dept)}</span></td>
       <td class="pop">${esc(d.taille)}</td>
+      <td class="td-dir">${(d.dirigeants||'').split(' · ').filter(Boolean).map(x=>{const i=x.indexOf(' : ');return i<0?esc(x):`<span class="role">${esc(x.slice(0,i))}</span> ${esc(x.slice(i+3))}`;}).join('<br>')}</td>
       <td><span class="adresse">${esc(d.adresse)}</span></td>
       <td class="tel">${d.tel?`<a href="tel:${d.tel.replace(/[^0-9+]/g,'')}" style="color:inherit;text-decoration:none">${esc(d.tel)}</a>`:''}</td>
       <td>${d.email
         ? `<a class="web-link" href="mailto:${esc(d.email)}">${esc(d.email)}</a>`
         : d.contact
-          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">Formulaire de contact ↗</a>`
+          ? `<a class="web-link" href="${esc(lien(d.contact))}" target="_blank" rel="noopener">${libelleContact(d.contact)} ↗</a>`
           : '<span class="web-na">Non disponible</span>'}</td>
+      <td class="td-note"><textarea class="note${noteDe(d)?' rempli':''}" rows="2" maxlength="2000" aria-label="Commentaire sur ${esc(d.nom)}"
+        placeholder="Ajouter un commentaire…" data-id="${esc(idNote(d))}" onchange="enregistrerNote(this)">${esc(noteDe(d))}</textarea></td>
     </tr>`).join('');
   }
   document.getElementById('s-total').textContent=fmt(DATA.length);
@@ -379,7 +491,7 @@ function render(){
 }
 
 function resetFilters(){
-  ['search','dept-filter','type-filter','mail-filter'].forEach(id=>document.getElementById(id).value='');
+  ['search','dept-filter','type-filter','mail-filter','note-filter','client-filter'].forEach(id=>document.getElementById(id).value='');
   sortField='nom';sortDir='asc';
   document.querySelectorAll('.arr').forEach(el=>el.textContent='');
   document.getElementById('arr-nom').textContent='↑';
@@ -474,11 +586,11 @@ function triggerDownload(blob, filename){
   setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},2000);
 }
 
-const COLUMNS=['Rang','Organisme','Type','Département','Code dép.','Taille','Adresse',
-               'Téléphone','Courriel','Contact officiel'];
+const COLUMNS=['Rang','Organisme','Type','Département','Code dép.','Taille','Dirigeants','Adresse',
+               'Téléphone','Courriel','Contact officiel','Commentaire','Client'];
 function toRow(d,i){
-  return [i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.dept,d.taille,d.adresse,
-          d.tel||'',d.email||'',d.contact||''];
+  return [i+1,d.nom,d.type,DEPTS[d.dept]||d.dept,d.dept,d.taille,d.dirigeants||'',d.adresse,
+          d.tel||'',d.email||'',d.contact||'',noteDe(d),estClient(d)?'oui':''];
 }
 
 /* ══ EXPORT CSV ══ */
@@ -503,15 +615,15 @@ function exportSheets(){
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:5},{wch:46},{wch:22},{wch:24},{wch:9},{wch:16},{wch:44},
-                 {wch:17},{wch:32},{wch:40}];
+                 {wch:17},{wch:32},{wch:40},{wch:50},{wch:40},{wch:8}];
     ws['!freeze']={xSplit:0,ySplit:1};
     XLSX.utils.book_append_sheet(wb,ws,'Prospection');
 
     const meta=XLSX.utils.aoa_to_sheet([
       ['Fichier de prospection — Provence-Alpes-Côte d\'Azur'],
-      ['Communes, EPCI, syndicats, Epl, départements et Région'],
+      ['Communes, EPCI, syndicats, Epl, associations, départements et Région'],
       [''],
-      ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, INSEE'],
+      ['Sources','Annuaire de l\'administration (DILA), annuaire des Epl, BANATIC, SIRENE, INSEE'],
       ['Date d\'export', '__EXPORT_DATE__'],
       ['Enrichissement','API Annuaire des Entreprises (dirigeants, adresses, contacts)'],
       ['Version', '__VERSION__'],
@@ -550,7 +662,7 @@ function exportPDF(){
     doc.setFontSize(13);
     doc.text('Fichier de prospection — Provence-Alpes-Côte d\'Azur',12,8);
     doc.setFontSize(8);
-    doc.text('Communes · EPCI · Syndicats · Epl · '+rows.length+' organismes — '+new Date().toLocaleDateString('fr-FR'),12,14);
+    doc.text('Communes · EPCI · Syndicats · Epl · Associations · '+rows.length+' organismes — '+new Date().toLocaleDateString('fr-FR'),12,14);
 
     doc.autoTable({
       startY:23,
