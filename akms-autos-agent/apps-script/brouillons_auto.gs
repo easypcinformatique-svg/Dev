@@ -99,7 +99,7 @@ function copierBoiteAmks() {
     sh = ss.insertSheet(BA_BOITE_TAB);
     sh.setFrozenRows(1);
   }
-  const moi = Session.getEffectiveUser().getEmail().toLowerCase();
+  const moi = 'amks.autos2308@gmail.com'; // pas de Session.getEffectiveUser() : éviterait une nouvelle autorisation
   const fils = GmailApp.search('newer_than:21d -category:promotions -category:social', 0, 150);
   const lignes = [];
   fils.forEach((f) => {
