@@ -1,0 +1,52 @@
+name: Alerte loyers
+
+on:
+  schedule:
+    # Le 10 : récapitulatif complet (vers 9h, heure de Paris)
+    - cron: '17 7 10 * *'
+    # Le 15 : rappel, seulement si un loyer manque encore
+    - cron: '17 7 15 * *'
+  workflow_dispatch:
+    inputs:
+      mois:
+        description: 'Mois à vérifier (AAAA-MM), vide = mois en cours'
+        required: false
+        default: ''
+
+concurrency:
+  group: alerte-loyers
+  cancel-in-progress: false
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: alerte-loyers
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Vérifier les loyers
+        env:
+          EB_APP_ID: ${{ secrets.EB_APP_ID }}
+          EB_CLE_PRIVEE: ${{ secrets.EB_CLE_PRIVEE }}
+          EB_SESSIONS: ${{ secrets.EB_SESSIONS }}
+          BAUX_JSON: ${{ secrets.BAUX_JSON }}
+          GMAIL_ADRESSE: ${{ secrets.GMAIL_ADRESSE }}
+          GMAIL_MOT_DE_PASSE_APPLI: ${{ secrets.GMAIL_MOT_DE_PASSE_APPLI }}
+          ALERTE_DESTINATAIRE: ${{ secrets.ALERTE_DESTINATAIRE }}
+          NTFY_SUJET: ${{ secrets.NTFY_SUJET }}
+          MOIS: ${{ github.event.inputs.mois }}
+          RAPPEL: ${{ github.event.schedule == '17 7 15 * *' }}
+        run: |
+          args=()
+          [ -n "$MOIS" ] && args+=(--mois "$MOIS")
+          [ "$RAPPEL" = "true" ] && args+=(--seulement-si-probleme)
+          python alerte_loyers.py "${args[@]}"
