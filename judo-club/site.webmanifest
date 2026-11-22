@@ -1,0 +1,14 @@
+{
+  "name": "Judo Club Cadeneaux OJM",
+  "short_name": "JC Cadeneaux",
+  "description": "Club de judo et ju-jitsu aux Cadeneaux, Les Pennes-Mirabeau (13170).",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "lang": "fr-FR",
+  "icons": [
+    { "src": "/images/logo.png", "sizes": "196x196", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

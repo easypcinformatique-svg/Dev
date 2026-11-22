@@ -1,0 +1,103 @@
+name: Deploy Judo Club Cadeneaux
+
+# Le monorepo Dev reste la source de verite.
+# Ce job recopie judo-club/ a la racine du depot de publication
+# easypcinformatique-svg/jccadeneaux-ojm, dont GitHub Pages sert la branche main
+# sur le domaine jccadeneaux-ojm.fr.
+#
+# Pourquoi un depot separe : un depot ne peut heberger qu'UN seul site Pages, et
+# celui de Dev est deja pris (deploy-calculator.yml, deploy-auction-scanner.yml).
+# Un domaine personnalise s'applique au site Pages entier, pas a un sous-dossier.
+#
+# Prerequis : secret JUDO_DEPLOY_TOKEN = PAT fine-grained, portee
+# easypcinformatique-svg/jccadeneaux-ojm, permission "Contents: Read and write".
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'judo-club/**'
+      - '.github/workflows/deploy-judo-club.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-judo-club
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Publier sur jccadeneaux-ojm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du monorepo
+        uses: actions/checkout@v4
+
+      - name: Verifier le token de publication
+        id: guard
+        env:
+          PAT: ${{ secrets.JUDO_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$PAT" ]; then
+            echo "::warning::JUDO_DEPLOY_TOKEN absent - publication ignoree."
+            echo "Creer un PAT fine-grained (Contents: Read and write) sur le depot"
+            echo "jccadeneaux-ojm, puis l'ajouter dans Settings > Secrets > Actions."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Controles avant publication
+        if: steps.guard.outputs.ok == 'true'
+        run: |
+          set -e
+          test -f judo-club/index.html   || { echo "index.html manquant"; exit 1; }
+          test -f judo-club/CNAME        || { echo "CNAME manquant"; exit 1; }
+          test -f judo-club/.nojekyll    || { echo ".nojekyll manquant"; exit 1; }
+          grep -qx 'jccadeneaux-ojm.fr' judo-club/CNAME \
+            || { echo "CNAME ne contient pas le bon domaine"; exit 1; }
+          echo "Structure OK."
+
+      - name: Verifier que toutes les images referencees existent
+        if: steps.guard.outputs.ok == 'true'
+        run: |
+          python3 - <<'EOF'
+          import glob, os, re, sys
+
+          manquantes = []
+          for page in glob.glob('judo-club/*.html') + glob.glob('judo-club/blog/*.html'):
+              html = open(page, encoding='utf-8').read()
+              # les blocs en commentaire (galerie en attente de photos) ne comptent pas
+              html = re.sub(r'<!--.*?-->', '', html, flags=re.S)
+              for ref in re.findall(r'src="(images/[^"]+)"', html):
+                  if not os.path.isfile(os.path.join('judo-club', ref)):
+                      manquantes.append((page, ref))
+
+          for page, ref in manquantes:
+              print(f"image manquante : {ref} (reference par {page})")
+          if manquantes:
+              sys.exit(1)
+          print("Toutes les images referencees sont presentes.")
+          EOF
+
+      - name: Recopier le site dans le depot de publication
+        if: steps.guard.outputs.ok == 'true'
+        env:
+          PAT: ${{ secrets.JUDO_DEPLOY_TOKEN }}
+        run: |
+          set -e
+          git clone --depth 1 \
+            "https://x-access-token:${PAT}@github.com/easypcinformatique-svg/jccadeneaux-ojm.git" \
+            site
+          # --delete pour que les fichiers retires du monorepo disparaissent du site
+          rsync -a --delete --exclude '.git' judo-club/ site/
+          cd site
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Aucun changement a publier."
+          else
+            git commit -m "Publication depuis Dev@${GITHUB_SHA::7}"
+            git push origin HEAD:main
+            echo "Publie sur https://jccadeneaux-ojm.fr/"
+          fi
