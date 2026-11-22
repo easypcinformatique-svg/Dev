@@ -1,0 +1,585 @@
+/* ————— Capital Défi — thème « carnet de voyage » ————— */
+
+:root {
+  --creme: #faf3e6;
+  --papier: #fffdf7;
+  --encre: #2c3648;
+  --encre-douce: #5c6a80;
+  --bleu: #1d6fa5;
+  --bleu-fonce: #14213d;
+  --corail: #e8604c;
+  --sable: #f2c14e;
+  --vert: #3a9d6e;
+  --bordure: #e6d9bf;
+  --ombre: 0 2px 10px rgba(44, 54, 72, 0.08);
+  --rayon: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(242, 193, 78, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(29, 111, 165, 0.07), transparent 45%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(44, 54, 72, 0.025) 23px 24px),
+    var(--creme);
+  color: var(--encre);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .question { font-family: Georgia, 'Times New Roman', serif; }
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--bleu);
+  outline-offset: 2px;
+}
+
+.ecran {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ————— Accueil ————— */
+
+.entete-accueil { text-align: center; padding-top: 12px; }
+
+.globe { font-size: 56px; }
+
+.entete-accueil h1 {
+  font-size: 40px;
+  color: var(--bleu-fonce);
+  letter-spacing: 0.5px;
+}
+
+.slogan { color: var(--encre-douce); font-size: 16px; }
+
+.titre-section {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--encre-douce);
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.grille-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.carte-mode {
+  background: var(--papier);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  box-shadow: var(--ombre);
+  transition: transform 0.1s ease, border-color 0.15s ease;
+  min-height: 48px;
+}
+
+.carte-mode:active { transform: scale(0.97); }
+
+.carte-mode.actif { border-color: var(--bleu); background: #eef5fb; }
+
+.icone-mode { font-size: 34px; }
+.nom-mode { font-weight: 700; font-size: 18px; }
+.desc-mode { font-size: 13px; color: var(--encre-douce); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.chip {
+  background: var(--papier);
+  border: 2px dashed var(--bordure);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 15px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip.actif {
+  border-style: solid;
+  border-color: var(--corail);
+  background: #fdf0ed;
+  font-weight: 700;
+}
+
+.compte {
+  background: var(--sable);
+  color: var(--bleu-fonce);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.meilleur-score { text-align: center; color: var(--encre-douce); }
+
+.bouton-principal {
+  background: var(--corail);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  border-radius: var(--rayon);
+  padding: 16px;
+  min-height: 56px;
+  box-shadow: 0 4px 0 #c44a38;
+  transition: transform 0.1s ease;
+}
+
+.bouton-principal:active { transform: translateY(2px); box-shadow: 0 2px 0 #c44a38; }
+
+.bouton-secondaire {
+  color: var(--bleu);
+  font-weight: 600;
+  padding: 12px;
+  min-height: 48px;
+}
+
+.pied-accueil {
+  text-align: center;
+  color: var(--encre-douce);
+  font-size: 13px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+/* ————— Quiz solo ————— */
+
+.entete-quiz { display: flex; flex-direction: column; gap: 10px; }
+
+.bouton-fermer {
+  align-self: flex-start;
+  font-size: 20px;
+  color: var(--encre-douce);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--papier);
+  border: 1px solid var(--bordure);
+}
+
+.barre-progression {
+  height: 10px;
+  background: var(--bordure);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barre-remplie {
+  height: 100%;
+  background: var(--bleu);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.infos-quiz {
+  display: flex;
+  justify-content: space-between;
+  color: var(--encre-douce);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.corps-quiz { display: flex; flex-direction: column; gap: 16px; }
+
+.drapeau {
+  font-size: 84px;
+  text-align: center;
+  line-height: 1.1;
+  filter: drop-shadow(0 3px 6px rgba(44, 54, 72, 0.2));
+}
+
+.question { font-size: 24px; text-align: center; color: var(--bleu-fonce); }
+
+.choix { display: flex; flex-direction: column; gap: 10px; }
+
+.bouton-choix {
+  background: var(--papier);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 14px 16px;
+  font-size: 18px;
+  font-weight: 600;
+  min-height: 56px;
+  text-align: center;
+  box-shadow: var(--ombre);
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.bouton-choix:not(:disabled):active { transform: scale(0.98); }
+
+.bouton-choix.correct { background: #e5f5ec; border-color: var(--vert); color: #1e6b47; }
+.bouton-choix.incorrect { background: #fdeae7; border-color: var(--corail); color: #a33a2a; }
+.bouton-choix.estompe { opacity: 0.5; }
+
+.panneau-feedback {
+  background: var(--papier);
+  border: 2px dashed var(--sable);
+  border-radius: var(--rayon);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.verdict { font-weight: 700; font-size: 18px; }
+.verdict.bon { color: var(--vert); }
+.verdict.mauvais { color: var(--corail); }
+
+.anecdote { color: var(--encre); font-size: 16px; }
+
+/* ————— Résultat ————— */
+
+.resultat { justify-content: center; text-align: center; gap: 14px; }
+
+.emoji-final { font-size: 72px; }
+
+.resultat h1 { font-size: 44px; color: var(--bleu-fonce); }
+
+.message-final { font-size: 18px; color: var(--encre-douce); }
+
+.record { font-weight: 700; }
+
+.score-duel-final { display: flex; gap: 16px; justify-content: center; font-size: 20px; }
+
+/* ————— Duel ————— */
+
+.ecran.duel {
+  max-width: none;
+  padding: 0;
+  gap: 0;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.moitie {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  overflow: hidden;
+}
+
+.moitie.retournee { transform: rotate(180deg); background: #f6ede0; }
+
+.drapeau-duel { font-size: 44px; }
+
+.question-duel {
+  font-size: 17px;
+  text-align: center;
+  color: var(--bleu-fonce);
+  font-weight: 700;
+}
+
+.choix-duel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.bouton-duel { font-size: 15px; min-height: 52px; padding: 8px; }
+
+.barre-centrale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 12px;
+  background: var(--bleu-fonce);
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.barre-centrale .bouton-fermer {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  position: absolute;
+  left: 10px;
+}
+
+.manche { font-weight: 700; }
+
+.badge-j1, .badge-j2 { font-weight: 700; }
+
+.bouton-suivant-duel {
+  font-size: 15px;
+  min-height: 40px;
+  padding: 8px 14px;
+  position: absolute;
+  right: 10px;
+  box-shadow: none;
+}
+
+/* ————— Carte du monde ————— */
+
+.ligne-titre-destination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ligne-titre-destination .titre-section { margin-bottom: 0; }
+
+.cadre-carte {
+  background: var(--papier);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 10px;
+}
+
+.carte-monde { display: block; width: 100%; height: auto; }
+
+.continent {
+  fill: #dcebf5;
+  stroke: var(--bleu);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 0.15s ease, transform 0.15s ease;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.continent:hover { fill: #fbe9c8; }
+
+.continent:focus-visible {
+  outline: none;
+  stroke: var(--corail);
+  stroke-width: 2.6;
+  stroke-dasharray: none;
+}
+
+.continent.choisi {
+  fill: var(--sable);
+  stroke: var(--corail);
+  stroke-dasharray: none;
+  stroke-width: 2.2;
+  transform: scale(1.03);
+}
+
+.ile { fill: #dcebf5; stroke: var(--bleu); stroke-width: 1; }
+
+.etiquette-continent {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 9.5px;
+  fill: var(--encre-douce);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.legende-carte {
+  text-align: center;
+  color: var(--encre-douce);
+  font-size: 14px;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ————— Atlas ————— */
+
+.ligne-entete-atlas { display: flex; align-items: center; gap: 12px; }
+
+.titre-atlas { font-size: 26px; color: var(--bleu-fonce); }
+
+.champ-recherche {
+  width: 100%;
+  font: inherit;
+  padding: 13px 16px;
+  min-height: 50px;
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--papier);
+  color: var(--encre);
+  box-shadow: var(--ombre);
+}
+
+.champ-recherche:focus {
+  outline: none;
+  border-color: var(--bleu);
+}
+
+.chips-defilantes {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.chips-defilantes::-webkit-scrollbar { display: none; }
+
+.chip-compacte { min-height: 42px; padding: 6px 14px; font-size: 14px; white-space: nowrap; }
+
+.compte-resultats { color: var(--encre-douce); font-size: 14px; font-weight: 600; }
+
+.liste-pays { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+.ligne-pays {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--papier);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 10px 14px;
+  min-height: 60px;
+  box-shadow: var(--ombre);
+  text-align: left;
+  transition: transform 0.1s ease;
+}
+
+.ligne-pays:active { transform: scale(0.98); }
+
+.drapeau-liste { font-size: 32px; }
+
+.nom-pays-liste { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.nom-pays-liste strong { font-size: 17px; }
+
+.capitale-liste { color: var(--encre-douce); font-size: 14px; }
+
+.chevron { color: var(--encre-douce); font-size: 24px; }
+
+.vide-atlas {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--encre-douce);
+}
+
+.emoji-vide { font-size: 44px; }
+
+.astuce-vide { font-size: 14px; margin-top: 6px; }
+
+/* ————— Fiche pays ————— */
+
+.entete-fiche { display: flex; }
+
+.heros-fiche { text-align: center; }
+
+.drapeau-fiche { font-size: 96px; }
+
+.heros-fiche h1 { font-size: 34px; color: var(--bleu-fonce); }
+
+.sous-titre-fiche {
+  color: var(--encre-douce);
+  font-size: 18px;
+  font-style: italic;
+}
+
+.details-fiche {
+  background: var(--papier);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  overflow: hidden;
+}
+
+.ligne-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 13px 16px;
+}
+
+.ligne-detail + .ligne-detail { border-top: 1px dashed var(--bordure); }
+
+.ligne-detail dt {
+  color: var(--encre-douce);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ligne-detail dd { text-align: right; font-weight: 600; }
+
+.carte-anecdote {
+  background: var(--papier);
+  border: 2px dashed var(--sable);
+  border-radius: var(--rayon);
+  padding: 16px;
+}
+
+/* ————— Carte Atlas sur l'accueil ————— */
+
+.carte-atlas { border: 2px dashed var(--bleu); }
+
+.icone-atlas { font-size: 30px; }
+
+.texte-atlas { display: flex; flex-direction: column; flex: 1; }
+
+.texte-atlas strong { font-size: 17px; }
+
+.texte-atlas span:not(strong) { color: var(--encre-douce); font-size: 13px; }
+
+/* ————— Animations douces ————— */
+
+@keyframes apparition {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.corps-quiz, .panneau-feedback, .heros-fiche, .details-fiche,
+.carte-anecdote, .resultat > * {
+  animation: apparition 0.25s ease both;
+}
+
+@keyframes celebration {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.emoji-final { animation: celebration 0.5s ease both; }
+
+/* ————— Divers ————— */
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+@media (min-width: 640px) {
+  .ecran.duel { max-width: 640px; margin: 0 auto; }
+}
