@@ -1,0 +1,54 @@
+name: Publier le site AMKS Autos sur gh-pages
+
+# Copie amks-autos/ dans le dossier amks-autos/ de la branche gh-pages, sans
+# toucher aux autres pages publiées (annuaires, etc.). Le site est alors en ligne à
+# https://<propriétaire>.github.io/<dépôt>/amks-autos/ quelques minutes après chaque modification.
+# Le dossier _apercus/ (captures locales) et l'outil de fabrication de l'aperçu ne sont pas publiés.
+
+on:
+  push:
+    branches: [master, claude/magical-faraday-7ojfsi]
+    paths: ['amks-autos/**', '.github/workflows/deploy-amks-autos.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-annuaires   # même file que les autres publications vers gh-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+      - name: Copier le site
+        run: |
+          set -euo pipefail
+          rm -rf site/amks-autos
+          mkdir -p site/amks-autos
+          rsync -a --exclude '_apercus/' --exclude 'outils/' --exclude '.gitignore' --exclude 'README.md' source/amks-autos/ site/amks-autos/
+      - name: Commit et push
+        run: |
+          set -euo pipefail
+          cd site
+          git add -A amks-autos
+          if git diff --cached --quiet; then echo "Rien de nouveau à publier."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Publier le site AMKS Autos (${GITHUB_SHA::7})"
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q origin gh-pages && git push -q origin gh-pages && { echo "Poussé (tentative $i)"; exit 0; }
+            echo "Push rejeté, nouvelle tentative…"; sleep $((i * 5))
+          done
+          echo "::error::Push impossible après 5 tentatives"; exit 1
+      - name: Récapitulatif
+        run: |
+          echo "Site en ligne : https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/amks-autos/" >> "$GITHUB_STEP_SUMMARY"
