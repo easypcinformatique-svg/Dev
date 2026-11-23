@@ -403,6 +403,83 @@ if not os.path.exists(_ICONE):
     except Exception as _e:                      # Pillow absent : on s'en passe
         log("apple-touch-icon.png", f"non dessinée ({_e})")
 
+# ---------- variantes d'images ----------
+# Le site servait ses photos en pleine résolution à tout le monde : 1 400 px
+# pour un emplacement de 270, et 5 Mo d'images sur l'accueil d'un téléphone.
+# On fabrique des versions réduites en WebP et on laisse le navigateur choisir.
+#
+# L'échelle n'est pas ronde par hasard. Les emplacements mesurés font 270, 322
+# et 328 px de large sur un écran de 360, et 586 à 736 sur un écran large ; en
+# doublant pour les écrans à forte densité, il faut des barreaux vers 540, 650
+# et 740. D'où 320 / 580 / 780 / 1000, chacun juste au-dessus d'un besoin réel.
+# Une échelle mal placée fait choisir le barreau du dessus et annule le gain.
+LARGEURS_IMAGE = (320, 580, 780, 1000)
+QUALITE_WEBP = 80
+EXT_IMAGE = re.compile(r"\.(jpe?g|png|webp)$", re.I)
+
+# Combien de place l'image occupe-t-elle vraiment, selon l'écran ? Sans cette
+# indication le navigateur suppose toute la largeur de la fenêtre et reprend
+# la plus grande version : srcset seul ne sert alors à rien.
+TAILLES_IMAGE = {
+    "carte":   "(max-width:640px) 100vw, 480px",   # photo zoomée par transform
+    "apropos": "(max-width:640px) 92vw, 540px",
+    "galerie": "(max-width:640px) 92vw, 580px",
+    "sortie":  "(max-width:640px) 78vw, 700px",
+    "ville":   "(max-width:640px) 92vw, 740px",
+    "defaut":  "(max-width:640px) 92vw, 700px",
+}
+_largeurs_connues = {}
+
+
+def largeur_image(fichier):
+    if fichier not in _largeurs_connues:
+        try:
+            from PIL import Image
+            with Image.open(fichier) as im:
+                _largeurs_connues[fichier] = im.size[0]
+        except Exception:
+            _largeurs_connues[fichier] = 0
+    return _largeurs_connues[fichier]
+
+
+def variantes_image(fichier):
+    """Crée les versions réduites manquantes. Renvoie [(largeur, chemin)]."""
+    try:
+        from PIL import Image
+        with Image.open(fichier) as im:
+            w = im.size[0]
+            _largeurs_connues[fichier] = w
+            if w < 400:
+                return []
+            sortie = []
+            for L in LARGEURS_IMAGE:
+                # 0,92 : au-delà, la « réduction » pèserait autant que l'original.
+                if L >= w * 0.92:
+                    break
+                cible = EXT_IMAGE.sub(f"-{L}w.webp", fichier)
+                if not os.path.exists(cible):
+                    co = im.convert("RGB") if im.mode in ("P", "RGBA", "LA") else im.copy()
+                    co.thumbnail((L, 10 ** 6), Image.LANCZOS)
+                    co.save(cible, "WEBP", quality=QUALITE_WEBP, method=5)
+                sortie.append((L, cible))
+            return sortie
+    except Exception:
+        return []
+
+
+def _contexte_image(tag, avant):
+    t = tag + avant[-220:]
+    if "about-img" in t:
+        return "apropos"
+    if "gal-item" in t:
+        return "galerie"
+    if "sortie-photo" in t or "monument-card" in t:
+        return "sortie"
+    if "ville-photo" in t or "/img/ville" in t:
+        return "ville"
+    return "defaut"
+
+
 # ---------- per-page invariants ----------
 pages = sorted(glob.glob(os.path.join(SITE, "**", "*.html"), recursive=True))
 for path in pages:
@@ -1237,6 +1314,142 @@ for path in pages:
                 and k not in {sans_accent(n) for n in CARTE["hors_depliant_conservees"]}]
         if hors:
             log(rel, f"ALERTE recettes du formulaire absentes du dépliant : {', '.join(hors)}")
+
+    # 6z0. Les images. Trois chemins mènent à une photo sur ce site, et il faut
+    # les traiter tous les trois : les balises <img> écrites dans la page, les
+    # photos de la carte posées par le script, et le fond du bandeau qui est
+    # une image CSS — srcset ne peut rien pour cette dernière.
+    _vus_img = [0]
+
+    def _reecrire_img(m):
+        tag = m.group(0)
+        src = re.search(r'\ssrc="([^"]+)"', tag)
+        if not src:
+            return tag
+        s = src.group(1)
+        if s.startswith(("http", "data:")) or not EXT_IMAGE.search(s):
+            return tag
+        base = SITE if s.startswith("/") else os.path.dirname(path)
+        f = os.path.normpath(os.path.join(base, s.lstrip("/")))
+        if not os.path.exists(f):
+            return tag
+        vs = variantes_image(f)
+        if not vs:
+            return tag
+        if s.startswith("/"):
+            chemin = lambda cb: "/" + os.path.relpath(cb, SITE).replace(os.sep, "/")
+        else:
+            chemin = lambda cb: os.path.join(os.path.dirname(s), os.path.basename(cb)).replace(os.sep, "/")
+        jeu = ", ".join([f"{chemin(cb)} {L}w" for L, cb in vs] + [f"{s} {largeur_image(f)}w"])
+        t = re.sub(r'\ssrcset="[^"]*"', "", tag)
+        t = re.sub(r'\ssizes="[^"]*"', "", t)
+        # type="image/webp" sur un <img> ne veut rien dire : cet attribut
+        # appartient à <source>, dans un <picture>.
+        t = re.sub(r'\stype="image/[^"]*"', "", t)
+        # On retire aussi le decoding qu'on avait posé : sans cela il se
+        # retrouve avant srcset au passage suivant, la balise change de forme
+        # sans changer de sens, et le guard ne converge pas.
+        t = re.sub(r'\sdecoding="async"', "", t)
+        ajout = f' srcset="{jeu}" sizes="{TAILLES_IMAGE[_contexte_image(tag, c[:m.start()])]}"'
+        if "loading=" not in t and "fetchpriority" not in t:
+            ajout += ' loading="lazy"'
+        if "decoding=" not in t:
+            ajout += ' decoding="async"'
+        _vus_img[0] += 1
+        return t[:-1].rstrip() + ajout + ">"
+
+    avant_img = c
+    c = re.sub(r"<img\b[^>]*>", _reecrire_img, c)
+    if c != avant_img:
+        log(rel, f"images : {_vus_img[0]} balise(s) pourvue(s) de versions réduites")
+
+    # Les photos de la carte sont créées par le script, qui ne connaît pas les
+    # fichiers disponibles : on lui passe la table.
+    if "const pizzaPhotos" in c:
+        bloc = re.search(r"const pizzaPhotos\s*=\s*\{(.*?)\n\};", c, re.DOTALL)
+        table = {}
+        for ph in sorted(set(re.findall(r"'([^']+\.(?:jpe?g|png|webp))'",
+                                        bloc.group(1) if bloc else ""))):
+            f = os.path.join(SITE, ph)
+            vs = variantes_image(f) if os.path.exists(f) else []
+            if vs:
+                table[ph] = ", ".join([f"{os.path.basename(cb)} {L}w" for L, cb in vs]
+                                      + [f"{ph} {largeur_image(f)}w"])
+        ancien = c
+        # Le saut de ligne posé avec la table doit partir avec elle, sinon la
+        # page gagne une ligne vide à chaque passage et le guard ne converge
+        # jamais.
+        c = re.sub(r"const SRCSET_CARTE=\{.*?\};\n?", "", c, flags=re.DOTALL)
+        c = c.replace("const pizzaPhotos",
+                      "const SRCSET_CARTE=" + json.dumps(table, ensure_ascii=False)
+                      + ";\nconst pizzaPhotos", 1)
+        vieille_pose = "img.src=photo;img.alt=h3.textContent;img.className='menu-card-img';"
+        if vieille_pose in c:
+            c = c.replace(vieille_pose,
+                          "img.src=photo;"
+                          "if(typeof SRCSET_CARTE!=='undefined'&&SRCSET_CARTE[photo]){"
+                          "img.srcset=SRCSET_CARTE[photo];"
+                          "img.sizes='" + TAILLES_IMAGE["carte"] + "';}"
+                          "img.loading='lazy';img.decoding='async';"
+                          "img.alt=h3.textContent;img.className='menu-card-img';")
+        if c != ancien:
+            log(rel, f"carte : {len(table)} photo(s) déclarées en versions réduites")
+
+    # Le fond du bandeau. Aucune balise ne le porte : on recopie la déclaration
+    # du site en n'échangeant que le nom du fichier, pour ne pas perdre le
+    # voile sombre qui rend le texte lisible par-dessus.
+    if "hero-mozza" in c and "</head>" in c:
+        regles = []
+        # On lit les règles du site, pas la nôtre : sans cette mise à l'écart,
+        # le passage suivant reprend la règle injectée comme s'il s'agissait
+        # d'une déclaration d'origine et en empile une de plus à chaque fois.
+        c_sans_notre_regle = re.sub(r'<style id="bandeau-petit-ecran">.*?</style>', "",
+                                    c, flags=re.DOTALL)
+        for sel, decl in re.findall(r"(\.hero(?:::before)?)\{([^{}]*hero-mozza[^{}]*)\}",
+                                    c_sans_notre_regle):
+            mb = re.search(r"(background(?:-image)?)\s*:\s*([^;]*)", decl)
+            if not mb:
+                continue
+            val = re.sub(r"url\('(/?)hero-mozza(?:-\d+w)?\.[a-z]+'\)",
+                         r"url('\1hero-mozza-780w.webp')", mb.group(2))
+            regles.append(f"{sel}{{{mb.group(1)}:{val} !important;}}")
+        if regles:
+            for cand in ("hero-mozza.webp", "hero-mozza.jpg"):
+                if os.path.exists(os.path.join(SITE, cand)):
+                    variantes_image(os.path.join(SITE, cand))
+            feuille = ('<style id="bandeau-petit-ecran">@media(max-width:640px){'
+                       + "".join(regles) + "}</style>")
+            deb = c.find('<style id="bandeau-petit-ecran">')
+            if deb == -1:
+                c = c.replace("</head>", feuille + "\n</head>", 1)
+                log(rel, "bandeau : version réduite pour les petits écrans")
+            else:
+                fin = c.find("</style>", deb)
+                if fin != -1 and c[deb:fin + 8] != feuille:
+                    c = c[:deb] + feuille + c[fin + 8:]
+                    log(rel, "bandeau : version réduite mise à jour")
+
+        # Et le preload, qui part avant toute mise en page : sans la même
+        # échelle, il télécharge la pleine taille en plus de la réduite.
+        def _preload(mp):
+            tag = mp.group(0)
+            f0 = next((os.path.join(SITE, n) for n in ("hero-mozza.webp", "hero-mozza.jpg")
+                       if os.path.exists(os.path.join(SITE, n))), None)
+            if not f0:
+                return tag
+            vs = variantes_image(f0)
+            if not vs:
+                return tag
+            jeu = ", ".join([f"/{os.path.basename(cb)} {L}w" for L, cb in vs]
+                            + [f"/{os.path.basename(f0)} {largeur_image(f0)}w"])
+            t = re.sub(r'\simagesrcset="[^"]*"', "", tag)
+            t = re.sub(r'\simagesizes="[^"]*"', "", t)
+            return t[:-1].rstrip() + f' imagesrcset="{jeu}" imagesizes="100vw">'
+
+        avant_pl = c
+        c = re.sub(r'<link\b[^>]*rel="preload"[^>]*hero-mozza[^>]*>', _preload, c)
+        if c != avant_pl:
+            log(rel, "bandeau : le preload suit la taille de l'écran")
 
     # 6z1. La même carte, affichée cette fois. La règle précédente alignait le
     # formulaire de commande sur le dépliant ; les fiches de la page d'accueil,
