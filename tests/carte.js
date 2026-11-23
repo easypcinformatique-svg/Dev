@@ -54,6 +54,62 @@ const cle = n => n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   t('« Raviole Basilic » renommée', !menu.some(p => p.name === 'Raviole Basilic'));
   t('Margherita petite à 7,00 €', (menu.find(p => p.name === 'Margherita') || {}).p26 === 7);
 
+  // La carte affichée sur la page d'accueil est une SECONDE liste, écrite à la
+  // main à côté du formulaire. Les deux avaient divergé sans que rien ne le
+  // voie : la Bergère annonçait « mozzarella » dans sa fiche et
+  // « champignons » dans le formulaire, sur la même page, et c'est une cliente
+  // qui l'a signalé. On compare désormais les deux listes entre elles.
+  const fiches = await page.evaluate(() => [...document.querySelectorAll('.menu-card')].map(k => {
+    const prix = [...k.querySelectorAll('.price-item')].map(i => ({
+      taille: (i.querySelector('.price-size') || {}).textContent || '',
+      val: (i.querySelector('.price-val') || {}).textContent || '' }));
+    return { nom: (k.querySelector('h3') || {}).textContent.trim(),
+             ingr: (k.querySelector('p') || {}).textContent.trim(), prix };
+  }));
+  t('la page affiche bien une carte', fiches.length > 50, `${fiches.length} fiches`);
+
+  const montant = s => {
+    const m = String(s).replace('€', ',').match(/[\d]+(?:,\d+)?/);
+    return m ? parseFloat(m[0].replace(',', '.')) : null;
+  };
+  const ecartsFiches = [];
+  for (const f of fiches) {
+    const ref = CARTE.pizzas[Object.keys(CARTE.pizzas).find(n => cle(n) === cle(f.nom))];
+    if (!ref) continue;                       // desserts et recettes hors dépliant
+    if (f.ingr !== ref.ingredients.trim())
+      ecartsFiches.push(`${f.nom} : fiche « ${f.ingr} » ≠ dépliant « ${ref.ingredients} »`);
+    for (const p of f.prix) {
+      const attendu = /petite/i.test(p.taille) ? ref.petite : ref.grande;
+      if (attendu == null) continue;
+      if (Math.abs((montant(p.val) ?? -1) - attendu) > 0.005)
+        ecartsFiches.push(`${f.nom} : ${p.taille.trim()} affichée ${p.val}, dépliant ${attendu}`);
+    }
+  }
+  t('les fiches de la page d’accueil disent la même chose que le dépliant',
+    ecartsFiches.length === 0, `${ecartsFiches.length} écart(s)`);
+  ecartsFiches.slice(0, 8).forEach(e => console.log(`         ${e}`));
+
+  // Et le point de départ : fiche et formulaire d'accord entre eux.
+  const desaccords = [];
+  for (const f of fiches) {
+    const vu = menu.find(p => cle(p.name) === cle(f.nom));
+    if (!vu) continue;
+    if (f.ingr !== vu.ingr.trim())
+      desaccords.push(`${f.nom} : fiche « ${f.ingr} » ≠ formulaire « ${vu.ingr} »`);
+    for (const p of f.prix) {
+      const attendu = /petite/i.test(p.taille) ? vu.p26 : vu.p30;
+      if (attendu == null) continue;
+      if (Math.abs((montant(p.val) ?? -1) - attendu) > 0.005)
+        desaccords.push(`${f.nom} : ${p.taille.trim()} ${p.val} ≠ formulaire ${attendu}`);
+    }
+  }
+  t('la fiche et le formulaire ne se contredisent pas', desaccords.length === 0,
+    `${desaccords.length} contradiction(s)`);
+  desaccords.slice(0, 8).forEach(e => console.log(`         ${e}`));
+  t('Bergère : champignons, pas mozzarella',
+    (fiches.find(f => cle(f.nom) === cle('Bergère')) || {}).ingr === 'Fromage, crème, chèvre, champignons',
+    (fiches.find(f => cle(f.nom) === cle('Bergère')) || {}).ingr);
+
   // Les offres elles-mêmes sont couvertes par tests/offres-boisson.js : ici on
   // ne vérifie que ce que le bandeau annonce au visiteur.
   const banniere = await page.locator('.promo-banner').innerText();   // le CSS le met en capitales

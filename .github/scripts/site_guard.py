@@ -1238,6 +1238,77 @@ for path in pages:
         if hors:
             log(rel, f"ALERTE recettes du formulaire absentes du dépliant : {', '.join(hors)}")
 
+    # 6z1. La même carte, affichée cette fois. La règle précédente alignait le
+    # formulaire de commande sur le dépliant ; les fiches de la page d'accueil,
+    # non. Les deux listes vivaient côte à côte sur la même page et avaient
+    # divergé : la Bergère annonçait « mozzarella » dans sa fiche et
+    # « champignons » dans le formulaire, la Margherita 7€90 dans l'une et 7,00
+    # dans l'autre. C'est une cliente qui l'a remarqué. Les deux viennent
+    # désormais de carte.json, donc elles ne peuvent plus se contredire.
+    if '<div class="menu-card"' in c:
+        for ancien, neuf in CARTE["renommages"].items():
+            if f"<h3>{ancien}</h3>" in c:
+                c = c.replace(f"<h3>{ancien}</h3>", f"<h3>{neuf}</h3>")
+                log(rel, f"carte affichée : « {ancien} » renommée « {neuf} »")
+
+        vus_aff, corriges_aff = set(), [0]
+
+        def _aligner_fiche(m):
+            bloc = m.group(0)
+            titre = re.search(r"<h3>(.*?)</h3>", bloc, re.DOTALL)
+            if not titre:
+                return bloc
+            cle = sans_accent(re.sub(r"<[^>]+>", "", titre.group(1)).strip())
+            vus_aff.add(cle)
+            if cle not in CARTE_PAR_CLE:
+                return bloc                      # desserts et recettes hors dépliant
+            _, ref = CARTE_PAR_CLE[cle]
+            neuf = bloc
+            if "<" not in ref["ingredients"]:
+                neuf = re.sub(r"(<p>)[^<]*(</p>)",
+                              lambda x: x.group(1) + ref["ingredients"] + x.group(2),
+                              neuf, count=1)
+
+            # Chaque prix est repris d'après son propre libellé, Petite ou
+            # Grande : dix fiches n'ont qu'une taille, et se fier à l'ordre
+            # d'apparition y mettrait le prix de la petite sur la grande.
+            def _prix(x):
+                taille = sans_accent(x.group(4)).strip()
+                v = ref["petite"] if taille.startswith("petite") else ref["grande"]
+                if v is None:
+                    return x.group(0)
+                # On ne réécrit que si le MONTANT change. Comparer les chaînes
+                # aurait réécrit « 12€00 » en « 12€ » sur vingt fiches : une
+                # retouche d'affichage que personne n'a demandée, au milieu
+                # d'une correction de prix qu'il faut pouvoir relire.
+                actuel = re.sub(r"[^\d,.]", "", x.group(2).replace("€", ",")).rstrip(",")
+                try:
+                    if abs(float(actuel.replace(",", ".")) - v) < 0.005:
+                        return x.group(0)
+                except ValueError:
+                    pass
+                return x.group(1) + euro(v) + x.group(3) + x.group(4) + x.group(5)
+
+            neuf = re.sub(r'(<span class="price-val">)([^<]*)'
+                          r'(</span>\s*<span class="price-size">)([^<]*)(</span>)',
+                          _prix, neuf)
+            if neuf != bloc:
+                corriges_aff[0] += 1
+            return neuf
+
+        c = re.sub(r'<div class="menu-card"[^>]*>(?:(?!<div class="menu-card"|</section>).)*',
+                   _aligner_fiche, c, flags=re.DOTALL)
+        if corriges_aff[0]:
+            log(rel, f"carte affichée alignée sur le dépliant "
+                     f"({corriges_aff[0]} fiche(s) corrigée(s))")
+        absentes = [CARTE_PAR_CLE[k][0] for k in CARTE_PAR_CLE if k not in vus_aff]
+        if absentes:
+            log(rel, f"ALERTE recettes du dépliant absentes des fiches : {', '.join(absentes)}")
+        en_trop = [k for k in vus_aff if k not in CARTE_PAR_CLE
+                   and k not in {sans_accent(n) for n in CARTE["hors_depliant_conservees"]}]
+        if en_trop:
+            log(rel, f"ALERTE fiches absentes du dépliant : {', '.join(en_trop)}")
+
     # 6z2. The delivery rule was written out three times: this table,
     # getMinPizzasForCity(), and a third copy inlined in envoyerWhatsApp() —
     # and it is that third copy, not the named function, that actually decides
