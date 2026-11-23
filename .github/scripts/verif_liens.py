@@ -4,14 +4,24 @@ et ressources. On explore toutes les pages atteignables, pas seulement celles
 du sitemap, et on interroge chaque cible pour de vrai."""
 import re, sys, time, json, collections, concurrent.futures as cf
 import urllib.request, urllib.error
-from urllib.parse import urljoin, urldefrag, urlparse
+from urllib.parse import urljoin, urldefrag, urlparse, quote
 
 HOTE = (sys.argv[1] if len(sys.argv) > 1 else "https://pizzanapolicarpentras.fr").rstrip("/")
 UA = {"User-Agent": "Mozilla/5.0 (compatible; verif-liens/1.0)"}
 
 
+def encoder(url):
+    """Une URL écrite avec des accents — « Château de Mazan » dans un lien
+    Google Maps — n'est pas une URL valide tant que ses caractères non ASCII
+    ne sont pas encodés. Sans cette ligne, dix liens parfaitement bons étaient
+    déclarés injoignables parce que la requête ne partait jamais : un défaut
+    du vérificateur présenté comme un défaut du site."""
+    return quote(url, safe=":/?#[]@!$&'()*+,;=%~")
+
+
 def requete(url, methode="GET", essais=3):
     """L'hébergeur limite les requêtes : on réessaie avant de conclure."""
+    url = encoder(url)
     for n in range(essais):
         try:
             r = urllib.request.urlopen(
@@ -51,7 +61,13 @@ for u, (st, corps) in pages.items():
     if st != 200:
         continue
     ids = set(re.findall(r'\sid="([^"]+)"', corps)) | set(re.findall(r'\sname="([^"]+)"', corps))
-    for attr, href in re.findall(r'(href|src)="([^"]+)"', corps):
+    # preconnect et dns-prefetch ne sont pas des liens : ils annoncent au
+    # navigateur un serveur qu'il contactera bientôt. Interroger la racine de
+    # fonts.googleapis.com renvoie une 404 — c'est la réponse normale, pas un
+    # lien cassé. Les retirer avant la collecte.
+    corps_liens = re.sub(r'<link\b[^>]*rel="(?:preconnect|dns-prefetch|preload|prefetch)"[^>]*>',
+                         " ", corps, flags=re.IGNORECASE)
+    for attr, href in re.findall(r'(href|src)="([^"]+)"', corps_liens):
         if href.startswith(("mailto:", "tel:", "javascript:", "data:")):
             continue
         if href.startswith("#"):
@@ -76,7 +92,7 @@ def verifier(url):
     return url, st
 
 
-casses_int, casses_res, casses_ext, redir = [], [], [], []
+casses_int, casses_res, casses_ext, redir, refus = [], [], [], [], []
 with cf.ThreadPoolExecutor(max_workers=6) as ex:
     for url, st in ex.map(verifier, sorted(internes)):
         if st != 200:
@@ -87,7 +103,13 @@ with cf.ThreadPoolExecutor(max_workers=6) as ex:
             casses_res.append((url, st))
 with cf.ThreadPoolExecutor(max_workers=4) as ex:
     for url, st in ex.map(verifier, sorted(externes)):
-        if st in (0,) or st >= 400:
+        # 401, 403 et 429 veulent dire « pas pour un robot », pas « page
+        # disparue » : PagesJaunes et TripAdvisor répondent cela à tout client
+        # automatisé tout en s'ouvrant normalement dans un navigateur. Les
+        # mélanger aux liens morts fait un rapport impressionnant et faux.
+        if st in (401, 403, 429):
+            refus.append((url, st))
+        elif st in (0,) or st >= 400:
             casses_ext.append((url, st))
 
 print("\n" + "=" * 70)
@@ -112,9 +134,13 @@ for u, h in ancres[:12]:
 print(f"\nLiens externes en échec : {len(casses_ext)}")
 for u, st in casses_ext[:15]:
     print(f"   {st or 'injoignable'}  {u[:80]}   (depuis {', '.join(x[len(HOTE):] or '/' for x in list(externes[u])[:2])})")
-print(f"\nLiens externes vérifiés : {len(externes)}")
-for u in sorted(externes):
-    if u not in dict(casses_ext):
-        print(f"   ok  {u[:86]}")
+print(f"\nLiens externes qui refusent les robots (403/429) : {len(refus)}")
+print("   Ils s'ouvrent normalement dans un navigateur ; à vérifier à la main"
+      " s'ils changent." if refus else "")
+for u, st in refus[:10]:
+    print(f"   {st}  {u[:80]}")
+print(f"\nLiens externes vérifiés : {len(externes)}"
+      f" — {len(externes) - len(casses_ext) - len(refus)} joignables,"
+      f" {len(refus)} refusent les robots, {len(casses_ext)} en échec")
 json.dump({"casses_int": casses_int, "casses_res": casses_res, "casses_ext": casses_ext,
-           "ancres": ancres, "redir": redir}, open("liens.json", "w"), ensure_ascii=False, indent=1)
+           "refus": refus, "ancres": ancres, "redir": redir}, open("liens.json", "w"), ensure_ascii=False, indent=1)

@@ -74,7 +74,7 @@
   "gravite": "mineur",
   "titre": "Typographie : espaces insécables et apostrophes",
   "etat": "résolu",
-  "detail": "140 insécables, 1302 apostrophes droites"
+  "detail": "139 insécables, 1304 apostrophes droites"
  },
  {
   "code": "E12",
@@ -142,9 +142,9 @@
  {
   "code": "S7",
   "gravite": "important",
-  "titre": "Pages liées mais canonisées ailleurs",
-  "etat": "ouvert",
-  "detail": "pizza-carpentras/index.html, livraison-pizza-84200/index.html"
+  "titre": "Pages canonisées ailleurs mais encore liées",
+  "etat": "résolu",
+  "detail": "plus aucun lien entrant : le maillage ne s'y perd plus"
  },
  {
   "code": "S8",
@@ -247,9 +247,9 @@
  {
   "code": "C9",
   "gravite": "important",
-  "titre": "Délais de livraison contradictoires",
-  "etat": "ouvert",
-  "detail": "15-25 min, 20 à 30 min, 20 à 35 min, 20 à 50 min, 20-30 min, 20-35 min, 25 à 40 min, 25-35 min"
+  "titre": "Délais de livraison contradictoires pour une même commune",
+  "etat": "résolu",
+  "detail": "9 communes, un délai chacune"
  },
  {
   "code": "C10",
