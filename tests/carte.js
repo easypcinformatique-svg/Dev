@@ -3,6 +3,7 @@
 // le client voit qui compte.
 const { chromium } = require('playwright');
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8899';
+const BASE_PIZZERIA = BASE + '/pizzeria-carpentras/';
 const fs = require('fs');
 const path = require('path');
 
@@ -106,6 +107,15 @@ const cle = n => n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   t('la fiche et le formulaire ne se contredisent pas', desaccords.length === 0,
     `${desaccords.length} contradiction(s)`);
   desaccords.slice(0, 8).forEach(e => console.log(`         ${e}`));
+  // Un seul prix sur cent quarante-neuf s'écrivait « 7€ » quand tous les
+  // autres s'écrivent « 7€90 » ou « 12€00 » : c'est celui que j'avais corrigé,
+  // avec le format abrégé utilisé ailleurs sur le site.
+  const formats = await page.evaluate(() =>
+    [...document.querySelectorAll('.price-val')].map(e => e.textContent.trim()));
+  const malFormes = formats.filter(p => !/^\d+€\d\d$/.test(p));
+  t('tous les prix de la carte au même format', malFormes.length === 0,
+    `${malFormes.length} sur ${formats.length} : ${[...new Set(malFormes)].slice(0, 4).join(', ')}`);
+
   t('Bergère : champignons, pas mozzarella',
     (fiches.find(f => cle(f.nom) === cle('Bergère')) || {}).ingr === 'Fromage, crème, chèvre, champignons',
     (fiches.find(f => cle(f.nom) === cle('Bergère')) || {}).ingr);
@@ -145,6 +155,41 @@ const cle = n => n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   t('années d’expérience justes',
     ans && +ans.n === new Date().getFullYear() - 2008,
     ans ? `${ans.n} ans` : 'compteur absent');
+
+  // La page pizzeria porte une TROISIÈME liste de recettes, une sélection de
+  // huit pizzas dans un balisage à part. Seuls ses prix étaient tenus à jour :
+  // ses ingrédients avaient dérivé bien plus loin que les autres, et la
+  // Saint-Jacques — que le dépliant écrit sans trait d'union, ce qui la
+  // faisait échapper aux contrôles — s'y affichait à 13 € au lieu de 13,90.
+  {
+    const p3 = await (await browser.newContext()).newPage();
+    p3.on('dialog', d => d.dismiss());
+    await p3.goto(BASE_PIZZERIA, { waitUntil: 'domcontentloaded' });
+    const selection = await p3.evaluate(() => [...document.querySelectorAll('.pizza-card')]
+      .map(k => ({
+        nom: (k.querySelector('.pizza-name') || {}).textContent || '',
+        ingr: (k.querySelector('.pizza-desc') || {}).textContent || '',
+        prix: (k.querySelector('.pizza-price') || {}).textContent || '',
+      })).filter(x => x.nom && x.prix));
+    t('la page pizzeria affiche sa sélection', selection.length >= 6, `${selection.length} fiches`);
+    const eur = p => `${Math.floor(p)}€${Math.round((p - Math.floor(p)) * 100).toString().padStart(2, '0')}`;
+    const ecartsSel = [];
+    for (const s of selection) {
+      const nom = s.nom.trim();
+      const ref = CARTE.pizzas[Object.keys(CARTE.pizzas).find(n => cle(n) === cle(nom))];
+      if (!ref) { ecartsSel.push(`${nom} : absente du dépliant`); continue; }
+      if (s.ingr.trim() !== ref.ingredients.trim())
+        ecartsSel.push(`${nom} : « ${s.ingr.trim()} » ≠ « ${ref.ingredients} »`);
+      const attendu = ref.petite != null
+        ? `${eur(ref.petite)} / ${eur(ref.grande)}`
+        : `${eur(ref.grande)} grande`;
+      if (s.prix.trim().replace(/\s+/g, ' ') !== attendu)
+        ecartsSel.push(`${nom} : prix « ${s.prix.trim()} » ≠ « ${attendu} »`);
+    }
+    t('la sélection de la page pizzeria suit le dépliant', ecartsSel.length === 0,
+      `${ecartsSel.length} écart(s)`);
+    ecartsSel.slice(0, 8).forEach(e => console.log(`         ${e}`));
+  }
 
   console.log(`\n  ${ok}/${total} conformes`);
   await browser.close();

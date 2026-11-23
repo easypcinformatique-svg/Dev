@@ -297,6 +297,13 @@ def euro(p):
     return f"{int(p)}€" if abs(p - int(p)) < 0.005 else f"{int(p)}€{round((p - int(p)) * 100):02d}"
 
 
+def euro_carte(p):
+    """Le format des cartes : toujours deux décimales, « 12€00 » et non
+    « 12€ ». euro() raccourcit les montants ronds, ce qui convient ailleurs
+    mais met un prix à part au milieu d'une colonne qui n'en a pas."""
+    return f"{int(p)}€{round((p - int(p)) * 100):02d}"
+
+
 def sans_accent(nom):
     """Match menu names across apostrophes, accents and hyphens."""
     base = unicodedata.normalize("NFKD", nom.lower()).encode("ascii", "ignore").decode()
@@ -706,18 +713,40 @@ for path in pages:
                f'démarrent à <strong>{euro(MIN_PRICE)}</strong> en petite et '
                f'<strong>{euro(MIN_PRICE_30)}</strong> en grande', c)
 
+    # La sélection de huit pizzas de la page pizzeria : une TROISIÈME liste de
+    # recettes, après le formulaire de commande et les fiches de l'accueil.
+    # Seuls ses prix étaient tenus à jour ; ses ingrédients, jamais. Elle avait
+    # dérivé bien plus loin que les autres — la Végétarienne y annonçait
+    # « légumes grillés, poivrons, courgettes, olives » là où le dépliant dit
+    # « tomate, aubergines, fromage, champignons, poivrons, artichaut », et la
+    # Saint-Jacques grande s'affichait à 13 € au lieu de 13,90.
     def fix_card(m):
-        nom, prix = m.group(1), m.group(2)
-        p26, p30 = MENU.get(nom.lower(), (None, None))
+        nom, ing, prix = m.group(1), m.group(2), m.group(3)
+        # Le nom est cherché dans le dépliant d'abord, via la clé qui ignore
+        # accents, apostrophes et traits d'union. MENU est indexé sur le nom
+        # brut : la page écrit « Saint-Jacques » et le dépliant « Saint
+        # Jacques », si bien que cette fiche passait à travers — elle annonçait
+        # la grande à 13 € au lieu de 13,90.
+        ref = CARTE_PAR_CLE.get(sans_accent(nom))
+        if ref:
+            p26, p30 = ref[1]["petite"], ref[1]["grande"]
+        else:
+            p26, p30 = MENU.get(nom.lower(), (None, None))
         if p30 is None:
             return m.group(0)
-        vrai = f"{euro(p26)} / {euro(p30)}" if p26 else f"{euro(p30)} grande"
+        vrai = (f"{euro_carte(p26)} / {euro_carte(p30)}" if p26
+                else f"{euro_carte(p30)} grande")
+        neuf_ing = ref[1]["ingredients"] if ref and "<" not in ref[1]["ingredients"] else ing
         if vrai != prix:
             log(rel, f"prix {nom} : {prix} -> {vrai}")
-        return m.group(0).replace(f'>{prix}<', f'>{vrai}<')
+        if neuf_ing != ing:
+            log(rel, f"ingrédients {nom} : « {ing} » -> « {neuf_ing} »")
+        return (f'<div class="pizza-name">{nom}</div>'
+                f'<div class="pizza-desc">{neuf_ing}</div>'
+                f'<div class="pizza-price">{vrai}</div>')
 
     c = re.sub(r'<div class="pizza-name">([^<]+)</div>'
-               r'<div class="pizza-desc">[^<]*</div>'
+               r'<div class="pizza-desc">([^<]*)</div>'
                r'<div class="pizza-price">([^<]+)</div>', fix_card, c)
 
     # 6f. testimonials may only name pizzas that exist on the menu
@@ -1490,17 +1519,16 @@ for path in pages:
                 v = ref["petite"] if taille.startswith("petite") else ref["grande"]
                 if v is None:
                     return x.group(0)
-                # On ne réécrit que si le MONTANT change. Comparer les chaînes
-                # aurait réécrit « 12€00 » en « 12€ » sur vingt fiches : une
-                # retouche d'affichage que personne n'a demandée, au milieu
-                # d'une correction de prix qu'il faut pouvoir relire.
-                actuel = re.sub(r"[^\d,.]", "", x.group(2).replace("€", ",")).rstrip(",")
-                try:
-                    if abs(float(actuel.replace(",", ".")) - v) < 0.005:
-                        return x.group(0)
-                except ValueError:
-                    pass
-                return x.group(1) + euro(v) + x.group(3) + x.group(4) + x.group(5)
+                # Toujours deux décimales, comme la carte les écrit déjà :
+                # « 12€00 », pas « 12€ ». Une première version se servait du
+                # format abrégé du reste du site et ne réécrivait un prix que
+                # si le montant changeait, pour ne pas retoucher vingt
+                # affichages sans raison. Résultat : la Margherita corrigée à
+                # 7,00 est sortie en « 7€ », seule de son espèce au milieu de
+                # cent quarante-huit prix — et la garde empêchait ensuite de la
+                # remettre d'équerre. Avec le bon format, écrire à chaque fois
+                # ne change rien là où c'était déjà juste.
+                return x.group(1) + euro_carte(v) + x.group(3) + x.group(4) + x.group(5)
 
             neuf = re.sub(r'(<span class="price-val">)([^<]*)'
                           r'(</span>\s*<span class="price-size">)([^<]*)(</span>)',
@@ -1521,6 +1549,7 @@ for path in pages:
                    and k not in {sans_accent(n) for n in CARTE["hors_depliant_conservees"]}]
         if en_trop:
             log(rel, f"ALERTE fiches absentes du dépliant : {', '.join(en_trop)}")
+
 
     # 6z2. The delivery rule was written out three times: this table,
     # getMinPizzasForCity(), and a third copy inlined in envoyerWhatsApp() —
