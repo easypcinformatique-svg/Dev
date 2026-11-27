@@ -1,6 +1,6 @@
 """Service pour la gestion des commandes."""
 
-import random
+import secrets
 import string
 from datetime import date, datetime, timezone
 
@@ -17,10 +17,20 @@ from backend.services import creneau_service
 
 
 def _generer_numero() -> str:
-    """Genere un numero de commande unique (ex: P-A3X7)."""
+    """Genere un numero de commande (ex: P-A3X7K9). 6 caracteres = ~2,2 milliards de valeurs."""
     chars = string.ascii_uppercase + string.digits
-    code = "".join(random.choices(chars, k=4))
+    code = "".join(secrets.choice(chars) for _ in range(6))
     return f"P-{code}"
+
+
+async def _numero_unique(db: AsyncSession, essais: int = 10) -> str:
+    """Genere un numero non deja utilise (nouvel essai en cas de collision)."""
+    for _ in range(essais):
+        numero = _generer_numero()
+        existe = await db.execute(select(Commande.id).where(Commande.numero == numero))
+        if existe.scalar_one_or_none() is None:
+            return numero
+    raise RuntimeError("Impossible de generer un numero de commande unique")
 
 
 async def _get_or_create_client(
@@ -106,7 +116,7 @@ async def creer_commande(db: AsyncSession, data: dict) -> Commande:
             raise ValueError("Creneau complet ou indisponible")
 
     # Numero unique
-    numero = _generer_numero()
+    numero = await _numero_unique(db)
 
     commande = Commande(
         numero=numero,
