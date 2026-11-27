@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+ <title>Portail PL — Accès</title>
+ <style>
+  :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#203049;background:#f4f6fa;font-synthesis:none}
+  *{box-sizing:border-box} body{margin:0;min-height:100vh} button,input,select{font:inherit}
+  .shell{max-width:800px;margin:auto;padding:24px 18px 100px}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px}
+  .eyebrow{color:#718096;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.13em;margin:0 0 6px}
+  h1{font-size:29px;letter-spacing:-.055em;margin:0;color:#172a48} .sub{margin:5px 0 0;color:#7a8697;font-size:14px}
+  .mark{height:56px;width:56px;border-radius:19px;background:#0e263f;color:#fff;display:grid;place-items:center;box-shadow:0 12px 20px #0e263f26;font-size:28px}
+  .hero{padding:21px;background:linear-gradient(135deg,#122944,#1d4866);color:white;border-radius:23px;margin-bottom:22px;box-shadow:0 13px 30px #1b3e5730}
+  .hero .tag{font-size:11px;font-weight:750;color:#9dc5d5;letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  .heroGrid{display:flex;gap:12px;align-items:end;justify-content:space-between}.big{font-weight:790;font-size:34px;line-height:1}.big small{font-size:16px;color:#a8bdc9;font-weight:400}
+  .hero p{margin:10px 0 0;color:#bfced9;font-size:13px;max-width:370px;line-height:1.5}
+  .count{font-size:13px;background:#ffffff1f;border:1px solid #ffffff28;border-radius:999px;padding:9px 12px;white-space:nowrap}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:21px 0 12px}.sectionTitle{margin:0;font-size:18px;letter-spacing:-.025em}
+  button{cursor:pointer;border:0;transition:transform .12s,opacity .12s} button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
+  .primary{background:#1179ad;color:white;font-weight:750;border-radius:12px;padding:13px 16px;box-shadow:0 5px 14px #1780ab2b}
+  .plain{background:white;color:#23415a;border:1px solid #e2e7ee;border-radius:11px;font-weight:700;padding:10px 12px}
+  .rowCard{background:#fff;border:1px solid #e5eaf0;border-radius:16px;padding:16px;margin:10px 0;display:flex;gap:12px;align-items:flex-start;box-shadow:0 2px 6px #15304709}
+  .avatar{background:#e7f2f7;color:#1880ab;flex:0 0 45px;height:45px;border-radius:15px;display:grid;place-items:center;font-size:22px;font-weight:800}
+  .detail{min-width:0;flex:1}.name{font-weight:760;font-size:15px;margin:0 0 4px;overflow-wrap:anywhere}.meta{color:#83909d;font-size:12px;line-height:1.55}.pill{font-size:10px;padding:5px 8px;border-radius:99px;font-weight:750;white-space:nowrap;background:#e5f8ee;color:#147548;display:inline-flex;align-items:center;margin:0 0 10px}
+  .pill.off{background:#eef1f4;color:#697583}.pill.exp{background:#fff4df;color:#926121}
+  .cardRight{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.iconBtn{background:#f4f6f9;border:1px solid #e6ebf1;width:35px;height:35px;border-radius:10px;color:#60718a}
+  .empty{padding:30px 18px;text-align:center;background:white;border-radius:18px;border:1px dashed #d6e1e9;color:#7a8796;font-size:13px;line-height:1.6}.empty strong{display:block;font-size:18px;color:#2f4760;margin:8px 0 4px}
+  .foot{color:#83919e;text-align:center;font-size:12px;line-height:1.6;margin-top:24px}
+  .overlay{position:fixed;inset:0;background:#0b2037a6;display:none;align-items:flex-end;justify-content:center;z-index:3;overflow:auto}
+  .overlay.visible{display:flex}.sheet{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:680px;max-height:94vh;overflow:auto;padding:24px 20px 32px;box-shadow:0 -15px 45px #08192730}
+  .sheetHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.sheetHead h2{font-size:21px;letter-spacing:-.03em;margin:0}
+  .field{margin:12px 0}.field label{display:block;font-size:12px;font-weight:750;color:#63728a;margin-bottom:7px}
+  .field input{width:100%;border:1px solid #dce4ed;border-radius:11px;padding:12px;color:#182e46;background:#fff;outline-color:#187faf;min-height:44px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row{display:flex;gap:12px;align-items:center}.row.grow>*{flex:1}.selectcontact{background:#eaf5fc;color:#116b97;border:1px solid #bedfe9;border-radius:12px;font-size:13px;font-weight:750;padding:12px;width:100%}
+  .searchResults{max-height:190px;overflow:auto;border:1px solid #e1e7ef;border-radius:11px;margin-top:8px;display:none}.searchResults.visible{display:block}.contact{width:100%;text-align:left;padding:12px;background:white;border-bottom:1px solid #f0f2f5;display:block}.contact strong{font-size:13px}.contact small{display:block;color:#7d8a98;margin-top:3px}
+  .switchBox{display:flex;align-items:center;justify-content:space-between;background:#f7f9fc;padding:14px;border-radius:12px;margin:17px 0;font-size:14px;font-weight:650}
+  .switch{appearance:none;width:47px;height:27px;background:#d3d9e1;border-radius:20px;position:relative;outline:none;cursor:pointer;flex-shrink:0}.switch:before{content:"";position:absolute;left:4px;top:4px;width:19px;height:19px;border-radius:50%;background:white;transition:transform .15s}.switch:checked{background:#137cae}.switch:checked:before{transform:translateX(20px)}
+  .buttonRow{display:flex;gap:10px}.buttonRow button{flex:1;min-height:45px}
+  .error{color:#ba2930;font-size:12px;min-height:17px;margin:7px 0}#toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#12283e;color:white;border-radius:12px;padding:12px 17px;z-index:8;display:none;font-size:13px;max-width:calc(100vw - 30px);box-shadow:0 8px 25px #0019}
+  .journal{margin-top:24px} .logLine{display:flex;gap:10px;align-items:center;font-size:12px;padding:10px 4px;border-bottom:1px solid #e8edf3}.logDate{color:#8997a6;min-width:76px}.logDetail{flex:1}.allow{color:#0d874e;font-weight:750}.deny{color:#a65555;font-weight:750}
+  @media (max-width:450px){.shell{padding:20px 14px 80px}.heroGrid{align-items:center}.rowCard{padding:13px}.cardRight{min-width:58px}.two{gap:8px}.count{font-size:11px}}
+ </style>
+</head>
+<body>
+ <main class="shell">
+  <header class="top"><div><p class="eyebrow">GESTION SÉCURISÉE</p><h1>Portail PL</h1><p class="sub">Accès temporaires aux artisans</p></div><div class="mark" aria-hidden="true">⌂</div></header>
+  <section class="hero"><div class="tag">Administration des accès</div><div class="heroGrid"><div><div class="big" id="activeCount">— <small>actifs</small></div><p>Autorisez uniquement les numéros et créneaux nécessaires. Votre accès personnel et celui de Julie restent indépendants.</p></div><div class="count" id="usedCount">— / 5 artisans</div></div></section>
+  <div class="toolbar"><h2 class="sectionTitle">Mes autorisations</h2><button class="primary" id="addBtn">＋ Ajouter</button></div>
+  <section id="userList"><div class="empty">Chargement des autorisations…</div></section>
+  <section class="journal"><div class="toolbar"><h2 class="sectionTitle">Derniers appels</h2><button class="plain" id="refreshLog">Actualiser</button></div><div id="logs"><div class="empty">Journal non chargé</div></div></section>
+  <div class="foot">Accès réservé aux deux administrateurs autorisés.<br>Les appels non autorisés ne doivent jamais déclencher l'ouverture.</div>
+ </main>
+ <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Créer ou modifier un artisan">
+  <div class="sheet"><div class="sheetHead"><h2 id="modalTitle">Ajouter un artisan</h2><button class="plain" id="closeBtn">Fermer</button></div>
+   <div class="field"><label for="search">Rechercher dans mes contacts Google</label><input id="search" placeholder="Nom ou entreprise de l'artisan" autocomplete="off"/><div id="results" class="searchResults"></div><div class="meta">Recherche parmi les contacts Google du compte connecté. Seuls les noms et numéros sont utilisés.</div></div>
+   <div class="field"><label for="name">Nom de l'artisan</label><input id="name" placeholder="Par exemple : Électricien" maxlength="80"/></div>
+   <div class="field"><label for="phone">Numéro autorisé</label><input id="phone" type="tel" placeholder="06 12 34 56 78"/></div>
+   <div class="two"><div class="field"><label for="start">Début</label><input id="start" type="date"/></div><div class="field"><label for="end">Fin (incluse)</label><input id="end" type="date"/></div></div>
+   <div class="two"><div class="field"><label for="from">À partir de</label><input id="from" type="time" value="08:00"/></div><div class="field"><label for="to">Jusqu'à</label><input id="to" type="time" value="20:00"/></div></div>
+   <label class="switchBox" for="active"><span>Autorisation activée</span><input class="switch" type="checkbox" id="active"/></label>
+   <div class="field"><label for="notes">Note (facultatif)</label><input id="notes" placeholder="Ex : rénovation cuisine" maxlength="240"/></div>
+   <div class="error" id="error"></div>
+   <div class="buttonRow"><button class="plain" id="deleteBtn">Supprimer</button><button class="primary" id="saveBtn">Enregistrer</button></div>
+  </div>
+ </div>
+ <div id="toast" role="status"></div>
+ <script>
+  let state={users:[]}, editSlot=-1, searchTimer;
+  const $=id=>document.getElementById(id);
+  const call=(method,...args)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args));
+  const frag=(t,cls)=>{const e=document.createElement(t);if(cls)e.className=cls;return e};
+  const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+  function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',4000)}
+  function status(u){if(!u.active)return ['Inactif','off'];const now=today();return !u.start||!u.end||now>u.end?['Expiré','exp']:now<u.start?['À venir','exp']:['Actif',''];}
+  function render(){
+    const users=state.users||[], filled=users.filter(u=>u.name), active=filled.filter(u=>status(u)[0]==='Actif');
+    $('activeCount').innerHTML=`${active.length} <small>actifs</small>`;$('usedCount').textContent=`${filled.length} / 5 artisans`;
+    $('addBtn').disabled=filled.length>=5;
+    const list=$('userList');list.replaceChildren();
+    if(!filled.length){const d=frag('div','empty');d.innerHTML='<strong>Aucun artisan</strong>Appuie sur « Ajouter » pour préparer un accès limité dans le temps.';list.append(d);return;}
+    for(const u of filled){
+      const row=frag('div','rowCard'),icon=frag('div','avatar');icon.textContent=(u.name||'?')[0].toUpperCase();
+      const body=frag('div','detail'),name=frag('div','name');name.textContent=u.name;
+      const meta=frag('div','meta');meta.textContent=`${u.phone} · ${u.start||'?'} au ${u.end||'?'} · ${u.from}–${u.to}`;
+      body.append(name,meta);
+      const right=frag('div','cardRight'),p=frag('span','pill '+status(u)[1]);p.textContent=status(u)[0];
+      const edit=frag('button','iconBtn');edit.type='button';edit.textContent='✎';edit.setAttribute('aria-label','Modifier '+u.name);edit.onclick=()=>openForm(u.slot);
+      right.append(p,edit);row.append(icon,body,right);list.append(row);
+    }
+  }
+  function openForm(slot){
+    editSlot=slot;
+    const u=state.users.find(x=>x.slot===slot)||{slot,name:'',phone:'',start:today(),end:today(),from:'08:00',to:'20:00',active:false,notes:''};
+    $('modalTitle').textContent=u.name?'Modifier l’accès':'Nouvel artisan';
+    for(const id of ['name','phone','start','end','from','to','notes'])$(id).value=u[id]||'';
+    $('active').checked=u.active===true;$('search').value='';$('results').replaceChildren();$('results').classList.remove('visible');$('error').textContent='';
+    $('deleteBtn').style.display=u.name?'':'none';$('overlay').classList.add('visible');
+  }
+  function closeForm(){$('overlay').classList.remove('visible')}
+  async function load(){try{state=await call('getInitialState');render();}catch(e){toast('Erreur : '+e.message);}}
+  async function save(){
+    const v={slot:editSlot,active:$('active').checked};
+    for(const id of ['name','phone','start','end','from','to','notes'])v[id]=$(id).value;
+    $('saveBtn').disabled=true;$('error').textContent='';
+    try{state=await call('saveArtisan',v);closeForm();render();toast('Autorisation enregistrée');}
+    catch(e){$('error').textContent=String(e.message||e)}finally{$('saveBtn').disabled=false;}
+  }
+  async function revoke(){if(!confirm('Supprimer définitivement cet artisan ?'))return;
+    try{state=await call('deleteArtisan',editSlot);closeForm();render();toast('Artisan supprimé');}catch(e){$('error').textContent=e.message;}}
+  async function loadLog(){
+    const box=$('logs');box.replaceChildren();try{const logs=await call('getRecentJournal');if(!logs.length){const d=frag('div','empty');d.textContent='Aucune tentative enregistrée';box.append(d);return;}
+      for(const l of logs){const r=frag('div','logLine'),date=frag('div','logDate'),detail=frag('div','logDetail'),status=frag('div',l.result==='ALLOW'?'allow':'deny');date.textContent=l.at;detail.textContent=l.phone+' · '+l.detail;status.textContent=l.result==='ALLOW'?'Autorisé':'Refusé';r.append(date,detail,status);box.append(r);}}
+    catch(e){const d=frag('div','empty');d.textContent='Journal indisponible';box.append(d);}
+  }
+  async function searchContacts(q){
+    const result=$('results');result.replaceChildren();result.classList.remove('visible');if(q.trim().length<2)return;
+    try {const contacts=await call('searchMyGoogleContacts',q);if($('search').value!==q)return;
+      if(!contacts.length){const d=frag('div','contact');d.textContent='Aucun contact trouvé : tu peux saisir un numéro manuellement.';result.append(d)}
+      for(const c of contacts){const b=frag('button','contact');b.type='button';const strong=frag('strong');strong.textContent=c.name;const small=frag('small');small.textContent=c.phone;b.append(strong,small);b.onclick=()=>{$('name').value=c.name;$('phone').value=c.phone;result.classList.remove('visible');$('search').value=c.name};result.append(b);}
+      result.classList.add('visible');
+    }catch(e){$('error').textContent='Recherche de contacts indisponible. Vérifie les autorisations People API.';}
+  }
+  $('addBtn').onclick=()=>{const slot=state.users.find(u=>!u.name)?.slot;if(slot!==undefined)openForm(slot)};
+  $('closeBtn').onclick=closeForm;$('saveBtn').onclick=save;$('deleteBtn').onclick=revoke;
+  $('refreshLog').onclick=loadLog;$('search').oninput=e=>{clearTimeout(searchTimer);const q=e.target.value;searchTimer=setTimeout(()=>searchContacts(q),450)};
+  $('overlay').onclick=e=>{if(e.target===$('overlay'))closeForm()};
+  load().then(loadLog);call('primeContactsSearch').catch(()=>{});
+ </script>
+</body>
+</html>
