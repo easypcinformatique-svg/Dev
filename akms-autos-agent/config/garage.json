@@ -1,0 +1,43 @@
+{
+  "_a_completer": "Remplacez les valeurs marquees [A COMPLETER] par les vraies informations du garage avant la mise en ligne.",
+  "nom": "AKMS AUTOS",
+  "activites": [
+    "Vente de vehicules d'occasion",
+    "Entretien et reparation toutes marques",
+    "Reprise de vehicules"
+  ],
+  "adresse": "[A COMPLETER] adresse du garage",
+  "telephone": "[A COMPLETER] telephone",
+  "email": "[A COMPLETER] email",
+  "site_web": "[A COMPLETER] site web",
+  "horaires": {
+    "lundi": "08:30-12:00, 14:00-18:30",
+    "mardi": "08:30-12:00, 14:00-18:30",
+    "mercredi": "08:30-12:00, 14:00-18:30",
+    "jeudi": "08:30-12:00, 14:00-18:30",
+    "vendredi": "08:30-12:00, 14:00-18:30",
+    "samedi": "09:00-12:00",
+    "dimanche": "ferme"
+  },
+  "prestations_atelier": [
+    {"code": "vidange", "libelle": "Vidange + filtre a huile", "duree_min": 60, "prix_indicatif": "a partir de 89 EUR TTC"},
+    {"code": "revision", "libelle": "Revision constructeur", "duree_min": 120, "prix_indicatif": "sur devis selon le modele"},
+    {"code": "freinage", "libelle": "Plaquettes / disques de frein", "duree_min": 90, "prix_indicatif": "sur devis selon le modele"},
+    {"code": "pneus", "libelle": "Montage et equilibrage pneumatiques", "duree_min": 60, "prix_indicatif": "sur devis selon les pneus"},
+    {"code": "diagnostic", "libelle": "Diagnostic electronique", "duree_min": 45, "prix_indicatif": "a partir de 49 EUR TTC"},
+    {"code": "climatisation", "libelle": "Recharge climatisation", "duree_min": 60, "prix_indicatif": "a partir de 69 EUR TTC"},
+    {"code": "pre_controle", "libelle": "Pre-controle technique", "duree_min": 45, "prix_indicatif": "sur devis"},
+    {"code": "essai", "libelle": "Essai d'un vehicule en vente", "duree_min": 30, "prix_indicatif": "gratuit"}
+  ],
+  "planning": {
+    "postes_atelier": 2,
+    "jours_reservables_a_l_avance": 30,
+    "pas_creneau_min": 30
+  },
+  "services_vente": [
+    "Garantie 6 a 12 mois selon le vehicule",
+    "Financement possible (sous reserve d'acceptation)",
+    "Reprise de votre ancien vehicule",
+    "Carte grise prise en charge sur demande"
+  ]
+}

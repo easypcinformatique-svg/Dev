@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>AKMS AUTOS – Gestion</title>
+<style>
+  :root{--c:#c8102e;--bg:#f5f5f7;--card:#fff;--txt:#1d1d1f;--mut:#6e6e73;--bd:#e3e3e8}
+  @media (prefers-color-scheme: dark){:root{--bg:#141416;--card:#1f1f23;--txt:#f2f2f5;--mut:#a1a1a8;--bd:#34343a}}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);height:100dvh;display:flex;flex-direction:column}
+  header{background:var(--c);color:#fff;padding:12px 16px;display:flex;gap:12px;align-items:center}
+  header b{flex:1;font-size:17px}
+  header button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font:inherit;font-size:13px}
+  #login{max-width:380px;margin:12vh auto;padding:24px;background:var(--card);border:1px solid var(--bd);border-radius:12px}
+  #login input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;font:inherit;background:var(--bg);color:var(--txt);margin:8px 0 12px}
+  .btn{background:var(--c);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+  #app{flex:1;display:none;flex-direction:column;min-height:0;max-width:920px;width:100%;margin:0 auto}
+  #log{flex:1;overflow-y:auto;padding:16px}
+  .m{margin:8px 0;padding:10px 13px;border-radius:12px;max-width:92%;word-wrap:break-word}
+  .u{margin-left:auto;background:var(--c);color:#fff;white-space:pre-wrap;max-width:80%}
+  .a{background:var(--card);border:1px solid var(--bd)}
+  .a p{margin:.3em 0}.a ul{margin:.3em 0;padding-left:1.3em}.a h3,.a h4{margin:.5em 0 .2em}
+  .a table{border-collapse:collapse;margin:.4em 0;font-size:14px;display:block;overflow-x:auto}
+  .a th,.a td{border:1px solid var(--bd);padding:4px 8px;text-align:left;white-space:nowrap}
+  .ok{background:#e8f7ee;color:#14532d;border:1px solid #9bd3b0;font-size:13px}
+  @media (prefers-color-scheme: dark){.ok{background:#12301f;color:#bbf7d0;border-color:#1f6b3c}}
+  #sugg{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px}
+  #sugg button{border:1px solid var(--c);color:var(--c);background:var(--card);border-radius:16px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}
+  form#f{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--bd);background:var(--card)}
+  form#f textarea{flex:1;resize:none;height:48px;padding:10px;border:1px solid var(--bd);border-radius:8px;font:inherit;background:var(--bg);color:var(--txt)}
+  .err{color:var(--c);font-size:14px;min-height:1.2em}
+</style>
+</head>
+<body>
+<header><b>AKMS AUTOS – Gestion</b><button id="nouv" hidden>Nouvelle conversation</button><button id="out" hidden>Déconnexion</button></header>
+
+<div id="login">
+  <h2 style="margin-top:0">Espace équipe</h2>
+  <label for="tok">Code d'accès</label>
+  <input id="tok" type="password" autocomplete="current-password">
+  <div class="err" id="lerr"></div>
+  <button class="btn" id="go">Entrer</button>
+</div>
+
+<div id="app">
+  <div id="log" aria-live="polite"></div>
+  <div id="sugg"></div>
+  <form id="f"><textarea id="in" placeholder="Ex : confirme le RDV 12, ajoute une Clio 2019 à 11 900 €…" aria-label="Message"></textarea><button class="btn">Envoyer</button></form>
+</div>
+
+<script>
+(function(){
+  var TOKEN = "", SID = "";
+  try { TOKEN = sessionStorage.getItem("akms_gestion_token") || ""; } catch(e){}
+  function newSid(){ return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); }
+  SID = newSid();
+  var $ = function(id){ return document.getElementById(id); };
+  var log = $("log"), occupe = false;
+
+  function esc(s){ return s.replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function inline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>"); }
+  // Mini rendu markdown : le texte est echappe avant toute mise en forme.
+  function md(t){
+    var L = t.split("\n"), out = [], i = 0;
+    while (i < L.length) {
+      var l = L[i];
+      if (/^\s*\|.*\|\s*$/.test(l)) {
+        var rows = [];
+        while (i < L.length && /^\s*\|.*\|\s*$/.test(L[i])) { rows.push(L[i]); i++; }
+        var cells = function(r){ return r.trim().slice(1,-1).split("|").map(function(c){ return c.trim(); }); };
+        var h = "<table>";
+        rows.forEach(function(r, k){
+          if (/^\s*\|[\s:\-|]+\|\s*$/.test(r)) return;
+          var tag = k === 0 ? "th" : "td";
+          h += "<tr>" + cells(r).map(function(c){ return "<"+tag+">"+inline(c)+"</"+tag+">"; }).join("") + "</tr>";
+        });
+        out.push(h + "</table>"); continue;
+      }
+      if (/^\s*[-*•] /.test(l)) {
+        var li = [];
+        while (i < L.length && /^\s*[-*•] /.test(L[i])) { li.push("<li>" + inline(L[i].replace(/^\s*[-*•] /,"")) + "</li>"); i++; }
+        out.push("<ul>" + li.join("") + "</ul>"); continue;
+      }
+      var hm = l.match(/^(#{1,4}) (.*)/);
+      if (hm) { out.push("<h4>" + inline(hm[2]) + "</h4>"); i++; continue; }
+      if (l.trim()) out.push("<p>" + inline(l) + "</p>");
+      i++;
+    }
+    return out.join("");
+  }
+  function bulle(cls, texte, html){
+    var d = document.createElement("div"); d.className = "m " + cls;
+    if (html) d.innerHTML = md(texte); else d.textContent = texte;
+    log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
+  }
+  function api(path, body){
+    return fetch(path, { method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + TOKEN }, body: JSON.stringify(body) });
+  }
+  var SUGG = ["Tableau de bord de la semaine", "Planning d'aujourd'hui et demain", "Demandes clients à traiter", "Stock : véhicules en vente depuis plus de 60 jours", "RDV à confirmer"];
+  function accueil(){
+    log.textContent = "";
+    bulle("a", "Bonjour ! Je gère avec vous le planning, les demandes clients, le stock et les ventes. Que voulez-vous faire ?", false);
+    var s = $("sugg"); s.textContent = "";
+    SUGG.forEach(function(t){ var b = document.createElement("button"); b.type = "button"; b.textContent = t; b.onclick = function(){ envoyer(t); }; s.appendChild(b); });
+  }
+  function ouvrir(){
+    $("login").style.display = "none"; $("app").style.display = "flex";
+    $("nouv").hidden = false; $("out").hidden = false; accueil(); $("in").focus();
+  }
+  function envoyer(t){
+    t = (t || "").trim(); if (!t || occupe) return;
+    occupe = true; $("sugg").textContent = ""; bulle("u", t, false); $("in").value = "";
+    var w = bulle("a", "…", false);
+    api("/api/gestion/chat", { session_id: SID, message: t }).then(function(r){
+      if (r.status === 401) { deconnexion("Code d'accès refusé."); throw 0; }
+      if (r.status === 429) return { reponse: "Trop de messages : patientez une minute." };
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }).then(function(d){
+      w.innerHTML = md(d.reponse || "");
+      (d.actions || []).forEach(function(a){ bulle("ok", "✔ " + a.outil.replace(/_/g, " ") + " effectué", false); });
+    }).catch(function(e){ if (e !== 0) w.textContent = "Erreur de connexion, réessayez."; })
+      .finally(function(){ occupe = false; $("in").focus(); });
+  }
+  function deconnexion(msg){
+    TOKEN = ""; try { sessionStorage.removeItem("akms_gestion_token"); } catch(e){}
+    $("app").style.display = "none"; $("login").style.display = "block";
+    $("nouv").hidden = true; $("out").hidden = true; $("lerr").textContent = msg || "";
+  }
+  $("go").onclick = function(){
+    var t = $("tok").value.trim(); if (!t) return;
+    TOKEN = t;
+    api("/api/gestion/reset", { session_id: SID, message: "" }).then(function(r){
+      if (r.ok) { try { sessionStorage.setItem("akms_gestion_token", t); } catch(e){} $("tok").value = ""; ouvrir(); }
+      else deconnexion(r.status === 503 ? "Le code d'accès n'est pas configuré sur le serveur." : "Code d'accès refusé.");
+    }).catch(function(){ deconnexion("Serveur injoignable."); });
+  };
+  $("tok").addEventListener("keydown", function(e){ if (e.key === "Enter") $("go").click(); });
+  $("nouv").onclick = function(){ api("/api/gestion/reset", { session_id: SID, message: "" }); SID = newSid(); accueil(); };
+  $("out").onclick = function(){ deconnexion(""); };
+  $("f").onsubmit = function(e){ e.preventDefault(); envoyer($("in").value); };
+  $("in").addEventListener("keydown", function(e){ if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); envoyer($("in").value); } });
+  if (TOKEN) ouvrir();
+})();
+</script>
+</body>
+</html>
