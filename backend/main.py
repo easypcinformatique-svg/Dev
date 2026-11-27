@@ -5,7 +5,8 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -54,7 +55,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # auth par Bearer token, pas de cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -89,8 +90,16 @@ async def health_check():
 
 
 @app.post("/api/seed")
-async def run_seed(force: bool = False):
-    """Initialise la DB avec les donnees demo."""
+async def run_seed(
+    force: bool = False,
+    credentials: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
+):
+    """Initialise la DB avec les donnees demo. force=true (reset complet) reserve a un admin."""
+    if force:
+        from backend.services.auth_service import decode_token
+        payload = decode_token(credentials.credentials) if credentials else None
+        if payload is None or payload.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin requis pour reinitialiser la base")
     try:
         from backend.db.database import async_session
         from backend.models import Utilisateur
