@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alertes Z quotidien</title>
+<style>
+:root { --fond:#faf9f7; --carte:#fff; --texte:#1c1b19; --doux:#6b6862;
+        --trait:#e5e2dc; --rouge:#b3261e; --rouge-fond:#fdf0ef; --vert:#1f6f43; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --fond:#171614; --carte:#201f1c; --texte:#f2f0ec; --doux:#a5a199;
+  --trait:#34322d; --rouge:#f2b8b5; --rouge-fond:#3b1b19; --vert:#7fd0a0; } }
+:root[data-theme="dark"] { --fond:#171614; --carte:#201f1c; --texte:#f2f0ec; --doux:#a5a199;
+  --trait:#34322d; --rouge:#f2b8b5; --rouge-fond:#3b1b19; --vert:#7fd0a0; }
+* { box-sizing:border-box; }
+body { margin:0; padding:32px 16px 64px; background:var(--fond); color:var(--texte);
+  font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+.page { max-width:1080px; margin:0 auto; }
+h1 { font-size:26px; margin:0 0 4px; letter-spacing:-.01em; }
+.sous { color:var(--doux); margin:0 0 28px; }
+.tuiles { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); margin-bottom:28px; }
+.tuile { background:var(--carte); border:1px solid var(--trait); border-radius:12px; padding:16px; }
+.tuile.alerte { border-color:var(--rouge); background:var(--rouge-fond); }
+.tuile h3 { margin:0 0 8px; font-size:12px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--doux); }
+.montant { margin:0; font-size:24px; font-weight:650; font-variant-numeric:tabular-nums; }
+.part { margin:4px 0 0; font-size:13px; color:var(--doux); }
+.tuile.alerte .part { color:var(--rouge); font-weight:600; }
+.seuil { display:block; font-size:11px; font-weight:400; color:var(--doux); margin-top:2px; }
+.cadre { background:var(--carte); border:1px solid var(--trait); border-radius:12px; overflow-x:auto; }
+table { border-collapse:collapse; width:100%; min-width:760px; }
+th, td { padding:11px 12px; text-align:left; border-bottom:1px solid var(--trait); }
+th { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--doux);
+  font-weight:600; white-space:nowrap; }
+tr:last-child td { border-bottom:none; }
+td.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+td.d { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.js { display:block; font-size:11px; color:var(--doux); text-transform:capitalize; }
+.p { display:block; font-size:11px; color:var(--doux); }
+td.alerte { background:var(--rouge-fond); color:var(--rouge); font-weight:600; }
+td.alerte .p { color:var(--rouge); }
+td.total { font-weight:650; }
+.notes { margin-top:28px; background:var(--carte); border:1px solid var(--trait);
+  border-radius:12px; padding:18px 22px; }
+.notes h2 { font-size:14px; margin:0 0 10px; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--doux); }
+.notes ul { margin:0; padding-left:20px; }
+.notes li { margin-bottom:6px; }
+</style></head><body><div class="page">
+<h1>Alertes Z quotidien — Pizza Napoli Carpentras</h1>
+<p class="sous">1 journee(s) analysee(s) · CA TTC cumule 928,60 € ·
+1 journee(s) hors seuil</p>
+<div class="tuiles"><div class="tuile alerte"><h3>Corrections avant cuisine</h3><p class="montant">150,10 €</p><p class="part">16,16 % du CA <span class="seuil">seuil 5 %</span></p></div><div class="tuile ok"><h3>Corrections apres cuisine</h3><p class="montant">0,00 €</p><p class="part">0,00 % du CA <span class="seuil">seuil 2 %</span></p></div><div class="tuile alerte"><h3>Annulations apres ticket</h3><p class="montant">65,80 €</p><p class="part">7,09 % du CA <span class="seuil">seuil 2 %</span></p></div><div class="tuile alerte"><h3>Offerts</h3><p class="montant">186,50 €</p><p class="part">20,08 % du CA <span class="seuil">seuil 3 %</span></p></div></div>
+<div class="cadre"><table>
+<thead><tr><th>Date</th><th class="n">CA TTC</th><th class="n">Tickets</th>
+<th class="n">Corr. avant</th><th class="n">Corr. apres</th>
+<th class="n">Annul. ticket</th><th class="n">Offerts</th><th class="n">Total ecarts</th></tr></thead>
+<tbody><tr><td class="d">2026-08-14<span class="js">vendredi</span></td><td class="n">928,60 €</td><td class="n">27</td><td class="n alerte">150,10 €<span class="p">16,16 %</span></td><td class="n">0,00 €<span class="p">0,00 %</span></td><td class="n alerte">65,80 €<span class="p">7,09 %</span></td><td class="n alerte">186,50 €<span class="p">20,08 %</span></td><td class="n total alerte">402,40 €<span class="p">43,33 %</span></td></tr></tbody></table></div>
+<div class="notes"><h2>Moyennes et reperes</h2><ul><li><strong>Corrections avant cuisine</strong> : 16,16 % en moyenne / jour (seuil 5 %)</li><li><strong>Corrections apres cuisine</strong> : 0,00 % en moyenne / jour (seuil 2 %)</li><li><strong>Annulations apres ticket</strong> : 7,09 % en moyenne / jour (seuil 2 %)</li><li><strong>Offerts</strong> : 20,08 % en moyenne / jour (seuil 3 %)</li>
+<li>Le nombre de tickets est <em>reconstruit</em> (CA TTC / ticket moyen) : le Z ne le fournit pas.</li>
+<li>Une case rouge signale un depassement du seuil defini dans <code>SEUILS</code> (parse_z.py).</li>
+</ul></div></div></body></html>
